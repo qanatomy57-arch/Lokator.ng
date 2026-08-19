@@ -418,7 +418,7 @@ RETURNS TABLE (
   distance_km DOUBLE PRECISION
 )
 LANGUAGE sql
-SECURITY DEFINER
+SECURITY INVOKER
 STABLE
 SET search_path = public, extensions, pg_temp
 AS $$
