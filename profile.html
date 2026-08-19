@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Provider Profile — Lokator</title>
+  <meta name="description" content="View verified artisan profile, portfolio showcase, customer reviews, pricing guide, and connect directly via phone or WhatsApp on Lokator." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="profile.css" />
+</head>
+<body>
+
+  <!-- ===== NAVBAR ===== -->
+  <header class="navbar" id="navbar">
+    <div class="container nav-inner">
+      <a href="index.html" class="logo" id="logo-link">
+        <div class="logo-mark">
+          <svg width="30" height="30" viewBox="0 0 30 30" fill="none"><path d="M15 2C10.03 2 6 6.03 6 11c0 6.75 9 17 9 17s9-10.25 9-17c0-4.97-4.03-9-9-9z" fill="#006B3F"/><circle cx="15" cy="11" r="4" fill="#D4AF37"/><circle cx="15" cy="11" r="2" fill="#FFFFFF"/></svg>
+        </div>
+        <span class="logo-text">Lokator</span>
+      </a>
+      <nav class="nav-links" id="nav-links">
+        <a href="index.html" class="nav-link">Home</a>
+        <a href="search.html" class="nav-link">Find Providers</a>
+        <a href="index.html#how-it-works" class="nav-link">How It Works</a>
+        <a href="register.html" class="btn btn-outline" id="nav-register">List Your Skill</a>
+      </nav>
+      <button class="hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ===== MAIN PROFILE CONTENT ===== -->
+  <main class="profile-page-main">
+    <div class="container">
+
+      <!-- Breadcrumbs -->
+      <nav class="profile-breadcrumbs" aria-label="Breadcrumb">
+        <a href="index.html">Home</a>
+        <span class="sep">/</span>
+        <a href="search.html">Directory</a>
+        <span class="sep">/</span>
+        <span class="current" id="crumb-provider-name">Provider Profile</span>
+      </nav>
+
+      <!-- HERO PROFILE HEADER CARD -->
+      <section class="profile-hero-card" id="profile-hero">
+        <div class="profile-hero-top">
+          
+          <div class="profile-identity-group">
+            <div class="profile-avatar-wrap">
+              <div class="profile-big-avatar" id="hero-avatar">--</div>
+              <span class="profile-status-badge online" id="hero-status-badge" title="Available today"></span>
+            </div>
+            <div class="profile-names-wrap">
+              <h1 id="hero-name">
+                <span>Loading Provider...</span>
+              </h1>
+              <div class="profile-trade-title" id="hero-trade">Specialist Artisan</div>
+              <div class="profile-loc-meta">
+                <span id="hero-location">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                  <span id="hero-location-text">Surulere, Lagos</span>
+                </span>
+                <span>•</span>
+                <span id="hero-rating-stars">
+                  ★ <strong id="hero-rating-val">4.9</strong> (<span id="hero-reviews-count">214</span> reviews)
+                </span>
+                <span>•</span>
+                <span id="hero-verified-badge" class="profile-verified-pill">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                  NIN Verified Pro
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Action Buttons -->
+          <div class="profile-hero-actions">
+            <a href="#" id="btn-call-hero" class="btn btn-primary btn-lg">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              Call Provider
+            </a>
+            <a href="#" id="btn-wa-hero" target="_blank" rel="noopener" class="btn btn-gold btn-lg">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.625.846 5.059 2.284 7.034L.789 23.492a.5.5 0 0 0 .611.611l4.458-1.495A11.952 11.952 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22a9.94 9.94 0 0 1-5.39-1.585l-.386-.231-2.646.887.887-2.646-.231-.386A9.94 9.94 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
+              WhatsApp Booking
+            </a>
+            <button class="btn-share" id="btn-share-profile" title="Share Profile" aria-label="Share Profile">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Metric Badges Row -->
+        <div class="profile-metrics-row">
+          <div class="pmetric-card">
+            <strong id="metric-rating">★ 4.9</strong>
+            <span>Customer Rating</span>
+          </div>
+          <div class="pmetric-card">
+            <strong id="metric-jobs">540+</strong>
+            <span>Jobs Completed</span>
+          </div>
+          <div class="pmetric-card">
+            <strong id="metric-exp">8 Years</strong>
+            <span>Experience</span>
+          </div>
+          <div class="pmetric-card">
+            <strong id="metric-response">~15 mins</strong>
+            <span>Avg. Response Time</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- TWO-COLUMN PROFILE CONTENT -->
+      <div class="profile-content-grid">
+        
+        <!-- LEFT MAIN COLUMN -->
+        <div class="profile-main-col">
+          
+          <!-- About / Bio Card -->
+          <article class="profile-card-box">
+            <h2 class="profile-section-heading">About This Professional</h2>
+            <p class="profile-bio-text" id="bio-full-text">Loading verified artisan information...</p>
+          </article>
+
+          <!-- Specialized Skills Checklist -->
+          <article class="profile-card-box">
+            <h2 class="profile-section-heading">Specialized Skills & Capabilities</h2>
+            <div class="skills-tags-grid" id="skills-container">
+              <!-- Rendered dynamically -->
+            </div>
+          </article>
+
+          <!-- PORTFOLIO SHOWCASE GALLERY -->
+          <article class="profile-card-box" id="portfolio-section">
+            <div class="profile-section-heading">
+              <h2>Work Portfolio & Projects</h2>
+            </div>
+            
+            <div class="portfolio-tabs-bar" role="tablist">
+              <button class="ptab-btn active" data-filter="all" role="tab">All Samples</button>
+              <button class="ptab-btn" data-filter="before-after" role="tab">Before & After</button>
+              <button class="ptab-btn" data-filter="completed" role="tab">Completed Jobs</button>
+            </div>
+
+            <div class="portfolio-grid" id="portfolio-grid">
+              <!-- Rendered dynamically -->
+            </div>
+          </article>
+
+          <!-- Transparent Pricing Guide -->
+          <article class="profile-card-box">
+            <h2 class="profile-section-heading">
+              <span>Standard Pricing Guide</span>
+              <small style="font-size: 12px; font-weight: 500; color: var(--fg-muted);">No Hidden Fees</small>
+            </h2>
+            <p style="font-size: 13.5px; color: var(--fg-muted); margin-bottom: 12px;">Final quote may vary depending on material requirements, job complexity, and exact location.</p>
+            <div class="pricing-guide-list" id="pricing-list-container">
+              <!-- Rendered dynamically -->
+            </div>
+          </article>
+
+          <!-- CUSTOMER REVIEWS & RATINGS -->
+          <article class="profile-card-box" id="reviews-section">
+            <div class="profile-section-heading">
+              <h2>Customer Reviews & Ratings</h2>
+              <button class="btn btn-outline btn-sm" id="btn-open-review-modal">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                Write a Review
+              </button>
+            </div>
+
+            <!-- Score Summary & Histogram -->
+            <div class="reviews-summary-card">
+              <div class="reviews-score-col">
+                <div class="score-big-num" id="score-big-val">4.9</div>
+                <div class="score-stars" id="score-big-stars">★★★★★</div>
+                <div class="score-total-count" id="score-sub-text">Based on 214 reviews</div>
+              </div>
+              <div class="reviews-histogram-col" id="reviews-histogram">
+                <!-- 5 Star -->
+                <div class="histo-row">
+                  <span class="histo-label">5 ★</span>
+                  <div class="histo-bar-track"><div class="histo-bar-fill" id="histo-bar-5" style="width: 90%;"></div></div>
+                  <span class="histo-count" id="histo-cnt-5">90%</span>
+                </div>
+                <!-- 4 Star -->
+                <div class="histo-row">
+                  <span class="histo-label">4 ★</span>
+                  <div class="histo-bar-track"><div class="histo-bar-fill" id="histo-bar-4" style="width: 8%;"></div></div>
+                  <span class="histo-count" id="histo-cnt-4">8%</span>
+                </div>
+                <!-- 3 Star -->
+                <div class="histo-row">
+                  <span class="histo-label">3 ★</span>
+                  <div class="histo-bar-track"><div class="histo-bar-fill" id="histo-bar-3" style="width: 2%;"></div></div>
+                  <span class="histo-count" id="histo-cnt-3">2%</span>
+                </div>
+                <!-- 2 Star -->
+                <div class="histo-row">
+                  <span class="histo-label">2 ★</span>
+                  <div class="histo-bar-track"><div class="histo-bar-fill" id="histo-bar-2" style="width: 0%;"></div></div>
+                  <span class="histo-count" id="histo-cnt-2">0%</span>
+                </div>
+                <!-- 1 Star -->
+                <div class="histo-row">
+                  <span class="histo-label">1 ★</span>
+                  <div class="histo-bar-track"><div class="histo-bar-fill" id="histo-bar-1" style="width: 0%;"></div></div>
+                  <span class="histo-count" id="histo-cnt-1">0%</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Reviews List -->
+            <div class="reviews-list" id="reviews-container">
+              <!-- Rendered dynamically -->
+            </div>
+          </article>
+
+        </div>
+
+        <!-- RIGHT SIDEBAR COLUMN -->
+        <aside class="profile-sidebar-col">
+          
+          <!-- Direct Call & Contact Card -->
+          <div class="sidebar-action-card">
+            <h3>Direct Contact (No Middleman)</h3>
+            <p style="font-size: 13px; color: var(--fg-muted);">Speak directly with the verified artisan to explain your job or request emergency inspection.</p>
+            
+            <a href="#" id="sidebar-call-btn" class="btn btn-primary btn-block">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              Call <span id="sidebar-phone-text">+234...</span>
+            </a>
+
+            <div style="font-size: 12.5px; color: var(--fg-muted); display: flex; align-items: center; gap: 6px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#006B3F" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              <span>100% Free • No Commission Added</span>
+            </div>
+          </div>
+
+          <!-- STRUCTURED WHATSAPP BOOKING GENERATOR -->
+          <div class="whatsapp-builder-card" id="whatsapp-builder">
+            <h3>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="#006B3F"><path d="M12 0C5.373 0 0 5.373 0 12c0 2.625.846 5.059 2.284 7.034L.789 23.492a.5.5 0 0 0 .611.611l4.458-1.495A11.952 11.952 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0z"/></svg>
+              Instant WhatsApp Booking
+            </h3>
+            <p style="font-size: 13px; color: var(--green-dark);">Build a structured message with your job requirements and send directly to the provider.</p>
+
+            <div class="form-field-group">
+              <label for="wa-service-type">Service Needed</label>
+              <select id="wa-service-type" class="filter-select">
+                <!-- Dynamically populated from provider skills -->
+              </select>
+            </div>
+
+            <div class="form-field-group">
+              <label for="wa-user-location">Your Location / Address</label>
+              <input type="text" id="wa-user-location" placeholder="e.g. 14 Ogunlana Dr, Surulere" />
+            </div>
+
+            <div class="form-field-group">
+              <label for="wa-urgency">When is it needed?</label>
+              <select id="wa-urgency" class="filter-select">
+                <option value="Urgent / Today">Urgent (Today / Emergency)</option>
+                <option value="Tomorrow">Tomorrow</option>
+                <option value="This Weekend">This Weekend</option>
+                <option value="Next Week">Next Week / Flexible</option>
+              </select>
+            </div>
+
+            <div class="form-field-group">
+              <label for="wa-note">Job Details (Optional)</label>
+              <input type="text" id="wa-note" placeholder="e.g. Inverter tripped, need inspection" />
+            </div>
+
+            <div>
+              <label style="font-size: 12px; font-weight: 700; color: var(--green-dark); margin-bottom: 4px; display: block;">Message Preview:</label>
+              <div class="wa-preview-box" id="wa-preview-text">Preview will appear here...</div>
+            </div>
+
+            <a href="#" id="wa-send-btn" target="_blank" rel="noopener" class="btn btn-gold btn-block" style="margin-top: 4px;">
+              Open in WhatsApp →
+            </a>
+          </div>
+
+          <!-- Working Hours Schedule -->
+          <div class="working-hours-card">
+            <h4>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Working Hours & Availability
+            </h4>
+            <div class="wh-list" id="working-hours-list">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+          <!-- Verified Guarantee Badge Card -->
+          <div class="working-hours-card" style="background: var(--green-pale); border-color: rgba(0,107,63,0.25);">
+            <h4 style="color: var(--green-dark);">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#006B3F" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              Lokator Safety Guarantee
+            </h4>
+            <ul style="font-size: 12.5px; color: var(--fg-muted); padding-left: 18px; line-height: 1.6; margin-top: 8px;">
+              <li>Identity checked with National NIN verification</li>
+              <li>Direct customer reviews and verified ratings</li>
+              <li>Zero middleman markups or platform fees</li>
+            </ul>
+          </div>
+
+        </aside>
+
+      </div>
+
+      <!-- NEARBY RECOMMENDED ARTISANS -->
+      <section class="nearby-section">
+        <div class="section-header" style="text-align: left; margin-bottom: 24px;">
+          <span class="badge-pill">Recommendations</span>
+          <h2>Other Verified Professionals Nearby</h2>
+          <p>Explore other top-rated artisans available in your region</p>
+        </div>
+        <div class="nearby-grid" id="nearby-providers-container">
+          <!-- Rendered dynamically -->
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- ==================================================
+       MODALS: LIGHTBOX & WRITE A REVIEW
+       ================================================== -->
+
+  <!-- Fullscreen Portfolio Lightbox Modal -->
+  <div class="lightbox-overlay" id="portfolio-lightbox" aria-hidden="true" role="dialog">
+    <div class="lightbox-dialog">
+      <button class="lightbox-close-btn" id="lightbox-close-btn" aria-label="Close lightbox">✕</button>
+      <div class="lightbox-banner" id="lightbox-banner">⚡</div>
+      <div class="lightbox-body">
+        <span class="review-service-tag" id="lightbox-tag">Completed Project</span>
+        <h3 id="lightbox-title">Project Title</h3>
+        <p id="lightbox-desc">Project detailed description.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Write A Review Modal -->
+  <div class="review-modal-overlay" id="review-modal" aria-hidden="true" role="dialog">
+    <div class="review-modal-dialog">
+      <div class="review-modal-header">
+        <h3>Write a Review</h3>
+        <button class="lightbox-close-btn" id="review-modal-close" style="position: static; background: var(--muted); color: var(--fg);" aria-label="Close review dialog">✕</button>
+      </div>
+      <form id="review-form">
+        
+        <div class="form-field-group">
+          <label>Your Overall Rating *</label>
+          <div class="star-picker-row" id="star-picker">
+            <button type="button" class="star-pick-btn active" data-val="1">★</button>
+            <button type="button" class="star-pick-btn active" data-val="2">★</button>
+            <button type="button" class="star-pick-btn active" data-val="3">★</button>
+            <button type="button" class="star-pick-btn active" data-val="4">★</button>
+            <button type="button" class="star-pick-btn active" data-val="5">★</button>
+          </div>
+        </div>
+
+        <div class="form-field-group">
+          <label for="rev-author">Your Name *</label>
+          <input type="text" id="rev-author" required placeholder="e.g. Babajide Sanusi" />
+        </div>
+
+        <div class="form-field-group">
+          <label for="rev-location">Your Area / Location *</label>
+          <input type="text" id="rev-location" required placeholder="e.g. Surulere, Lagos" />
+        </div>
+
+        <div class="form-field-group">
+          <label for="rev-service">Service Received *</label>
+          <input type="text" id="rev-service" required placeholder="e.g. Inverter Installation, Pipe Repair" />
+        </div>
+
+        <div class="form-field-group">
+          <label for="rev-comment">Your Honest Review *</label>
+          <textarea id="rev-comment" rows="4" required placeholder="Describe the quality of work, punctuality, and pricing..."></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block" style="padding: 14px; margin-top: 8px;">
+          Submit Verified Review
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer" id="footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <a href="index.html" class="logo" aria-label="Lokator home">
+          <div class="logo-mark"><svg width="24" height="24" viewBox="0 0 30 30" fill="none"><path d="M15 2C10.03 2 6 6.03 6 11c0 6.75 9 17 9 17s9-10.25 9-17c0-4.97-4.03-9-9-9z" fill="#006B3F"/><circle cx="15" cy="11" r="4" fill="#D4AF37"/><circle cx="15" cy="11" r="2" fill="#fff"/></svg></div>
+          <span class="logo-text">Lokator</span>
+        </a>
+        <p>Locate skilled hands near you. Nigeria's #1 service provider discovery platform.</p>
+      </div>
+      <div class="footer-cols">
+        <div class="fcol">
+          <h4>Services</h4>
+          <a href="search.html?service=electrician">Electricians</a>
+          <a href="search.html?service=plumber">Plumbers</a>
+          <a href="search.html?service=mechanic">Mechanics</a>
+          <a href="search.html?service=nail-technician">Nail Techs</a>
+          <a href="search.html">All Services</a>
+        </div>
+        <div class="fcol">
+          <h4>Providers</h4>
+          <a href="register.html">Register Free</a>
+          <a href="register.html#pricing">Pricing Plans</a>
+          <a href="register.html#pricing">Verified Badge</a>
+        </div>
+        <div class="fcol">
+          <h4>Company</h4>
+          <a href="index.html">Home</a>
+          <a href="index.html#how-it-works">How It Works</a>
+          <a href="index.html#why-lokator">Why Lokator</a>
+        </div>
+        <div class="fcol">
+          <h4>Legal</h4>
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms of Use</a>
+          <a href="#">Safety</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="container fb-inner">
+        <p>© 2026 Lokator. All rights reserved. Made with ❤️ in Nigeria 🇳🇬</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="categories.js"></script>
+  <script src="supabase-client.js"></script>
+  <script src="profile.js"></script>
+</body>
+</html>

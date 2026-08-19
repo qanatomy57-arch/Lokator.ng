@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Provider Management Dashboard — Lokator</title>
+  <meta name="description" content="Manage your artisan profile, customer leads, pricing guide, availability, and portfolio on Lokator Nigeria." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="dashboard.css" />
+</head>
+<body class="dash-body">
+
+  <!-- ===== TOPBAR ===== -->
+  <header class="dash-topbar" id="dash-topbar">
+    <div class="dash-topbar-inner">
+      <div class="dash-brand-wrap">
+        <a href="index.html" class="logo dash-logo-link">
+          <div class="logo-mark">
+            <svg width="26" height="26" viewBox="0 0 30 30" fill="none">
+              <path d="M15 2C10.03 2 6 6.03 6 11c0 6.75 9 17 9 17s9-10.25 9-17c0-4.97-4.03-9-9-9z" fill="#006B3F"/>
+              <circle cx="15" cy="11" r="4" fill="#D4AF37"/>
+              <circle cx="15" cy="11" r="2" fill="#FFFFFF"/>
+            </svg>
+          </div>
+          <span class="logo-text dash-logo-text">Lokator</span>
+        </a>
+        <span class="dash-portal-badge">Provider Portal</span>
+      </div>
+
+      <div class="dash-topbar-actions">
+        <!-- Live Availability Switch -->
+        <div class="availability-toggle-wrap">
+          <label class="toggle-switch">
+            <input type="checkbox" id="dash-avail-check" checked aria-label="Toggle provider online/busy status" />
+            <span class="slider"></span>
+          </label>
+          <span class="avail-label online" id="dash-avail-text">Online</span>
+        </div>
+
+        <!-- View Public Profile CTA -->
+        <a href="#" class="btn btn-outline btn-view-public-custom" id="btn-view-public" target="_blank">
+          View Public Profile ↗
+        </a>
+
+        <!-- User Snapshot -->
+        <div class="dash-user-snapshot">
+          <div class="dash-avatar-circle" id="top-avatar">AO</div>
+          <div class="dash-user-meta">
+            <span class="dash-user-name" id="top-provider-name">Loading...</span>
+            <span class="dash-user-role" id="top-provider-trade">Artisan</span>
+          </div>
+        </div>
+
+        <!-- Sign Out Button -->
+        <button type="button" class="btn btn-outline btn-signout-custom" id="btn-signout" title="Sign out of provider portal">
+          Sign Out
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== DASHBOARD LAYOUT ===== -->
+  <div class="dash-layout">
+    <!-- Sidebar -->
+    <aside class="dash-sidebar" id="dash-sidebar">
+      <button type="button" class="dash-nav-item active" data-tab="overview">
+        <span class="nav-icon">📊</span>
+        <span>Overview & Leads</span>
+      </button>
+      <button type="button" class="dash-nav-item" data-tab="profile">
+        <span class="nav-icon">✏️</span>
+        <span>Edit Profile Info</span>
+      </button>
+      <button type="button" class="dash-nav-item" data-tab="services">
+        <span class="nav-icon">🛠️</span>
+        <span>Skills & Services</span>
+      </button>
+      <button type="button" class="dash-nav-item" data-tab="pricing">
+        <span class="nav-icon">💰</span>
+        <span>Pricing Guide</span>
+      </button>
+      <button type="button" class="dash-nav-item" data-tab="hours">
+        <span class="nav-icon">⏰</span>
+        <span>Working Hours</span>
+      </button>
+      <button type="button" class="dash-nav-item" data-tab="portfolio">
+        <span class="nav-icon">🖼️</span>
+        <span>Work Portfolio</span>
+      </button>
+      <button type="button" class="dash-nav-item" data-tab="reviews">
+        <span class="nav-icon">⭐</span>
+        <span>Customer Reviews</span>
+      </button>
+      <button type="button" class="dash-nav-item" data-tab="subscription">
+        <span class="nav-icon">🛡️</span>
+        <span>Trust & Subscription</span>
+      </button>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="dash-content" id="dash-content">
+
+      <!-- ===== TAB 1: OVERVIEW ===== -->
+      <div class="dash-tab-panel active" id="tab-overview">
+        <!-- KPI Ribbon -->
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-icon-box">👁️</div>
+            <div class="kpi-info">
+              <h3>Profile Views (Est.)</h3>
+              <div class="kpi-val" id="kpi-views">0</div>
+            </div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-icon-box">💬</div>
+            <div class="kpi-info">
+              <h3>WhatsApp Leads (Est.)</h3>
+              <div class="kpi-val" id="kpi-leads">0</div>
+            </div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-icon-box">🛠️</div>
+            <div class="kpi-info">
+              <h3>Completed Jobs</h3>
+              <div class="kpi-val" id="kpi-jobs">0</div>
+            </div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-icon-box gold">★</div>
+            <div class="kpi-info">
+              <h3>Rating</h3>
+              <div class="kpi-val" id="kpi-rating">5.0</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dash-overview-grid">
+          <!-- Ratings Summary -->
+          <div class="dash-card-section">
+            <div class="dash-section-header">
+              <div>
+                <h2>Reputation Breakdown</h2>
+                <p>Based on verified customer feedback</p>
+              </div>
+              <div class="ov-rating-val" id="ov-rating-badge">★ 5.0</div>
+            </div>
+            <div class="rating-breakdown-wrap" id="ov-rating-bars">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+          <!-- Quick Actions & Share -->
+          <div class="dash-card-section">
+            <div class="dash-section-header">
+              <div>
+                <h2>Customer WhatsApp Link</h2>
+                <p>Direct link for clients to message you</p>
+              </div>
+            </div>
+            <p class="share-link-desc">
+              Share your direct booking link on WhatsApp, Instagram, or Facebook. Clients can view your verified status and contact you instantly.
+            </p>
+            <div class="share-link-row">
+              <input type="text" id="share-link-input" readonly class="share-link-input" placeholder="Your profile link" aria-label="Your public profile share link" title="Public profile share link" />
+              <button type="button" class="btn btn-outline btn-copy-share" id="btn-copy-share">Copy</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Reviews in Overview -->
+        <div class="dash-card-section">
+          <div class="dash-section-header">
+            <div>
+              <h2>Recent Customer Inquiries & Reviews</h2>
+              <p>Real feedback from local clients</p>
+            </div>
+            <button type="button" class="btn btn-outline btn-view-all-revs" onclick="switchTab('reviews')">View All Reviews →</button>
+          </div>
+          <div class="dash-reviews-list" id="ov-reviews-list">
+            <!-- Rendered via JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== TAB 2: EDIT PROFILE ===== -->
+      <div class="dash-tab-panel" id="tab-profile">
+        <div class="dash-card-section">
+          <div class="dash-section-header">
+            <div>
+              <h2>Edit Profile Information</h2>
+              <p>Update your contact details, trade title, and bio</p>
+            </div>
+          </div>
+
+          <form id="form-edit-profile" class="dash-form-grid">
+            <div class="form-group">
+              <label for="edit-fname">First Name *</label>
+              <input type="text" id="edit-fname" required />
+            </div>
+
+            <div class="form-group">
+              <label for="edit-lname">Last Name *</label>
+              <input type="text" id="edit-lname" required />
+            </div>
+
+            <div class="form-group">
+              <label for="edit-bname">Business / Trade Name</label>
+              <input type="text" id="edit-bname" placeholder="e.g. Okafor Master Electricals" />
+            </div>
+
+            <div class="form-group">
+              <label for="edit-trade">Primary Trade Title *</label>
+              <input type="text" id="edit-trade" required placeholder="e.g. Master Electrician & Solar Specialist" />
+            </div>
+
+            <div class="form-group">
+              <label for="edit-phone">WhatsApp / Phone Number *</label>
+              <input type="tel" id="edit-phone" required placeholder="+2348012345678" />
+            </div>
+
+            <div class="form-group">
+              <label for="edit-email">Email Address</label>
+              <input type="email" id="edit-email" placeholder="adebayo@lokator.ng" />
+            </div>
+
+            <div class="form-group">
+              <label for="edit-state">State *</label>
+              <input type="text" id="edit-state" required placeholder="e.g. Lagos" />
+            </div>
+
+            <div class="form-group">
+              <label for="edit-city">City / LGA *</label>
+              <input type="text" id="edit-city" required placeholder="e.g. Surulere" />
+            </div>
+
+            <div class="form-group">
+              <label for="edit-area">Area / Neighborhood *</label>
+              <input type="text" id="edit-area" required placeholder="e.g. Surulere, Lagos" />
+            </div>
+
+            <div class="form-group">
+              <label for="edit-exp">Years of Experience</label>
+              <input type="number" id="edit-exp" min="1" max="50" />
+            </div>
+
+            <div class="form-group">
+              <label for="edit-price">Starting / Inspection Price</label>
+              <input type="text" id="edit-price" placeholder="₦4,000 / inspection" />
+            </div>
+
+            <div class="form-group">
+              <label for="edit-response">Response Time</label>
+              <input type="text" id="edit-response" placeholder="~15 mins" />
+            </div>
+
+            <div class="form-group dash-form-full">
+              <label for="edit-bio">Professional Bio & Service Description</label>
+              <textarea id="edit-bio" rows="4" placeholder="Describe your skills, tools, and craftsmanship guarantee..."></textarea>
+            </div>
+
+            <div class="dash-form-full dash-form-actions">
+              <button type="submit" class="btn btn-primary" id="btn-save-profile">
+                Save Profile Changes
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- ===== TAB 3: SERVICES & SKILLS ===== -->
+      <div class="dash-tab-panel" id="tab-services">
+        <div class="dash-card-section">
+          <div class="dash-section-header">
+            <div>
+              <h2>Skills & Services Offered</h2>
+              <p>Add specific tasks so clients searching natural terms find you immediately</p>
+            </div>
+          </div>
+
+          <div class="dash-skills-body">
+            <label class="dash-active-services-lbl">Active Services List</label>
+            <div class="skills-chips-list dash-skills-chips-wrap" id="dash-services-chips">
+              <!-- Chips rendered via JS -->
+            </div>
+
+            <div class="dash-add-skill-row">
+              <input type="text" id="dash-new-service-input" class="dash-add-skill-input" placeholder="e.g. Inverter Installation, Fault Tracing" />
+              <button type="button" class="btn btn-primary" id="btn-add-dash-service">+ Add Skill</button>
+            </div>
+          </div>
+
+          <div class="dash-services-actions">
+            <button type="button" class="btn btn-primary" id="btn-save-services">Save Skills to Profile</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== TAB 4: PRICING GUIDE ===== -->
+      <div class="dash-tab-panel" id="tab-pricing">
+        <div class="dash-card-section">
+          <div class="dash-section-header">
+            <div>
+              <h2>Service Pricing Guide & Rate Cards</h2>
+              <p>Transparent rates build high trust with Nigerian customers</p>
+            </div>
+          </div>
+
+          <div class="pricing-items-wrap" id="pricing-items-list">
+            <!-- Rendered via JS -->
+          </div>
+
+          <div class="pricing-actions-row">
+            <button type="button" class="btn btn-outline" id="btn-add-price-row">+ Add Pricing Item</button>
+            <button type="button" class="btn btn-primary" id="btn-save-pricing">Save Rate Card</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== TAB 5: WORKING HOURS ===== -->
+      <div class="dash-tab-panel" id="tab-hours">
+        <div class="dash-card-section">
+          <div class="dash-section-header">
+            <div>
+              <h2>Working Hours & Emergency Availability</h2>
+              <p>Let customers know when you are open for bookings</p>
+            </div>
+          </div>
+
+          <form id="form-edit-hours" class="dash-form-grid">
+            <div class="form-group dash-form-full">
+              <label for="hours-weekday">Monday – Friday</label>
+              <input type="text" id="hours-weekday" value="8:00 AM – 7:00 PM" placeholder="e.g. 8:00 AM – 7:00 PM" />
+            </div>
+
+            <div class="form-group dash-form-full">
+              <label for="hours-saturday">Saturday</label>
+              <input type="text" id="hours-saturday" value="8:00 AM – 6:00 PM" placeholder="e.g. 8:00 AM – 6:00 PM" />
+            </div>
+
+            <div class="form-group dash-form-full">
+              <label for="hours-sunday">Sunday / Emergency Availability</label>
+              <input type="text" id="hours-sunday" value="Emergency Callouts (24/7)" placeholder="e.g. Emergency Callouts (24/7)" />
+            </div>
+
+            <div class="dash-form-full dash-hours-actions">
+              <button type="submit" class="btn btn-primary" id="btn-save-hours">Save Working Hours</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- ===== TAB 6: PORTFOLIO ===== -->
+      <div class="dash-tab-panel" id="tab-portfolio">
+        <div class="dash-card-section">
+          <div class="dash-section-header">
+            <div>
+              <h2>Completed Project Portfolio</h2>
+              <p>Showcase past craftsmanship to win more high-paying clients</p>
+            </div>
+            <button type="button" class="btn btn-primary" id="btn-open-portfolio-modal">+ Add Project</button>
+          </div>
+
+          <div class="dash-portfolio-grid" id="dash-portfolio-list">
+            <!-- Rendered via JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== TAB 7: REVIEWS ===== -->
+      <div class="dash-tab-panel" id="tab-reviews">
+        <div class="dash-card-section">
+          <div class="dash-section-header">
+            <div>
+              <h2>All Customer Reviews & Ratings</h2>
+              <p>Public verified reviews appearing on your profile</p>
+            </div>
+          </div>
+
+          <div class="dash-reviews-list" id="all-reviews-list">
+            <!-- Rendered via JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== TAB 8: SUBSCRIPTION & TRUST ===== -->
+      <div class="dash-tab-panel" id="tab-subscription">
+        <div class="dash-card-section">
+          <div class="dash-section-header">
+            <div>
+              <h2>Trust Badges & Membership Tier</h2>
+              <p>Preview badge tiers. In production, live plan upgrades are verified through payment webhooks.</p>
+            </div>
+          </div>
+
+          <div class="plan-tier-grid">
+            <div class="dash-plan-card" id="tier-basic">
+              <div class="price-label">Basic</div>
+              <div class="tier-price">₦0<span class="tier-price-period">/mo</span></div>
+              <p class="tier-desc">Standard directory listing and direct WhatsApp contact.</p>
+              <button type="button" class="btn btn-outline btn-block btn-select-tier" data-tier="basic">Active Plan</button>
+            </div>
+
+            <div class="dash-plan-card" id="tier-verified">
+              <div class="price-label price-label-green">Verified Artisan</div>
+              <div class="tier-price-green">₦3,000<span class="tier-price-period">/mo</span></div>
+              <p class="tier-desc">NIN Verified Badge ✓, priority search rank, and customer trust seal.</p>
+              <button type="button" class="btn btn-primary btn-block btn-select-tier" data-tier="verified">Upgrade to Verified</button>
+            </div>
+
+            <div class="dash-plan-card" id="tier-premium">
+              <div class="price-label price-label-gold">Premium Partner</div>
+              <div class="tier-price-gold">₦8,000<span class="tier-price-period">/mo</span></div>
+              <p class="tier-desc">Top Spotlight banner, photo showcase, analytics dashboard.</p>
+              <button type="button" class="btn btn-primary btn-block btn-select-tier" data-tier="premium">Upgrade to Premium</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="dash-toast" id="dash-toast">Notification Message</div>
+
+  <!-- Add Portfolio Item Modal -->
+  <div id="modal-portfolio" class="modal-overlay">
+    <div class="modal-card">
+      <h3 class="modal-title">Add Completed Project</h3>
+      <form id="form-add-portfolio">
+        <div class="form-group">
+          <label for="port-title">Project Title *</label>
+          <input type="text" id="port-title" required placeholder="e.g. 5kVA Solar Inverter Setup" />
+        </div>
+        <div class="form-group">
+          <label for="port-category">Category</label>
+          <input type="text" id="port-category" placeholder="e.g. Electrical Installation" />
+        </div>
+        <div class="form-group">
+          <label for="port-tag">Badge Tag</label>
+          <input type="text" id="port-tag" placeholder="e.g. Verified Work" value="Verified Work" />
+        </div>
+        <div class="form-group">
+          <label for="port-desc">Description</label>
+          <textarea id="port-desc" rows="3" placeholder="Briefly describe what was accomplished..."></textarea>
+        </div>
+        <div class="modal-form-actions">
+          <button type="button" class="btn btn-outline" id="btn-close-modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Add to Portfolio</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="categories.js"></script>
+  <script src="providers-data.js"></script>
+  <script src="supabase-client.js"></script>
+  <script src="dashboard.js"></script>
+</body>
+</html>

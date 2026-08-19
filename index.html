@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lokator — Locate Skilled Hands Near You</title>
+  <meta name="description"
+    content="Lokator connects you with the closest verified artisans and service providers near your location across Nigeria. Find electricians, plumbers, nail techs, tailors and more — instantly." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+  <!-- ===== NAVBAR ===== -->
+  <header class="navbar" id="navbar">
+    <div class="container nav-inner">
+      <a href="index.html" class="logo" id="logo-link">
+        <div class="logo-mark">
+          <svg width="30" height="30" viewBox="0 0 30 30" fill="none">
+            <path d="M15 2C10.03 2 6 6.03 6 11c0 6.75 9 17 9 17s9-10.25 9-17c0-4.97-4.03-9-9-9z" fill="#006B3F" />
+            <circle cx="15" cy="11" r="4" fill="#D4AF37" />
+            <circle cx="15" cy="11" r="2" fill="#FFFFFF" />
+          </svg>
+        </div>
+        <span class="logo-text">Lokator</span>
+      </a>
+      <nav class="nav-links" id="nav-links">
+        <a href="search.html" class="nav-link">Find Providers</a>
+        <a href="#how-it-works" class="nav-link">How It Works</a>
+        <a href="#categories" class="nav-link">Services</a>
+        <a href="#why-lokator" class="nav-link">Why Lokator</a>
+        <a href="register.html" class="btn btn-outline" id="nav-register">List Your Skill</a>
+        <a href="search.html" class="btn btn-primary" id="nav-find">Search Directory</a>
+      </nav>
+      <button class="hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ===== HERO VERTICAL VIDEO SCROLL ===== -->
+  <section class="hero-scroll-wrapper" id="hero">
+
+    <!-- Sticky Progress & Navigation System -->
+    <div class="hero-timeline-sticky">
+      <nav class="hero-timeline-nav" id="hero-timeline-nav" aria-label="Hero video slides navigation">
+        <!-- Video Position Counter -->
+        <div class="hero-nav-counter" id="hero-nav-counter" aria-live="polite" aria-atomic="true">
+          <span class="hnc-current" id="hnc-current">01</span>
+          <span class="hnc-sep">/</span>
+          <span class="hnc-total" id="hnc-total">09</span>
+        </div>
+        <!-- Vertical Step Indicator Dots -->
+        <div class="timeline-steps" id="timeline-steps" role="tablist" aria-label="Hero video slides">
+          <button class="t-step active" data-step="0" role="tab" aria-selected="true" aria-current="true" aria-label="Go to hero video 1: Marketplace Overview" title="Marketplace Overview">
+            <span class="t-indicator"><span class="t-fill"></span></span>
+            <span class="t-tooltip"><span>⚡</span> Overview</span>
+          </button>
+          <button class="t-step" data-step="1" role="tab" aria-selected="false" aria-current="false" aria-label="Go to hero video 2: Electrical Services" title="Electrical Services">
+            <span class="t-indicator"><span class="t-fill"></span></span>
+            <span class="t-tooltip"><span>⚡</span> Electrician</span>
+          </button>
+          <button class="t-step" data-step="2" role="tab" aria-selected="false" aria-current="false" aria-label="Go to hero video 3: Plumbing Services" title="Plumbing Services">
+            <span class="t-indicator"><span class="t-fill"></span></span>
+            <span class="t-tooltip"><span>🔧</span> Plumber</span>
+          </button>
+          <button class="t-step" data-step="3" role="tab" aria-selected="false" aria-current="false" aria-label="Go to hero video 4: Beauty & Nail Services" title="Beauty & Nail Services">
+            <span class="t-indicator"><span class="t-fill"></span></span>
+            <span class="t-tooltip"><span>💅</span> Beauty</span>
+          </button>
+          <button class="t-step" data-step="4" role="tab" aria-selected="false" aria-current="false" aria-label="Go to hero video 5: Fashion & Tailoring" title="Fashion & Tailoring">
+            <span class="t-indicator"><span class="t-fill"></span></span>
+            <span class="t-tooltip"><span>🧵</span> Tailoring</span>
+          </button>
+          <button class="t-step" data-step="5" role="tab" aria-selected="false" aria-current="false" aria-label="Go to hero video 6: Auto Services" title="Auto Services">
+            <span class="t-indicator"><span class="t-fill"></span></span>
+            <span class="t-tooltip"><span>🔩</span> Mechanic</span>
+          </button>
+          <button class="t-step" data-step="6" role="tab" aria-selected="false" aria-current="false" aria-label="Go to hero video 7: Carpentry & Woodwork" title="Carpentry & Woodwork">
+            <span class="t-indicator"><span class="t-fill"></span></span>
+            <span class="t-tooltip"><span>🪚</span> Carpenter</span>
+          </button>
+          <button class="t-step" data-step="7" role="tab" aria-selected="false" aria-current="false" aria-label="Go to hero video 8: Home & Cleaning Services" title="Home & Cleaning Services">
+            <span class="t-indicator"><span class="t-fill"></span></span>
+            <span class="t-tooltip"><span>✨</span> Cleaning</span>
+          </button>
+          <button class="t-step" data-step="8" role="tab" aria-selected="false" aria-current="false" aria-label="Go to hero video 9: Nationwide Pro Network" title="Nationwide Pro Network">
+            <span class="t-indicator"><span class="t-fill"></span></span>
+            <span class="t-tooltip"><span>🇳🇬</span> Finale</span>
+          </button>
+        </div>
+      </nav>
+    </div>
+
+    <!-- SLIDE 0: MASTER MARKETPLACE -->
+    <div class="hero-slide is-active" data-index="0">
+      <video class="hero-video" id="video-0" autoplay muted loop playsinline webkit-playsinline preload="auto">
+        <source src="hero/01_master_marketplace.mp4" type="video/mp4" />
+      </video>
+      <div class="hero-video-scrim"></div>
+      <div class="hero-ambient-glow"></div>
+      <div class="container hero-slide-content">
+        <div class="story-card" id="panel-0">
+          <div class="hero-badge">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
+            Nigeria's #1 Service Locator
+          </div>
+          <h1 class="hero-title">Find Trusted Skilled <span class="highlight">Professionals</span> Near You.</h1>
+          <p class="hero-sub">Discover verified local professionals for the services you need — right in your area.
+            Connect directly with zero middleman fees.</p>
+
+          <!-- LOCATION SEARCH CARD -->
+          <div class="search-card" id="search-card">
+            <div class="search-row">
+              <div class="search-field">
+                <svg class="field-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2">
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="m21 21-4.35-4.35" />
+                </svg>
+                <input type="text" id="service-input" placeholder="What do you need? e.g. plumber, nail tech..."
+                  aria-label="Search for a service" />
+              </div>
+              <div class="search-divider"></div>
+              <div class="search-field">
+                <svg class="field-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                  <circle cx="12" cy="10" r="3" />
+                </svg>
+                <input type="text" id="location-input" placeholder="Your location or area..."
+                  aria-label="Enter your location" />
+                <button class="gps-btn" id="gps-btn" aria-label="Use my current location" title="Use my GPS location">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3" />
+                    <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
+                    <circle cx="12" cy="12" r="8" />
+                  </svg>
+                </button>
+              </div>
+              <button class="btn btn-primary search-btn" id="search-btn" aria-label="Find a Professional">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="m21 21-4.35-4.35" />
+                </svg>
+                Find a Professional
+              </button>
+            </div>
+            <div class="quick-tags" aria-label="Quick search tags">
+              <span class="qt-label">Popular:</span>
+              <a href="search.html?service=electrician" class="qtag">⚡ Electrician</a>
+              <a href="search.html?service=plumber" class="qtag">🔧 Plumber</a>
+              <a href="search.html?service=nail-technician" class="qtag">💅 Nail Tech</a>
+              <a href="search.html?service=barber" class="qtag">✂️ Barber</a>
+              <a href="search.html?service=mechanic" class="qtag">🔩 Mechanic</a>
+              <a href="search.html?service=tailor" class="qtag">🧵 Tailor</a>
+            </div>
+          </div>
+
+          <div class="hero-stats">
+            <div class="hstat"><strong>18,000+</strong><span>Providers</span></div>
+            <div class="hstat-sep"></div>
+            <div class="hstat"><strong>36 Cities</strong><span>Covered</span></div>
+            <div class="hstat-sep"></div>
+            <div class="hstat"><strong>100% Free</strong><span>For Customers</span></div>
+          </div>
+
+          <div class="scroll-prompt-indicator" id="scroll-prompt">
+            <span>Scroll to explore services</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 5v14M19 12l-7 7-7-7" />
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 1: ELECTRICIAN -->
+    <div class="hero-slide" data-index="1">
+      <video class="hero-video" id="video-1" muted loop playsinline webkit-playsinline preload="auto">
+        <source src="hero/02_electrician.mp4" type="video/mp4" />
+      </video>
+      <div class="hero-video-scrim"></div>
+      <div class="hero-ambient-glow"></div>
+      <div class="container hero-slide-content">
+        <div class="story-card" id="panel-1">
+          <div class="scene-badge"><span class="scene-badge-icon">⚡</span> ELECTRICAL SERVICES</div>
+          <h2 class="scene-title">Electrical Services</h2>
+          <p class="scene-sub">Find trusted electricians near you.</p>
+          <p class="scene-desc">From complex domestic conduit wiring and inverter solar installations to emergency
+            short-circuit repairs — connect with NIN-verified electrical engineers right in your neighborhood.</p>
+
+          <div class="scene-tags">
+            <span class="stag">⚡ Wiring & Conduit</span>
+            <span class="stag">☀️ Inverter & Solar</span>
+            <span class="stag">🔌 Fault Diagnosis</span>
+            <span class="stag">⚡ Generator Setup</span>
+          </div>
+
+          <div class="scene-meta">
+            <div class="sm-item"><strong>★ 4.9</strong><span>1,420+ Reviews</span></div>
+            <div class="sm-sep"></div>
+            <div class="sm-item"><strong>~15 mins</strong><span>Avg. Response</span></div>
+            <div class="sm-sep"></div>
+            <div class="sm-item"><strong>NIN Verified</strong><span>ID Checked</span></div>
+          </div>
+
+          <div class="scene-actions">
+            <a href="search.html?service=electrician" class="btn btn-primary btn-lg" id="hero-cta-electrician"
+              aria-label="Find Electricians">
+              Find Electricians
+            </a>
+            <a href="tel:+2348012345678" class="btn btn-outline btn-lg call-quick-btn"
+              aria-label="Call Verified Electrician">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path
+                  d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72" />
+              </svg>
+              Call Verified Pro
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 2: PLUMBER -->
+    <div class="hero-slide" data-index="2">
+      <video class="hero-video" id="video-2" muted loop playsinline webkit-playsinline preload="auto">
+        <source src="hero/03_plumber.mp4" type="video/mp4" />
+      </video>
+      <div class="hero-video-scrim"></div>
+      <div class="hero-ambient-glow"></div>
+      <div class="container hero-slide-content">
+        <div class="story-card" id="panel-2">
+          <div class="scene-badge"><span class="scene-badge-icon">🔧</span> PLUMBING SERVICES</div>
+          <h2 class="scene-title">Plumbing Services</h2>
+          <p class="scene-sub">Find skilled plumbers near you.</p>
+          <p class="scene-desc">Burst pipe emergencies, water heater installations, overhead tank pump issues, or
+            bathroom remodels. Lokator connects you with fast-response plumbers within minutes.</p>
+
+          <div class="scene-tags">
+            <span class="stag">🔧 Burst Pipe Repair</span>
+            <span class="stag">🚿 Bathroom Fitting</span>
+            <span class="stag">💧 Pumping Machine</span>
+            <span class="stag">🛠️ Soakaway & Drainage</span>
+          </div>
+
+          <div class="scene-meta">
+            <div class="sm-item"><strong>★ 4.8</strong><span>980+ Reviews</span></div>
+            <div class="sm-sep"></div>
+            <div class="sm-item"><strong>24/7 Service</strong><span>Emergency Ready</span></div>
+            <div class="sm-sep"></div>
+            <div class="sm-item"><strong>Direct Call</strong><span>No Middleman</span></div>
+          </div>
+
+          <div class="scene-actions">
+            <a href="search.html?service=plumber" class="btn btn-primary btn-lg" id="hero-cta-plumber"
+              aria-label="Find Plumbers">
+              Find Plumbers
+            </a>
+            <a href="https://wa.me/2348034567890?text=Hello,%20I%20need%20a%20verified%20plumber%20via%20Lokator"
+              target="_blank" rel="noopener" class="btn btn-outline btn-lg wa-quick-btn"
+              aria-label="WhatsApp Plumber">
+              WhatsApp Plumber
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 3: BEAUTY & NAIL TECH -->
+    <div class="hero-slide" data-index="3">
+      <video class="hero-video" id="video-3" muted loop playsinline webkit-playsinline preload="metadata">
+        <source src="hero/04_beauty_nail.mp4" type="video/mp4" />
+      </video>
+      <div class="hero-video-scrim"></div>
+      <div class="hero-ambient-glow"></div>
+      <div class="container hero-slide-content">
+        <div class="story-card" id="panel-3">
+          <div class="scene-badge"><span class="scene-badge-icon">💅</span> BEAUTY & NAIL SERVICES</div>
+          <h2 class="scene-title">Beauty & Nail Services</h2>
+          <p class="scene-sub">Discover beauty professionals near you.</p>
+          <p class="scene-desc">Get runway-ready nails, luxury pedicures, lashes, and bespoke esthetics. Book
+            certified nail technicians for private salon sessions or convenient home-service visits.</p>
+
+          <div class="scene-tags">
+            <span class="stag">💅 Acrylic & Gel Nails</span>
+            <span class="stag">✨ Pedicure & Manicure</span>
+            <span class="stag">👁️ Lash Extension</span>
+            <span class="stag">🏠 Home Service Available</span>
+          </div>
+
+          <div class="scene-meta">
+            <div class="sm-item"><strong>★ 5.0</strong><span>2,150+ Reviews</span></div>
+            <div class="sm-sep"></div>
+            <div class="sm-item"><strong>Top Rated</strong><span>Verified Salons</span></div>
+            <div class="sm-sep"></div>
+            <div class="sm-item"><strong>Fair Pricing</strong><span>Transparent Rates</span></div>
+          </div>
+
+          <div class="scene-actions">
+            <a href="search.html?service=nail-technician" class="btn btn-primary btn-lg" id="hero-cta-nailtech"
+              aria-label="Find Nail Technicians">
+              Find Nail Technicians
+            </a>
+            <a href="search.html?service=barber" class="btn btn-outline btn-lg" aria-label="Explore Barbers">
+              Explore Barbers Too
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 4: TAILOR & FASHION -->
+    <div class="hero-slide" data-index="4">
+      <video class="hero-video" id="video-4" muted loop playsinline webkit-playsinline preload="metadata">
+        <source src="hero/05_tailor.mp4" type="video/mp4" />
+      </video>
+      <div class="hero-video-scrim"></div>
+      <div class="hero-ambient-glow"></div>
+      <div class="container hero-slide-content">
+        <div class="story-card" id="panel-4">
+          <div class="scene-badge"><span class="scene-badge-icon">🧵</span> FASHION & TAILORING</div>
+          <h2 class="scene-title">Fashion & Tailoring</h2>
+          <p class="scene-sub">Find skilled tailors near you.</p>
+          <p class="scene-desc">From sharp bespoke corporate suits and timeless Agbada / Senegalese native attires to
+            bridal gowns and swift alterations — locate master tailors near your location.</p>
+
+          <div class="scene-tags">
+            <span class="stag">🧵 Agbada & Native Wear</span>
+            <span class="stag">👔 Bespoke Suits</span>
+            <span class="stag">👗 Ankara & Lace Gowns</span>
+            <span class="stag">✂️ Fitting & Alterations</span>
+          </div>
+
+          <div class="scene-meta">
+            <div class="sm-item"><strong>★ 4.9</strong><span>1,830+ Reviews</span></div>
+            <div class="sm-sep"></div>
+            <div class="sm-item"><strong>Custom Fit</strong><span>On-time Delivery</span></div>
+            <div class="sm-sep"></div>
+            <div class="sm-item"><strong>Portfolio</strong><span>Verified Samples</span></div>
+          </div>
+
+          <div class="scene-actions">
+            <a href="search.html?service=tailor" class="btn btn-primary btn-lg" id="hero-cta-tailor"
+              aria-label="Find Tailors">
+              Find Tailors
+            </a>
+            <a href="register.html" class="btn btn-outline btn-lg" aria-label="List as Fashion Designer">
+              List Your Skill
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 5: MECHANIC & AUTO -->
+    <div class="hero-slide" data-index="5">
+      <video class="hero-video" id="video-5" muted loop playsinline webkit-playsinline preload="metadata">
+        <source src="hero/06_mechanic.mp4" type="video/mp4" />
+      </video>
+      <div class="hero-video-scrim"></div>
+      <div class="hero-ambient-glow"></div>
+      <div class="container hero-slide-content">
+        <div class="story-card" id="panel-5">
+          <div class="scene-badge"><span class="scene-badge-icon">🔩</span> AUTO SERVICES</div>
+          <h2 class="scene-title">Auto Services</h2>
+          <p class="scene-sub">Connect with reliable mechanics near you.</p>
+          <p class="scene-desc">Car broke down on the road or needs scheduled maintenance? Find trusted Japanese,
+            European, and American auto specialists, auto-electricians, and diagnostic experts instantly.</p>
+
+          <div class="scene-tags">
+            <span class="stag">💻 Computer Diagnostics</span>
+            <span class="stag">🔩 Engine Overhaul</span>
+            <span class="stag">🛑 Brake & Suspension</span>
+            <span class="stag">⚡ Auto Rewiring & AC</span>
+          </div>
+
+          <div class="scene-meta">
+            <div class="sm-item"><strong>★ 4.8</strong><span>1,290+ Reviews</span></div>
+            <div class="sm-sep"></div>
+            <div class="sm-item"><strong>Roadside Help</strong><span>Swift Dispatch</span></div>
+            <div class="sm-sep"></div>
+            <div class="sm-item"><strong>Honest Quotes</strong><span>No Overcharging</span></div>
+          </div>
+
+          <div class="scene-actions">
+            <a href="search.html?service=mechanic" class="btn btn-primary btn-lg" id="hero-cta-mechanic"
+              aria-label="Find Mechanics">
+              Find Mechanics
+            </a>
+            <a href="tel:+2348055667788" class="btn btn-outline btn-lg" aria-label="Emergency Auto Call">
+              Emergency Auto Call
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 6: CARPENTER -->
+    <div class="hero-slide" data-index="6">
+      <video class="hero-video" id="video-6" muted loop playsinline webkit-playsinline preload="metadata">
+        <source src="hero/07_carpenter.mp4" type="video/mp4" />
+      </video>
+      <div class="hero-video-scrim"></div>
+      <div class="hero-ambient-glow"></div>
+      <div class="container hero-slide-content">
+        <div class="story-card" id="panel-6">
+          <div class="scene-badge"><span class="scene-badge-icon">🪚</span> CARPENTRY</div>
+          <h2 class="scene-title">Carpentry & Woodwork</h2>
+          <p class="scene-sub">Find skilled carpenters near you.</p>
+          <p class="scene-desc">Build durable kitchen cabinets, custom master-bedroom wardrobes, quality hardwood
+            doors, roofing trusses, and bespoke modern office furniture crafted to perfection.</p>
+
+          <div class="scene-tags">
+            <span class="stag">🪑 Custom Furniture</span>
+            <span class="stag">🚪 Hardwood Doors</span>
+            <span class="stag">🍳 Modular Kitchens</span>
+            <span class="stag">🏠 Roofing & Ceilings</span>
+          </div>
+
+          <div class="scene-meta">
+            <div class="sm-item"><strong>★ 4.9</strong><span>870+ Reviews</span></div>
+            <div class="sm-sep"></div>
+            <div class="sm-item"><strong>Solid Timber</strong><span>Quality Materials</span></div>
+            <div class="sm-sep"></div>
+            <div class="sm-item"><strong>Custom Finish</strong><span>Modern Designs</span></div>
+          </div>
+
+          <div class="scene-actions">
+            <a href="search.html?service=carpenter" class="btn btn-primary btn-lg" id="hero-cta-carpenter"
+              aria-label="Find Carpenters">
+              Find Carpenters
+            </a>
+            <a href="search.html?service=painter" class="btn btn-outline btn-lg" aria-label="Find Painters">
+              Find Painters
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 7: CLEANING PROS -->
+    <div class="hero-slide" data-index="7">
+      <video class="hero-video" id="video-7" muted loop playsinline webkit-playsinline preload="metadata">
+        <source src="hero/08_cleaner.mp4" type="video/mp4" />
+      </video>
+      <div class="hero-video-scrim"></div>
+      <div class="hero-ambient-glow"></div>
+      <div class="container hero-slide-content">
+        <div class="story-card" id="panel-7">
+          <div class="scene-badge"><span class="scene-badge-icon">✨</span> CLEANING SERVICES</div>
+          <h2 class="scene-title">Home & Cleaning Services</h2>
+          <p class="scene-sub">Find trusted cleaning professionals near you.</p>
+          <p class="scene-desc">Sparkling post-construction deep cleanings, routine apartment housekeeping, fumigation
+            & pest elimination, and certified laundry dry-cleaning specialists near you.</p>
+
+          <div class="scene-tags">
+            <span class="stag">✨ Deep Home Cleaning</span>
+            <span class="stag">🏢 Post-Construction</span>
+            <span class="stag">🐜 Fumigation & Pest Control</span>
+            <span class="stag">👔 Laundry & Dry Clean</span>
+          </div>
+
+          <div class="scene-meta">
+            <div class="sm-item"><strong>★ 4.9</strong><span>1,640+ Reviews</span></div>
+            <div class="sm-sep"></div>
+            <div class="sm-item"><strong>Eco-Friendly</strong><span>Safe Supplies</span></div>
+            <div class="sm-sep"></div>
+            <div class="sm-item"><strong>Vetted Staff</strong><span>Background Checked</span></div>
+          </div>
+
+          <div class="scene-actions">
+            <a href="search.html?service=cleaner" class="btn btn-primary btn-lg" id="hero-cta-cleaner"
+              aria-label="Find Cleaners">
+              Find Cleaners
+            </a>
+            <a href="search.html?service=caterer" class="btn btn-outline btn-lg" aria-label="Find Caterers">
+              Find Caterers Too
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 8: FINALE COMMUNITY -->
+    <div class="hero-slide" data-index="8">
+      <video class="hero-video" id="video-8" muted loop playsinline webkit-playsinline preload="metadata">
+        <source src="hero/09_finale_community.mp4" type="video/mp4" />
+      </video>
+      <div class="hero-video-scrim"></div>
+      <div class="hero-ambient-glow"></div>
+      <div class="container hero-slide-content">
+        <div class="story-card" id="panel-8">
+          <div class="scene-badge"><span class="scene-badge-icon">🇳🇬</span> Nationwide Pro Network</div>
+          <h2 class="scene-title">Find Professionals For Your Home</h2>
+          <p class="scene-sub">Every verified skill you need, right in your neighborhood.</p>
+          <p class="scene-desc">Over 18,000 artisans across Lagos, Abuja, Port Harcourt, Ibadan, Kano, and 36 states
+            are ready to deliver quality craftsmanship directly to your doorstep.</p>
+
+          <div class="finale-cat-pills">
+            <a href="search.html?service=electrician" class="f-pill">⚡ Electricians</a>
+            <a href="search.html?service=plumber" class="f-pill">🔧 Plumbers</a>
+            <a href="search.html?service=nail-technician" class="f-pill">💅 Beauty & Nails</a>
+            <a href="search.html?service=tailor" class="f-pill">🧵 Tailors</a>
+            <a href="search.html?service=mechanic" class="f-pill">🔩 Mechanics</a>
+            <a href="search.html?service=carpenter" class="f-pill">🪚 Carpenters</a>
+            <a href="search.html?service=cleaner" class="f-pill">✨ Cleaners</a>
+            <a href="search.html?service=painter" class="f-pill">🎨 Painters</a>
+            <a href="search.html?service=welder" class="f-pill">🔥 Welders</a>
+          </div>
+
+          <div class="hero-cta-group">
+            <a href="search.html" class="btn btn-primary btn-lg" id="hero-finale-find"
+              aria-label="Find a Professional">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.35-4.35" />
+              </svg>
+              Find a Professional
+            </a>
+            <a href="register.html" class="btn btn-gold btn-lg" id="hero-finale-register"
+              aria-label="List Your Skill">
+              List Your Skill — Free
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ===== HOW IT WORKS ===== -->
+  <section class="how-it-works section-pad" id="how-it-works">
+    <div class="container">
+      <div class="section-header">
+        <span class="badge-pill">How It Works</span>
+        <h2>Connect with Skilled Hands in 3 Steps</h2>
+        <p>No signup needed for customers. Just search, find, and connect.</p>
+      </div>
+      <div class="steps-row">
+        <div class="step" id="step-1">
+          <div class="step-num">1</div>
+          <div class="step-icon"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="1.5">
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.35-4.35" />
+            </svg></div>
+          <h3>Search a Service</h3>
+          <p>Type what you need — plumber, nail tech, mechanic — and your location.</p>
+        </div>
+        <div class="step-arrow" aria-hidden="true"><svg width="32" height="16" viewBox="0 0 32 16" fill="none">
+            <path d="M0 8h28M22 2l6 6-6 6" stroke="#D4AF37" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round" />
+          </svg></div>
+        <div class="step" id="step-2">
+          <div class="step-num">2</div>
+          <div class="step-icon"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="1.5">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg></div>
+          <h3>See Nearest Providers</h3>
+          <p>Results sorted by distance — the closest verified hands show up first.</p>
+        </div>
+        <div class="step-arrow" aria-hidden="true"><svg width="32" height="16" viewBox="0 0 32 16" fill="none">
+            <path d="M0 8h28M22 2l6 6-6 6" stroke="#D4AF37" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round" />
+          </svg></div>
+        <div class="step" id="step-3">
+          <div class="step-num">3</div>
+          <div class="step-icon"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="1.5">
+              <path
+                d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72" />
+            </svg></div>
+          <h3>Call or WhatsApp</h3>
+          <p>Connect directly with the provider — via phone call or WhatsApp. No middleman.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CATEGORIES ===== -->
+  <section class="categories section-pad bg-muted" id="categories">
+    <div class="container">
+      <div class="section-header">
+        <span class="badge-pill">Services</span>
+        <h2>15+ Service Categories</h2>
+        <p>Whatever you need done — there's a skilled hand near you</p>
+      </div>
+      <div class="cat-grid">
+        <a href="search.html?service=electrician" class="cat-item" id="cat-electrician"><span
+            class="cat-emoji">⚡</span><span>Electricians</span></a>
+        <a href="search.html?service=plumber" class="cat-item" id="cat-plumber"><span
+            class="cat-emoji">🔧</span><span>Plumbers</span></a>
+        <a href="search.html?service=mechanic" class="cat-item" id="cat-mechanic"><span
+            class="cat-emoji">🔩</span><span>Mechanics</span></a>
+        <a href="search.html?service=tailor" class="cat-item" id="cat-tailor"><span
+            class="cat-emoji">🧵</span><span>Tailors</span></a>
+        <a href="search.html?service=nail-technician" class="cat-item" id="cat-nailtech"><span
+            class="cat-emoji">💅</span><span>Nail Techs</span></a>
+        <a href="search.html?service=barber" class="cat-item" id="cat-barber"><span
+            class="cat-emoji">✂️</span><span>Barbers</span></a>
+        <a href="search.html?service=carpenter" class="cat-item" id="cat-carpenter"><span
+            class="cat-emoji">🪚</span><span>Carpenters</span></a>
+        <a href="search.html?service=painter" class="cat-item" id="cat-painter"><span
+            class="cat-emoji">🎨</span><span>Painters</span></a>
+        <a href="search.html?service=welder" class="cat-item" id="cat-welder"><span
+            class="cat-emoji">🔥</span><span>Welders</span></a>
+        <a href="search.html?service=photographer" class="cat-item" id="cat-photographer"><span
+            class="cat-emoji">📸</span><span>Photographers</span></a>
+        <a href="search.html?service=caterer" class="cat-item" id="cat-caterer"><span
+            class="cat-emoji">🍽️</span><span>Caterers</span></a>
+        <a href="search.html?service=cleaner" class="cat-item" id="cat-laundry"><span
+            class="cat-emoji">✨</span><span>Cleaners</span></a>
+        <a href="search.html?service=phone-repair" class="cat-item" id="cat-phonerepair"><span
+            class="cat-emoji">📱</span><span>Phone Repair</span></a>
+        <a href="search.html?service=dispatch" class="cat-item" id="cat-dispatch"><span
+            class="cat-emoji">🏍️</span><span>Dispatch</span></a>
+        <a href="search.html" class="cat-item cat-item-more" id="cat-all"><span class="cat-emoji">➕</span><span>View
+            All</span></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== WHY LOKATOR ===== -->
+  <section class="why section-pad" id="why-lokator">
+    <div class="container">
+      <div class="section-header">
+        <span class="badge-pill">Why Lokator</span>
+        <h2>Why 200,000+ Nigerians Trust Lokator</h2>
+        <p>We're solving the #1 problem: finding trusted skilled people near you</p>
+      </div>
+      <div class="why-grid">
+        <div class="why-card" id="why-1">
+          <div class="why-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg></div>
+          <h3>Location-Based Discovery</h3>
+          <p>GPS-powered results show you the closest service providers first. No wasted time searching.</p>
+        </div>
+        <div class="why-card" id="why-2">
+          <div class="why-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg></div>
+          <h3>NIN-Verified Providers</h3>
+          <p>Every verified provider has confirmed their identity with NIN. Your safety, guaranteed.</p>
+        </div>
+        <div class="why-card" id="why-3">
+          <div class="why-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2">
+              <path
+                d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72" />
+            </svg></div>
+          <h3>Direct Connection</h3>
+          <p>Call or WhatsApp the provider directly. No middleman, no app fees, no commission taken.</p>
+        </div>
+        <div class="why-card" id="why-4">
+          <div class="why-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg></div>
+          <h3>100% Free for Customers</h3>
+          <p>Search, browse, and connect as many times as you want — always free, always unlimited.</p>
+        </div>
+        <div class="why-card" id="why-5">
+          <div class="why-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+            </svg></div>
+          <h3>Ratings & Reviews</h3>
+          <p>Read honest reviews from real customers before you connect. No fake ratings.</p>
+        </div>
+        <div class="why-card" id="why-6">
+          <div class="why-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+              <line x1="8" y1="21" x2="16" y2="21" />
+              <line x1="12" y1="17" x2="12" y2="21" />
+            </svg></div>
+          <h3>Works Everywhere</h3>
+          <p>Optimized for slow networks and low-end phones. Works on 2G, 3G, 4G — any device.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== TOP PROVIDERS ===== -->
+  <section class="top-providers section-pad bg-muted" id="providers">
+    <div class="container">
+      <div class="section-header">
+        <span class="badge-pill">Featured</span>
+        <h2>Top-Rated Providers Near Lagos</h2>
+        <p>These verified professionals are trusted by hundreds of customers</p>
+      </div>
+      <div class="tp-grid">
+        <div class="tp-card" id="tp-1">
+          <div class="tp-top">
+            <a href="profile.html?id=1" class="tp-card-link">
+              <div class="tp-avatar tpa-1">AO</div>
+            </a>
+            <div class="tp-details">
+              <a href="profile.html?id=1" class="tp-card-link"><strong>Adebayo Okafor</strong></a>
+              <span class="verified-badge sm"><svg width="10" height="10" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg> Verified</span>
+            </div>
+          </div>
+          <span class="tp-trade">⚡ Master Electrician</span>
+          <div class="tp-rating">★★★★★ <span>4.9 (214)</span></div>
+          <span class="tp-loc">📍 Surulere, Lagos · 0.8 km</span>
+          <div class="tp-actions">
+            <a href="tel:+2348012345678" class="action-btn call-btn sm">📞 Call</a>
+            <a href="https://wa.me/2348012345678?text=Hello%20Adebayo,%20I%20saw%20your%20profile%20on%20Lokator"
+              target="_blank" rel="noopener" class="action-btn wa-btn sm">💬 WhatsApp</a>
+            <a href="profile.html?id=1" class="action-btn profile-btn sm">View Profile</a>
+          </div>
+        </div>
+        <div class="tp-card tp-featured" id="tp-2">
+          <span class="tp-featured-label">⭐ Top Rated</span>
+          <div class="tp-top">
+            <a href="profile.html?id=2" class="tp-card-link">
+              <div class="tp-avatar tpa-2">CI</div>
+            </a>
+            <div class="tp-details">
+              <a href="profile.html?id=2" class="tp-card-link"><strong>Chidinma Ikenna</strong></a>
+              <span class="verified-badge sm"><svg width="10" height="10" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg> Verified</span>
+            </div>
+          </div>
+          <span class="tp-trade">💅 Nail Technician</span>
+          <div class="tp-rating">★★★★★ <span>5.0 (389)</span></div>
+          <span class="tp-loc">📍 Lekki, Lagos · 1.2 km</span>
+          <div class="tp-actions">
+            <a href="tel:+2348098765432" class="action-btn call-btn sm">📞 Call</a>
+            <a href="https://wa.me/2348098765432?text=Hello%20Chidinma,%20I%20saw%20your%20profile%20on%20Lokator"
+              target="_blank" rel="noopener" class="action-btn wa-btn sm">💬 WhatsApp</a>
+            <a href="profile.html?id=2" class="action-btn profile-btn sm">View Profile</a>
+          </div>
+        </div>
+        <div class="tp-card" id="tp-3">
+          <div class="tp-top">
+            <a href="profile.html?id=4" class="tp-card-link">
+              <div class="tp-avatar tpa-3">FK</div>
+            </a>
+            <div class="tp-details">
+              <a href="profile.html?id=4" class="tp-card-link"><strong>Fatima Kawu</strong></a>
+              <span class="verified-badge sm"><svg width="10" height="10" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg> Verified</span>
+            </div>
+          </div>
+          <span class="tp-trade">🧵 Fashion Tailor</span>
+          <div class="tp-rating">★★★★★ <span>4.8 (176)</span></div>
+          <span class="tp-loc">📍 Wuse, Abuja · 1.5 km</span>
+          <div class="tp-actions">
+            <a href="tel:+2348055667788" class="action-btn call-btn sm">📞 Call</a>
+            <a href="https://wa.me/2348055667788?text=Hello%20Fatima,%20I%20saw%20your%20profile%20on%20Lokator"
+              target="_blank" rel="noopener" class="action-btn wa-btn sm">💬 WhatsApp</a>
+            <a href="profile.html?id=4" class="action-btn profile-btn sm">View Profile</a>
+          </div>
+        </div>
+      </div>
+      <div class="section-cta">
+        <a href="search.html" class="btn btn-outline btn-lg" id="browse-all">Browse All Providers in Directory →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== TESTIMONIALS ===== -->
+  <section class="testimonials section-pad" id="testimonials">
+    <div class="container">
+      <div class="section-header">
+        <span class="badge-pill">Testimonials</span>
+        <h2>What Nigerians Are Saying</h2>
+      </div>
+      <div class="testi-grid">
+        <div class="testi-card" id="testi-1">
+          <div class="testi-stars">★★★★★</div>
+          <p>"My pipe burst at 11pm. I searched 'plumber' on Lokator and called someone 0.5km from my house. He was
+            there in 10 minutes. This app is a lifesaver!"</p>
+          <div class="testi-author">
+            <div class="testi-av tav1">TN</div>
+            <div><strong>Taiwo Nwachukwu</strong><span>Lagos</span></div>
+          </div>
+        </div>
+        <div class="testi-card testi-hl" id="testi-2">
+          <div class="testi-stars">★★★★★</div>
+          <p>"I registered as a nail tech on Lokator and in my first week I got 7 new customers — all from my area. I
+            didn't pay one naira. My business is booming!"</p>
+          <div class="testi-author">
+            <div class="testi-av tav2">AB</div>
+            <div><strong>Amaka Bello</strong><span>Abuja</span></div>
+          </div>
+        </div>
+        <div class="testi-card" id="testi-3">
+          <div class="testi-stars">★★★★★</div>
+          <p>"No more asking neighbours 'you know any good mechanic?' Lokator shows me verified people near me with
+            ratings. Best thing since WhatsApp in Nigeria!"</p>
+          <div class="testi-author">
+            <div class="testi-av tav3">SK</div>
+            <div><strong>Sani Kabiru</strong><span>Kano</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CTA PROVIDER ===== -->
+  <section class="cta-provider" id="cta-provider">
+    <div class="cta-pattern" aria-hidden="true"></div>
+    <div class="container cta-inner">
+      <div class="cta-text">
+        <h2>Got a Skill? Get Found.</h2>
+        <p>Join 18,000+ providers on Lokator. List your skill for FREE and start getting customers near you — today.</p>
+        <ul class="cta-list">
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="3">
+              <polyline points="20 6 9 17 4 12" />
+            </svg> Free to register</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="3">
+              <polyline points="20 6 9 17 4 12" />
+            </svg> Get customers near your location</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="3">
+              <polyline points="20 6 9 17 4 12" />
+            </svg> Upgrade for verified badge</li>
+        </ul>
+      </div>
+      <div class="cta-btns">
+        <a href="register.html" class="btn btn-gold btn-lg" id="cta-register">Register as Provider — Free</a>
+        <a href="#how-it-works" class="btn btn-white-outline btn-lg" id="cta-learn">Learn More</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer" id="footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <a href="index.html" class="logo" aria-label="Lokator home">
+          <div class="logo-mark"><svg width="24" height="24" viewBox="0 0 30 30" fill="none">
+              <path d="M15 2C10.03 2 6 6.03 6 11c0 6.75 9 17 9 17s9-10.25 9-17c0-4.97-4.03-9-9-9z" fill="#006B3F" />
+              <circle cx="15" cy="11" r="4" fill="#D4AF37" />
+              <circle cx="15" cy="11" r="2" fill="#fff" />
+            </svg></div>
+          <span class="logo-text">Lokator</span>
+        </a>
+        <p>Locate skilled hands near you. Nigeria's #1 service provider discovery platform.</p>
+        <div class="social-row">
+          <a href="#" class="soc-link" aria-label="Twitter"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <path
+                d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5" />
+            </svg></a>
+          <a href="#" class="soc-link" aria-label="Instagram"><svg width="16" height="16" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+              <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+            </svg></a>
+          <a href="#" class="soc-link" aria-label="LinkedIn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z" />
+              <rect x="2" y="9" width="4" height="12" />
+              <circle cx="4" cy="4" r="2" />
+            </svg></a>
+        </div>
+      </div>
+      <div class="footer-cols">
+        <div class="fcol">
+          <h4>Services</h4>
+          <a href="search.html?service=electrician">Electricians</a>
+          <a href="search.html?service=plumber">Plumbers</a>
+          <a href="search.html?service=mechanic">Mechanics</a>
+          <a href="search.html?service=nail-technician">Nail Techs</a>
+          <a href="search.html">All Services</a>
+        </div>
+        <div class="fcol">
+          <h4>Providers</h4>
+          <a href="register.html">Register Free</a>
+          <a href="register.html#pricing">Pricing</a>
+          <a href="register.html#pricing">Verified Badge</a>
+          <a href="search.html">Directory</a>
+        </div>
+        <div class="fcol">
+          <h4>Company</h4>
+          <a href="#">About</a>
+          <a href="#">Blog</a>
+          <a href="#">Careers</a>
+          <a href="#">Contact</a>
+        </div>
+        <div class="fcol">
+          <h4>Legal</h4>
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms of Use</a>
+          <a href="#">Safety</a>
+          <a href="#">Help Centre</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="container fb-inner">
+        <p>© 2026 Lokator. All rights reserved. Made with ❤️ in Nigeria 🇳🇬</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="categories.js"></script>
+  <script src="supabase-client.js"></script>
+  <script src="app.js"></script>
+</body>
+
+</html>

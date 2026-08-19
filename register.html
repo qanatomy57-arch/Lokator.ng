@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register as Provider — Lokator</title>
+  <meta name="description" content="Join 18,000+ service providers on Lokator. Register for free, get verified, and start receiving customers near your location today." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .nav-login-highlight {
+      color: var(--green);
+      font-weight: 700;
+    }
+    .reg-pwd-wrap {
+      position: relative;
+    }
+    .reg-pwd-input {
+      padding-right: 40px;
+    }
+    .btn-toggle-reg-pwd {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--fg-muted);
+    }
+    .reg-login-prompt {
+      text-align: center;
+      margin-top: 14px;
+      font-size: 13.5px;
+      color: var(--fg-muted);
+    }
+    .reg-login-link {
+      color: var(--green);
+      font-weight: 700;
+      text-decoration: none;
+    }
+    .reg-form-note-spaced {
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== NAVBAR ===== -->
+  <header class="navbar" id="navbar">
+    <div class="container nav-inner">
+      <a href="index.html" class="logo" id="logo-link">
+        <div class="logo-mark"><svg width="30" height="30" viewBox="0 0 30 30" fill="none"><path d="M15 2C10.03 2 6 6.03 6 11c0 6.75 9 17 9 17s9-10.25 9-17c0-4.97-4.03-9-9-9z" fill="#006B3F"/><circle cx="15" cy="11" r="4" fill="#D4AF37"/><circle cx="15" cy="11" r="2" fill="#FFFFFF"/></svg></div>
+        <span class="logo-text">Lokator</span>
+      </a>
+      <nav class="nav-links" id="nav-links">
+        <a href="index.html" class="nav-link">Home</a>
+        <a href="search.html" class="nav-link">Find Providers</a>
+        <a href="#pricing" class="nav-link">Pricing</a>
+        <a href="login.html" class="nav-link nav-login-highlight">Provider Login</a>
+      </nav>
+      <button class="hamburger" id="hamburger" aria-label="Open menu"><span></span><span></span><span></span></button>
+    </div>
+  </header>
+
+  <!-- ===== REGISTER HERO ===== -->
+  <section class="reg-hero" id="reg-hero">
+    <div class="container reg-hero-inner">
+      <div class="reg-hero-text">
+        <span class="badge-pill">For Providers</span>
+        <h1>List Your Skill. Get Customers Near You.</h1>
+        <p>Join 18,000+ artisans and service providers already getting new customers through Lokator — completely free to start.</p>
+        <div class="reg-perks">
+          <div class="perk"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#006B3F" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span>Free basic listing</span></div>
+          <div class="perk"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#006B3F" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span>Appear in local search results</span></div>
+          <div class="perk"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#006B3F" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span>Customers call or WhatsApp you directly</span></div>
+          <div class="perk"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#006B3F" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span>Upgrade for verified badge & premium profile</span></div>
+        </div>
+      </div>
+
+      <!-- REGISTRATION FORM -->
+      <div class="reg-form-card" id="reg-form-card">
+        <h2>Register as Provider</h2>
+        <p class="form-subtitle">Takes less than 3 minutes. Start getting customers today.</p>
+        <form id="reg-form" class="reg-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="fname">First Name *</label>
+              <input type="text" id="fname" name="fname" required placeholder="e.g. Adebayo" />
+            </div>
+            <div class="form-group">
+              <label for="lname">Last Name *</label>
+              <input type="text" id="lname" name="lname" required placeholder="e.g. Okafor" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="phone">Phone Number (WhatsApp) *</label>
+            <div class="phone-input">
+              <span class="phone-prefix">+234</span>
+              <input type="tel" id="phone" name="phone" required placeholder="8012345678" pattern="[0-9]{10,11}" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="email">Email Address *</label>
+              <input type="email" id="email" name="email" required placeholder="your@email.com (for dashboard login)" autocomplete="email" />
+            </div>
+            <div class="form-group">
+              <label for="password">Create Password *</label>
+              <div class="reg-pwd-wrap">
+                <input type="password" id="password" name="password" required placeholder="Min 6 characters" minlength="6" autocomplete="new-password" class="reg-pwd-input" />
+                <button type="button" id="toggle-reg-pwd" class="btn-toggle-reg-pwd" aria-label="Toggle password visibility">👁️</button>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="skill-input">Skills & Services Provided *</label>
+            <div class="skills-chips-wrapper" id="skills-chips-wrap">
+              <div class="skills-chips-list" id="skills-chips-list">
+                <!-- Dynamic Chips -->
+              </div>
+              <div class="skills-input-row">
+                <input type="text" id="skill-input" placeholder="Type any skill/service (e.g. Recording Studio, Plumber, Makeup) and press Enter..." autocomplete="off" />
+                <button type="button" class="btn-add-skill" id="btn-add-skill">+ Add</button>
+              </div>
+            </div>
+            <div class="popular-skills-hints" id="popular-hints">
+              <span class="hints-label">Popular suggestions:</span>
+              <span class="popular-skill-pill" data-skill="⚡ Electrician">⚡ Electrician</span>
+              <span class="popular-skill-pill" data-skill="🔧 Plumber">🔧 Plumber</span>
+              <span class="popular-skill-pill" data-skill="🎙️ Recording Studio">🎙️ Recording Studio</span>
+              <span class="popular-skill-pill" data-skill="📸 Photographer">📸 Photographer</span>
+              <span class="popular-skill-pill" data-skill="💄 Makeup Artist">💄 Makeup Artist</span>
+              <span class="popular-skill-pill" data-skill="☀️ Solar Installer">☀️ Solar Installer</span>
+              <span class="popular-skill-pill" data-skill="👗 Tailor">👗 Tailor</span>
+              <span class="popular-skill-pill" data-skill="💅 Nail Technician">💅 Nail Tech</span>
+              <span class="popular-skill-pill" data-skill="💻 Computer Repair">💻 Computer Repair</span>
+            </div>
+            <input type="hidden" id="service" name="service" required />
+          </div>
+          <div class="form-group">
+            <label for="location">Your Location / Area *</label>
+            <div class="loc-input-wrap">
+              <input type="text" id="location" name="location" required placeholder="e.g. Surulere, Lagos" />
+              <button type="button" class="gps-btn-form" id="gps-btn-form" aria-label="Use my GPS location">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="8"/></svg>
+                Use GPS
+              </button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="experience">Years of Experience *</label>
+            <select id="experience" name="experience" required>
+              <option value="">Select...</option>
+              <option value="0-1">Less than 1 year</option>
+              <option value="1-3">1–3 years</option>
+              <option value="3-5">3–5 years</option>
+              <option value="5-10">5–10 years</option>
+              <option value="10+">10+ years</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="bio">Short Bio (optional)</label>
+            <textarea id="bio" name="bio" rows="3" placeholder="Tell customers about your skills and experience..."></textarea>
+          </div>
+          <div class="form-check">
+            <input type="checkbox" id="terms" name="terms" required />
+            <label for="terms">I agree to Lokator's <a href="#">Terms of Use</a> and <a href="#">Privacy Policy</a></label>
+          </div>
+          <button type="submit" class="btn btn-primary btn-lg btn-block" id="submit-btn">
+            Register & Create Dashboard
+          </button>
+          <div class="reg-login-prompt">
+            Already have an account? <a href="login.html" class="reg-login-link">Sign In Here →</a>
+          </div>
+          <p class="form-note reg-form-note-spaced">Free basic listing. Upgrade to Verified anytime.</p>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PRICING ===== -->
+  <section class="pricing section-pad bg-muted" id="pricing">
+    <div class="container">
+      <div class="section-header">
+        <span class="badge-pill">Plans</span>
+        <h2>Choose Your Plan</h2>
+        <p>Start free. Upgrade when you're ready to grow.</p>
+      </div>
+      <div class="pricing-grid">
+        <div class="price-card" id="plan-free">
+          <div class="price-label">Basic</div>
+          <div class="price-amount">₦0<span>/month</span></div>
+          <p class="price-desc">Get discovered by customers near you</p>
+          <ul class="price-features">
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#006B3F" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Listed in search results</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#006B3F" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Location-based discovery</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#006B3F" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Call & WhatsApp connect</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#006B3F" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Customer reviews</li>
+            <li class="feat-disabled"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Verified badge</li>
+            <li class="feat-disabled"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Priority placement</li>
+          </ul>
+          <a href="#reg-form-card" class="btn btn-outline btn-block" id="select-free">Get Started Free</a>
+        </div>
+
+        <div class="price-card price-featured" id="plan-verified">
+          <div class="price-popular">Most Popular</div>
+          <div class="price-label">Verified</div>
+          <div class="price-amount">₦3,000<span>/month</span></div>
+          <p class="price-desc">Stand out with a verified badge & more visibility</p>
+          <ul class="price-features">
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#006B3F" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Everything in Basic</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> <strong>Verified Badge ✓</strong></li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> <strong>Priority in search results</strong></li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#006B3F" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> NIN-verified trust seal</li>
+            <li class="feat-disabled"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Portfolio gallery</li>
+            <li class="feat-disabled"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Analytics dashboard</li>
+          </ul>
+          <a href="#reg-form-card" class="btn btn-primary btn-block" id="select-verified">Get Verified</a>
+        </div>
+
+        <div class="price-card" id="plan-premium">
+          <div class="price-label">Premium</div>
+          <div class="price-amount">₦8,000<span>/month</span></div>
+          <p class="price-desc">Maximum visibility & premium profile features</p>
+          <ul class="price-features">
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#006B3F" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Everything in Verified</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> <strong>Photo portfolio gallery</strong></li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> <strong>Featured in top results</strong></li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> <strong>Analytics dashboard</strong></li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#006B3F" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Highlighted reviews</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#006B3F" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Priority support</li>
+          </ul>
+          <a href="#reg-form-card" class="btn btn-outline btn-block" id="select-premium">Go Premium</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer" id="footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <a href="index.html" class="logo"><div class="logo-mark"><svg width="24" height="24" viewBox="0 0 30 30" fill="none"><path d="M15 2C10.03 2 6 6.03 6 11c0 6.75 9 17 9 17s9-10.25 9-17c0-4.97-4.03-9-9-9z" fill="#006B3F"/><circle cx="15" cy="11" r="4" fill="#D4AF37"/><circle cx="15" cy="11" r="2" fill="#fff"/></svg></div><span class="logo-text">Lokator</span></a>
+        <p>Locate skilled hands near you. Nigeria's #1 service provider discovery platform.</p>
+      </div>
+      <div class="footer-cols">
+        <div class="fcol"><h4>Quick Links</h4><a href="index.html">Home</a><a href="index.html#categories">Services</a><a href="#">About</a><a href="#">Contact</a></div>
+        <div class="fcol"><h4>Legal</h4><a href="#">Privacy Policy</a><a href="#">Terms of Use</a><a href="#">Safety</a></div>
+      </div>
+    </div>
+    <div class="footer-bottom"><div class="container fb-inner"><p>© 2026 Lokator. All rights reserved. Made with ❤️ in Nigeria 🇳🇬</p></div></div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="categories.js"></script>
+  <script src="supabase-client.js"></script>
+  <script>
+    // Navbar scroll
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => { navbar.classList.toggle('scrolled', window.scrollY > 20); }, { passive: true });
+    // Hamburger
+    const hamburger = document.getElementById('hamburger');
+    const navLinks = document.getElementById('nav-links');
+    hamburger.addEventListener('click', () => { const o = navLinks.classList.toggle('open'); hamburger.setAttribute('aria-expanded', o); });
+    navLinks.querySelectorAll('a').forEach(l => l.addEventListener('click', () => { navLinks.classList.remove('open'); hamburger.setAttribute('aria-expanded','false'); }));
+    
+    // Skills & Services Chips Manager
+    const skillInput = document.getElementById('skill-input');
+    const btnAddSkill = document.getElementById('btn-add-skill');
+    const chipsList = document.getElementById('skills-chips-list');
+    const serviceHidden = document.getElementById('service');
+    const popularHints = document.getElementById('popular-hints');
+
+    let providerSkills = [];
+
+    function cleanSkillName(name) {
+      return name.replace(/^[\p{Emoji}\u200d\uFE0F\s]+/u, '').trim();
+    }
+
+    function renderChips() {
+      if (!chipsList) return;
+      chipsList.innerHTML = providerSkills.map((s, idx) => `
+        <div class="skill-chip">
+          <span>${escapeHtml(s)}</span>
+          <span class="skill-chip-remove" data-idx="${parseInt(idx, 10)}" title="Remove skill">×</span>
+        </div>
+      `).join('');
+
+      if (serviceHidden) {
+        serviceHidden.value = providerSkills.join(', ');
+      }
+    }
+
+    function addSkill(name) {
+      if (!name) return;
+      const clean = cleanSkillName(name);
+      if (!clean) return;
+      if (!providerSkills.some(s => s.toLowerCase() === clean.toLowerCase())) {
+        providerSkills.push(clean);
+        renderChips();
+      }
+      if (skillInput) skillInput.value = '';
+    }
+
+    function removeSkill(idx) {
+      providerSkills.splice(idx, 1);
+      renderChips();
+    }
+
+    if (btnAddSkill && skillInput) {
+      btnAddSkill.addEventListener('click', (e) => {
+        e.preventDefault();
+        addSkill(skillInput.value.trim());
+      });
+
+      skillInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ',') {
+          e.preventDefault();
+          addSkill(skillInput.value.trim());
+        }
+      });
+    }
+
+    if (chipsList) {
+      chipsList.addEventListener('click', (e) => {
+        const removeBtn = e.target.closest('.skill-chip-remove');
+        if (removeBtn && removeBtn.dataset.idx != null) {
+          removeSkill(parseInt(removeBtn.dataset.idx, 10));
+        }
+      });
+    }
+
+    if (popularHints) {
+      popularHints.addEventListener('click', (e) => {
+        const pill = e.target.closest('.popular-skill-pill');
+        if (pill && pill.dataset.skill) {
+          addSkill(pill.dataset.skill);
+        }
+      });
+    }
+
+    // Prefill from URL query params (e.g. ?service=Recording%20Studio)
+    const urlParams = new URLSearchParams(window.location.search);
+    const prefillService = urlParams.get('service') || urlParams.get('q');
+    if (prefillService) {
+      addSkill(decodeURIComponent(prefillService));
+    }
+
+    // GPS button
+    const gpsBtn = document.getElementById('gps-btn-form');
+    const locInput = document.getElementById('location');
+    let userCoords = null;
+
+    if (gpsBtn) {
+      gpsBtn.addEventListener('click', () => {
+        if ('geolocation' in navigator) {
+          gpsBtn.textContent = 'Detecting...';
+          navigator.geolocation.getCurrentPosition(
+            pos => {
+              userCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+              locInput.value = `${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`;
+              gpsBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Located';
+            },
+            () => { gpsBtn.textContent = 'GPS failed'; }
+          );
+        }
+      });
+    }
+
+    // Password visibility toggle
+    const toggleRegPwd = document.getElementById('toggle-reg-pwd');
+    const pwdInput = document.getElementById('password');
+    if (toggleRegPwd && pwdInput) {
+      toggleRegPwd.addEventListener('click', () => {
+        const isPwd = pwdInput.type === 'password';
+        pwdInput.type = isPwd ? 'text' : 'password';
+        toggleRegPwd.textContent = isPwd ? '🙈' : '👁️';
+      });
+    }
+
+    // Form submit to Supabase
+    const form = document.getElementById('reg-form');
+    if (form) {
+      form.addEventListener('submit', async e => {
+        e.preventDefault();
+
+        // Ensure at least one skill is specified
+        if (providerSkills.length === 0 && skillInput && skillInput.value.trim()) {
+          addSkill(skillInput.value.trim());
+        }
+
+        if (providerSkills.length === 0) {
+          alert('Please add at least one skill or service you provide.');
+          if (skillInput) skillInput.focus();
+          return;
+        }
+
+        const email = document.getElementById('email') ? document.getElementById('email').value.trim() : '';
+        const password = document.getElementById('password') ? document.getElementById('password').value : '';
+
+        if (!email || !password || password.length < 6) {
+          alert('Please provide a valid email and a password of at least 6 characters.');
+          return;
+        }
+
+        const btn = document.getElementById('submit-btn');
+        btn.textContent = 'Creating Account & Profile...';
+        btn.disabled = true;
+
+        const primarySkill = providerSkills[0];
+
+        const formData = {
+          fname: document.getElementById('fname').value,
+          lname: document.getElementById('lname').value,
+          phone: document.getElementById('phone').value,
+          email: email,
+          service: primarySkill,
+          trade: providerSkills.join(' & '),
+          skills: providerSkills,
+          location: document.getElementById('location').value,
+          experience: document.getElementById('experience').value,
+          bio: document.getElementById('bio') ? document.getElementById('bio').value : '',
+          lat: userCoords ? userCoords.lat : null,
+          lng: userCoords ? userCoords.lng : null
+        };
+
+        try {
+          const authRes = await LokatorDB.auth.signUp({
+            email: email,
+            password: password,
+            options: {
+              data: {
+                first_name: formData.fname,
+                last_name: formData.lname,
+                phone: formData.phone,
+                role: 'provider'
+              }
+            }
+          }, formData);
+
+          if (authRes.error) {
+            console.warn('Auth note:', authRes.error);
+          }
+
+          const registered = (authRes.data && authRes.data.provider) || await LokatorDB.registerProvider(formData);
+          const serviceSlug = registered.primary_category_slug || encodeURIComponent(primarySkill);
+          
+          form.innerHTML = `
+            <div class="success-msg" style="text-align: center; padding: 24px;">
+              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#006B3F" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="16 8 10 16 7 13"/></svg>
+              <h3 style="font-size: 22px; font-weight: 800; color: var(--fg); margin: 12px 0 6px;">Welcome to Lokator, ${escapeHtml(registered.first_name || 'Partner')}! 🎉</h3>
+              <p style="color: var(--fg-muted); margin-bottom: 20px; font-size: 14.5px;">Your provider profile and secured authentication account are now active in the database.</p>
+              
+              <div style="display: flex; flex-direction: column; gap: 10px; max-width: 320px; margin: 0 auto;">
+                <a href="dashboard.html" class="btn btn-primary btn-block">Go to Provider Dashboard →</a>
+                <a href="profile.html?id=${encodeURIComponent(registered.id)}" class="btn btn-outline btn-block">View Your Live Profile</a>
+                <a href="search.html?service=${serviceSlug}&location=${encodeURIComponent(registered.city || '')}" class="btn btn-outline btn-block">Find Yourself in Directory</a>
+              </div>
+            </div>
+          `;
+        } catch (err) {
+          console.error('Registration failed:', err);
+          btn.disabled = false;
+          btn.textContent = 'Register & Create Dashboard';
+          alert('Could not complete registration: ' + (err.message || 'Please check your inputs and try again.'));
+        }
+      });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,2418 @@
+// ============================================================================
+// LOKATOR.NG — SUPABASE CLIENT & DATA ACCESS LAYER (supabase-client.js)
+// Real database driver for Provider Registration, Search, and Profiles
+// Connected Project: hvxosxhnxauiqrhpyuur (https://hvxosxhnxauiqrhpyuur.supabase.co)
+// ============================================================================
+
+(function (global) {
+  'use strict';
+
+  // 1. SUPABASE CLIENT CONFIGURATION & PROJECT TARGETING
+  // Primary Project Reference ID: hvxosxhnxauiqrhpyuur
+  const TARGET_PROJECT_REF = 'hvxosxhnxauiqrhpyuur';
+  const TARGET_DEFAULT_URL = `https://${TARGET_PROJECT_REF}.supabase.co`;
+
+  // Dynamic configuration resolution (supports window config, global envs, or target project default)
+  const userConfig = (typeof window !== 'undefined' && window.LOKATOR_SUPABASE_CONFIG) || {};
+  const envUrl = (typeof window !== 'undefined' && (window.LOKATOR_SUPABASE_URL || window.SUPABASE_URL)) ||
+                 (typeof process !== 'undefined' && process.env && (process.env.LOKATOR_SUPABASE_URL || process.env.SUPABASE_URL));
+  const envKey = (typeof window !== 'undefined' && (window.LOKATOR_SUPABASE_ANON_KEY || window.LOKATOR_SUPABASE_PUBLISHABLE_KEY || window.SUPABASE_ANON_KEY || window.SUPABASE_PUBLISHABLE_KEY)) ||
+                 (typeof process !== 'undefined' && process.env && (process.env.LOKATOR_SUPABASE_ANON_KEY || process.env.LOKATOR_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_PUBLISHABLE_KEY));
+
+  const CONFIG = {
+    url: userConfig.url || envUrl || TARGET_DEFAULT_URL,
+    anonKey: userConfig.anonKey || userConfig.publishableKey || envKey || '',
+    projectRef: TARGET_PROJECT_REF,
+    schema: userConfig.schema || 'public'
+  };
+
+  let supabaseInstance = null;
+
+  // Initialize official Supabase JS SDK if present and publishable/anon key is configured
+  if (typeof global.supabase !== 'undefined' && typeof global.supabase.createClient === 'function' && CONFIG.url && CONFIG.anonKey) {
+    try {
+      supabaseInstance = global.supabase.createClient(CONFIG.url, CONFIG.anonKey, {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true
+        }
+      });
+    } catch (e) {
+      console.warn('Supabase SDK initialization notice:', e);
+    }
+  }
+
+  function isRemoteActive() {
+    return Boolean(supabaseInstance && CONFIG.anonKey && CONFIG.anonKey.trim().length > 10);
+  }
+
+  // 2. HAVERSINE REAL DISTANCE CALCULATION
+  function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
+    if (!lat1 || !lon1 || !lat2 || !lon2) return null;
+    const R = 6371; // Earth radius in km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return Number((R * c).toFixed(1));
+  }
+
+  // 2.1 CENTRALIZED HTML ESCAPING UTILITY (XSS Prevention)
+  /**
+   * Safely converts HTML special characters into their inert entity equivalents.
+   * Prevents stored and reflected XSS attacks across all dynamic template literals.
+   *
+   * @param {*} value - Value to escape (string, number, null, undefined)
+   * @returns {string} Safe HTML-escaped string
+   */
+  function escapeHtml(value) {
+    if (value === null || value === undefined) return '';
+    const str = String(value);
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  // Export globally
+  global.escapeHtml = escapeHtml;
+  if (typeof window !== 'undefined') {
+    window.escapeHtml = escapeHtml;
+  }
+
+  // 3. PERSISTENT STORAGE DRIVER (Fallback & In-Memory Supabase-Compatible DB)
+  // Ensures seamless offline-first execution, testability, and real DB synchronization
+  const DB_STORE_KEY = 'lokator_supabase_providers_db';
+  const DB_SERVICES_KEY = 'lokator_supabase_services_db';
+  const DB_REVIEWS_KEY = 'lokator_supabase_reviews_db';
+  const DB_PORTFOLIO_KEY = 'lokator_supabase_portfolio_db';
+  const DB_WORKING_HOURS_KEY = 'lokator_supabase_working_hours_db';
+  const DB_AUTH_SESSION_KEY = 'lokator_supabase_auth_session';
+  const DB_USERS_KEY = 'lokator_supabase_users_db';
+
+  // 3.0 CENTRAL WRITE RESULT MODEL (Phase 4.5 Standard)
+  function createWriteResult({
+    status = 'REMOTE_SUCCESS',
+    operationId = null,
+    entity = 'unknown',
+    entityId = null,
+    message = '',
+    remoteConfirmed = false,
+    queued = false,
+    data = null,
+    error = null
+  }) {
+    const opId = operationId || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : ('op_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9)));
+    const defaultMsg = status === 'REMOTE_SUCCESS' 
+      ? 'Saved successfully.' 
+      : (status === 'OFFLINE_PENDING' 
+          ? "Saved offline — will sync when you're back online." 
+          : (error && error.message ? error.message : 'Operation failed.'));
+
+    const envelope = {
+      status,
+      operationId: opId,
+      entity,
+      entityId,
+      message: message || defaultMsg,
+      remoteConfirmed: Boolean(remoteConfirmed),
+      queued: Boolean(queued),
+      data: data,
+      error: error ? { message: error.message || String(error), code: error.code || error.status || null } : null
+    };
+
+    // Backwards-compatibility: allow direct property access if data is an object
+    if (data && typeof data === 'object' && !Array.isArray(data)) {
+      return Object.assign(Object.create(envelope), data, envelope);
+    }
+    return envelope;
+  }
+
+  // 3.0.1 MUTATION SANITIZER (Blocks privileged/sensitive data from outbox)
+  function sanitizeOutboxPayload(type, payload) {
+    if (!payload || typeof payload !== 'object') return {};
+    const clean = { ...payload };
+    const protectedFields = [
+      'password', 'token', 'secret', 'service' + '_role', 'api_key',
+      'is_verified', 'nin_verified', 'rating', 'reviews_count', 
+      'subscription_plan', 'completed_jobs', 'user_id', 'role',
+      'verification_documents', 'nin_document'
+    ];
+    protectedFields.forEach(f => { delete clean[f]; });
+    return clean;
+  }
+
+  // 3.0.2 TRANSIENT NETWORK ERROR CLASSIFIER
+  function isRetryableNetworkError(error) {
+    if (!error) return true;
+    const msg = (error.message || String(error)).toLowerCase();
+    const code = error.code || error.status;
+
+    if (code === 400 || code === 401 || code === 403 || code === 404 || code === 409 || code === 422 || 
+        code === '42501' || code === '23505' || code === '23503') {
+      return false;
+    }
+    if (msg.includes('permission denied') || msg.includes('violates foreign key') || 
+        msg.includes('violates unique') || msg.includes('not authenticated') || 
+        msg.includes('invalid email') || msg.includes('invalid credentials')) {
+      return false;
+    }
+    return true;
+  }
+
+  // 3.0.3 INDEXEDDB OFFLINE MUTATION OUTBOX (with memory fallback)
+  const IDB_DB_NAME = 'lokator_offline';
+  const IDB_STORE_NAME = 'mutation_outbox';
+  let memoryOutbox = [];
+
+  const outboxManager = {
+    async _getDb() {
+      if (typeof window === 'undefined' || !window.indexedDB) {
+        return null;
+      }
+      return new Promise((resolve) => {
+        try {
+          const req = window.indexedDB.open(IDB_DB_NAME, 1);
+          req.onupgradeneeded = (e) => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains(IDB_STORE_NAME)) {
+              const store = db.createObjectStore(IDB_STORE_NAME, { keyPath: 'id' });
+              store.createIndex('status', 'status', { unique: false });
+              store.createIndex('userId', 'userId', { unique: false });
+              store.createIndex('createdAt', 'createdAt', { unique: false });
+            }
+          };
+          req.onsuccess = (e) => resolve(e.target.result);
+          req.onerror = () => resolve(null);
+        } catch (e) {
+          resolve(null);
+        }
+      });
+    },
+
+    async enqueue(mutation) {
+      const record = {
+        id: mutation.id || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : ('mut_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9))),
+        operationId: mutation.operationId || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : ('op_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9))),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        type: mutation.type,
+        entityId: mutation.entityId || null,
+        payload: sanitizeOutboxPayload(mutation.type, mutation.payload),
+        status: 'PENDING',
+        attempts: 0,
+        lastAttemptAt: null,
+        lastError: null,
+        userId: mutation.userId || null
+      };
+
+      const db = await this._getDb();
+      if (db) {
+        return new Promise((resolve) => {
+          try {
+            const tx = db.transaction(IDB_STORE_NAME, 'readwrite');
+            const store = tx.objectStore(IDB_STORE_NAME);
+            store.put(record);
+            tx.oncomplete = () => resolve(record);
+            tx.onerror = () => {
+              memoryOutbox.push(record);
+              resolve(record);
+            };
+          } catch (e) {
+            memoryOutbox.push(record);
+            resolve(record);
+          }
+        });
+      } else {
+        memoryOutbox.push(record);
+        return record;
+      }
+    },
+
+    async getPending(targetUserId = null) {
+      const db = await this._getDb();
+      if (db) {
+        return new Promise((resolve) => {
+          try {
+            const tx = db.transaction(IDB_STORE_NAME, 'readonly');
+            const store = tx.objectStore(IDB_STORE_NAME);
+            const req = store.getAll();
+            req.onsuccess = () => {
+              const all = req.result || [];
+              const pending = all.filter(m => m.status === 'PENDING' || m.status === 'SYNCING');
+              if (targetUserId) {
+                resolve(pending.filter(m => !m.userId || m.userId === targetUserId));
+              } else {
+                resolve(pending);
+              }
+            };
+            req.onerror = () => resolve(memoryOutbox.filter(m => m.status === 'PENDING' || m.status === 'SYNCING'));
+          } catch (e) {
+            resolve(memoryOutbox.filter(m => m.status === 'PENDING' || m.status === 'SYNCING'));
+          }
+        });
+      } else {
+        return memoryOutbox.filter(m => {
+          const isPend = m.status === 'PENDING' || m.status === 'SYNCING';
+          return targetUserId ? (isPend && (!m.userId || m.userId === targetUserId)) : isPend;
+        });
+      }
+    },
+
+    async updateStatus(id, status, errorInfo = null) {
+      const db = await this._getDb();
+      if (db) {
+        return new Promise((resolve) => {
+          try {
+            const tx = db.transaction(IDB_STORE_NAME, 'readwrite');
+            const store = tx.objectStore(IDB_STORE_NAME);
+            const getReq = store.get(id);
+            getReq.onsuccess = () => {
+              const rec = getReq.result;
+              if (rec) {
+                rec.status = status;
+                rec.updatedAt = new Date().toISOString();
+                rec.lastAttemptAt = new Date().toISOString();
+                rec.attempts = (rec.attempts || 0) + 1;
+                if (errorInfo) rec.lastError = errorInfo;
+                store.put(rec);
+              }
+              resolve(rec);
+            };
+            getReq.onerror = () => resolve(null);
+          } catch (e) {
+            resolve(null);
+          }
+        });
+      } else {
+        const item = memoryOutbox.find(m => m.id === id);
+        if (item) {
+          item.status = status;
+          item.updatedAt = new Date().toISOString();
+          item.lastAttemptAt = new Date().toISOString();
+          item.attempts = (item.attempts || 0) + 1;
+          if (errorInfo) item.lastError = errorInfo;
+        }
+        return item;
+      }
+    },
+
+    async remove(id) {
+      const db = await this._getDb();
+      if (db) {
+        return new Promise((resolve) => {
+          try {
+            const tx = db.transaction(IDB_STORE_NAME, 'readwrite');
+            const store = tx.objectStore(IDB_STORE_NAME);
+            store.delete(id);
+            tx.oncomplete = () => resolve(true);
+            tx.onerror = () => resolve(false);
+          } catch (e) {
+            resolve(false);
+          }
+        });
+      } else {
+        memoryOutbox = memoryOutbox.filter(m => m.id !== id);
+        return true;
+      }
+    },
+
+    async getAll() {
+      const db = await this._getDb();
+      if (db) {
+        return new Promise((resolve) => {
+          try {
+            const tx = db.transaction(IDB_STORE_NAME, 'readonly');
+            const store = tx.objectStore(IDB_STORE_NAME);
+            const req = store.getAll();
+            req.onsuccess = () => resolve(req.result || []);
+            req.onerror = () => resolve([...memoryOutbox]);
+          } catch (e) {
+            resolve([...memoryOutbox]);
+          }
+        });
+      } else {
+        return [...memoryOutbox];
+      }
+    },
+
+    async clear() {
+      const db = await this._getDb();
+      if (db) {
+        return new Promise((resolve) => {
+          try {
+            const tx = db.transaction(IDB_STORE_NAME, 'readwrite');
+            const store = tx.objectStore(IDB_STORE_NAME);
+            store.clear();
+            tx.oncomplete = () => resolve(true);
+            tx.onerror = () => resolve(false);
+          } catch (e) {
+            resolve(false);
+          }
+        });
+      } else {
+        memoryOutbox = [];
+        return true;
+      }
+    }
+  };
+
+  // 3.0.4 SYNCHRONIZATION ENGINE & CONNECTION CONTROLLER
+  let isSyncingLock = false;
+  let connectionState = (typeof navigator !== 'undefined' && navigator.onLine === false) ? 'OFFLINE' : 'ONLINE';
+  const connectionListeners = new Set();
+
+  function notifyConnectionListeners(state, details = {}) {
+    connectionState = state;
+    connectionListeners.forEach(fn => {
+      try {
+        fn(state, details);
+      } catch (err) {
+        console.warn('Connection listener error:', err);
+      }
+    });
+    updateConnectionUI(state, details);
+  }
+
+  function updateConnectionUI(state, details = {}) {
+    if (typeof document === 'undefined') return;
+
+    let banner = document.getElementById('lokator-global-conn-indicator');
+    if (!banner && document.body) {
+      banner = document.createElement('aside');
+      banner.id = 'lokator-global-conn-indicator';
+      banner.setAttribute('aria-live', 'polite');
+      banner.setAttribute('role', 'status');
+      banner.className = 'lokator-conn-badge';
+      document.body.appendChild(banner);
+    }
+
+    if (!banner) return;
+
+    if (state === 'OFFLINE') {
+      banner.innerHTML = `<span class="conn-dot offline"></span><span>Offline — showing cached data</span>`;
+      banner.className = 'lokator-conn-badge show offline';
+    } else if (state === 'SYNCING') {
+      banner.innerHTML = `<span class="conn-dot syncing"></span><span>Syncing changes…</span>`;
+      banner.className = 'lokator-conn-badge show syncing';
+    } else if (state === 'SYNCED') {
+      banner.innerHTML = `<span class="conn-dot synced"></span><span>All changes synced (${details.synced || 1})</span>`;
+      banner.className = 'lokator-conn-badge show synced';
+      setTimeout(() => {
+        if (connectionState === 'ONLINE') banner.className = 'lokator-conn-badge';
+      }, 3500);
+    } else if (state === 'SYNC_FAILED') {
+      banner.innerHTML = `<span class="conn-dot failed"></span><span>Some changes could not be synced</span>`;
+      banner.className = 'lokator-conn-badge show failed';
+    } else {
+      banner.className = 'lokator-conn-badge';
+    }
+  }
+
+  if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+    window.addEventListener('online', () => {
+      notifyConnectionListeners('ONLINE');
+      if (typeof LokatorDB !== 'undefined' && LokatorDB.sync) {
+        LokatorDB.sync.processOutbox();
+      }
+    });
+
+    window.addEventListener('offline', () => {
+      notifyConnectionListeners('OFFLINE');
+    });
+  }
+
+  const syncEngine = {
+    isSyncing() {
+      return isSyncingLock;
+    },
+
+    getConnectionState() {
+      return connectionState;
+    },
+
+    onConnectionChange(callback) {
+      if (typeof callback === 'function') {
+        connectionListeners.add(callback);
+      }
+      return {
+        unsubscribe: () => connectionListeners.delete(callback)
+      };
+    },
+
+    async processOutbox() {
+      if (isSyncingLock) {
+        return { status: 'LOCKED', message: 'Sync cycle already in progress' };
+      }
+
+      if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+        notifyConnectionListeners('OFFLINE');
+        return { status: 'OFFLINE', message: 'Cannot sync while offline' };
+      }
+
+      if (!isRemoteActive()) {
+        return { status: 'NO_REMOTE', message: 'Remote Supabase is not active' };
+      }
+
+      isSyncingLock = true;
+      notifyConnectionListeners('SYNCING');
+
+      let syncedCount = 0;
+      let failedCount = 0;
+      let skippedCount = 0;
+
+      try {
+        const userRes = await LokatorDB.auth.getUser();
+        const activeUserId = userRes?.data?.user?.id || null;
+
+        const pending = await outboxManager.getPending();
+
+        for (const mut of pending) {
+          if (mut.userId && activeUserId && mut.userId !== activeUserId) {
+            skippedCount++;
+            continue;
+          }
+
+          await outboxManager.updateStatus(mut.id, 'SYNCING');
+
+          try {
+            let res = null;
+            if (mut.type === 'PROFILE_UPDATE') {
+              res = await supabaseInstance
+                .from('providers')
+                .update(mut.payload)
+                .eq('id', mut.entityId);
+            } else if (mut.type === 'SERVICES_UPDATE') {
+              if (Array.isArray(mut.payload.skills)) {
+                res = await supabaseInstance
+                  .from('providers')
+                  .update({ skills: mut.payload.skills })
+                  .eq('id', mut.entityId);
+              }
+            } else if (mut.type === 'PORTFOLIO_ADD') {
+              res = await supabaseInstance
+                .from('portfolio_items')
+                .insert([mut.payload]);
+            } else if (mut.type === 'PORTFOLIO_DELETE') {
+              res = await supabaseInstance
+                .from('portfolio_items')
+                .delete()
+                .eq('id', mut.entityId);
+            } else if (mut.type === 'WORKING_HOURS_UPDATE') {
+              res = await supabaseInstance
+                .from('working_hours')
+                .upsert([mut.payload]);
+            } else if (mut.type === 'REVIEW_CREATE') {
+              res = await supabaseInstance
+                .from('reviews')
+                .insert([mut.payload]);
+            }
+
+            if (res && res.error) {
+              throw res.error;
+            }
+
+            await outboxManager.remove(mut.id);
+            syncedCount++;
+          } catch (err) {
+            const isRetryable = isRetryableNetworkError(err);
+            if (isRetryable) {
+              await outboxManager.updateStatus(mut.id, 'PENDING', err.message || 'Transient network error');
+            } else {
+              await outboxManager.updateStatus(mut.id, 'FAILED', err.message || 'Permanent database rejection');
+              failedCount++;
+            }
+          }
+        }
+      } catch (globalErr) {
+        console.warn('Sync engine global exception:', globalErr);
+      } finally {
+        isSyncingLock = false;
+      }
+
+      if (failedCount > 0) {
+        notifyConnectionListeners('SYNC_FAILED', { synced: syncedCount, failed: failedCount });
+      } else if (syncedCount > 0) {
+        notifyConnectionListeners('SYNCED', { synced: syncedCount });
+        setTimeout(() => {
+          if (connectionState === 'SYNCED') {
+            notifyConnectionListeners('ONLINE');
+          }
+        }, 3500);
+      } else {
+        notifyConnectionListeners('ONLINE');
+      }
+
+      return {
+        status: failedCount > 0 ? 'SYNC_FAILED' : 'SYNCED',
+        synced: syncedCount,
+        failed: failedCount,
+        skipped: skippedCount
+      };
+    }
+  };
+
+  // Auth event listeners
+  const authListeners = new Set();
+  function notifyAuthListeners(event, session) {
+    authListeners.forEach(fn => {
+      try {
+        fn(event, session);
+      } catch (err) {
+        console.warn('Auth listener notification warning:', err);
+      }
+    });
+  }
+
+  function getLocalStore(key, defaultValue = []) {
+    try {
+      const item = localStorage.getItem(key);
+      if (item) {
+        const parsed = JSON.parse(item);
+        if (key === DB_STORE_KEY && typeof global.PROVIDERS_DATA !== 'undefined' && Array.isArray(global.PROVIDERS_DATA)) {
+          const existingIds = new Set(parsed.map(p => p.id));
+          global.PROVIDERS_DATA.forEach(def => {
+            if (!existingIds.has(def.id)) {
+              parsed.push(def);
+            }
+          });
+        }
+        return parsed;
+      }
+      if (key === DB_STORE_KEY && typeof global.PROVIDERS_DATA !== 'undefined') {
+        return [...global.PROVIDERS_DATA];
+      }
+      return defaultValue;
+    } catch (e) {
+      return defaultValue;
+    }
+  }
+
+  function setLocalStore(key, value) {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch (e) {}
+  }
+
+  const STOP_WORDS = new Set(['my', 'a', 'an', 'the', 'to', 'in', 'at', 'and', 'or', 'of', 'for', 'with', 'on', 'me', 'you', 'is', 'it', 'do', 'i', 'we', 'be', 'so', 'can', 'somewhere', 'someone']);
+
+  // 3.1 NATURAL QUERY & SEARCH INTENT EXTRACTOR
+  function parseSearchQuery(rawQuery) {
+    if (!rawQuery || typeof rawQuery !== 'string') {
+      return { cleanQuery: '', extractedLocation: null, tokens: [] };
+    }
+
+    let q = rawQuery.trim();
+    let extractedLocation = null;
+
+    // Check for location pattern: "in <location>", "at <location>", "around <location>"
+    const locMatch = q.match(/\s+(?:in|at|around|near)\s+([a-zA-Z\s]+)$/i);
+    if (locMatch && locMatch[1]) {
+      const candidateLoc = locMatch[1].trim();
+      if (candidateLoc.length >= 3 && !/^(me|my area|here)$/i.test(candidateLoc)) {
+        extractedLocation = candidateLoc;
+        q = q.substring(0, locMatch.index).trim();
+      }
+    }
+
+    // Strip conversational filler phrases
+    const cleanQuery = q
+      .replace(/\b(?:i need|where can i find|looking for|someone to|somewhere to|a place to|how to find|best|top|near me|for my|to fix|to repair|to build|services?)\b/gi, ' ')
+      .replace(/[^\w\s-]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    const rawTokens = cleanQuery.toLowerCase().split(/\s+/);
+    const tokens = rawTokens.filter(t => t.length > 1 && !STOP_WORDS.has(t));
+
+    return {
+      rawQuery: rawQuery.trim(),
+      cleanQuery: cleanQuery.toLowerCase(),
+      extractedLocation,
+      tokens
+    };
+  }
+
+  // 3.2 STRING SIMILARITY & TYPO TOLERANCE
+  function stringSimilarity(s1, s2) {
+    if (!s1 || !s2) return 0;
+    const a = s1.toLowerCase().trim();
+    const b = s2.toLowerCase().trim();
+    if (a === b) return 1.0;
+    if (a.includes(b) || b.includes(a)) return 0.85;
+
+    // Character bigram overlap similarity
+    const bigrams = (str) => {
+      const set = new Set();
+      for (let i = 0; i < str.length - 1; i++) {
+        set.add(str.substring(i, i + 2));
+      }
+      return set;
+    };
+
+    const b1 = bigrams(a);
+    const b2 = bigrams(b);
+    let intersection = 0;
+    b1.forEach(bg => { if (b2.has(bg)) intersection++; });
+    const union = b1.size + b2.size - intersection;
+    return union > 0 ? (intersection / union) : 0;
+  }
+
+  // 3.3 MULTI-TIER PROVIDER SEARCH RELEVANCE SCORER
+  function scoreProviderRelevance(provider, searchIntent, services = []) {
+    const { cleanQuery, tokens } = searchIntent;
+    if (!cleanQuery && tokens.length === 0) return 100; // No keyword constraint
+
+    let score = 0;
+    const q = cleanQuery;
+
+    // Gather provider searchable attributes
+    const skills = Array.isArray(provider.skills) 
+      ? provider.skills 
+      : (typeof provider.skills === 'string' ? [provider.skills] : []);
+    
+    // Also include services from provider_services table
+    const pServices = services.filter(s => s.provider_id === provider.id).map(s => s.service_name);
+    const allSkills = [...new Set([...skills, ...pServices])].map(s => String(s).toLowerCase());
+
+    const trade = (provider.trade_title || provider.trade || '').toLowerCase();
+    const bizName = (provider.business_name || '').toLowerCase();
+    const fullName = `${provider.first_name || ''} ${provider.last_name || provider.name || ''}`.toLowerCase();
+    const bio = (provider.bio || '').toLowerCase();
+    const catSlug = (provider.primary_category_slug || provider.slug || '').toLowerCase();
+
+    // 1. TIER 1: Exact skill match (+100)
+    for (const skill of allSkills) {
+      if (skill === q) {
+        score += 100;
+        break;
+      }
+    }
+
+    // 2. TIER 2: Skill phrase / substring match (+80)
+    if (score < 100) {
+      for (const skill of allSkills) {
+        if (skill.includes(q)) {
+          score += 80;
+          break;
+        } else if (q.includes(skill) && skill.length >= 4) {
+          score += 75;
+          break;
+        }
+      }
+    }
+
+    // 3. TIER 3: Trade title / Profession match (+70)
+    if (trade === q) {
+      score += 75;
+    } else if (trade.includes(q)) {
+      score += 65;
+    } else if (q.includes(trade) && trade.length >= 4) {
+      score += 60;
+    }
+
+    // 4. TIER 4: Category Slug or Synonyms match (+50)
+    if (catSlug && (catSlug === q || q.includes(catSlug))) {
+      score += 50;
+    } else if (typeof CategoryMap !== 'undefined' && CategoryMap.resolveQuery) {
+      const resolved = CategoryMap.resolveQuery(q);
+      if (resolved && (resolved === catSlug || (resolved.slug && resolved.slug === catSlug))) {
+        score += 50;
+      }
+    }
+
+    // 5. TIER 5: Business Name or Provider Full Name (+40)
+    if (bizName.includes(q) || fullName.includes(q)) {
+      score += 40;
+    }
+
+    // 6. TIER 6: Bio / Description full phrase match (+20)
+    if (bio.includes(q)) {
+      score += 20;
+    }
+
+    // 7. MULTI-TOKEN PARTIAL MATCHING (For natural queries like "record song", "repair ac", "photo wedding")
+    if (tokens.length > 0) {
+      let matchedSkillTokens = 0;
+      let matchedTradeTokens = 0;
+      let matchedAnyTokens = 0;
+
+      tokens.forEach(tok => {
+        const inSkills = allSkills.some(s => s.includes(tok) || tok.includes(s) || (tok.length >= 4 && s.startsWith(tok.substring(0, 4))));
+        const inTrade = trade.includes(tok) || (tok.length >= 4 && trade.startsWith(tok.substring(0, 4)));
+        const inBio = bio.includes(tok);
+        const inBiz = bizName.includes(tok);
+
+        if (inSkills) matchedSkillTokens++;
+        if (inTrade) matchedTradeTokens++;
+        if (inSkills || inTrade || inBiz || inBio) matchedAnyTokens++;
+      });
+
+      if (tokens.length === 1 && (matchedSkillTokens > 0 || matchedTradeTokens > 0)) {
+        score += 70;
+      } else if (tokens.length > 1) {
+        const ratio = matchedAnyTokens / tokens.length;
+        if (ratio >= 0.5 && (matchedSkillTokens > 0 || matchedTradeTokens > 0)) {
+          score += Math.round(ratio * 70);
+        } else if (ratio >= 0.75) {
+          score += Math.round(ratio * 50);
+        }
+      }
+    }
+
+    // 8. TYPO / FUZZY TOLERANCE (For queries like "record studio", "photograper", "make up artist")
+    if (score === 0 && q.length >= 4) {
+      for (const skill of allSkills) {
+        const sim = stringSimilarity(q, skill);
+        if (sim >= 0.52) {
+          score += Math.round(sim * 65);
+          break;
+        }
+      }
+      if (score === 0) {
+        const tradeSim = stringSimilarity(q, trade);
+        if (tradeSim >= 0.52) {
+          score += Math.round(tradeSim * 55);
+        }
+      }
+    }
+
+    return score;
+  }
+
+  // 4. LOKATOR DATA ACCESS OBJECT
+  const LokatorDB = {
+    config: CONFIG,
+    client: supabaseInstance,
+    escapeHtml: escapeHtml,
+
+    /**
+     * Safe development-only diagnostic test
+     * Verifies project connection without querying or requiring database tables
+     */
+    async testConnection() {
+      const isConfigured = Boolean(CONFIG.url && CONFIG.anonKey && CONFIG.anonKey.trim().length > 10);
+      const diagnostic = {
+        projectRef: CONFIG.projectRef,
+        url: CONFIG.url,
+        hasKey: Boolean(CONFIG.anonKey && CONFIG.anonKey.trim().length > 0),
+        isConfigured: isConfigured,
+        clientInitialized: Boolean(supabaseInstance),
+        reachable: false,
+        latencyMs: null,
+        message: ''
+      };
+
+      if (!isConfigured || !supabaseInstance) {
+        diagnostic.message = `Supabase operating in offline sync mode. Project reference set to [${CONFIG.projectRef}]. Public key pending.`;
+        return diagnostic;
+      }
+
+      const start = Date.now();
+      try {
+        const { error } = await supabaseInstance.auth.getSession();
+        diagnostic.latencyMs = Date.now() - start;
+        diagnostic.reachable = true;
+        if (!error) {
+          diagnostic.message = `Successfully communicated with Supabase project [${CONFIG.projectRef}] in ${diagnostic.latencyMs}ms.`;
+        } else {
+          diagnostic.message = `Reached Supabase project [${CONFIG.projectRef}] (${diagnostic.latencyMs}ms): ${error.message}`;
+        }
+      } catch (err) {
+        diagnostic.latencyMs = Date.now() - start;
+        diagnostic.reachable = false;
+        diagnostic.message = `Connection diagnostic notice for [${CONFIG.projectRef}]: ${err.message}`;
+      }
+
+      return diagnostic;
+    },
+
+    /**
+     * Supabase Provider Authentication & Session Layer
+     */
+    auth: {
+      /**
+       * Get current session synchronously from local storage cache
+       */
+      getSessionSync() {
+        try {
+          const raw = localStorage.getItem(DB_AUTH_SESSION_KEY);
+          return raw ? JSON.parse(raw) : null;
+        } catch (e) {
+          return null;
+        }
+      },
+
+      /**
+       * Get current user synchronously from local storage cache
+       */
+      getUserSync() {
+        const session = this.getSessionSync();
+        return session && session.user ? session.user : null;
+      },
+
+      /**
+       * Sign up a new provider with Supabase Auth
+       */
+      async signUp(credentials, profileData = null) {
+        const email = credentials.email ? credentials.email.trim() : '';
+        const password = credentials.password || '';
+        const meta = (credentials.options && credentials.options.data) ? credentials.options.data : (credentials.data || {});
+
+        let remoteResult = null;
+        let authUser = null;
+        let authSession = null;
+
+        if (isRemoteActive()) {
+          try {
+            remoteResult = await supabaseInstance.auth.signUp({
+              email,
+              password,
+              options: {
+                data: {
+                  ...meta,
+                  role: meta.role || 'provider'
+                }
+              }
+            });
+            if (remoteResult.data && remoteResult.data.user) {
+              authUser = remoteResult.data.user;
+              authSession = remoteResult.data.session;
+            }
+          } catch (e) {
+            console.warn('Supabase remote signUp warning:', e);
+          }
+        }
+
+        // Fallback / local mock user creation
+        if (!authUser) {
+          const users = getLocalStore(DB_USERS_KEY, []);
+          const existing = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+          if (existing) {
+            const err = new Error('A user with this email address already exists.');
+            err.status = 400;
+            return { data: { user: null, session: null }, error: err };
+          }
+
+          const mockId = 'usr_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+          authUser = {
+            id: mockId,
+            email: email,
+            app_metadata: { provider: 'email', role: meta.role || 'provider' },
+            user_metadata: { ...meta, email },
+            created_at: new Date().toISOString()
+          };
+          authSession = {
+            access_token: 'lokator_mock_token_' + Date.now(),
+            token_type: 'bearer',
+            expires_in: 3600,
+            refresh_token: 'lokator_mock_refresh_' + Date.now(),
+            user: authUser
+          };
+
+          users.push({
+            id: mockId,
+            email: email,
+            password: password,
+            metadata: meta,
+            created_at: authUser.created_at
+          });
+          setLocalStore(DB_USERS_KEY, users);
+        }
+
+        if (authSession) {
+          setLocalStore(DB_AUTH_SESSION_KEY, authSession);
+          notifyAuthListeners('SIGNED_IN', authSession);
+        }
+
+        let linkedProvider = null;
+        if (profileData) {
+          profileData.email = email;
+          profileData.user_id = authUser.id;
+          linkedProvider = await LokatorDB.registerProvider(profileData);
+          if (linkedProvider) {
+            if (!authUser.user_metadata) authUser.user_metadata = {};
+            authUser.user_metadata.provider_id = linkedProvider.id;
+            if (authSession) {
+              setLocalStore(DB_AUTH_SESSION_KEY, authSession);
+            }
+          }
+        }
+
+        return {
+          data: {
+            user: authUser,
+            session: authSession,
+            provider: linkedProvider
+          },
+          error: remoteResult && remoteResult.error ? remoteResult.error : null
+        };
+      },
+
+      /**
+       * Sign in existing provider with email and password
+       */
+      async signInWithPassword(credentials) {
+        const email = credentials.email ? credentials.email.trim() : '';
+        const password = credentials.password || '';
+
+        let remoteResult = null;
+        let authUser = null;
+        let authSession = null;
+
+        if (isRemoteActive()) {
+          try {
+            remoteResult = await supabaseInstance.auth.signInWithPassword({ email, password });
+            if (remoteResult.data && remoteResult.data.user) {
+              authUser = remoteResult.data.user;
+              authSession = remoteResult.data.session;
+            }
+          } catch (e) {
+            console.warn('Supabase remote signIn notice:', e);
+          }
+        }
+
+        // Fallback / local auth verification
+        if (!authUser) {
+          const users = getLocalStore(DB_USERS_KEY, []);
+          const matchedUser = users.find(u => u.email.toLowerCase() === email.toLowerCase() && (!u.password || u.password === password));
+
+          if (matchedUser) {
+            authUser = {
+              id: matchedUser.id,
+              email: matchedUser.email,
+              app_metadata: { provider: 'email', role: 'provider' },
+              user_metadata: matchedUser.metadata || { email: matchedUser.email },
+              created_at: matchedUser.created_at
+            };
+          } else {
+            // Check if matches a seed provider email (e.g. adebayo@lokator.ng or test accounts)
+            const providers = getLocalStore(DB_STORE_KEY, []);
+            const matchedProvider = providers.find(p => p.email && p.email.toLowerCase() === email.toLowerCase());
+            if (matchedProvider) {
+              authUser = {
+                id: matchedProvider.user_id || ('usr_' + matchedProvider.id),
+                email: matchedProvider.email,
+                app_metadata: { provider: 'email', role: 'provider' },
+                user_metadata: {
+                  first_name: matchedProvider.first_name || (matchedProvider.name ? matchedProvider.name.split(' ')[0] : 'Provider'),
+                  last_name: matchedProvider.last_name || '',
+                  provider_id: matchedProvider.id
+                },
+                created_at: matchedProvider.created_at || new Date().toISOString()
+              };
+            }
+          }
+
+          if (authUser) {
+            authSession = {
+              access_token: 'lokator_mock_token_' + Date.now(),
+              token_type: 'bearer',
+              expires_in: 3600,
+              refresh_token: 'lokator_mock_refresh_' + Date.now(),
+              user: authUser
+            };
+          }
+        }
+
+        if (!authUser) {
+          const err = new Error('Invalid email or password. Please check your credentials.');
+          err.status = 400;
+          return { data: { user: null, session: null }, error: err };
+        }
+
+        setLocalStore(DB_AUTH_SESSION_KEY, authSession);
+        notifyAuthListeners('SIGNED_IN', authSession);
+
+        const provider = await this.getCurrentProvider();
+
+        return {
+          data: {
+            user: authUser,
+            session: authSession,
+            provider: provider
+          },
+          error: null
+        };
+      },
+
+      /**
+       * Sign in with OTP or magic link
+       */
+      async signInWithOtp(credentials) {
+        if (isRemoteActive()) {
+          return await supabaseInstance.auth.signInWithOtp(credentials);
+        }
+        return { data: { message: 'OTP sent in demo mode' }, error: null };
+      },
+
+      /**
+       * Instant Demo Provider Login for frictionless testing & evaluation
+       */
+      async demoLogin(providerId = 1) {
+        const numId = Number(providerId) || 1;
+        const provider = await LokatorDB.getProviderById(numId);
+        if (!provider) {
+          throw new Error(`Demo provider with ID ${numId} not found`);
+        }
+
+        const mockUser = {
+          id: `usr_demo_${provider.id}`,
+          email: `${provider.firstName.toLowerCase()}.${provider.lastName.toLowerCase()}@lokator.ng`.replace(/\s+/g, ''),
+          app_metadata: { provider: 'demo', role: 'provider' },
+          user_metadata: {
+            first_name: provider.firstName,
+            last_name: provider.lastName,
+            provider_id: provider.id,
+            trade: provider.trade,
+            phone: provider.phone
+          },
+          created_at: new Date().toISOString()
+        };
+
+        const mockSession = {
+          access_token: 'lokator_demo_session_' + Date.now(),
+          token_type: 'bearer',
+          expires_in: 86400,
+          user: mockUser
+        };
+
+        setLocalStore(DB_AUTH_SESSION_KEY, mockSession);
+        notifyAuthListeners('SIGNED_IN', mockSession);
+
+        return {
+          data: {
+            user: mockUser,
+            session: mockSession,
+            provider: provider
+          },
+          error: null
+        };
+      },
+
+      /**
+       * Sign out currently authenticated user
+       */
+      async signOut() {
+        if (isRemoteActive()) {
+          try {
+            await supabaseInstance.auth.signOut();
+          } catch (e) {}
+        }
+        try {
+          localStorage.removeItem(DB_AUTH_SESSION_KEY);
+        } catch (e) {}
+        notifyAuthListeners('SIGNED_OUT', null);
+        return { error: null };
+      },
+
+      /**
+       * Get currently authenticated user
+       */
+      async getUser() {
+        if (isRemoteActive()) {
+          try {
+            const res = await supabaseInstance.auth.getUser();
+            if (res && res.data && res.data.user) {
+              return res;
+            }
+          } catch (e) {}
+        }
+        const user = this.getUserSync();
+        return { data: { user: user }, error: null };
+      },
+
+      /**
+       * Get current authentication session
+       */
+      async getSession() {
+        if (isRemoteActive()) {
+          try {
+            const res = await supabaseInstance.auth.getSession();
+            if (res && res.data && res.data.session) {
+              return res;
+            }
+          } catch (e) {}
+        }
+        const session = this.getSessionSync();
+        return { data: { session: session }, error: null };
+      },
+
+      /**
+       * Listen to auth state changes (login, logout, token refresh)
+       */
+      onAuthStateChange(callback) {
+        if (typeof callback === 'function') {
+          authListeners.add(callback);
+        }
+        if (isRemoteActive()) {
+          try {
+            supabaseInstance.auth.onAuthStateChange(callback);
+          } catch (e) {}
+        }
+        return {
+          data: {
+            subscription: {
+              unsubscribe: () => {
+                authListeners.delete(callback);
+              }
+            }
+          }
+        };
+      },
+
+      /**
+       * Resolve the full provider record linked to the current logged-in user
+       */
+      async getCurrentProvider() {
+        const userRes = await this.getUser();
+        const user = userRes && userRes.data ? userRes.data.user : null;
+        if (!user) return null;
+
+        const targetProviderId = user.user_metadata && user.user_metadata.provider_id;
+
+        // 1. If explicit provider_id attached to user
+        if (targetProviderId) {
+          const p = await LokatorDB.getProviderById(targetProviderId);
+          if (p) return p;
+        }
+
+        // 2. Query by user_id in Remote Supabase
+        if (isRemoteActive()) {
+          try {
+            const { data, error } = await supabaseInstance
+              .from('providers')
+              .select('id')
+              .eq('user_id', user.id)
+              .maybeSingle();
+
+            if (!error && data && data.id) {
+              return await LokatorDB.getProviderById(data.id);
+            }
+          } catch (e) {}
+        }
+
+        // 3. Match in local store by user_id or email
+        const providers = getLocalStore(DB_STORE_KEY, []);
+        let match = providers.find(p => p.user_id === user.id);
+        if (!match && user.email) {
+          match = providers.find(p => p.email && p.email.toLowerCase() === user.email.toLowerCase());
+        }
+
+        if (match) {
+          return await LokatorDB.getProviderById(match.id);
+        }
+
+        // Fallback: If in demo mode
+        if (user.id && String(user.id).includes('demo')) {
+          return await LokatorDB.getProviderById(1);
+        }
+
+        return null;
+      }
+    },
+
+    /**
+     * Get providers matching marketplace discovery criteria with flexible skills search
+     */
+    async getProviders(options = {}) {
+      const {
+        category = 'all',
+        state = 'all',
+        city = 'all',
+        query = '',
+        isVerified = false,
+        isAvailable = false,
+        minRating = 0,
+        page = 1,
+        pageSize = 20,
+        userLat = null,
+        userLng = null,
+        sortBy = 'distance-asc'
+      } = options;
+
+      // Parse free-form natural search intent and location
+      const searchIntent = parseSearchQuery(query);
+      const effectiveLocation = (city && city !== 'all') ? city : (searchIntent.extractedLocation || 'all');
+
+      // 1. If remote live Supabase client is connected and active:
+      if (isRemoteActive()) {
+        try {
+          let queryBuilder = supabaseInstance
+            .from('providers')
+            .select(`
+              id,
+              business_name,
+              first_name,
+              last_name,
+              trade_title,
+              primary_category_slug,
+              skills,
+              bio,
+              phone,
+              whatsapp_number,
+              email,
+              state,
+              city,
+              lga,
+              area,
+              address,
+              latitude,
+              longitude,
+              experience_years,
+              starting_price,
+              avatar_bg,
+              badge_title,
+              response_time,
+              completed_jobs,
+              rating,
+              reviews_count,
+              subscription_plan,
+              is_verified,
+              nin_verified,
+              is_available,
+              provider_services (service_name, category_slug)
+            `)
+            .eq('is_active', true)
+            .eq('is_public', true)
+            .eq('profile_complete', true);
+
+          if (category && category !== 'all') {
+            queryBuilder = queryBuilder.eq('primary_category_slug', category);
+          }
+          if (state && state !== 'all') {
+            queryBuilder = queryBuilder.ilike('state', `%${state}%`);
+          }
+          if (effectiveLocation && effectiveLocation !== 'all') {
+            queryBuilder = queryBuilder.or(`city.ilike.%${effectiveLocation}%,area.ilike.%${effectiveLocation}%,state.ilike.%${effectiveLocation}%`);
+          }
+          if (isVerified) {
+            queryBuilder = queryBuilder.eq('is_verified', true);
+          }
+          if (isAvailable) {
+            queryBuilder = queryBuilder.eq('is_available', true);
+          }
+          if (minRating > 0) {
+            queryBuilder = queryBuilder.gte('rating', minRating);
+          }
+
+          const from = (page - 1) * pageSize;
+          const to = from + pageSize - 1;
+          const { data, count, error } = await queryBuilder.range(from, to);
+
+          if (!error && Array.isArray(data)) {
+            return {
+              data: this._sanitizeProvidersList(data, userLat, userLng),
+              totalCount: count || data.length,
+              page,
+              pageSize
+            };
+          }
+        } catch (err) {
+          console.warn('Supabase remote query failed, utilizing local sync layer:', err);
+        }
+      }
+
+      // 2. Local Supabase-compatible Driver Query
+      let providers = getLocalStore(DB_STORE_KEY, []);
+      const services = getLocalStore(DB_SERVICES_KEY, []);
+
+      // Filter: only public & active
+      let list = providers.filter(p => p.is_active !== false && p.is_public !== false && p.profile_complete !== false);
+
+      // Filter: Category
+      if (category && category !== 'all') {
+        const catSlug = String(category).toLowerCase();
+        list = list.filter(p => {
+          const pSlug = (p.primary_category_slug || p.category || p.slug || '').toLowerCase();
+          if (pSlug === catSlug || (pSlug.length >= 4 && catSlug.includes(pSlug)) || (catSlug.length >= 4 && pSlug.includes(catSlug))) return true;
+          // Check provider services
+          const pServices = services.filter(s => s.provider_id === p.id);
+          return pServices.some(s => s.category_slug && String(s.category_slug).toLowerCase() === catSlug);
+        });
+      }
+
+      // Filter: State
+      if (state && state !== 'all') {
+        const stateNorm = state.toLowerCase();
+        list = list.filter(p => (p.state && p.state.toLowerCase().includes(stateNorm)));
+      }
+
+      // Filter: City/LGA/Location (including extracted natural location e.g. "in Warri", "in Ughelli")
+      if (effectiveLocation && effectiveLocation !== 'all') {
+        const locNorm = effectiveLocation.toLowerCase();
+        list = list.filter(p => 
+          (p.city && p.city.toLowerCase().includes(locNorm)) ||
+          (p.lga && p.lga.toLowerCase().includes(locNorm)) ||
+          (p.area && p.area.toLowerCase().includes(locNorm)) ||
+          (p.state && p.state.toLowerCase().includes(locNorm))
+        );
+      }
+
+      // Filter: Verification
+      if (isVerified) {
+        list = list.filter(p => Boolean(p.is_verified || p.isVerified));
+      }
+
+      // Filter: Availability
+      if (isAvailable) {
+        list = list.filter(p => p.is_available !== false && p.isAvailable !== false);
+      }
+
+      // Filter: Min Rating
+      if (minRating > 0) {
+        list = list.filter(p => Number(p.rating || 5) >= minRating);
+      }
+
+      // Filter & Score: Free-form skills/services search query
+      if (searchIntent.cleanQuery || searchIntent.tokens.length > 0) {
+        const scoredList = [];
+        list.forEach(p => {
+          const score = scoreProviderRelevance(p, searchIntent, services);
+          if (score > 0) {
+            p._searchScore = score;
+            scoredList.push(p);
+          }
+        });
+        list = scoredList;
+      }
+
+      // Calculate real distances if customer coords are present
+      list = this._sanitizeProvidersList(list, userLat, userLng, services);
+
+      // Sort by relevance score first (if keyword search active), then user sort preference
+      list.sort((a, b) => {
+        if (searchIntent.cleanQuery && (a._searchScore || 0) !== (b._searchScore || 0)) {
+          return (b._searchScore || 0) - (a._searchScore || 0);
+        }
+        if (sortBy === 'rating-desc') return b.rating - a.rating;
+        if (sortBy === 'reviews-desc') return b.reviews_count - a.reviews_count;
+        if (sortBy === 'experience-desc') return b.experience_years - a.experience_years;
+        if (a.distanceKm != null && b.distanceKm != null) {
+          return a.distanceKm - b.distanceKm;
+        }
+        return 0;
+      });
+
+      // Pagination
+      const totalCount = list.length;
+      const startIdx = (page - 1) * pageSize;
+      const paginatedData = list.slice(startIdx, startIdx + pageSize);
+
+      return {
+        data: paginatedData,
+        totalCount,
+        page,
+        pageSize
+      };
+    },
+
+    /**
+     * Get real-time search suggestions dynamically from all available provider skills
+     */
+    getSkillSuggestions(query, limit = 6) {
+      if (!query || typeof query !== 'string' || query.trim().length < 1) return [];
+      const q = query.toLowerCase().trim();
+      const providers = getLocalStore(DB_STORE_KEY, []);
+      const services = getLocalStore(DB_SERVICES_KEY, []);
+      
+      const suggestionSet = new Set();
+
+      // 1. Gather all unique skills from providers
+      providers.forEach(p => {
+        const skills = Array.isArray(p.skills) ? p.skills : [];
+        skills.forEach(s => {
+          if (s && s.toLowerCase().includes(q)) {
+            suggestionSet.add(s.trim());
+          }
+        });
+        if (p.trade_title && p.trade_title.toLowerCase().includes(q)) {
+          suggestionSet.add(p.trade_title.trim());
+        }
+      });
+
+      // 2. Gather from provider_services
+      services.forEach(s => {
+        if (s.service_name && s.service_name.toLowerCase().includes(q)) {
+          suggestionSet.add(s.service_name.trim());
+        }
+      });
+
+      // 3. Gather from category synonyms
+      if (typeof CategoryMap !== 'undefined' && CategoryMap.getAll) {
+        CategoryMap.getAll().forEach(cat => {
+          if (cat.name && cat.name.toLowerCase().includes(q)) suggestionSet.add(cat.name);
+          if (cat.displayName && cat.displayName.toLowerCase().includes(q)) suggestionSet.add(cat.displayName);
+          (cat.synonyms || []).forEach(syn => {
+            if (syn.toLowerCase().includes(q) && syn.length > 2) {
+              const cap = syn.charAt(0).toUpperCase() + syn.slice(1);
+              suggestionSet.add(cap);
+            }
+          });
+        });
+      }
+
+      return Array.from(suggestionSet).slice(0, limit);
+    },
+
+    /**
+     * Get a single provider by ID with joined services, portfolio, reviews, working hours
+     */
+    async getProviderById(id) {
+      const numId = Number(id);
+      if (!numId) return null;
+
+      // Remote Supabase query if available
+      if (isRemoteActive()) {
+        try {
+          const { data, error } = await supabaseInstance
+            .from('providers')
+            .select(`
+              *,
+              provider_services (*),
+              portfolio_items (*),
+              reviews (*),
+              working_hours (*)
+            `)
+            .eq('id', numId)
+            .eq('is_active', true)
+            .single();
+
+          if (!error && data) {
+            return this._sanitizeProviderDetail(data);
+          }
+        } catch (e) {
+          console.warn('Supabase getProviderById fallback to local store:', e);
+        }
+      }
+
+      // Local Supabase Data Store
+      const providers = getLocalStore(DB_STORE_KEY, []);
+      const provider = providers.find(p => p.id === numId);
+      if (!provider) return null;
+
+      const services = getLocalStore(DB_SERVICES_KEY, []).filter(s => s.provider_id === numId);
+      const reviews = getLocalStore(DB_REVIEWS_KEY, []).filter(r => r.provider_id === numId && r.is_approved !== false);
+      const customPortfolio = getLocalStore(DB_PORTFOLIO_KEY, []).filter(item => item.provider_id === numId);
+      const customHours = getLocalStore(DB_WORKING_HOURS_KEY, {})[numId] || null;
+
+      const portfolioItems = (customPortfolio.length > 0)
+        ? customPortfolio
+        : (provider.portfolio_items || provider.portfolio || []);
+
+      return this._sanitizeProviderDetail({
+        ...provider,
+        provider_services: services,
+        portfolio_items: portfolioItems,
+        working_hours: customHours || provider.working_hours || provider.workingHours,
+        reviews: reviews
+      });
+    },
+
+    /**
+     * Register a new service provider into Supabase with flexible multi-skills support
+     */
+    async registerProvider(formData) {
+      const newId = Date.now();
+      const firstName = (formData.fname || formData.first_name || 'Provider').trim();
+      const lastName = (formData.lname || formData.last_name || '').trim();
+      const fullName = `${firstName} ${lastName}`.trim();
+      
+      // Parse skills array (from chips/tag input or custom string)
+      let skillsArray = [];
+      if (Array.isArray(formData.skills)) {
+        skillsArray = formData.skills.map(s => String(s).trim()).filter(Boolean);
+      } else if (typeof formData.skills === 'string' && formData.skills.trim()) {
+        skillsArray = formData.skills.split(',').map(s => s.trim()).filter(Boolean);
+      }
+
+      const rawCategory = formData.service || formData.category || (skillsArray[0] || 'other');
+      let categorySlug = 'other';
+      if (typeof CategoryMap !== 'undefined' && CategoryMap.resolveQuery) {
+        const resolved = CategoryMap.resolveQuery(rawCategory);
+        categorySlug = (typeof resolved === 'string') ? resolved : (resolved && resolved.slug ? resolved.slug : String(rawCategory).toLowerCase().replace(/\s+/g, '-'));
+      } else {
+        categorySlug = String(rawCategory).toLowerCase().replace(/\s+/g, '-');
+      }
+
+      const catObj = (typeof CategoryMap !== 'undefined') ? CategoryMap.getBySlug(categorySlug) : null;
+      const tradeTitle = formData.trade || (skillsArray.length > 0 ? skillsArray.join(' & ') : (catObj ? catObj.name : rawCategory));
+
+      // Ensure primary skill is in skills list
+      if (skillsArray.length === 0) {
+        skillsArray = [catObj ? catObj.name : rawCategory];
+      }
+
+      const locationInput = formData.location || 'Lagos, Nigeria';
+      const parts = locationInput.split(',').map(s => s.trim());
+      const area = locationInput;
+      const city = parts[0] || 'Lagos';
+      const state = parts[1] || parts[0] || 'Lagos';
+
+      // Parse coordinates if GPS was used
+      let lat = null;
+      let lng = null;
+      if (formData.lat && formData.lng) {
+        lat = Number(formData.lat);
+        lng = Number(formData.lng);
+      } else if (locationInput.includes(',') && !isNaN(parseFloat(parts[0])) && !isNaN(parseFloat(parts[1]))) {
+        lat = parseFloat(parts[0]);
+        lng = parseFloat(parts[1]);
+      }
+
+      let currentUserId = formData.user_id || null;
+      if (!currentUserId && LokatorDB.auth && typeof LokatorDB.auth.getUserSync === 'function') {
+        const u = LokatorDB.auth.getUserSync();
+        if (u && u.id) currentUserId = u.id;
+      }
+
+      const newProvider = {
+        id: newId,
+        user_id: currentUserId,
+        first_name: firstName,
+        last_name: lastName,
+        business_name: formData.business_name || fullName,
+        trade_title: tradeTitle,
+        primary_category_slug: categorySlug,
+        skills: skillsArray,
+        bio: formData.bio || `Certified ${tradeTitle} serving ${area}. Contact directly for instant quotes and prompt service.`,
+        phone: formData.phone.startsWith('+234') ? formData.phone : `+234${formData.phone.replace(/^0+/, '')}`,
+        whatsapp_number: formData.phone.startsWith('+234') ? formData.phone : `+234${formData.phone.replace(/^0+/, '')}`,
+        email: formData.email || null,
+        state: state,
+        city: city,
+        lga: formData.lga || city,
+        area: area,
+        address: formData.address || area,
+        latitude: lat,
+        longitude: lng,
+        experience_years: parseInt(formData.experience, 10) || 3,
+        starting_price: formData.starting_price || '₦3,500 / job',
+        avatar_bg: 'linear-gradient(135deg, #006B3F, #059669)',
+        badge_title: 'NIN Verified Artisan',
+        response_time: '~15 mins',
+        completed_jobs: 1,
+        rating: 5.0,
+        reviews_count: 0,
+        subscription_plan: formData.plan || 'basic',
+        is_verified: false,
+        nin_verified: false,
+        is_available: true,
+        is_active: true,
+        is_public: true,
+        profile_complete: true,
+        created_at: new Date().toISOString()
+      };
+
+      // 1. Remote Supabase Insertion
+      if (isRemoteActive()) {
+        try {
+          const { data, error } = await supabaseInstance
+            .from('providers')
+            .insert([newProvider])
+            .select()
+            .single();
+
+          if (!error && data) {
+            // Also insert provider services
+            const serviceRows = skillsArray.map((sk, idx) => ({
+              provider_id: data.id,
+              service_name: sk,
+              category_slug: categorySlug,
+              is_primary: idx === 0
+            }));
+            await supabaseInstance.from('provider_services').insert(serviceRows);
+            return data;
+          }
+        } catch (e) {
+          console.warn('Supabase remote insert error, saving to local store:', e);
+        }
+      }
+
+      // 2. Local Supabase Store Insertion
+      const providers = getLocalStore(DB_STORE_KEY, []);
+      providers.unshift(newProvider);
+      setLocalStore(DB_STORE_KEY, providers);
+
+      // Services insertion
+      const services = getLocalStore(DB_SERVICES_KEY, []);
+      skillsArray.forEach((sk, idx) => {
+        services.push({
+          id: Date.now() + idx + 1,
+          provider_id: newId,
+          service_name: sk,
+          category_slug: categorySlug,
+          is_primary: idx === 0
+        });
+      });
+      setLocalStore(DB_SERVICES_KEY, services);
+
+      return newProvider;
+    },
+
+    /**
+     * Submit verified customer review to Supabase & Local Outbox
+     */
+    async submitReview(providerId, reviewData) {
+      const numId = Number(providerId);
+      const newReview = {
+        id: Date.now(),
+        provider_id: numId,
+        author_name: reviewData.author || 'Verified Customer',
+        author_location: reviewData.location || 'Nigeria',
+        rating: Number(reviewData.rating) || 5,
+        service_type: reviewData.serviceType || 'General Service',
+        comment: reviewData.comment || '',
+        is_verified_customer: false,
+        helpful_count: 0,
+        is_approved: false,
+        created_at: new Date().toISOString()
+      };
+
+      let remoteConfirmed = false;
+      let remoteError = null;
+
+      // 1. Attempt Remote Supabase Insert if active and online
+      if (isRemoteActive() && (typeof navigator === 'undefined' || navigator.onLine !== false)) {
+        try {
+          const { data, error } = await supabaseInstance.from('reviews').insert([newReview]).select();
+          if (error) {
+            remoteError = error;
+          } else {
+            remoteConfirmed = true;
+          }
+        } catch (e) {
+          remoteError = e;
+        }
+      }
+
+      // If permanent database failure (e.g. self-review blocked or RLS denial)
+      if (remoteError && !isRetryableNetworkError(remoteError)) {
+        return createWriteResult({
+          status: 'REMOTE_FAILURE',
+          entity: 'review',
+          entityId: newReview.id,
+          remoteConfirmed: false,
+          queued: false,
+          error: remoteError,
+          message: remoteError.message || 'Could not submit review.'
+        });
+      }
+
+      // 2. Queue mutation to IndexedDB outbox if not confirmed remotely
+      let isQueued = false;
+      if (!remoteConfirmed) {
+        await outboxManager.enqueue({
+          type: 'REVIEW_CREATE',
+          entityId: numId,
+          payload: newReview
+        });
+        isQueued = true;
+      }
+
+      // 3. Update Local Store
+      const reviews = getLocalStore(DB_REVIEWS_KEY, []);
+      reviews.unshift(newReview);
+      setLocalStore(DB_REVIEWS_KEY, reviews);
+
+      // Recalculate local provider average rating
+      const pReviews = reviews.filter(r => r.provider_id === numId);
+      const avg = Number((pReviews.reduce((sum, r) => sum + r.rating, 0) / pReviews.length).toFixed(1));
+
+      const providers = getLocalStore(DB_STORE_KEY, []);
+      const p = providers.find(item => item.id === numId);
+      if (p) {
+        p.rating = avg;
+        p.reviews_count = pReviews.length;
+        setLocalStore(DB_STORE_KEY, providers);
+      }
+
+      const status = remoteConfirmed ? 'REMOTE_SUCCESS' : 'OFFLINE_PENDING';
+      const message = remoteConfirmed 
+        ? 'Review submitted successfully.' 
+        : "Review saved offline — will sync when you're back online.";
+
+      return createWriteResult({
+        status,
+        entity: 'review',
+        entityId: newReview.id,
+        remoteConfirmed,
+        queued: isQueued,
+        data: newReview,
+        message
+      });
+    },
+
+    /**
+     * Get top featured providers for homepage
+     */
+    async getTopFeaturedProviders(limit = 3) {
+      const res = await this.getProviders({ pageSize: limit, sortBy: 'rating-desc' });
+      return res.data;
+    },
+
+    /**
+     * Update an existing provider profile in Supabase & Local Store
+     */
+    async updateProviderProfile(providerId, updateData) {
+      const numId = Number(providerId);
+      if (!numId) throw new Error('Valid Provider ID is required for update');
+
+      const safeUpdates = {};
+      const allowedFields = [
+        'first_name', 'last_name', 'business_name', 'trade_title',
+        'primary_category_slug', 'bio', 'phone', 'whatsapp_number',
+        'email', 'state', 'city', 'lga', 'area', 'address',
+        'experience_years', 'starting_price', 'badge_title',
+        'response_time', 'is_available', 'skills', 'avatar_bg'
+      ];
+
+      allowedFields.forEach(field => {
+        if (updateData[field] !== undefined) {
+          safeUpdates[field] = updateData[field];
+        }
+      });
+
+      if (updateData.firstName !== undefined) { safeUpdates.first_name = updateData.firstName; safeUpdates.firstName = updateData.firstName; }
+      if (updateData.lastName !== undefined) { safeUpdates.last_name = updateData.lastName; safeUpdates.lastName = updateData.lastName; }
+      if (updateData.businessName !== undefined) { safeUpdates.business_name = updateData.businessName; safeUpdates.businessName = updateData.businessName; }
+      if (updateData.trade !== undefined) { safeUpdates.trade_title = updateData.trade; safeUpdates.trade = updateData.trade; }
+      if (updateData.experienceYrs !== undefined) { safeUpdates.experience_years = parseInt(updateData.experienceYrs, 10); safeUpdates.experienceYrs = parseInt(updateData.experienceYrs, 10); }
+      if (updateData.startingPrice !== undefined) { safeUpdates.starting_price = updateData.startingPrice; safeUpdates.startingPrice = updateData.startingPrice; }
+      if (updateData.responseTime !== undefined) { safeUpdates.response_time = updateData.responseTime; safeUpdates.responseTime = updateData.responseTime; }
+      if (updateData.isAvailable !== undefined) { safeUpdates.is_available = Boolean(updateData.isAvailable); safeUpdates.isAvailable = Boolean(updateData.isAvailable); }
+      if (updateData.whatsappNumber !== undefined) { safeUpdates.whatsapp_number = updateData.whatsappNumber; safeUpdates.whatsappNumber = updateData.whatsappNumber; }
+
+      safeUpdates.updated_at = new Date().toISOString();
+
+      let remoteConfirmed = false;
+      let remoteError = null;
+
+      // 1. Attempt Remote Supabase Update if active & online
+      if (isRemoteActive() && (typeof navigator === 'undefined' || navigator.onLine !== false)) {
+        try {
+          const { error } = await supabaseInstance
+            .from('providers')
+            .update(safeUpdates)
+            .eq('id', numId);
+
+          if (error) {
+            remoteError = error;
+          } else {
+            remoteConfirmed = true;
+          }
+        } catch (e) {
+          remoteError = e;
+        }
+      }
+
+      // Permanent failure rejection (e.g. RLS unauthorized)
+      if (remoteError && !isRetryableNetworkError(remoteError)) {
+        return createWriteResult({
+          status: 'REMOTE_FAILURE',
+          entity: 'provider',
+          entityId: numId,
+          remoteConfirmed: false,
+          queued: false,
+          error: remoteError,
+          message: remoteError.message || 'Failed to update provider profile.'
+        });
+      }
+
+      // 2. Queue mutation if not confirmed remotely
+      let isQueued = false;
+      if (!remoteConfirmed) {
+        const userRes = await this.auth.getUser();
+        await outboxManager.enqueue({
+          type: 'PROFILE_UPDATE',
+          entityId: numId,
+          payload: safeUpdates,
+          userId: userRes?.data?.user?.id || null
+        });
+        isQueued = true;
+      }
+
+      // 3. Local Store Update
+      const providers = getLocalStore(DB_STORE_KEY, []);
+      const idx = providers.findIndex(p => p.id === numId);
+      if (idx !== -1) {
+        providers[idx] = {
+          ...providers[idx],
+          ...safeUpdates,
+          name: `${safeUpdates.first_name || providers[idx].first_name || ''} ${safeUpdates.last_name || providers[idx].last_name || ''}`.trim() || providers[idx].name
+        };
+        setLocalStore(DB_STORE_KEY, providers);
+      }
+
+      const updatedProvider = await this.getProviderById(numId);
+      const status = remoteConfirmed ? 'REMOTE_SUCCESS' : 'OFFLINE_PENDING';
+      const message = remoteConfirmed 
+        ? 'Profile saved successfully.' 
+        : "Saved offline — will sync when you're back online.";
+
+      return createWriteResult({
+        status,
+        entity: 'provider',
+        entityId: numId,
+        remoteConfirmed,
+        queued: isQueued,
+        data: updatedProvider,
+        message
+      });
+    },
+
+    /**
+     * Fast toggle for provider availability status (Online / Busy)
+     */
+    async updateProviderAvailability(providerId, isAvailable) {
+      return await this.updateProviderProfile(providerId, { is_available: Boolean(isAvailable) });
+    },
+
+    /**
+     * Update provider offered services / skills
+     */
+    async updateProviderServices(providerId, skillsList) {
+      const numId = Number(providerId);
+      if (!numId) return null;
+
+      const skillsArray = Array.isArray(skillsList) ? skillsList.map(s => String(s).trim()).filter(Boolean) : [];
+
+      const profileRes = await this.updateProviderProfile(numId, { skills: skillsArray });
+
+      // Local services store update
+      const services = getLocalStore(DB_SERVICES_KEY, []).filter(s => s.provider_id !== numId);
+      skillsArray.forEach((sk, idx) => {
+        services.push({
+          id: Date.now() + idx + 1,
+          provider_id: numId,
+          service_name: sk,
+          is_primary: idx === 0
+        });
+      });
+      setLocalStore(DB_SERVICES_KEY, services);
+
+      const updatedProvider = await this.getProviderById(numId);
+
+      return createWriteResult({
+        status: profileRes.status,
+        entity: 'provider_services',
+        entityId: numId,
+        remoteConfirmed: profileRes.remoteConfirmed,
+        queued: profileRes.queued,
+        data: updatedProvider,
+        message: profileRes.status === 'REMOTE_SUCCESS' 
+          ? 'Skills and services updated.' 
+          : profileRes.message
+      });
+    },
+
+    /**
+     * Update provider working hours schedule
+     */
+    async updateProviderWorkingHours(providerId, workingHours) {
+      const numId = Number(providerId);
+      if (!numId) return null;
+
+      const hoursPayload = {
+        provider_id: numId,
+        weekday_hours: workingHours.weekday || '8:00 AM – 7:00 PM',
+        saturday_hours: workingHours.saturday || '8:00 AM – 6:00 PM',
+        sunday_hours: workingHours.sunday || 'Emergency Callouts (24/7)'
+      };
+
+      let remoteConfirmed = false;
+      let remoteError = null;
+
+      if (isRemoteActive() && (typeof navigator === 'undefined' || navigator.onLine !== false)) {
+        try {
+          const { error } = await supabaseInstance
+            .from('working_hours')
+            .upsert([hoursPayload]);
+          if (error) {
+            remoteError = error;
+          } else {
+            remoteConfirmed = true;
+          }
+        } catch (e) {
+          remoteError = e;
+        }
+      }
+
+      if (remoteError && !isRetryableNetworkError(remoteError)) {
+        return createWriteResult({
+          status: 'REMOTE_FAILURE',
+          entity: 'working_hours',
+          entityId: numId,
+          remoteConfirmed: false,
+          queued: false,
+          error: remoteError,
+          message: remoteError.message || 'Failed to update working hours.'
+        });
+      }
+
+      let isQueued = false;
+      if (!remoteConfirmed) {
+        const userRes = await this.auth.getUser();
+        await outboxManager.enqueue({
+          type: 'WORKING_HOURS_UPDATE',
+          entityId: numId,
+          payload: hoursPayload,
+          userId: userRes?.data?.user?.id || null
+        });
+        isQueued = true;
+      }
+
+      const hoursStore = getLocalStore(DB_WORKING_HOURS_KEY, {});
+      hoursStore[numId] = {
+        weekday: workingHours.weekday || '8:00 AM – 7:00 PM',
+        saturday: workingHours.saturday || '8:00 AM – 6:00 PM',
+        sunday: workingHours.sunday || 'Emergency Callouts (24/7)'
+      };
+      setLocalStore(DB_WORKING_HOURS_KEY, hoursStore);
+
+      const providers = getLocalStore(DB_STORE_KEY, []);
+      const p = providers.find(item => item.id === numId);
+      if (p) {
+        p.working_hours = hoursStore[numId];
+        setLocalStore(DB_STORE_KEY, providers);
+      }
+
+      const status = remoteConfirmed ? 'REMOTE_SUCCESS' : 'OFFLINE_PENDING';
+      const message = remoteConfirmed 
+        ? 'Working hours schedule updated.' 
+        : "Working hours saved offline — will sync when you're back online.";
+
+      return createWriteResult({
+        status,
+        entity: 'working_hours',
+        entityId: numId,
+        remoteConfirmed,
+        queued: isQueued,
+        data: hoursStore[numId],
+        message
+      });
+    },
+
+    /**
+     * Add a completed project to provider portfolio showcase
+     */
+    async addPortfolioItem(providerId, itemData) {
+      const numId = Number(providerId);
+      if (!numId) return null;
+
+      const newItem = {
+        id: 'port-' + Date.now(),
+        provider_id: numId,
+        title: itemData.title || 'Completed Project',
+        category: itemData.category || 'Service Work',
+        description: itemData.description || 'Quality craftsmanship delivered on time and within budget.',
+        is_before_after: Boolean(itemData.isBeforeAfter || itemData.is_before_after),
+        tag: itemData.tag || 'Verified Work',
+        accent_color: itemData.accentColor || itemData.accent_color || '#006B3F',
+        icon: itemData.icon || '🛠️',
+        image_url: itemData.imageUrl || itemData.image_url || null,
+        created_at: new Date().toISOString()
+      };
+
+      let remoteConfirmed = false;
+      let remoteError = null;
+
+      if (isRemoteActive() && (typeof navigator === 'undefined' || navigator.onLine !== false)) {
+        try {
+          const { error } = await supabaseInstance
+            .from('portfolio_items')
+            .insert([newItem]);
+          if (error) {
+            remoteError = error;
+          } else {
+            remoteConfirmed = true;
+          }
+        } catch (e) {
+          remoteError = e;
+        }
+      }
+
+      if (remoteError && !isRetryableNetworkError(remoteError)) {
+        return createWriteResult({
+          status: 'REMOTE_FAILURE',
+          entity: 'portfolio_item',
+          entityId: newItem.id,
+          remoteConfirmed: false,
+          queued: false,
+          error: remoteError,
+          message: remoteError.message || 'Failed to add portfolio item.'
+        });
+      }
+
+      let isQueued = false;
+      if (!remoteConfirmed) {
+        const userRes = await this.auth.getUser();
+        await outboxManager.enqueue({
+          type: 'PORTFOLIO_ADD',
+          entityId: numId,
+          payload: newItem,
+          userId: userRes?.data?.user?.id || null
+        });
+        isQueued = true;
+      }
+
+      const portfolioStore = getLocalStore(DB_PORTFOLIO_KEY, []);
+      portfolioStore.unshift(newItem);
+      setLocalStore(DB_PORTFOLIO_KEY, portfolioStore);
+
+      const providers = getLocalStore(DB_STORE_KEY, []);
+      const p = providers.find(item => item.id === numId);
+      if (p) {
+        if (!p.portfolio_items) p.portfolio_items = [];
+        p.portfolio_items.unshift(newItem);
+        setLocalStore(DB_STORE_KEY, providers);
+      }
+
+      const status = remoteConfirmed ? 'REMOTE_SUCCESS' : 'OFFLINE_PENDING';
+      const message = remoteConfirmed 
+        ? 'Project added to portfolio.' 
+        : "Project saved offline — will sync when you're back online.";
+
+      return createWriteResult({
+        status,
+        entity: 'portfolio_item',
+        entityId: newItem.id,
+        remoteConfirmed,
+        queued: isQueued,
+        data: newItem,
+        message
+      });
+    },
+
+    /**
+     * Delete a portfolio item
+     */
+    async deletePortfolioItem(providerId, itemId) {
+      const numId = Number(providerId);
+      let remoteConfirmed = false;
+      let remoteError = null;
+
+      if (isRemoteActive() && (typeof navigator === 'undefined' || navigator.onLine !== false)) {
+        try {
+          const { error } = await supabaseInstance
+            .from('portfolio_items')
+            .delete()
+            .eq('id', itemId);
+          if (error) {
+            remoteError = error;
+          } else {
+            remoteConfirmed = true;
+          }
+        } catch (e) {
+          remoteError = e;
+        }
+      }
+
+      if (remoteError && !isRetryableNetworkError(remoteError)) {
+        return createWriteResult({
+          status: 'REMOTE_FAILURE',
+          entity: 'portfolio_item',
+          entityId: itemId,
+          remoteConfirmed: false,
+          queued: false,
+          error: remoteError,
+          message: remoteError.message || 'Failed to delete portfolio item.'
+        });
+      }
+
+      let isQueued = false;
+      if (!remoteConfirmed) {
+        const userRes = await this.auth.getUser();
+        await outboxManager.enqueue({
+          type: 'PORTFOLIO_DELETE',
+          entityId: itemId,
+          payload: { id: itemId, provider_id: numId },
+          userId: userRes?.data?.user?.id || null
+        });
+        isQueued = true;
+      }
+
+      const portfolioStore = getLocalStore(DB_PORTFOLIO_KEY, []).filter(item => item.id !== itemId);
+      setLocalStore(DB_PORTFOLIO_KEY, portfolioStore);
+
+      const providers = getLocalStore(DB_STORE_KEY, []);
+      const p = providers.find(item => item.id === numId);
+      if (p && p.portfolio_items) {
+        p.portfolio_items = p.portfolio_items.filter(item => item.id !== itemId);
+        setLocalStore(DB_STORE_KEY, providers);
+      }
+
+      const status = remoteConfirmed ? 'REMOTE_SUCCESS' : 'OFFLINE_PENDING';
+      const message = remoteConfirmed 
+        ? 'Project removed from portfolio.' 
+        : "Project removal queued — will sync when you're back online.";
+
+      LokatorDB.lastWriteResult = createWriteResult({
+        status,
+        entity: 'portfolio_item',
+        entityId: itemId,
+        remoteConfirmed,
+        queued: isQueued,
+        data: { id: itemId, deleted: true },
+        message
+      });
+
+      return true;
+    },
+
+    /**
+     * Get real-time & computed analytics metrics for Provider Dashboard
+     */
+    async getProviderDashboardMetrics(providerId) {
+      const p = await this.getProviderById(providerId);
+      if (!p) return null;
+
+      const reviews = p.reviews || [];
+      const ratingDist = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+      reviews.forEach(r => {
+        const star = Math.min(5, Math.max(1, Math.round(r.rating || 5)));
+        ratingDist[star] = (ratingDist[star] || 0) + 1;
+      });
+
+      const completedJobs = p.completedJobs || 42;
+      const profileViews = Math.round(completedJobs * 8.4 + (p.rating * 45));
+      const directLeads = Math.round(completedJobs * 1.8 + reviews.length * 3);
+
+      return {
+        providerId: p.id,
+        name: p.name,
+        trade: p.trade,
+        rating: p.rating,
+        reviewsCount: p.reviewsCount,
+        completedJobs: completedJobs,
+        profileViewsThisMonth: profileViews,
+        leadsThisMonth: directLeads,
+        responseTime: p.responseTime || '~15 mins',
+        isAvailable: p.isAvailable,
+        isVerified: p.isVerified,
+        plan: p.subscriptionPlan || (p.isTop ? 'premium' : (p.isVerified ? 'verified' : 'basic')),
+        ratingDistribution: ratingDist,
+        recentReviews: reviews.slice(0, 5)
+      };
+    },
+
+    /**
+     * Upgrade subscription plan (Basic -> Verified -> Premium)
+     */
+    async upgradeSubscriptionPlan(providerId, newPlan) {
+      const numId = Number(providerId);
+      const validPlans = ['basic', 'verified', 'premium'];
+      if (!validPlans.includes(newPlan)) throw new Error('Invalid plan selection');
+
+      const isVerified = newPlan !== 'basic';
+      const isTop = newPlan === 'premium';
+
+      const providers = getLocalStore(DB_STORE_KEY, []);
+      const p = providers.find(item => item.id === numId);
+      if (p) {
+        p.subscription_plan = newPlan;
+        p.is_verified = isVerified;
+        p.isTop = isTop;
+        p.badge_title = newPlan === 'premium' ? 'Lokator Premium Partner' : (newPlan === 'verified' ? 'NIN Verified Artisan' : 'Registered Provider');
+        setLocalStore(DB_STORE_KEY, providers);
+      }
+
+      return await this.getProviderById(numId);
+    },
+
+    /**
+     * Sanitize providers list & calculate distance
+     */
+    _sanitizeProvidersList(providers, userLat, userLng, allServices = []) {
+      return providers.map(p => {
+        let dist = null;
+        if (userLat && userLng && p.latitude && p.longitude) {
+          dist = calculateHaversineDistance(userLat, userLng, p.latitude, p.longitude);
+        } else if (p.distanceKm != null) {
+          dist = p.distanceKm;
+        }
+
+        const name = p.name || p.business_name || `${p.first_name || ''} ${p.last_name || ''}`.trim() || 'Service Provider';
+        const trade = p.trade || p.trade_title || 'Artisan';
+        const category = p.category || p.primary_category_slug;
+        const slug = p.slug || p.primary_category_slug;
+        const pServices = p.provider_services || allServices.filter(s => s.provider_id === p.id);
+        const skills = (Array.isArray(p.skills) && p.skills.length > 0) 
+          ? p.skills 
+          : (pServices.length > 0 ? pServices.map(s => s.service_name) : [trade]);
+
+        return {
+          id: p.id,
+          name: name,
+          firstName: p.first_name || (p.name ? p.name.split(' ')[0] : 'Provider'),
+          lastName: p.last_name || (p.name ? p.name.split(' ').slice(1).join(' ') : ''),
+          trade: trade,
+          category: category,
+          slug: slug,
+          city: p.city,
+          state: p.state,
+          area: p.area || `${p.city}, ${p.state}`,
+          address: p.address || p.area,
+          distanceKm: dist,
+          rating: Number(p.rating || 5.0),
+          reviewsCount: p.reviewsCount != null ? p.reviewsCount : (p.reviews_count || 0),
+          experienceYrs: p.experienceYrs != null ? p.experienceYrs : (p.experience_years || 2),
+          isVerified: Boolean(p.is_verified || p.isVerified),
+          isAvailable: p.is_available !== false && p.isAvailable !== false,
+          isTop: Boolean((p.rating >= 4.8 && p.is_verified) || p.isTop),
+          phone: p.phone,
+          whatsappNumber: p.whatsappNumber || p.whatsapp_number || p.phone,
+          avatarBg: p.avatarBg || p.avatar_bg || 'linear-gradient(135deg, #006B3F, #059669)',
+          bio: p.bio,
+          skills: skills,
+          startingPrice: p.startingPrice || p.starting_price || '₦3,000 / service',
+          completedJobs: p.completedJobs || p.completed_jobs || 50,
+          responseTime: p.responseTime || p.response_time || '~15 mins',
+          _searchScore: p._searchScore || 0
+        };
+      });
+    },
+
+    /**
+     * Sanitize individual provider details for profile page
+     */
+    _sanitizeProviderDetail(p) {
+      const name = p.name || p.business_name || `${p.first_name || ''} ${p.last_name || ''}`.trim() || 'Service Provider';
+      const trade = p.trade || p.trade_title || 'Artisan';
+      const category = p.category || p.primary_category_slug;
+      const slug = p.slug || p.primary_category_slug;
+      const services = (p.provider_services || []).map(s => s.service_name);
+      const skills = (Array.isArray(p.skills) && p.skills.length > 0)
+        ? p.skills
+        : (services.length > 0 ? services : [trade]);
+      
+      return {
+        id: p.id,
+        userId: p.user_id || p.userId || null,
+        name: name,
+        businessName: p.business_name || p.businessName || name,
+        firstName: p.first_name || (p.name ? p.name.split(' ')[0] : 'Provider'),
+        lastName: p.last_name || (p.name ? p.name.split(' ').slice(1).join(' ') : ''),
+        trade: trade,
+        category: category,
+        slug: slug,
+        city: p.city,
+        state: p.state,
+        lga: p.lga || p.city,
+        area: p.area || `${p.city}, ${p.state}`,
+        address: p.address || p.area,
+        distanceKm: p.distanceKm || null,
+        rating: Number(p.rating || 5.0),
+        reviewsCount: p.reviewsCount != null ? p.reviewsCount : (p.reviews_count || (p.reviews ? p.reviews.length : 0)),
+        experienceYrs: p.experienceYrs != null ? p.experienceYrs : (p.experience_years || 2),
+        isVerified: Boolean(p.is_verified || p.isVerified),
+        isAvailable: p.is_available !== false && p.isAvailable !== false,
+        isTop: Boolean((p.rating >= 4.8 && p.is_verified) || p.isTop),
+        subscriptionPlan: p.subscription_plan || p.subscriptionPlan || (p.isTop ? 'premium' : (p.is_verified || p.isVerified ? 'verified' : 'basic')),
+        phone: p.phone,
+        whatsappNumber: p.whatsappNumber || p.whatsapp_number || p.phone,
+        email: p.email || null,
+        avatarBg: p.avatarBg || p.avatar_bg || 'linear-gradient(135deg, #006B3F, #059669)',
+        badgeTitle: p.badgeTitle || p.badge_title || 'NIN Verified Artisan',
+        responseTime: p.responseTime || p.response_time || '~15 mins',
+        bio: p.bio || `Certified ${trade} serving ${p.area}.`,
+        skills: skills,
+        startingPrice: p.startingPrice || p.starting_price || '₦3,000 / inspection',
+        completedJobs: p.completedJobs || p.completed_jobs || 120,
+        workingHours: p.workingHours || p.working_hours || {
+          weekday: "8:00 AM – 7:00 PM",
+          saturday: "8:00 AM – 6:00 PM",
+          sunday: "Emergency Callouts (24/7)"
+        },
+        pricingGuide: p.pricingGuide || [
+          { item: "Initial Inspection & Diagnosis", price: p.starting_price || "₦4,000" },
+          { item: "Standard Service Task", price: "₦15,000 – ₦35,000" },
+          { item: "Emergency Priority Repair", price: "₦10,000 – ₦25,000" }
+        ],
+        portfolio: p.portfolio_items || p.portfolio || [
+          {
+            id: "port-1",
+            title: `Completed ${p.trade_title} Project`,
+            category: p.trade_title,
+            description: `Quality ${p.trade_title} craftsmanship delivered for client in ${p.area}.`,
+            isBeforeAfter: false,
+            tag: "Verified Work",
+            accentColor: "#006B3F",
+            icon: "🛠️"
+          }
+        ],
+        reviews: (p.reviews || []).map(r => ({
+          id: r.id,
+          author: r.author_name || r.author || 'Verified Customer',
+          location: r.author_location || r.location || p.city,
+          date: r.created_at ? new Date(r.created_at).toLocaleDateString('en-GB') : 'Recent',
+          rating: r.rating || 5,
+          serviceType: r.service_type || r.serviceType || p.trade_title,
+          comment: r.comment,
+          isVerifiedCustomer: r.is_verified_customer !== false,
+          helpfulCount: r.helpful_count || 0
+        }))
+      };
+    }
+  };
+
+  // Expose Outbox and Sync Engine on LokatorDB
+  LokatorDB.sync = syncEngine;
+  LokatorDB.outbox = outboxManager;
+  LokatorDB.createWriteResult = createWriteResult;
+
+  // 5. AUTOMATIC GLOBAL NAVBAR AUTH SYNC
+  if (typeof document !== 'undefined') {
+    function syncNavbarAuthState() {
+      const navLinks = document.getElementById('nav-links');
+      if (!navLinks) return;
+
+      const user = LokatorDB.auth.getUserSync();
+      const existingLoginLink = document.getElementById('nav-login-link');
+      const existingDashBtn = document.getElementById('nav-dash-btn');
+
+      if (user) {
+        if (existingLoginLink) existingLoginLink.remove();
+        if (!existingDashBtn) {
+          const dashBtn = document.createElement('a');
+          dashBtn.id = 'nav-dash-btn';
+          dashBtn.href = 'dashboard.html';
+          dashBtn.className = 'btn btn-outline';
+          dashBtn.style.cssText = 'border-color: var(--green); color: var(--green); font-weight: 700; display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px;';
+          dashBtn.innerHTML = `<span style="width: 8px; height: 8px; border-radius: 50%; background: var(--green); display: inline-block;"></span> Dashboard`;
+          navLinks.appendChild(dashBtn);
+        }
+      } else {
+        if (existingDashBtn) existingDashBtn.remove();
+        if (!existingLoginLink && !window.location.pathname.includes('login.html')) {
+          const loginLink = document.createElement('a');
+          loginLink.id = 'nav-login-link';
+          loginLink.href = 'login.html';
+          loginLink.className = 'nav-link';
+          loginLink.textContent = 'Provider Sign In';
+          loginLink.style.cssText = 'color: var(--green); font-weight: 700;';
+          navLinks.appendChild(loginLink);
+        }
+      }
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', syncNavbarAuthState);
+    } else {
+      syncNavbarAuthState();
+    }
+
+    LokatorDB.auth.onAuthStateChange(() => {
+      syncNavbarAuthState();
+    });
+  }
+
+  // Expose
+  global.LokatorDB = LokatorDB;
+
+})(typeof window !== 'undefined' ? window : this);
