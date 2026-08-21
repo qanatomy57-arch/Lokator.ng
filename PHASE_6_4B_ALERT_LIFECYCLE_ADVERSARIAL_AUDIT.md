@@ -7,7 +7,8 @@
 **Phase**: 6.4B — Anomaly Intelligence & Alert Lifecycle Adversarial Security Review  
 **Final Adversarial Verdict**: **GREEN WITH NOTES — ZERO P0/P1 VULNERABILITIES DETECTED**  
 **Review Mode**: **STRICTLY READ-ONLY ADVERSARIAL SECURITY AUDIT (ZERO PRODUCTION MODIFICATIONS)**  
-**Cumulative Verification Matrix**: **1,139 / 1,139 TOTAL ASSERTIONS GREEN (100% PASS across 8 test suites)**  
+**Cumulative Verification Matrix**: **1,139 / 1,139 TOTAL ASSERTIONS GREEN (100% PASS across 8 test suites)**
+
 - *Phase 6.4B Adversarial Security Suite*: **76 / 76 PASS (100%)**
 - *Phase 6.4 Alert Lifecycle Suite*: **50 / 50 PASS (100%)**
 - *Phase 6.3 Dedicated Anomaly Engine Suite*: **45 / 45 PASS (100%)**
@@ -65,11 +66,13 @@ graph TD
 ## 3. Review Area Findings
 
 ### 1. Alert RPC Authorization & Hardening
+
 - **`SECURITY DEFINER` Hardening**: All 7 alert RPCs enforce `SECURITY DEFINER` and explicitly lock `search_path = public, extensions, pg_temp;`.
 - **Server-Side Authorization (`public.is_admin()`)**: Evaluates signed `auth.jwt() -> 'app_metadata' ->> 'role' = 'admin'` or `service_role`. Rejects unauthorized callers with `SQLSTATE 42501`.
 - **Privilege Revocation**: Execution is revoked from `PUBLIC` and `anon` on all alert management functions.
 
 ### 2. State Machine Integrity & Transition Guards
+
 - **Allowed Transitions**:
   - `OPEN` $\rightarrow$ `ACKNOWLEDGED`, `RESOLVED`, `SUPPRESSED`
   - `ACKNOWLEDGED` $\rightarrow$ `RESOLVED`, `SUPPRESSED`
@@ -78,35 +81,43 @@ graph TD
 - **Illegal Transitions**: Transitions such as `RESOLVED` directly to `ACKNOWLEDGED`, or `ACKNOWLEDGED` to `OPEN`, are strictly rejected with `SQLSTATE 22023`.
 
 ### 3. Fingerprint Determinism & Deduplication
+
 - **Deterministic SHA-256 Hash**: Canonical format `lower(type):lower(metric):coalesce(lower(category),'all'):YYYY-MM-DD` guarantees identical inputs produce matching 64-character hex digests.
 - **Race Condition Prevention**: `anomaly_fingerprint TEXT NOT NULL UNIQUE` and atomic `ON CONFLICT DO UPDATE` ensure concurrent detections atomically increment `occurrence_count` without duplicate alert row creation.
 
 ### 4. Audit Trail Immutability & Actor Provenance
+
 - **Append-Only Defense**: `REVOKE UPDATE, DELETE ON public.analytics_alert_audit_log FROM PUBLIC, authenticated, anon;` prevents alteration or deletion of audit logs by any user or administrator.
 - **Actor Authentication**: Actor identities are derived strictly from server-side `auth.uid()`, preventing client-side actor spoofing.
 
 ### 5. Outbox Security & Recipient Whitelisting
+
 - **Whitelisted Constants**: `recipient_key` is strictly constrained via `CHECK (recipient_key IN ('ADMIN_OPS_PRIMARY', 'ADMIN_SECURITY_OPS', 'ADMIN_ONCALL_EMERGENCY'))`. Zero arbitrary email or phone parameters exist.
 - **Delivery Disabled**: Status is initialized to `'DISABLED'`, preventing unintended external message dispatch.
 
 ### 6. Anti-Flooding & Fatigue Controls
+
 - **Rate Ceilings**: Enforces $\le 10$ notification records generated per rolling hour platform-wide.
 - **Per-Alert Cooldown**: Requires $\ge 6$ hours between notification outbox insertions for the same anomaly fingerprint.
 - **Failure Isolation**: Outbox queueing is isolated in a `BEGIN ... EXCEPTION WHEN OTHERS THEN NULL; END;` block to ensure that notification queue issues cannot cause alert transaction rollbacks.
 
 ### 7. Resource Exhaustion & Parameter Bounds
+
 - Query windows are strictly bounded: `1 <= p_days <= 90` (SQLSTATE `22023`).
 - Suppression duration is strictly bounded: `1 <= p_duration_hours <= 720` (SQLSTATE `22023`).
 - Severity strings are restricted to `('INFO', 'WARNING', 'CRITICAL')`.
 
 ### 8. SQL Injection Immunity
+
 - Zero dynamic SQL concatenation or `format()` calls exist across all alert migrations and RPCs.
 
 ### 9. Privacy & $k$-Anonymity Affirmation
+
 - **Zero Sensitive Data**: Alert tables persist only pre-aggregated metrics (`current_value`, `baseline_value`, `deviation_score`, `sample_size`). Zero raw `session_id`, raw JSON properties, emails, phone numbers, or IP addresses are stored.
 - **Sample Floors**: Preserves $k \ge 5$ suppression, $N \ge 30$ funnel floor, and $N \ge 250$ Core Web Vitals floor.
 
 ### 10. Decoupled Business Truth Boundary
+
 - Telemetry anomaly alerts are strictly `OBSERVATIONAL_ONLY`.
 - Alerts **CANNOT and MUST NOT** automatically ban, suspend, delist, or alter ratings for artisans in `public.providers` or `public.reviews`.
 

@@ -1,6 +1,6 @@
 # LOKATOR.NG — PHASE 4.4A PWA LAUNCH + INSTALLATION UX AUDIT
 
-### Resilient App Shell Startup & Mobile Installation Polish
+## Resilient App Shell Startup & Mobile Installation Polish
 
 ---
 

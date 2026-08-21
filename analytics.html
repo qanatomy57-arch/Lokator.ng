@@ -9,6 +9,7 @@
   <meta name="robots" content="noindex, nofollow" />
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" type="image/svg+xml" href="icons/icon.svg" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -60,7 +61,7 @@
         <p style="margin: 4px 0 0; color: #94A3B8; font-size: 0.85rem;">Pre-aggregated telemetry intelligence & retention lifecycle</p>
       </div>
       <div style="display: flex; gap: 10px; align-items: center;">
-        <select id="time-window" style="background: #131B2A; color: #FFF; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 8px 12px; font-weight: 600;">
+        <select id="time-window" title="Select Time Window" aria-label="Select Time Window" style="background: #131B2A; color: #FFF; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 8px 12px; font-weight: 600;">
           <option value="7">Last 7 Days</option>
           <option value="30" selected>Last 30 Days</option>
           <option value="90">Last 90 Days</option>
