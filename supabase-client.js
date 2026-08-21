@@ -4134,6 +4134,78 @@
     }
   };
 
+  // Phase 10.0: Strategic Planning, Scenario Portfolio & Executive Command Engine (SPSECE)
+  const strategicPlanningManager = {
+    async createStrategicPlan(title, objectiveType = 'GEOGRAPHIC_EXPANSION', packageIds = [], planModelVersion = 'SPSECE-1.0.0') {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('create_strategic_plan', {
+          p_title: title,
+          p_objective_type: objectiveType,
+          p_package_ids: packageIds,
+          p_plan_model_version: planModelVersion
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        success: true,
+        plan_id: '00000000-0000-0000-0000-000000000000',
+        plan_code: 'PLAN-20260822-MOCK01',
+        plan_digest: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+        lifecycle_state: 'ANALYSIS_COMPLETE',
+        resource_feasibility: 'FEASIBLE',
+        composite_path_score: 85.00,
+        portfolio_hhi: 0.1800,
+        concentration_tier: 'MODERATE',
+        paths_count: packageIds.length || 1,
+        governance_guidance: 'DECISION_SUPPORT — HUMAN_REVIEW_REQUIRED'
+      };
+    },
+
+    async transitionPlanState(planId, targetState, governanceNotes = null) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('transition_strategic_plan_state', {
+          p_plan_id: planId,
+          p_target_state: targetState,
+          p_governance_notes: governanceNotes
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        success: true,
+        plan_id: planId,
+        previous_state: 'ANALYSIS_COMPLETE',
+        current_state: targetState,
+        governance_mode: 'HUMAN_ADMINISTRATOR_CONTROLLED'
+      };
+    },
+
+    async getStrategicPlanDetails(planId) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('get_strategic_plan_details', {
+          p_plan_id: planId
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        success: true,
+        plan_id: planId,
+        plan_code: 'PLAN-20260822-MOCK01',
+        title: 'Mock Strategic Plan',
+        objective_type: 'GEOGRAPHIC_EXPANSION',
+        lifecycle_state: 'ANALYSIS_COMPLETE',
+        resource_feasibility: 'FEASIBLE',
+        composite_path_score: 85.00,
+        portfolio_hhi: 0.1800,
+        concentration_tier: 'MODERATE',
+        plan_digest: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+        paths: []
+      };
+    }
+  };
+
   LokatorDB.strategicCommand = strategicCommandManager;
   LokatorDB.strategicDecision = strategicDecisionManager;
   LokatorDB.strategicOrchestration = strategicOrchestrationManager;
@@ -4144,6 +4216,7 @@
   LokatorDB.strategicDecisionGovernance = strategicDecisionGovernanceManager;
   LokatorDB.strategicLearning = strategicLearningManager;
   LokatorDB.strategicIntelligence = strategicIntelligenceManager;
+  LokatorDB.strategicPlanning = strategicPlanningManager;
   LokatorDB.predictiveGrowth = predictiveGrowthManager;
   LokatorDB.growthIntelligence = growthIntelligenceManager;
   LokatorDB.realtimeGrowth = realtimeGrowthManager;

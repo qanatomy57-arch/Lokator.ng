@@ -1520,6 +1520,57 @@ document.addEventListener('DOMContentLoaded', async () => {
           }
         };
         renderSIOEDSE();
+
+        // Phase 10.0 SPSECE Controller
+        const renderSPSECE = async () => {
+          try {
+            const btnCreatePlan = document.getElementById('btn-create-strategic-plan');
+            if (btnCreatePlan) {
+              btnCreatePlan.addEventListener('click', async () => {
+                btnCreatePlan.textContent = 'Generating Strategic Plan...';
+                btnCreatePlan.disabled = true;
+                try {
+                  const res = await LokatorDB.strategicPlanning.createStrategicPlan(
+                    '2026 Nationwide Multi-Region Expansion Plan',
+                    'GEOGRAPHIC_EXPANSION',
+                    []
+                  );
+                  if (res && res.plan_id) {
+                    document.getElementById('spsece-composite-score').textContent = Number(res.composite_path_score || 0).toFixed(2);
+                    document.getElementById('spsece-lifecycle-state').textContent = res.lifecycle_state || 'ANALYSIS_COMPLETE';
+                    document.getElementById('spsece-feasibility').textContent = res.resource_feasibility || 'FEASIBLE';
+                    document.getElementById('spsece-hhi').textContent = Number(res.portfolio_hhi || 0).toFixed(4);
+
+                    const container = document.getElementById('spsece-plan-container');
+                    container.innerHTML = `
+                      <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 12px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                          <div style="font-weight: 700; color: #E2E8F0; font-size: 0.85rem;">
+                            <span style="color: #F59E0B; margin-right: 6px;">${res.plan_code}</span> (Digest: ${String(res.plan_digest).substring(0, 16)}...)
+                          </div>
+                          <div style="font-size: 0.72rem; color: #94A3B8; margin-top: 4px;">
+                            State: ${res.lifecycle_state} | Feasibility: ${res.resource_feasibility} | HHI: ${res.portfolio_hhi} (${res.concentration_tier})
+                          </div>
+                        </div>
+                        <div style="text-align: right;">
+                          <span class="status-tag" style="background: rgba(245,158,11,0.2); color: #F59E0B;">SEALED_PLAN</span>
+                        </div>
+                      </div>
+                    `;
+                  }
+                } catch (e) {
+                  alert('Strategic plan creation failed: ' + e.message);
+                } finally {
+                  btnCreatePlan.textContent = 'Create Strategic Plan';
+                  btnCreatePlan.disabled = false;
+                }
+              });
+            }
+          } catch (e) {
+            console.warn('SPSECE initialization failed:', e.message);
+          }
+        };
+        renderSPSECE();
       }
 
     } catch (err) {

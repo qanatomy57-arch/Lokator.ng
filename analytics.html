@@ -1025,6 +1025,53 @@
         </div>
       </section>
 
+      <!-- Phase 10.0 Strategic Planning, Scenario Portfolio & Executive Command Engine (SPSECE) -->
+      <section>
+        <div class="section-title">Phase 10.0: Strategic Planning & Executive Command (SPSECE)</div>
+        <div class="card" style="margin-bottom: 24px; border-left: 4px solid #F59E0B;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div style="font-size: 0.85rem; color: #94A3B8;">
+              <span class="status-tag" style="background: rgba(245,158,11,0.2); color: #F59E0B; margin-right: 8px;">STRATEGIC_PLANNING</span>
+              <span class="status-tag" style="background: rgba(16,185,129,0.2); color: #10B981; margin-right: 8px;">ANALYSIS_COMPLETE</span>
+              <span class="status-tag" style="background: rgba(239,68,68,0.2); color: #EF4444; margin-right: 8px;">HUMAN_ADMIN_ONLY</span>
+            </div>
+            <button id="btn-create-strategic-plan" class="btn-action" style="padding: 4px 10px; font-size: 0.75rem; background: #F59E0B; color: #0E1522; font-weight: 700;">Create Strategic Plan</button>
+          </div>
+
+          <div style="font-size: 0.75rem; color: #64748B; margin-bottom: 14px;">
+            Apex strategic planning integrating objectives, candidate trajectories, bounded scenario trees (depth &le; 3), advisory contingencies, and governed milestone schedules.
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 14px;">
+            <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 10px;">
+              <div style="font-size: 0.7rem; color: #64748B; text-transform: uppercase;">Composite Path Score</div>
+              <div id="spsece-composite-score" style="font-size: 1.25rem; font-weight: 800; color: #F59E0B; margin-top: 4px;">0.00</div>
+            </div>
+            <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 10px;">
+              <div style="font-size: 0.7rem; color: #64748B; text-transform: uppercase;">Lifecycle State</div>
+              <div id="spsece-lifecycle-state" style="font-size: 1.25rem; font-weight: 800; color: #10B981; margin-top: 4px;">DRAFT</div>
+            </div>
+            <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 10px;">
+              <div style="font-size: 0.7rem; color: #64748B; text-transform: uppercase;">Resource Feasibility</div>
+              <div id="spsece-feasibility" style="font-size: 1.25rem; font-weight: 800; color: #38BDF8; margin-top: 4px;">FEASIBLE</div>
+            </div>
+            <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 10px;">
+              <div style="font-size: 0.7rem; color: #64748B; text-transform: uppercase;">Portfolio HHI</div>
+              <div id="spsece-hhi" style="font-size: 1.25rem; font-weight: 800; color: #A855F7; margin-top: 4px;">0.0000</div>
+            </div>
+          </div>
+
+          <div style="margin-top: 14px;">
+            <div style="font-size: 0.85rem; font-weight: 700; color: #E2E8F0; margin-bottom: 8px;">Strategic Plan Summary & Command Digest</div>
+            <div id="spsece-plan-container" style="display: flex; flex-direction: column; gap: 8px;">
+              <div style="font-size: 0.85rem; color: #64748B; padding: 12px; background: #0E1522; border-radius: 6px;">
+                No strategic plan instantiated yet. Click Create Strategic Plan.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
     </main>
   </div>
 
