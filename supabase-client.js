@@ -2694,6 +2694,113 @@
     }
   };
 
+  const analyticsAlertsManager = {
+    async getSummary(days = 7) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('get_analytics_alert_summary', {
+          p_days: days
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        window_days: days,
+        platform_alert_status: 'HEALTHY',
+        open_alerts_count: 0,
+        critical_alerts_count: 0,
+        warning_alerts_count: 0,
+        resolved_alerts_count: 0,
+        suppressed_alerts_count: 0,
+        total_alerts_count: 0,
+        alerts: [],
+        observational_status: 'OBSERVATIONAL_ONLY',
+        generated_at: new Date().toISOString()
+      };
+    },
+    async getDetail(alertId) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('get_analytics_alert_detail', {
+          p_alert_id: alertId
+        });
+        if (error) throw error;
+        return data;
+      }
+      return { alert: null, audit_trail: [], observational_status: 'OBSERVATIONAL_ONLY', generated_at: new Date().toISOString() };
+    },
+    async acknowledge(alertId, reason = null) {
+      if (isRemoteActive()) {
+        const { error } = await supabaseInstance.rpc('acknowledge_analytics_alert', {
+          p_alert_id: alertId,
+          p_reason: reason
+        });
+        if (error) throw error;
+        return true;
+      }
+      return true;
+    },
+    async resolve(alertId, reason = null) {
+      if (isRemoteActive()) {
+        const { error } = await supabaseInstance.rpc('resolve_analytics_alert', {
+          p_alert_id: alertId,
+          p_reason: reason
+        });
+        if (error) throw error;
+        return true;
+      }
+      return true;
+    },
+    async suppress(alertId, reason = null, durationHours = 24) {
+      if (isRemoteActive()) {
+        const { error } = await supabaseInstance.rpc('suppress_analytics_alert', {
+          p_alert_id: alertId,
+          p_reason: reason,
+          p_duration_hours: durationHours
+        });
+        if (error) throw error;
+        return true;
+      }
+      return true;
+    },
+    async reopen(alertId, reason = null) {
+      if (isRemoteActive()) {
+        const { error } = await supabaseInstance.rpc('reopen_analytics_alert', {
+          p_alert_id: alertId,
+          p_reason: reason
+        });
+        if (error) throw error;
+        return true;
+      }
+      return true;
+    },
+    async createOrUpdateAlert(params) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('create_or_update_analytics_alert', {
+          p_anomaly_type: params.anomalyType,
+          p_metric_name: params.metricName,
+          p_category: params.category || null,
+          p_severity: params.severity,
+          p_current_value: params.currentValue,
+          p_baseline_value: params.baselineValue,
+          p_deviation_score: params.deviationScore,
+          p_sample_size: params.sampleSize,
+          p_window_days: params.windowDays || 7
+        });
+        if (error) throw error;
+        return data;
+      }
+      return null;
+    }
+  };
+
+  LokatorDB.analyticsAlerts = analyticsAlertsManager;
+  LokatorDB.analytics.getAlertSummary = analyticsAlertsManager.getSummary;
+  LokatorDB.analytics.getAlertDetail = analyticsAlertsManager.getDetail;
+  LokatorDB.analytics.acknowledgeAlert = analyticsAlertsManager.acknowledge;
+  LokatorDB.analytics.resolveAlert = analyticsAlertsManager.resolve;
+  LokatorDB.analytics.suppressAlert = analyticsAlertsManager.suppress;
+  LokatorDB.analytics.reopenAlert = analyticsAlertsManager.reopen;
+
+
   // 5. AUTOMATIC GLOBAL NAVBAR AUTH SYNC
   if (typeof document !== 'undefined') {
     function syncNavbarAuthState() {

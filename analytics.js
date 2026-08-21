@@ -131,6 +131,130 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       }
 
+      // 5. Fetch Alert Lifecycle & Incident Intelligence
+      const alertSummary = await LokatorDB.analyticsAlerts.getSummary(days);
+      if (alertSummary) {
+        const platformAlertBadge = document.getElementById('platform-alert-status-badge');
+        const statOpen = document.getElementById('stat-open-alerts');
+        const statCritical = document.getElementById('stat-critical-alerts');
+        const statWarning = document.getElementById('stat-warning-alerts');
+        const statResolved = document.getElementById('stat-resolved-alerts');
+        const alertList = document.getElementById('alert-lifecycle-list');
+
+        if (statOpen) statOpen.textContent = alertSummary.open_alerts_count || 0;
+        if (statCritical) statCritical.textContent = alertSummary.critical_alerts_count || 0;
+        if (statWarning) statWarning.textContent = alertSummary.warning_alerts_count || 0;
+        if (statResolved) statResolved.textContent = alertSummary.resolved_alerts_count || 0;
+
+        if (platformAlertBadge) {
+          platformAlertBadge.textContent = alertSummary.platform_alert_status || 'HEALTHY';
+          if (alertSummary.platform_alert_status === 'CRITICAL_ALERT') {
+            platformAlertBadge.className = 'status-tag';
+            platformAlertBadge.style.background = 'rgba(239, 68, 68, 0.25)';
+            platformAlertBadge.style.color = '#F87171';
+          } else if (alertSummary.platform_alert_status === 'WARNING_ALERT') {
+            platformAlertBadge.className = 'status-tag status-notice';
+          } else if (alertSummary.platform_alert_status === 'WATCH') {
+            platformAlertBadge.className = 'status-tag';
+            platformAlertBadge.style.background = 'rgba(96, 165, 250, 0.25)';
+            platformAlertBadge.style.color = '#60A5FA';
+          } else {
+            platformAlertBadge.className = 'status-tag status-good';
+          }
+        }
+
+        if (alertList) {
+          const alerts = alertSummary.alerts || [];
+          if (alerts.length === 0) {
+            alertList.innerHTML = `
+              <div style="font-size: 0.85rem; color: #64748B; padding: 12px; background: #0E1522; border-radius: 6px;">
+                No persistent operational alerts in the evaluated ${days}-day window.
+              </div>
+            `;
+          } else {
+            alertList.innerHTML = alerts.map(alt => {
+              const sevColor = alt.severity === 'CRITICAL' ? '#F87171' : (alt.severity === 'WARNING' ? '#FBBF24' : '#60A5FA');
+              const statusBg = alt.status === 'OPEN' ? 'rgba(96, 165, 250, 0.2)' : (alt.status === 'RESOLVED' ? 'rgba(37, 211, 102, 0.2)' : 'rgba(148, 163, 184, 0.2)');
+              const statusColor = alt.status === 'OPEN' ? '#60A5FA' : (alt.status === 'RESOLVED' ? '#25D366' : '#94A3B8');
+
+              let actionButtons = '';
+              if (alt.status === 'OPEN') {
+                actionButtons = `
+                  <button class="btn-ack" data-id="${alt.id}" style="padding: 4px 8px; font-size: 0.75rem; background: #1E293B; border: 1px solid #334155; color: #E2E8F0; border-radius: 4px; cursor: pointer;">Acknowledge</button>
+                  <button class="btn-res" data-id="${alt.id}" style="padding: 4px 8px; font-size: 0.75rem; background: rgba(37, 211, 102, 0.15); border: 1px solid rgba(37, 211, 102, 0.3); color: #25D366; border-radius: 4px; cursor: pointer;">Resolve</button>
+                  <button class="btn-sup" data-id="${alt.id}" style="padding: 4px 8px; font-size: 0.75rem; background: #1E293B; border: 1px solid #334155; color: #94A3B8; border-radius: 4px; cursor: pointer;">Suppress 24h</button>
+                `;
+              } else if (alt.status === 'ACKNOWLEDGED') {
+                actionButtons = `
+                  <button class="btn-res" data-id="${alt.id}" style="padding: 4px 8px; font-size: 0.75rem; background: rgba(37, 211, 102, 0.15); border: 1px solid rgba(37, 211, 102, 0.3); color: #25D366; border-radius: 4px; cursor: pointer;">Resolve</button>
+                  <button class="btn-sup" data-id="${alt.id}" style="padding: 4px 8px; font-size: 0.75rem; background: #1E293B; border: 1px solid #334155; color: #94A3B8; border-radius: 4px; cursor: pointer;">Suppress 24h</button>
+                `;
+              } else if (alt.status === 'RESOLVED' || alt.status === 'SUPPRESSED') {
+                actionButtons = `
+                  <button class="btn-reopen" data-id="${alt.id}" style="padding: 4px 8px; font-size: 0.75rem; background: #1E293B; border: 1px solid #334155; color: #E2E8F0; border-radius: 4px; cursor: pointer;">Reopen</button>
+                `;
+              }
+
+              return `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; background: #0E1522; border-radius: 6px; border-left: 3px solid ${sevColor};">
+                  <div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <span style="font-weight: 700; font-size: 0.85rem; color: #E2E8F0;">[${alt.category || 'SYSTEM'}] ${alt.metric}</span>
+                      <span class="status-tag" style="background: rgba(255,255,255,0.06); color: ${sevColor}; font-size: 0.7rem;">${alt.severity}</span>
+                      <span class="status-tag" style="background: ${statusBg}; color: ${statusColor}; font-size: 0.7rem;">${alt.status}</span>
+                      <span style="font-size: 0.75rem; color: #64748B;">(${alt.occurrence_count || 1}x)</span>
+                    </div>
+                    <div style="font-size: 0.8rem; color: #94A3B8; margin-top: 4px;">
+                      Deviation: ${alt.deviation_score || '0'} | Baseline: ${alt.baseline_value || '0'} | Current: ${alt.current_value || '0'} (N=${alt.sample_size || '0'})
+                    </div>
+                  </div>
+                  <div style="display: flex; gap: 6px;">
+                    ${actionButtons}
+                  </div>
+                </div>
+              `;
+            }).join('');
+
+            // Attach action listeners
+            alertList.querySelectorAll('.btn-ack').forEach(btn => {
+              btn.addEventListener('click', async (e) => {
+                const id = e.target.getAttribute('data-id');
+                btn.disabled = true;
+                await LokatorDB.analyticsAlerts.acknowledge(id, 'Acknowledged from dashboard');
+                loadAnalytics();
+              });
+            });
+
+            alertList.querySelectorAll('.btn-res').forEach(btn => {
+              btn.addEventListener('click', async (e) => {
+                const id = e.target.getAttribute('data-id');
+                btn.disabled = true;
+                await LokatorDB.analyticsAlerts.resolve(id, 'Resolved from dashboard');
+                loadAnalytics();
+              });
+            });
+
+            alertList.querySelectorAll('.btn-sup').forEach(btn => {
+              btn.addEventListener('click', async (e) => {
+                const id = e.target.getAttribute('data-id');
+                btn.disabled = true;
+                await LokatorDB.analyticsAlerts.suppress(id, 'Suppressed 24h from dashboard', 24);
+                loadAnalytics();
+              });
+            });
+
+            alertList.querySelectorAll('.btn-reopen').forEach(btn => {
+              btn.addEventListener('click', async (e) => {
+                const id = e.target.getAttribute('data-id');
+                btn.disabled = true;
+                await LokatorDB.analyticsAlerts.reopen(id, 'Reopened from dashboard');
+                loadAnalytics();
+              });
+            });
+          }
+        }
+      }
+
     } catch (err) {
       console.error('Failed to load internal analytics:', err);
       if (err.message && err.message.toLowerCase().includes('unauthorized')) {

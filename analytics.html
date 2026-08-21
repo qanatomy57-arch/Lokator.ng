@@ -187,10 +187,44 @@
         </div>
       </section>
 
-      <!-- 5. Core Web Vitals (Real-User Performance) -->
+      <!-- 5. Alert Lifecycle & Incident Intelligence -->
+      <section id="section-alert-lifecycle">
+        <div class="section-title">
+          <span>5. Alert Lifecycle & Incident Intelligence</span>
+          <span id="platform-alert-status-badge" class="status-tag status-good">HEALTHY</span>
+        </div>
+        <div class="panel-card">
+          <div class="kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); margin-bottom: 16px;">
+            <div class="kpi-box">
+              <div class="kpi-val" id="stat-open-alerts" style="color: #60A5FA;">0</div>
+              <div class="kpi-lbl">Open Alerts</div>
+            </div>
+            <div class="kpi-box">
+              <div class="kpi-val" id="stat-critical-alerts" style="color: #F87171;">0</div>
+              <div class="kpi-lbl">Critical</div>
+            </div>
+            <div class="kpi-box">
+              <div class="kpi-val" id="stat-warning-alerts" style="color: #FBBF24;">0</div>
+              <div class="kpi-lbl">Warnings</div>
+            </div>
+            <div class="kpi-box">
+              <div class="kpi-val" id="stat-resolved-alerts" style="color: #25D366;">0</div>
+              <div class="kpi-lbl">Resolved (7d)</div>
+            </div>
+          </div>
+
+          <div id="alert-lifecycle-list" style="display: flex; flex-direction: column; gap: 10px;">
+            <div style="font-size: 0.85rem; color: #64748B; padding: 12px; background: #0E1522; border-radius: 6px;">
+              No persistent operational alerts in the evaluated window.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6. Core Web Vitals (Real-User Performance) -->
       <section>
         <div class="section-title">
-          <span>5. Core Web Vitals (Real-User Performance)</span>
+          <span>6. Core Web Vitals (Real-User Performance)</span>
           <span id="cwv-status-badge" class="status-tag status-notice">INSTRUMENTATION_ONLY</span>
         </div>
         <div class="cwv-grid">
