@@ -4206,6 +4206,82 @@
     }
   };
 
+  // Phase 10.1: Strategic Execution Monitoring, Variance Detection & Adaptive Control Engine (SEMVDACE)
+  const strategicMonitoringManager = {
+    async createMonitoringBaseline(planId, modelVersion = 'SEMVDACE-1.0.0') {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('create_strategic_monitoring_baseline', {
+          p_plan_id: planId,
+          p_model_version: modelVersion
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        success: true,
+        baseline_id: '00000000-0000-0000-0000-000000000000',
+        baseline_code: 'BSL-20260822-MOCK01',
+        baseline_digest: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+        approved_ev: 1250000.00,
+        approved_cost: 450000.00,
+        approved_milestones: 3,
+        status: 'BASELINE_FROZEN_IMMUTABLE'
+      };
+    },
+
+    async recordObservation(baselineId, observationPeriod, actualCost, actualEv, completedMilestones, modelVersion = 'SEMVDACE-1.0.0') {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('record_execution_observation', {
+          p_baseline_id: baselineId,
+          p_observation_period: observationPeriod,
+          p_actual_cost: actualCost,
+          p_actual_ev: actualEv,
+          p_completed_milestones: completedMilestones,
+          p_model_version: modelVersion
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        success: true,
+        observation_id: '00000000-0000-0000-0000-000000000000',
+        baseline_id: baselineId,
+        variance_status: 'ON_TRACK',
+        early_warning_tier: 'INFO',
+        strategic_deviation: 'NO_DEVIATION',
+        corrective_action: 'CONTINUE',
+        recovery_trajectory: 'STABLE',
+        recovery_probability: 95.00,
+        cost_variance_pct: 0.00,
+        ev_variance_pct: 0.00,
+        guidance: 'DECISION_SUPPORT — MANUAL_ACTION_REQUIRED'
+      };
+    },
+
+    async getMonitoringReport(baselineId) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('get_strategic_monitoring_report', {
+          p_baseline_id: baselineId
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        success: true,
+        baseline_id: baselineId,
+        baseline_code: 'BSL-20260822-MOCK01',
+        approved_ev: 1250000.00,
+        approved_cost: 450000.00,
+        approved_milestones: 3,
+        baseline_digest: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+        latest_variance_status: 'ON_TRACK',
+        latest_warning_tier: 'INFO',
+        latest_corrective_action: 'CONTINUE',
+        observations: []
+      };
+    }
+  };
+
   LokatorDB.strategicCommand = strategicCommandManager;
   LokatorDB.strategicDecision = strategicDecisionManager;
   LokatorDB.strategicOrchestration = strategicOrchestrationManager;
@@ -4217,6 +4293,7 @@
   LokatorDB.strategicLearning = strategicLearningManager;
   LokatorDB.strategicIntelligence = strategicIntelligenceManager;
   LokatorDB.strategicPlanning = strategicPlanningManager;
+  LokatorDB.strategicMonitoring = strategicMonitoringManager;
   LokatorDB.predictiveGrowth = predictiveGrowthManager;
   LokatorDB.growthIntelligence = growthIntelligenceManager;
   LokatorDB.realtimeGrowth = realtimeGrowthManager;

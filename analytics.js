@@ -1571,6 +1571,59 @@ document.addEventListener('DOMContentLoaded', async () => {
           }
         };
         renderSPSECE();
+
+        // Phase 10.1 SEMVDACE Controller
+        const renderSEMVDACE = async () => {
+          try {
+            const btnRecordObs = document.getElementById('btn-record-execution-obs');
+            if (btnRecordObs) {
+              btnRecordObs.addEventListener('click', async () => {
+                btnRecordObs.textContent = 'Recording Observation...';
+                btnRecordObs.disabled = true;
+                try {
+                  const res = await LokatorDB.strategicMonitoring.recordObservation(
+                    '00000000-0000-0000-0000-000000000000',
+                    '2026-M08',
+                    450000.00,
+                    1250000.00,
+                    1
+                  );
+                  if (res && res.observation_id) {
+                    document.getElementById('semvdace-variance-status').textContent = res.variance_status || 'ON_TRACK';
+                    document.getElementById('semvdace-warning-tier').textContent = res.early_warning_tier || 'INFO';
+                    document.getElementById('semvdace-corrective-action').textContent = res.corrective_action || 'CONTINUE';
+                    document.getElementById('semvdace-recovery-prob').textContent = Number(res.recovery_probability || 95.0).toFixed(2) + '%';
+
+                    const container = document.getElementById('semvdace-monitoring-container');
+                    container.innerHTML = `
+                      <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 12px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                          <div style="font-weight: 700; color: #E2E8F0; font-size: 0.85rem;">
+                            <span style="color: #06B6D4; margin-right: 6px;">${res.variance_status}</span> (${res.early_warning_tier})
+                          </div>
+                          <div style="font-size: 0.72rem; color: #94A3B8; margin-top: 4px;">
+                            Action: ${res.corrective_action} | Trajectory: ${res.recovery_trajectory} | Guidance: ${res.guidance}
+                          </div>
+                        </div>
+                        <div style="text-align: right;">
+                          <span class="status-tag" style="background: rgba(6,182,212,0.2); color: #06B6D4;">RECORDED_OBSERVATION</span>
+                        </div>
+                      </div>
+                    `;
+                  }
+                } catch (e) {
+                  alert('Recording observation failed: ' + e.message);
+                } finally {
+                  btnRecordObs.textContent = 'Record Execution Observation';
+                  btnRecordObs.disabled = false;
+                }
+              });
+            }
+          } catch (e) {
+            console.warn('SEMVDACE initialization failed:', e.message);
+          }
+        };
+        renderSEMVDACE();
       }
 
     } catch (err) {
