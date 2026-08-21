@@ -3738,12 +3738,123 @@
     }
   };
 
+  // Phase 9.6: Strategic Portfolio Resilience, Stress Testing & Contingency Intelligence (SPRTCIE)
+  const strategicResilienceManager = {
+    async createStressProfile({
+      profileName,
+      shockClass = 'CAPITAL_SHOCK',
+      deltaCapital = 0.00,
+      deltaOperations = 0.00,
+      deltaPersonnel = 0.00,
+      deltaCampaigns = 0.00,
+      deltaGeo = 0.00,
+      deltaTime = 0.00,
+      demandShockRatio = 0.00,
+      costInflationRatio = 0.00,
+      description = null
+    }) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('create_resilience_stress_profile', {
+          p_profile_name: profileName,
+          p_shock_class: shockClass,
+          p_delta_capital: deltaCapital,
+          p_delta_operations: deltaOperations,
+          p_delta_personnel: deltaPersonnel,
+          p_delta_campaigns: deltaCampaigns,
+          p_delta_geo: deltaGeo,
+          p_delta_time: deltaTime,
+          p_demand_shock_ratio: demandShockRatio,
+          p_cost_inflation_ratio: costInflationRatio,
+          p_description: description
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        success: true,
+        profile_id: '00000000-0000-0000-0000-000000000000',
+        profile_name: profileName,
+        shock_class: shockClass,
+        status: 'OFFLINE_MOCK'
+      };
+    },
+
+    async runStressTest(planId, profileId, modelVersion = 'SPRTCIE-1.0.0') {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('run_resilience_stress_test', {
+          p_plan_id: planId,
+          p_profile_id: profileId,
+          p_model_version: modelVersion
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        success: true,
+        run_id: '00000000-0000-0000-0000-000000000000',
+        resilience_score: 85.50,
+        resilience_tier: 'IMMUNE',
+        survival_ratio_count: 1.0000,
+        survival_ratio_value: 0.9500,
+        dominant_failure_constraint: 'NONE',
+        contingency_value_recovery_ratio: 1.0000,
+        executive_brief: {
+          provenance: 'DECISION_SUPPORT_ONLY',
+          status: 'SIMULATED_STRESS_TEST',
+          action_guidance: 'MANUAL_ACTION_REQUIRED',
+          model_version: modelVersion,
+          resilience_score: 85.50,
+          resilience_tier: 'IMMUNE'
+        }
+      };
+    },
+
+    async compareStressProfiles(planId, profileIds, modelVersion = 'SPRTCIE-1.0.0') {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('compare_resilience_stress_profiles', {
+          p_plan_id: planId,
+          p_profile_ids: profileIds,
+          p_model_version: modelVersion
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        success: true,
+        plan_id: planId,
+        model_version: modelVersion,
+        comparison_count: (profileIds || []).length,
+        comparison_results: []
+      };
+    },
+
+    async getStressRun(runId) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('get_resilience_stress_run', {
+          p_run_id: runId
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        success: true,
+        run_id: runId,
+        resilience_score: 0.00,
+        resilience_tier: 'CRITICAL_FAILURE',
+        constraint_failures: [],
+        contingency_portfolios: [],
+        executive_brief: {}
+      };
+    }
+  };
+
   LokatorDB.strategicCommand = strategicCommandManager;
   LokatorDB.strategicDecision = strategicDecisionManager;
   LokatorDB.strategicOrchestration = strategicOrchestrationManager;
   LokatorDB.strategicScenario = strategicScenarioManager;
   LokatorDB.strategicOptimization = strategicOptimizationManager;
   LokatorDB.strategicResourceAllocation = strategicResourceAllocationManager;
+  LokatorDB.strategicResilience = strategicResilienceManager;
   LokatorDB.predictiveGrowth = predictiveGrowthManager;
   LokatorDB.growthIntelligence = growthIntelligenceManager;
   LokatorDB.realtimeGrowth = realtimeGrowthManager;

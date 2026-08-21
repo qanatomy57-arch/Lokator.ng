@@ -1318,6 +1318,57 @@ document.addEventListener('DOMContentLoaded', async () => {
           }
         };
         renderSRACOE();
+
+        // Phase 9.6 SPRTCIE Controller
+        const renderSPRTCIE = async () => {
+          try {
+            const btnRunResilience = document.getElementById('btn-run-resilience-stress');
+            if (btnRunResilience) {
+              btnRunResilience.addEventListener('click', async () => {
+                btnRunResilience.textContent = 'Simulating Stress Shocks...';
+                btnRunResilience.disabled = true;
+                try {
+                  const res = await LokatorDB.strategicResilience.runStressTest(
+                    '00000000-0000-0000-0000-000000000000',
+                    '00000000-0000-0000-0000-000000000000',
+                    'SPRTCIE-1.0.0'
+                  );
+                  if (res && res.run_id) {
+                    document.getElementById('sprtcie-resilience-score').textContent = Number(res.resilience_score || 0).toFixed(2);
+                    document.getElementById('sprtcie-resilience-tier').textContent = res.resilience_tier || 'STABLE';
+                    document.getElementById('sprtcie-survival-value').textContent = (Number(res.survival_ratio_value || 0) * 100).toFixed(1) + '%';
+                    document.getElementById('sprtcie-dominant-bottleneck').textContent = res.dominant_failure_constraint || 'NONE';
+
+                    const container = document.getElementById('sprtcie-contingency-container');
+                    container.innerHTML = `
+                      <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 12px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                          <div style="font-weight: 700; color: #E2E8F0; font-size: 0.85rem;">
+                            <span style="color: #EC4899; margin-right: 6px;">CONTINGENCY_PORTFOLIO_01</span> (Recovery: ${(Number(res.contingency_value_recovery_ratio || 0) * 100).toFixed(1)}%)
+                          </div>
+                          <div style="font-size: 0.72rem; color: #94A3B8; margin-top: 4px;">
+                            Dominant Bottleneck: ${res.dominant_failure_constraint} | Actions Survived: ${(Number(res.survival_ratio_count || 0) * 100).toFixed(1)}%
+                          </div>
+                        </div>
+                        <div style="text-align: right;">
+                          <span class="status-tag" style="background: rgba(236,72,153,0.2); color: #EC4899;">SIMULATED_RECOVERY</span>
+                        </div>
+                      </div>
+                    `;
+                  }
+                } catch (e) {
+                  alert('Resilience stress test simulation failed: ' + e.message);
+                } finally {
+                  btnRunResilience.textContent = 'Run Macro Resilience Stress Test';
+                  btnRunResilience.disabled = false;
+                }
+              });
+            }
+          } catch (e) {
+            console.warn('SPRTCIE initialization failed:', e.message);
+          }
+        };
+        renderSPRTCIE();
       }
 
     } catch (err) {
