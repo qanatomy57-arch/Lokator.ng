@@ -131,6 +131,12 @@
       const splash = document.getElementById('pwa-app-splash');
       if (splash && !splash.classList.contains('splash-fade-out')) {
         splash.classList.add('splash-fade-out');
+        if (typeof performance !== 'undefined' && typeof performance.now === 'function') {
+          const splashTime = Math.round(performance.now());
+          if (typeof LokatorTelemetry !== 'undefined' && typeof LokatorTelemetry.setPWASplashTiming === 'function') {
+            LokatorTelemetry.setPWASplashTiming(splashTime);
+          }
+        }
         setTimeout(() => {
           if (splash && splash.parentNode) {
             splash.parentNode.removeChild(splash);
