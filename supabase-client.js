@@ -3670,11 +3670,80 @@
     }
   };
 
+  const strategicResourceAllocationManager = {
+    async generateResourcePlan(portfolioId, modelVersion = 'SRACOE-1.0.0', envelope = {}) {
+      const {
+        budgetCapital = 1000000.00,
+        capacityOperations = 100.00,
+        capacityPersonnel = 10,
+        capacityCampaigns = 5,
+        capacityGeoLga = 20,
+        capacityTimeDays = 90
+      } = envelope;
+
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('generate_strategic_resource_allocation', {
+          p_portfolio_id: portfolioId,
+          p_model_version: modelVersion,
+          p_budget_capital: budgetCapital,
+          p_capacity_operations: capacityOperations,
+          p_capacity_personnel: capacityPersonnel,
+          p_capacity_campaigns: capacityCampaigns,
+          p_capacity_geo_lga: capacityGeoLga,
+          p_capacity_time_days: capacityTimeDays
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        status: 'OFFLINE_MOCK',
+        plan_id: '00000000-0000-0000-0000-000000000000',
+        portfolio_id: portfolioId,
+        model_version: 'SRACOE-1.0.0',
+        robustness: 'STABLE',
+        composite_resource_risk: 0.00,
+        executive_brief: {
+          classification: 'DECISION_SUPPORT_RECOMMENDATION',
+          headline: 'Resource allocation completed (Offline Mock)',
+          aggregate_expected_value: 0.00,
+          composite_resource_risk: 0.00,
+          robustness_classification: 'STABLE',
+          disclaimer: 'DECISION_SUPPORT_ONLY — MANUAL_ACTION_REQUIRED. NOT EXECUTED.'
+        }
+      };
+    },
+
+    async getResourcePlan(planId) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('get_strategic_resource_plan', {
+          p_plan_id: planId
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        status: 'OFFLINE_MOCK',
+        plan_id: planId,
+        portfolio_id: '00000000-0000-0000-0000-000000000000',
+        model_version: 'SRACOE-1.0.0',
+        envelope: {},
+        allocated: {},
+        residual: {},
+        metrics: { selected_count: 0, aggregate_expected_value: 0.00, composite_resource_risk: 0.00, robustness_classification: 'STABLE' },
+        shadow_prices: {},
+        sensitivity_projections: [],
+        allocations: [],
+        executive_brief: {}
+      };
+    }
+  };
+
   LokatorDB.strategicCommand = strategicCommandManager;
   LokatorDB.strategicDecision = strategicDecisionManager;
   LokatorDB.strategicOrchestration = strategicOrchestrationManager;
   LokatorDB.strategicScenario = strategicScenarioManager;
   LokatorDB.strategicOptimization = strategicOptimizationManager;
+  LokatorDB.strategicResourceAllocation = strategicResourceAllocationManager;
   LokatorDB.predictiveGrowth = predictiveGrowthManager;
   LokatorDB.growthIntelligence = growthIntelligenceManager;
   LokatorDB.realtimeGrowth = realtimeGrowthManager;

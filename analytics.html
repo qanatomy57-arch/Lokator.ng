@@ -790,6 +790,51 @@
             </div>
           </div>
         </div>
+      <!-- Phase 9.5 Strategic Resource Allocation & Constraint Optimization (SRACOE) -->
+      <section>
+        <div class="section-title">Phase 9.5: Strategic Resource Allocation & Constraints (SRACOE)</div>
+        <div class="card" style="margin-bottom: 24px; border-left: 4px solid #10B981;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div style="font-size: 0.85rem; color: #94A3B8;">
+              <span class="status-tag" style="background: rgba(16,185,129,0.2); color: #10B981; margin-right: 8px;">DECISION_SUPPORT</span>
+              <span class="status-tag" style="background: rgba(56,189,248,0.2); color: #38BDF8; margin-right: 8px;">SIMULATED</span>
+              <span class="status-tag" style="background: rgba(239,68,68,0.2); color: #EF4444; margin-right: 8px;">MANUAL_ACTION_REQUIRED</span>
+            </div>
+            <button id="btn-generate-resource-plan" class="btn-action" style="padding: 4px 10px; font-size: 0.75rem; background: #10B981;">Optimize Resource Allocation</button>
+          </div>
+
+          <div style="font-size: 0.75rem; color: #64748B; margin-bottom: 14px;">
+            Optimizes multi-dimensional finite resource envelopes (capital, operational units, personnel, campaigns, geo LGA footprint, execution window) across recommended strategic actions.
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 14px;">
+            <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 10px;">
+              <div style="font-size: 0.7rem; color: #64748B; text-transform: uppercase;">Allocated Capital</div>
+              <div id="sracoe-allocated-capital" style="font-size: 1.25rem; font-weight: 800; color: #10B981; margin-top: 4px;">₦0.00</div>
+            </div>
+            <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 10px;">
+              <div style="font-size: 0.7rem; color: #64748B; text-transform: uppercase;">Residual Capital</div>
+              <div id="sracoe-residual-capital" style="font-size: 1.25rem; font-weight: 800; color: #38BDF8; margin-top: 4px;">₦0.00</div>
+            </div>
+            <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 10px;">
+              <div style="font-size: 0.7rem; color: #64748B; text-transform: uppercase;">Resource Risk</div>
+              <div id="sracoe-resource-risk" style="font-size: 1.25rem; font-weight: 800; color: #F59E0B; margin-top: 4px;">0.00</div>
+            </div>
+            <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 10px;">
+              <div style="font-size: 0.7rem; color: #64748B; text-transform: uppercase;">Robustness Classification</div>
+              <div id="sracoe-robustness" style="font-size: 1.25rem; font-weight: 800; color: #A855F7; margin-top: 4px;">STABLE</div>
+            </div>
+          </div>
+
+          <div style="margin-top: 14px;">
+            <div style="font-size: 0.85rem; font-weight: 700; color: #E2E8F0; margin-bottom: 8px;">Multi-Resource Constrained Allocation Plan</div>
+            <div id="sracoe-allocations-container" style="display: flex; flex-direction: column; gap: 8px;">
+              <div style="font-size: 0.85rem; color: #64748B; padding: 12px; background: #0E1522; border-radius: 6px;">
+                No resource allocation plan generated yet. Click Optimize.
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
 
     </main>

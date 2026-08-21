@@ -1250,6 +1250,74 @@ document.addEventListener('DOMContentLoaded', async () => {
           }
         };
         renderSOPAE();
+
+        // Initialize Section 9.5 (SRACOE)
+        const renderSRACOE = async () => {
+          try {
+            const btnOptResource = document.getElementById('btn-generate-resource-plan');
+            if (btnOptResource && !btnOptResource.hasAttribute('data-bound')) {
+              btnOptResource.setAttribute('data-bound', 'true');
+              btnOptResource.addEventListener('click', async () => {
+                try {
+                  btnOptResource.textContent = 'Allocating...';
+                  btnOptResource.disabled = true;
+
+                  const portfolioId = '00000000-0000-0000-0000-000000000000';
+                  const res = await LokatorDB.strategicResourceAllocation.generateResourcePlan(
+                    portfolioId,
+                    'SRACOE-1.0.0',
+                    {
+                      budgetCapital: 1000000.00,
+                      capacityOperations: 100.00,
+                      capacityPersonnel: 10,
+                      capacityCampaigns: 5,
+                      capacityGeoLga: 20,
+                      capacityTimeDays: 90
+                    }
+                  );
+
+                  if (res && res.plan_id) {
+                    const details = await LokatorDB.strategicResourceAllocation.getResourcePlan(res.plan_id);
+                    document.getElementById('sracoe-allocated-capital').textContent = '₦' + Number((details.allocated && details.allocated.capital) || 0).toFixed(2);
+                    document.getElementById('sracoe-residual-capital').textContent = '₦' + Number((details.residual && details.residual.capital) || 0).toFixed(2);
+                    document.getElementById('sracoe-resource-risk').textContent = Number((details.metrics && details.metrics.composite_resource_risk) || 0).toFixed(2);
+                    document.getElementById('sracoe-robustness').textContent = (details.metrics && details.metrics.robustness_classification) || 'STABLE';
+
+                    const container = document.getElementById('sracoe-allocations-container');
+                    if (details.allocations && details.allocations.length > 0) {
+                      container.innerHTML = details.allocations.map(a => `
+                        <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 12px; display: flex; justify-content: space-between; align-items: center;">
+                          <div>
+                            <div style="font-weight: 700; color: #E2E8F0; font-size: 0.85rem;">
+                              <span style="color: #10B981; margin-right: 6px;">#${a.rank}</span> ${a.scenario_title}
+                            </div>
+                            <div style="font-size: 0.72rem; color: #94A3B8; margin-top: 4px;">
+                              Capital: ₦${Number(a.allocated_capital).toFixed(2)} | Ops: ${a.allocated_operations} | Pers: ${a.allocated_personnel} | Days: ${a.allocated_time_days}
+                            </div>
+                          </div>
+                          <div style="text-align: right;">
+                            <div style="color: #64748B; font-size: 0.65rem; text-transform: uppercase;">Marginal Value</div>
+                            <div style="font-weight: 800; color: #10B981; font-size: 1.05rem;">${a.marginal_value_capital ? Number(a.marginal_value_capital).toFixed(4) : 'Sentinel (∞)'}</div>
+                          </div>
+                        </div>
+                      `).join('');
+                    } else {
+                      container.innerHTML = '<div style="font-size: 0.85rem; color: #64748B; padding: 12px; background: #0E1522; border-radius: 6px;">No resource allocation plan generated yet or candidates exhausted.</div>';
+                    }
+                  }
+                } catch (e) {
+                  alert('Resource allocation failed: ' + e.message);
+                } finally {
+                  btnOptResource.textContent = 'Optimize Resource Allocation';
+                  btnOptResource.disabled = false;
+                }
+              });
+            }
+          } catch (e) {
+            console.warn('SRACOE initialization failed:', e.message);
+          }
+        };
+        renderSRACOE();
       }
 
     } catch (err) {
