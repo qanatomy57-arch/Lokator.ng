@@ -2943,6 +2943,162 @@
     }
   };
 
+  // 4B. REALTIME GROWTH & OPERATIONAL MONITORING (Phase 8.0A)
+  let realtimeGrowthChannel = null;
+  let realtimeGrowthHeartbeatTimer = null;
+  let realtimeGrowthPollingTimer = null;
+  let realtimeGrowthStatus = 'DISCONNECTED';
+  let lastRealtimeGrowthSignalTime = null;
+
+  const realtimeGrowthManager = {
+    getStatus() {
+      return realtimeGrowthStatus;
+    },
+    async getLatestSignals() {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('get_realtime_growth_signals');
+        if (error) throw error;
+        lastRealtimeGrowthSignalTime = new Date();
+        return data;
+      }
+      return {
+        posture: 'OBSERVATIONAL_ADVISORY_ONLY',
+        active_signals_count: 0,
+        critical_high_count: 0,
+        last_computed_at: new Date().toISOString(),
+        window_status: 'HEALTHY',
+        events_evaluated: 0,
+        signals: []
+      };
+    },
+    async getDelta(since) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('get_realtime_growth_delta', {
+          p_since: since
+        });
+        if (error) throw error;
+        return data;
+      }
+      return { delta_timestamp: new Date().toISOString(), delta_signals: [] };
+    },
+    async computeSignals(forceRefresh = false) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('compute_realtime_growth_signals', {
+          p_force_refresh: forceRefresh
+        });
+        if (error) throw error;
+        return data;
+      }
+      return { status: 'SUCCESS', window_id: '5m', events_evaluated: 0, signals_generated: 0 };
+    },
+    async acknowledge(signalId, notes = null) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('acknowledge_realtime_signal', {
+          p_signal_id: signalId,
+          p_notes: notes
+        });
+        if (error) throw error;
+        return data;
+      }
+      return { status: 'SUCCESS', signal_id: signalId, new_status: 'ACKNOWLEDGED' };
+    },
+    subscribe(onSignal, onStatusChange) {
+      realtimeGrowthManager.unsubscribe();
+
+      const updateStatus = (newStatus) => {
+        if (realtimeGrowthStatus !== newStatus) {
+          realtimeGrowthStatus = newStatus;
+          if (typeof onStatusChange === 'function') {
+            onStatusChange(newStatus);
+          }
+        }
+      };
+
+      // Fallback Polling Loop (15-second intervals as required by P3-01 / P3-02)
+      const startPolling = () => {
+        updateStatus('POLLING_FALLBACK');
+        if (realtimeGrowthPollingTimer) clearInterval(realtimeGrowthPollingTimer);
+        realtimeGrowthPollingTimer = setInterval(async () => {
+          try {
+            const summary = await realtimeGrowthManager.getLatestSignals();
+            if (typeof onSignal === 'function') {
+              onSignal(summary);
+            }
+          } catch (err) {
+            console.warn('[Lokator RealtimeGrowth] Polling error:', err.message);
+            updateStatus('STALE');
+          }
+        }, 15000);
+      };
+
+      if (!isRemoteActive() || !supabaseInstance.channel) {
+        startPolling();
+        return;
+      }
+
+      try {
+        updateStatus('LIVE');
+        realtimeGrowthChannel = supabaseInstance.channel('realtime-growth-signals', {
+          config: { broadcast: { self: false } }
+        });
+
+        realtimeGrowthChannel
+          .on('broadcast', { event: 'growth_signal' }, (payload) => {
+            lastRealtimeGrowthSignalTime = new Date();
+            updateStatus('LIVE');
+            if (typeof onSignal === 'function') {
+              onSignal(payload.payload || payload);
+            }
+          })
+          .subscribe((status) => {
+            if (status === 'SUBSCRIBED') {
+              updateStatus('LIVE');
+            } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
+              console.warn('[Lokator RealtimeGrowth] Channel disconnected, switching to polling fallback');
+              startPolling();
+            }
+          });
+
+        // 30-second Heartbeat monitor (P3-02)
+        realtimeGrowthHeartbeatTimer = setInterval(() => {
+          const now = Date.now();
+          if (lastRealtimeGrowthSignalTime && (now - lastRealtimeGrowthSignalTime.getTime()) > 60000) {
+            // Signal stale for over 60s, trigger delta poll
+            realtimeGrowthManager.getLatestSignals().then(data => {
+              if (typeof onSignal === 'function') onSignal(data);
+            }).catch(() => {
+              updateStatus('STALE');
+            });
+          }
+        }, 30000);
+
+      } catch (e) {
+        console.warn('[Lokator RealtimeGrowth] WebSocket initialization failed, using polling fallback', e);
+        startPolling();
+      }
+    },
+    unsubscribe() {
+      if (realtimeGrowthHeartbeatTimer) {
+        clearInterval(realtimeGrowthHeartbeatTimer);
+        realtimeGrowthHeartbeatTimer = null;
+      }
+      if (realtimeGrowthPollingTimer) {
+        clearInterval(realtimeGrowthPollingTimer);
+        realtimeGrowthPollingTimer = null;
+      }
+      if (realtimeGrowthChannel && isRemoteActive()) {
+        try {
+          supabaseInstance.removeChannel(realtimeGrowthChannel);
+        } catch (e) {
+          // ignore cleanup errors
+        }
+        realtimeGrowthChannel = null;
+      }
+      realtimeGrowthStatus = 'DISCONNECTED';
+    }
+  };
+
+  LokatorDB.realtimeGrowth = realtimeGrowthManager;
   LokatorDB.growthRecommendations = growthRecommendationsManager;
   LokatorDB.analytics.getGrowthRecommendations = growthRecommendationsManager.getSummary;
   LokatorDB.analytics.reviewGrowthRecommendation = growthRecommendationsManager.review;

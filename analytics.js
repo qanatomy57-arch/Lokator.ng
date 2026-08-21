@@ -381,6 +381,105 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       }
 
+      // 8. REALTIME GROWTH & OPERATIONAL MONITORING (Phase 8.0A)
+      if (LokatorDB.realtimeGrowth && typeof LokatorDB.realtimeGrowth.getLatestSignals === 'function') {
+        const renderRealtimeSignals = (data) => {
+          if (!data) return;
+          const statActive = document.getElementById('stat-realtime-signals-active');
+          const statCritical = document.getElementById('stat-realtime-signals-critical');
+          const statEvents = document.getElementById('stat-realtime-events-evaluated');
+          const statWindow = document.getElementById('stat-realtime-window-status');
+          const container = document.getElementById('realtime-signals-container');
+          const connStatus = document.getElementById('realtime-growth-conn-text');
+          const pulseDot = document.getElementById('realtime-growth-pulse-dot');
+
+          if (statActive) statActive.textContent = data.active_signals_count || 0;
+          if (statCritical) statCritical.textContent = data.critical_high_count || 0;
+          if (statEvents) statEvents.textContent = (data.events_evaluated || 0).toLocaleString();
+          if (statWindow) statWindow.textContent = data.window_status || 'HEALTHY';
+
+          const currentStatus = LokatorDB.realtimeGrowth.getStatus();
+          if (connStatus) connStatus.textContent = currentStatus;
+          if (pulseDot) {
+            pulseDot.style.background = currentStatus === 'LIVE' ? '#10B981' : (currentStatus === 'POLLING_FALLBACK' ? '#F59E0B' : '#EF4444');
+          }
+
+          if (container) {
+            const signals = data.signals || [];
+            if (signals.length === 0) {
+              container.innerHTML = `
+                <div style="font-size: 0.85rem; color: #64748B; padding: 12px; background: #0E1522; border-radius: 6px;">
+                  No active realtime anomaly or demand volatility signals detected.
+                </div>
+              `;
+            } else {
+              container.innerHTML = signals.map(s => {
+                const sevColor = s.severity === 'CRITICAL' ? '#F43F5E' : (s.severity === 'HIGH' ? '#F97316' : (s.severity === 'WARNING' ? '#FBBF24' : '#38BDF8'));
+                const isAck = s.status === 'ACKNOWLEDGED';
+                return `
+                  <div style="background: #0E1522; border: 1px solid #1E293B; border-left: 3px solid ${sevColor}; border-radius: 6px; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="flex: 1;">
+                      <div style="display: flex; gap: 6px; align-items: center; margin-bottom: 4px;">
+                        <span style="font-size: 0.7rem; font-weight: 800; background: ${sevColor}22; color: ${sevColor}; padding: 2px 6px; border-radius: 4px;">${s.severity}</span>
+                        <span style="font-size: 0.75rem; font-weight: 700; color: #E2E8F0;">${s.signal_name}</span>
+                        <span style="font-size: 0.7rem; color: #94A3B8;">&bull; ${s.category} (${s.lga}, ${s.state})</span>
+                        ${isAck ? '<span style="font-size: 0.65rem; background: #334155; color: #CBD5E1; padding: 1px 5px; border-radius: 3px;">ACKNOWLEDGED</span>' : ''}
+                      </div>
+                      <div style="font-size: 0.75rem; color: #94A3B8;">
+                        Current: <strong>${s.current_value}</strong> vs Base: <strong>${s.baseline_value}</strong> | Conf: <strong>${Math.round(s.confidence_score * 100)}%</strong> | Sample: <strong>N=${s.sample_size}, k=${s.unique_sessions}</strong>
+                      </div>
+                    </div>
+                    <div style="display: flex; gap: 6px; align-items: center;">
+                      ${!isAck ? `<button class="btn-action btn-sig-ack" data-id="${s.id}" style="padding: 3px 8px; font-size: 0.7rem; background: #334155;">Acknowledge</button>` : ''}
+                    </div>
+                  </div>
+                `;
+              }).join('');
+
+              container.querySelectorAll('.btn-sig-ack').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                  const id = e.target.getAttribute('data-id');
+                  await LokatorDB.realtimeGrowth.acknowledge(id, 'Acknowledged via realtime admin dashboard');
+                  const updated = await LokatorDB.realtimeGrowth.getLatestSignals();
+                  renderRealtimeSignals(updated);
+                });
+              });
+            }
+          }
+        };
+
+        try {
+          const realtimeData = await LokatorDB.realtimeGrowth.getLatestSignals();
+          renderRealtimeSignals(realtimeData);
+
+          // Subscribe for realtime stream with fallback
+          LokatorDB.realtimeGrowth.subscribe((incoming) => {
+            renderRealtimeSignals(incoming);
+          }, (status) => {
+            const connStatus = document.getElementById('realtime-growth-conn-text');
+            const pulseDot = document.getElementById('realtime-growth-pulse-dot');
+            if (connStatus) connStatus.textContent = status;
+            if (pulseDot) {
+              pulseDot.style.background = status === 'LIVE' ? '#10B981' : (status === 'POLLING_FALLBACK' ? '#F59E0B' : '#EF4444');
+            }
+          });
+        } catch (e) {
+          console.warn('Realtime growth signals load failed:', e.message);
+        }
+
+        const btnRefreshRealtime = document.getElementById('btn-refresh-realtime-signals');
+        if (btnRefreshRealtime && !btnRefreshRealtime.hasAttribute('data-bound')) {
+          btnRefreshRealtime.setAttribute('data-bound', 'true');
+          btnRefreshRealtime.addEventListener('click', async () => {
+            btnRefreshRealtime.textContent = 'Computing...';
+            await LokatorDB.realtimeGrowth.computeSignals(true);
+            const latest = await LokatorDB.realtimeGrowth.getLatestSignals();
+            renderRealtimeSignals(latest);
+            btnRefreshRealtime.textContent = 'Compute Micro-Rollup';
+          });
+        }
+      }
+
 
     } catch (err) {
       console.error('Failed to load internal analytics:', err);
