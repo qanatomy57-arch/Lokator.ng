@@ -2671,6 +2671,26 @@
         return data;
       }
       return 0;
+    },
+    async getAnomalySummary(days = 7, zThreshold = 2.5) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('get_analytics_anomaly_summary', {
+          p_days: days,
+          p_z_threshold: zThreshold
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        window_days: days,
+        z_threshold: zThreshold,
+        platform_status: 'DATA_INSUFFICIENT',
+        anomalies_count: 0,
+        anomalies: [],
+        metrics_summary: { total_events: 0, total_sessions_approx: 0, error_rate_percent: 0, cwv_sample_count: 0, cwv_status: 'INSUFFICIENT_DATA' },
+        observational_status: 'OBSERVATIONAL_ONLY',
+        generated_at: new Date().toISOString()
+      };
     }
   };
 

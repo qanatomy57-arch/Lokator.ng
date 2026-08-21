@@ -76,6 +76,61 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       }
 
+      // 4. Fetch Operational Anomaly Intelligence Summary
+      const anomaly = await LokatorDB.analytics.getAnomalySummary(days, 2.5);
+      if (anomaly) {
+        const platformBadge = document.getElementById('anomaly-platform-status');
+        const anomalyList = document.getElementById('anomaly-list');
+        const summaryText = document.getElementById('anomaly-summary-text');
+
+        if (platformBadge) {
+          platformBadge.textContent = anomaly.platform_status || 'HEALTHY';
+          if (anomaly.platform_status === 'CRITICAL') {
+            platformBadge.className = 'status-tag';
+            platformBadge.style.background = 'rgba(239, 68, 68, 0.25)';
+            platformBadge.style.color = '#F87171';
+          } else if (anomaly.platform_status === 'WARNING') {
+            platformBadge.className = 'status-tag status-notice';
+          } else if (anomaly.platform_status === 'DATA_INSUFFICIENT') {
+            platformBadge.className = 'status-tag';
+            platformBadge.style.background = 'rgba(100, 116, 139, 0.25)';
+            platformBadge.style.color = '#94A3B8';
+          } else {
+            platformBadge.className = 'status-tag status-good';
+          }
+        }
+
+        if (summaryText) {
+          summaryText.textContent = `Evaluated across ${days}-day window (z-score threshold: 2.5). Status: ${anomaly.platform_status}. Total anomalies: ${anomaly.anomalies_count || 0}.`;
+        }
+
+        if (anomalyList) {
+          const items = anomaly.anomalies || [];
+          if (items.length === 0) {
+            anomalyList.innerHTML = `
+              <div style="font-size: 0.85rem; color: #64748B; padding: 10px; background: #0E1522; border-radius: 6px;">
+                No operational anomalies detected in the evaluated ${days}-day window.
+              </div>
+            `;
+          } else {
+            anomalyList.innerHTML = items.map(a => {
+              const sevColor = a.severity === 'CRITICAL' ? '#F87171' : (a.severity === 'ELEVATED' ? '#FBBF24' : '#60A5FA');
+              return `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #0E1522; border-radius: 6px; border-left: 3px solid ${sevColor};">
+                  <div>
+                    <span style="font-weight: 700; font-size: 0.85rem; color: #E2E8F0;">[${a.category || 'SYSTEM'}] ${a.metric}</span>
+                    <div style="font-size: 0.8rem; color: #94A3B8; margin-top: 2px;">${a.message || ''}</div>
+                  </div>
+                  <div style="text-align: right;">
+                    <span class="status-tag" style="background: rgba(255,255,255,0.06); color: ${sevColor};">${a.severity}</span>
+                  </div>
+                </div>
+              `;
+            }).join('');
+          }
+        }
+      }
+
     } catch (err) {
       console.error('Failed to load internal analytics:', err);
       if (err.message && err.message.toLowerCase().includes('unauthorized')) {

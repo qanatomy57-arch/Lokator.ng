@@ -169,11 +169,29 @@
         </div>
       </section>
 
-      <!-- 4. Real-User Core Web Vitals (p75 Percentile) -->
+      <!-- 4. Operational Anomaly Intelligence -->
+      <section id="section-anomalies">
+        <div class="section-title">
+          <span>4. Operational Anomaly Intelligence</span>
+          <span id="anomaly-platform-status" class="status-tag status-good">HEALTHY</span>
+        </div>
+        <div class="panel-card" id="anomaly-container">
+          <div id="anomaly-summary-text" style="font-size: 0.85rem; color: #94A3B8; margin-bottom: 14px;">
+            Analyzing telemetry deviation against multi-day statistical baselines (z-score threshold: 2.5).
+          </div>
+          <div id="anomaly-list" style="display: flex; flex-direction: column; gap: 8px;">
+            <div style="font-size: 0.85rem; color: #64748B; padding: 10px; background: #0E1522; border-radius: 6px;">
+              No operational anomalies detected in the evaluated window.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. Core Web Vitals (Real-User Performance) -->
       <section>
         <div class="section-title">
-          <span>4. Core Web Vitals (75th Percentile)</span>
-          <span class="status-tag status-notice" id="cwv-status-badge">INSTRUMENTATION_ONLY</span>
+          <span>5. Core Web Vitals (Real-User Performance)</span>
+          <span id="cwv-status-badge" class="status-tag status-notice">INSTRUMENTATION_ONLY</span>
         </div>
         <div class="cwv-grid">
           <div class="cwv-box">
@@ -214,9 +232,9 @@
         </div>
       </section>
 
-      <!-- 5. Telemetry Lifecycle & Retention Management -->
+      <!-- 6. Telemetry Lifecycle & Retention Management -->
       <section>
-        <div class="section-title">5. Data Retention & Storage Lifecycle</div>
+        <div class="section-title">6. Data Retention & Storage Lifecycle</div>
         <div class="panel-card">
           <div style="font-size: 0.85rem; color: #94A3B8; margin-bottom: 12px;">
             Retention Policy: <strong>60-day Hard Delete for Raw Events</strong> | <strong>365-day Retention for Daily Summary Rollups</strong>.
