@@ -259,10 +259,54 @@
         </div>
       </section>
 
-      <!-- 7. Core Web Vitals (Real-User Performance) -->
+      <!-- 7. Growth Automation & Smart Recommendations (Phase 7.2) -->
+      <section id="section-growth-recommendations">
+        <div class="section-title">
+          <span>7. Growth Automation & Smart Recommendations</span>
+          <span id="rec-status-badge" class="status-tag status-good">ADVISORY</span>
+        </div>
+        <div class="panel-card">
+          <div style="font-size: 0.85rem; color: #94A3B8; margin-bottom: 12px; padding: 8px 12px; background: rgba(30, 41, 59, 0.6); border-left: 3px solid #3B82F6; border-radius: 4px;">
+            ℹ️ <strong>Advisory Intelligence Posture:</strong> Recommendations are observational. Acceptance records administrative consensus and does NOT automatically execute marketplace mutations.
+          </div>
+
+          <div class="kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); margin-bottom: 16px;">
+            <div class="kpi-box">
+              <div class="kpi-val" id="stat-rec-active" style="color: #60A5FA;">0</div>
+              <div class="kpi-lbl">Active Recommendations</div>
+            </div>
+            <div class="kpi-box">
+              <div class="kpi-val" id="stat-rec-critical-high" style="color: #F87171;">0</div>
+              <div class="kpi-lbl">Critical / High Priority</div>
+            </div>
+            <div class="kpi-box">
+              <div class="kpi-val" id="stat-rec-supply-gaps" style="color: #FBBF24;">0</div>
+              <div class="kpi-lbl">Supply Gap Actions</div>
+            </div>
+            <div class="kpi-box">
+              <div class="kpi-val" id="stat-rec-zero-results" style="color: #A78BFA;">0</div>
+              <div class="kpi-lbl">Zero-Result Fixes</div>
+            </div>
+          </div>
+
+          <div style="margin-top: 14px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <div style="font-size: 0.85rem; font-weight: 700; color: #E2E8F0;">Active Growth Recommendations (Multi-Window Confirmed)</div>
+              <button id="btn-generate-recommendations" class="btn-action" style="padding: 4px 10px; font-size: 0.75rem; background: #2563EB;">Run Rollup Evaluation</button>
+            </div>
+            <div id="growth-recommendations-list" style="display: flex; flex-direction: column; gap: 8px;">
+              <div style="font-size: 0.85rem; color: #64748B; padding: 12px; background: #0E1522; border-radius: 6px;">
+                No active recommendations pending administrative review.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 8. Core Web Vitals (Real-User Performance) -->
       <section>
         <div class="section-title">
-          <span>7. Core Web Vitals (Real-User Performance)</span>
+          <span>8. Core Web Vitals (Real-User Performance)</span>
           <span id="cwv-status-badge" class="status-tag status-notice">INSTRUMENTATION_ONLY</span>
         </div>
         <div class="cwv-grid">

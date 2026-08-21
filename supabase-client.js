@@ -2878,7 +2878,76 @@
   LokatorDB.analytics.getDemandSupplyGaps = discoveryIntelligenceManager.getDemandSupplyGaps;
   LokatorDB.analytics.getGrowthSignals = discoveryIntelligenceManager.getGrowthSignals;
 
+  // Phase 7.2 Growth Automation & Smart Recommendations Manager
+  const growthRecommendationsManager = {
+    async getSummary() {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('get_growth_recommendation_summary');
+        if (error) throw error;
+        return data;
+      }
+      return {
+        active_count: 0,
+        critical_count: 0,
+        high_count: 0,
+        supply_gap_count: 0,
+        zero_result_count: 0,
+        quality_fix_count: 0,
+        recommendations: [],
+        observational_posture: 'OBSERVATIONAL_ADVISORY_ONLY'
+      };
+    },
+    async review(recommendationId, notes = null) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('review_growth_recommendation', {
+          p_recommendation_id: recommendationId,
+          p_notes: notes
+        });
+        if (error) throw error;
+        return data;
+      }
+      return { status: 'SUCCESS', id: recommendationId, new_status: 'REVIEWED' };
+    },
+    async accept(recommendationId, notes = null) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('accept_growth_recommendation', {
+          p_recommendation_id: recommendationId,
+          p_notes: notes
+        });
+        if (error) throw error;
+        return data;
+      }
+      return { status: 'SUCCESS', id: recommendationId, new_status: 'ACCEPTED', execution_posture: 'ACCEPTED_RECORDED_NO_AUTOMATED_MUTATION' };
+    },
+    async dismiss(recommendationId, reason = null) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('dismiss_growth_recommendation', {
+          p_recommendation_id: recommendationId,
+          p_reason: reason
+        });
+        if (error) throw error;
+        return data;
+      }
+      return { status: 'SUCCESS', id: recommendationId, new_status: 'DISMISSED' };
+    },
+    async generate(evalDays = 7, baselineDays = 28) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('generate_growth_recommendations', {
+          p_eval_days: evalDays,
+          p_baseline_days: baselineDays
+        });
+        if (error) throw error;
+        return data;
+      }
+      return { status: 'SUCCESS', recommendations_evaluated: 0, expired_recommendations: 0, model_version: 'v1' };
+    }
+  };
 
+  LokatorDB.growthRecommendations = growthRecommendationsManager;
+  LokatorDB.analytics.getGrowthRecommendations = growthRecommendationsManager.getSummary;
+  LokatorDB.analytics.reviewGrowthRecommendation = growthRecommendationsManager.review;
+  LokatorDB.analytics.acceptGrowthRecommendation = growthRecommendationsManager.accept;
+  LokatorDB.analytics.dismissGrowthRecommendation = growthRecommendationsManager.dismiss;
 
   // 5. AUTOMATIC GLOBAL NAVBAR AUTH SYNC
   if (typeof document !== 'undefined') {

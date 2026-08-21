@@ -292,6 +292,95 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       }
 
+      // 7. Growth Automation & Smart Recommendations (Phase 7.2)
+      if (LokatorDB.growthRecommendations && LokatorDB.growthRecommendations.getSummary) {
+        const recSummary = await LokatorDB.growthRecommendations.getSummary();
+        const statActive = document.getElementById('stat-rec-active');
+        const statCriticalHigh = document.getElementById('stat-rec-critical-high');
+        const statSupplyGaps = document.getElementById('stat-rec-supply-gaps');
+        const statZeroResults = document.getElementById('stat-rec-zero-results');
+        const recList = document.getElementById('growth-recommendations-list');
+
+        if (recSummary) {
+          if (statActive) statActive.textContent = (recSummary.active_count || 0);
+          if (statCriticalHigh) statCriticalHigh.textContent = ((recSummary.critical_count || 0) + (recSummary.high_count || 0));
+          if (statSupplyGaps) statSupplyGaps.textContent = (recSummary.supply_gap_count || 0);
+          if (statZeroResults) statZeroResults.textContent = (recSummary.zero_result_count || 0);
+
+          if (recList && recSummary.recommendations && recSummary.recommendations.length > 0) {
+            recList.innerHTML = recSummary.recommendations.map(r => {
+              const priorityColors = {
+                CRITICAL: '#EF4444',
+                HIGH: '#F97316',
+                MEDIUM: '#FBBF24',
+                LOW: '#60A5FA'
+              };
+              const pColor = priorityColors[r.priority] || '#94A3B8';
+              return `
+                <div style="padding: 12px; background: #0E1522; border-radius: 6px; border-left: 3px solid ${pColor}; display: flex; flex-direction: column; gap: 6px;">
+                  <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                      <span style="font-weight: 700; color: #E2E8F0; font-size: 0.9rem;">${r.title}</span>
+                      <span class="status-tag" style="margin-left: 8px; background: ${pColor}20; color: ${pColor}; font-size: 0.7rem; border: 1px solid ${pColor}40;">${r.priority}</span>
+                      <span class="status-tag" style="margin-left: 4px; background: #3B82F620; color: #60A5FA; font-size: 0.7rem;">Conf: ${(r.confidence_score * 100).toFixed(0)}%</span>
+                    </div>
+                    <div style="font-size: 0.75rem; color: #64748B;">Expires: ${new Date(r.expires_at).toLocaleDateString()}</div>
+                  </div>
+                  <div style="font-size: 0.8rem; color: #94A3B8;">${r.summary}</div>
+                  <div style="font-size: 0.75rem; color: #CBD5E1; background: #131D2D; padding: 6px 8px; border-radius: 4px;">
+                    <strong>Recommended Action:</strong> ${r.recommended_action}
+                  </div>
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+                    <div style="font-size: 0.7rem; color: #64748B;">
+                      Demand: ${r.demand_index} | Supply: ${r.supply_index} | Gap: ${r.gap_ratio}x | DQS: ${r.dqs_score}
+                    </div>
+                    <div style="display: flex; gap: 6px;">
+                      ${r.status === 'NEW' ? `<button class="btn-action btn-rec-review" data-id="${r.id}" style="padding: 2px 8px; font-size: 0.7rem; background: #475569;">Review</button>` : ''}
+                      <button class="btn-action btn-rec-accept" data-id="${r.id}" style="padding: 2px 8px; font-size: 0.7rem; background: #059669;">Accept</button>
+                      <button class="btn-action btn-rec-dismiss" data-id="${r.id}" style="padding: 2px 8px; font-size: 0.7rem; background: #DC2626;">Dismiss</button>
+                    </div>
+                  </div>
+                </div>
+              `;
+            }).join('');
+
+            // Wire action buttons
+            recList.querySelectorAll('.btn-rec-review').forEach(btn => {
+              btn.addEventListener('click', async (e) => {
+                const id = e.target.getAttribute('data-id');
+                await LokatorDB.growthRecommendations.review(id, 'Reviewed via admin dashboard');
+                loadAnalytics();
+              });
+            });
+            recList.querySelectorAll('.btn-rec-accept').forEach(btn => {
+              btn.addEventListener('click', async (e) => {
+                const id = e.target.getAttribute('data-id');
+                await LokatorDB.growthRecommendations.accept(id, 'Accepted via admin dashboard');
+                loadAnalytics();
+              });
+            });
+            recList.querySelectorAll('.btn-rec-dismiss').forEach(btn => {
+              btn.addEventListener('click', async (e) => {
+                const id = e.target.getAttribute('data-id');
+                await LokatorDB.growthRecommendations.dismiss(id, 'Dismissed via admin dashboard');
+                loadAnalytics();
+              });
+            });
+          }
+        }
+
+        const btnGenRecs = document.getElementById('btn-generate-recommendations');
+        if (btnGenRecs && !btnGenRecs.hasAttribute('data-bound')) {
+          btnGenRecs.setAttribute('data-bound', 'true');
+          btnGenRecs.addEventListener('click', async () => {
+            btnGenRecs.textContent = 'Evaluating...';
+            await LokatorDB.growthRecommendations.generate(7, 28);
+            btnGenRecs.textContent = 'Run Rollup Evaluation';
+            loadAnalytics();
+          });
+        }
+      }
+
 
     } catch (err) {
       console.error('Failed to load internal analytics:', err);
