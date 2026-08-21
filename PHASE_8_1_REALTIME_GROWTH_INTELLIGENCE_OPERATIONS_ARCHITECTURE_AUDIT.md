@@ -1,5 +1,4 @@
-# LOKATOR.NG — PHASE 8.1 REALTIME GROWTH INTELLIGENCE OPERATIONS
-## ARCHITECTURE, OPERATIONAL MODEL & THREAT-MODEL AUDIT
+# LOKATOR.NG — PHASE 8.1 REALTIME GROWTH INTELLIGENCE OPERATIONS ARCHITECTURE & THREAT-MODEL AUDIT
 
 ---
 
@@ -142,6 +141,7 @@ Critical  (3x 1h + Deficit) --> HIGH_PRIORITY (Requires Admin Attention)
 $$\text{Persistence Score } P = \sum_{w \in W} \omega_w \cdot \mathbb{I}(\text{deviation}_w \ge \theta_w)$$
 
 Where:
+
 - $W = \{ 5\text{m}, 15\text{m}, 1\text{h} \}$ with weights $\omega_{5\text{m}} = 0.2, \omega_{15\text{m}} = 0.3, \omega_{1\text{h}} = 0.5$.
 - $\theta_w = 2.0\sigma$ threshold.
 - A signal requires $P \ge 0.50$ for `EMERGING` and $P = 1.00$ for `SUSTAINED`.
@@ -208,6 +208,7 @@ graph LR
 ```
 
 ### Correlation Rules
+
 1. **Realtime Surge + Open Growth Recommendation**: When a realtime demand surge matches an existing `PENDING_ADMIN_REVIEW` recommendation, the operational UI displays an association tag: `MATCHES_REC_#UUID`.
 2. **Realtime Surge + Historical Anomaly**: When a surge coincides with a statistical anomaly in Phase 6.3, it confirms operational significance.
 3. **Observational Tagging**: Cross-system correlation outputs are strictly labeled `OBSERVATIONAL_ADVISORY_ONLY`.
@@ -217,6 +218,7 @@ graph LR
 ## 8. Dashboard UX & Operator Workflow Architecture
 
 ### Safe Operator Actions
+
 The administrative dashboard (`analytics.html` / `analytics.js`) allows only non-destructive, auditable operator actions:
 
 1. **Acknowledge (`ACKNOWLEDGE`)**: Marks the signal as reviewed, transitions status to `ACKNOWLEDGED` and state to `COOLDOWN`, recording `auth.uid()` in `analytics_realtime_audit_log`.
