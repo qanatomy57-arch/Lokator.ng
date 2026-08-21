@@ -3098,6 +3098,63 @@
     }
   };
 
+  const growthIntelligenceManager = {
+    async getOperationalIntelligence() {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('get_operational_growth_intelligence');
+        if (error) throw error;
+        return data;
+      }
+      return { status: 'HEALTHY', posture: 'OBSERVATIONAL_ADVISORY_ONLY', items: [] };
+    },
+    async getOperationalDelta(since) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('get_operational_growth_delta', { p_since: since });
+        if (error) throw error;
+        return data;
+      }
+      return { delta: [] };
+    },
+    async computeOperationalIntelligence(forceRefresh = false) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('compute_operational_growth_intelligence', { p_force_refresh: forceRefresh });
+        if (error) throw error;
+        return data;
+      }
+      return { status: 'SUCCESS', items_processed: 0 };
+    },
+    async transitionState(id, newState, notes = '') {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('transition_operational_intelligence', {
+          p_id: id,
+          p_new_state: newState,
+          p_notes: notes
+        });
+        if (error) throw error;
+        return data;
+      }
+      return { status: 'TRANSITIONED', id, new_state: newState };
+    },
+    async acknowledge(id, notes = '') {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('acknowledge_operational_intelligence', {
+          p_id: id,
+          p_notes: notes
+        });
+        if (error) throw error;
+        return data;
+      }
+      return { status: 'ACKNOWLEDGED', id };
+    },
+    async suppress(id, notes = 'Suppressed by operator') {
+      return this.transitionState(id, 'SUPPRESSED', notes);
+    },
+    async flagFollowUp(id, notes = 'Flagged for business follow-up') {
+      return this.transitionState(id, 'SUSTAINED', notes);
+    }
+  };
+
+  LokatorDB.growthIntelligence = growthIntelligenceManager;
   LokatorDB.realtimeGrowth = realtimeGrowthManager;
   LokatorDB.growthRecommendations = growthRecommendationsManager;
   LokatorDB.analytics.getGrowthRecommendations = growthRecommendationsManager.getSummary;

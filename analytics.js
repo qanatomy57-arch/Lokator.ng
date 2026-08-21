@@ -381,67 +381,108 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       }
 
-      // 8. REALTIME GROWTH & OPERATIONAL MONITORING (Phase 8.0A)
-      if (LokatorDB.realtimeGrowth && typeof LokatorDB.realtimeGrowth.getLatestSignals === 'function') {
-        const renderRealtimeSignals = (data) => {
+      // 8. REALTIME GROWTH & OPERATIONAL INTELLIGENCE (Phase 8.0 & 8.1)
+      if (LokatorDB.growthIntelligence || LokatorDB.realtimeGrowth) {
+        const renderOperationalFeed = (data) => {
           if (!data) return;
+          const statHighPrio = document.getElementById('stat-operational-high-prio');
+          const statSustained = document.getElementById('stat-operational-sustained');
+          const statEmerging = document.getElementById('stat-operational-emerging');
           const statActive = document.getElementById('stat-realtime-signals-active');
-          const statCritical = document.getElementById('stat-realtime-signals-critical');
-          const statEvents = document.getElementById('stat-realtime-events-evaluated');
-          const statWindow = document.getElementById('stat-realtime-window-status');
           const container = document.getElementById('realtime-signals-container');
           const connStatus = document.getElementById('realtime-growth-conn-text');
           const pulseDot = document.getElementById('realtime-growth-pulse-dot');
 
-          if (statActive) statActive.textContent = data.active_signals_count || 0;
-          if (statCritical) statCritical.textContent = data.critical_high_count || 0;
-          if (statEvents) statEvents.textContent = (data.events_evaluated || 0).toLocaleString();
-          if (statWindow) statWindow.textContent = data.window_status || 'HEALTHY';
+          if (statHighPrio) statHighPrio.textContent = data.high_priority_count || data.critical_high_count || 0;
+          if (statSustained) statSustained.textContent = data.sustained_count || 0;
+          if (statEmerging) statEmerging.textContent = data.emerging_count || 0;
+          if (statActive) statActive.textContent = data.total_active_count || data.active_signals_count || 0;
 
-          const currentStatus = LokatorDB.realtimeGrowth.getStatus();
+          const currentStatus = LokatorDB.realtimeGrowth ? LokatorDB.realtimeGrowth.getStatus() : 'LIVE';
           if (connStatus) connStatus.textContent = currentStatus;
           if (pulseDot) {
             pulseDot.style.background = currentStatus === 'LIVE' ? '#10B981' : (currentStatus === 'POLLING_FALLBACK' ? '#F59E0B' : '#EF4444');
           }
 
           if (container) {
-            const signals = data.signals || [];
-            if (signals.length === 0) {
+            const items = data.items || data.signals || [];
+            if (items.length === 0) {
               container.innerHTML = `
                 <div style="font-size: 0.85rem; color: #64748B; padding: 12px; background: #0E1522; border-radius: 6px;">
-                  No active realtime anomaly or demand volatility signals detected.
+                  No active operational demand pressure or unmet expansion signals detected.
                 </div>
               `;
             } else {
-              container.innerHTML = signals.map(s => {
-                const sevColor = s.severity === 'CRITICAL' ? '#F43F5E' : (s.severity === 'HIGH' ? '#F97316' : (s.severity === 'WARNING' ? '#FBBF24' : '#38BDF8'));
-                const isAck = s.status === 'ACKNOWLEDGED';
+              container.innerHTML = items.map(item => {
+                const opState = item.operational_state || (item.severity === 'CRITICAL' ? 'HIGH_PRIORITY' : 'EMERGING');
+                const stateColor = opState === 'HIGH_PRIORITY' ? '#F43F5E' : (opState === 'SUSTAINED' ? '#F59E0B' : (opState === 'EMERGING' ? '#38BDF8' : '#10B981'));
+                const isAck = opState === 'COOLDOWN' || item.status === 'ACKNOWLEDGED';
+                const isSuppressed = opState === 'SUPPRESSED';
+                const explanationText = (item.explanation && item.explanation.summary) ? item.explanation.summary : (item.evidence_summary || `Demand: ${item.current_value} vs Base: ${item.baseline_value}`);
+                const hasRec = item.correlation_metadata && item.correlation_metadata.has_matching_recommendation;
+
                 return `
-                  <div style="background: #0E1522; border: 1px solid #1E293B; border-left: 3px solid ${sevColor}; border-radius: 6px; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
-                    <div style="flex: 1;">
-                      <div style="display: flex; gap: 6px; align-items: center; margin-bottom: 4px;">
-                        <span style="font-size: 0.7rem; font-weight: 800; background: ${sevColor}22; color: ${sevColor}; padding: 2px 6px; border-radius: 4px;">${s.severity}</span>
-                        <span style="font-size: 0.75rem; font-weight: 700; color: #E2E8F0;">${s.signal_name}</span>
-                        <span style="font-size: 0.7rem; color: #94A3B8;">&bull; ${s.category} (${s.lga}, ${s.state})</span>
-                        ${isAck ? '<span style="font-size: 0.65rem; background: #334155; color: #CBD5E1; padding: 1px 5px; border-radius: 3px;">ACKNOWLEDGED</span>' : ''}
+                  <div style="background: #0E1522; border: 1px solid #1E293B; border-left: 4px solid ${stateColor}; border-radius: 6px; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                      <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                        <span style="font-size: 0.7rem; font-weight: 800; background: ${stateColor}22; color: ${stateColor}; padding: 2px 6px; border-radius: 4px;">${opState}</span>
+                        <span style="font-size: 0.75rem; font-weight: 700; color: #E2E8F0;">${item.category}</span>
+                        <span style="font-size: 0.7rem; color: #94A3B8;">&bull; ${item.lga}, ${item.state}</span>
+                        ${hasRec ? '<span style="font-size: 0.65rem; background: #1E3A8A; color: #93C5FD; padding: 1px 5px; border-radius: 3px;">MATCHES_GROWTH_REC</span>' : ''}
+                        ${isAck ? '<span style="font-size: 0.65rem; background: #334155; color: #CBD5E1; padding: 1px 5px; border-radius: 3px;">COOLDOWN_ACTIVE</span>' : ''}
+                        ${isSuppressed ? '<span style="font-size: 0.65rem; background: #475569; color: #94A3B8; padding: 1px 5px; border-radius: 3px;">SUPPRESSED</span>' : ''}
                       </div>
-                      <div style="font-size: 0.75rem; color: #94A3B8;">
-                        Current: <strong>${s.current_value}</strong> vs Base: <strong>${s.baseline_value}</strong> | Conf: <strong>${Math.round(s.confidence_score * 100)}%</strong> | Sample: <strong>N=${s.sample_size}, k=${s.unique_sessions}</strong>
+                      <div style="display: flex; gap: 6px; align-items: center;">
+                        ${!isAck && !isSuppressed ? `
+                          <button class="btn-action btn-op-ack" data-id="${item.id}" style="padding: 3px 8px; font-size: 0.7rem; background: #0D9488;">Acknowledge</button>
+                          <button class="btn-action btn-op-flag" data-id="${item.id}" style="padding: 3px 8px; font-size: 0.7rem; background: #1E293B;">Flag Follow-up</button>
+                          <button class="btn-action btn-op-suppress" data-id="${item.id}" style="padding: 3px 8px; font-size: 0.7rem; background: #334155;">Suppress</button>
+                        ` : ''}
                       </div>
                     </div>
-                    <div style="display: flex; gap: 6px; align-items: center;">
-                      ${!isAck ? `<button class="btn-action btn-sig-ack" data-id="${s.id}" style="padding: 3px 8px; font-size: 0.7rem; background: #334155;">Acknowledge</button>` : ''}
+                    <div style="font-size: 0.8rem; color: #CBD5E1; line-height: 1.4;">
+                      ${explanationText}
+                    </div>
+                    <div style="font-size: 0.7rem; color: #64748B; display: flex; gap: 12px; flex-wrap: wrap;">
+                      <span>Rate: <strong>${item.current_value}/hr</strong> (Base: ${item.baseline_value})</span>
+                      <span>Dev: <strong>+${item.deviation_score || item.deviation_ratio}σ</strong></span>
+                      <span>Sample: <strong>N=${item.sample_size}, k=${item.unique_sessions}</strong></span>
+                      <span>Persistence: <strong>${item.persistence_count || 1} windows</strong></span>
                     </div>
                   </div>
                 `;
               }).join('');
 
-              container.querySelectorAll('.btn-sig-ack').forEach(btn => {
+              container.querySelectorAll('.btn-op-ack').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
                   const id = e.target.getAttribute('data-id');
-                  await LokatorDB.realtimeGrowth.acknowledge(id, 'Acknowledged via realtime admin dashboard');
-                  const updated = await LokatorDB.realtimeGrowth.getLatestSignals();
-                  renderRealtimeSignals(updated);
+                  if (LokatorDB.growthIntelligence) {
+                    await LokatorDB.growthIntelligence.acknowledge(id, 'Acknowledged via operational dashboard');
+                    const updated = await LokatorDB.growthIntelligence.getOperationalIntelligence();
+                    renderOperationalFeed(updated);
+                  }
+                });
+              });
+
+              container.querySelectorAll('.btn-op-flag').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                  const id = e.target.getAttribute('data-id');
+                  if (LokatorDB.growthIntelligence) {
+                    await LokatorDB.growthIntelligence.flagFollowUp(id, 'Flagged for business team review');
+                    const updated = await LokatorDB.growthIntelligence.getOperationalIntelligence();
+                    renderOperationalFeed(updated);
+                  }
+                });
+              });
+
+              container.querySelectorAll('.btn-op-suppress').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                  const id = e.target.getAttribute('data-id');
+                  if (LokatorDB.growthIntelligence) {
+                    await LokatorDB.growthIntelligence.suppress(id, 'Suppressed as event noise by operator');
+                    const updated = await LokatorDB.growthIntelligence.getOperationalIntelligence();
+                    renderOperationalFeed(updated);
+                  }
                 });
               });
             }
@@ -449,33 +490,53 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
 
         try {
-          const realtimeData = await LokatorDB.realtimeGrowth.getLatestSignals();
-          renderRealtimeSignals(realtimeData);
+          if (LokatorDB.growthIntelligence && typeof LokatorDB.growthIntelligence.getOperationalIntelligence === 'function') {
+            LokatorDB.growthIntelligence.getOperationalIntelligence().then(opData => {
+              renderOperationalFeed(opData);
+            }).catch(() => {
+              if (LokatorDB.realtimeGrowth) {
+                LokatorDB.realtimeGrowth.getLatestSignals().then(renderOperationalFeed);
+              }
+            });
+          } else if (LokatorDB.realtimeGrowth) {
+            LokatorDB.realtimeGrowth.getLatestSignals().then(renderOperationalFeed);
+          }
 
-          // Subscribe for realtime stream with fallback
-          LokatorDB.realtimeGrowth.subscribe((incoming) => {
-            renderRealtimeSignals(incoming);
-          }, (status) => {
-            const connStatus = document.getElementById('realtime-growth-conn-text');
-            const pulseDot = document.getElementById('realtime-growth-pulse-dot');
-            if (connStatus) connStatus.textContent = status;
-            if (pulseDot) {
-              pulseDot.style.background = status === 'LIVE' ? '#10B981' : (status === 'POLLING_FALLBACK' ? '#F59E0B' : '#EF4444');
-            }
-          });
+          if (LokatorDB.realtimeGrowth && typeof LokatorDB.realtimeGrowth.subscribe === 'function') {
+            LokatorDB.realtimeGrowth.subscribe((incoming) => {
+              if (LokatorDB.growthIntelligence) {
+                LokatorDB.growthIntelligence.getOperationalIntelligence().then(renderOperationalFeed).catch(() => renderOperationalFeed(incoming));
+              } else {
+                renderOperationalFeed(incoming);
+              }
+            }, (status) => {
+              const connStatus = document.getElementById('realtime-growth-conn-text');
+              const pulseDot = document.getElementById('realtime-growth-pulse-dot');
+              if (connStatus) connStatus.textContent = status;
+              if (pulseDot) {
+                pulseDot.style.background = status === 'LIVE' ? '#10B981' : (status === 'POLLING_FALLBACK' ? '#F59E0B' : '#EF4444');
+              }
+            });
+          }
         } catch (e) {
-          console.warn('Realtime growth signals load failed:', e.message);
+          console.warn('Operational growth intelligence load failed:', e.message);
         }
 
         const btnRefreshRealtime = document.getElementById('btn-refresh-realtime-signals');
         if (btnRefreshRealtime && !btnRefreshRealtime.hasAttribute('data-bound')) {
           btnRefreshRealtime.setAttribute('data-bound', 'true');
           btnRefreshRealtime.addEventListener('click', async () => {
-            btnRefreshRealtime.textContent = 'Computing...';
-            await LokatorDB.realtimeGrowth.computeSignals(true);
-            const latest = await LokatorDB.realtimeGrowth.getLatestSignals();
-            renderRealtimeSignals(latest);
-            btnRefreshRealtime.textContent = 'Compute Micro-Rollup';
+            btnRefreshRealtime.textContent = 'Evaluating...';
+            if (LokatorDB.growthIntelligence) {
+              await LokatorDB.growthIntelligence.computeOperationalIntelligence(true);
+              const latest = await LokatorDB.growthIntelligence.getOperationalIntelligence();
+              renderOperationalFeed(latest);
+            } else if (LokatorDB.realtimeGrowth) {
+              await LokatorDB.realtimeGrowth.computeSignals(true);
+              const latest = await LokatorDB.realtimeGrowth.getLatestSignals();
+              renderOperationalFeed(latest);
+            }
+            btnRefreshRealtime.textContent = 'Evaluate Multi-Window Rollup';
           });
         }
       }
