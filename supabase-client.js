@@ -3221,6 +3221,80 @@
     }
   };
 
+  const strategicCommandManager = {
+    async getCommandCenter() {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('get_unified_marketplace_command_center');
+        if (error) throw error;
+        return data;
+      }
+      return {
+        schema_version: '9.0.0',
+        status: 'HEALTHY',
+        executive_pulse: {
+          marketplace_health: 'OPTIMAL',
+          strategic_pressure_index: 0,
+          critical_interventions_count: 0,
+          high_priority_expansions_count: 0,
+          total_active_opportunities: 0,
+          active_alerts_count: 0,
+          top_opportunity: null,
+          operational_posture: 'OBSERVATIONAL_ADVISORY_COMMAND_CENTER'
+        },
+        strategic_opportunities: [],
+        regional_matrix: [],
+        active_alerts: [],
+        generated_at: new Date().toISOString()
+      };
+    },
+    async computeSynthesis(forceRefresh = false) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('compute_strategic_intelligence_synthesis', { p_force_refresh: forceRefresh });
+        if (error) throw error;
+        return data;
+      }
+      return { status: 'SUCCESS', strategic_opportunities_synthesized: 0 };
+    },
+    async getSynthesisEvidence(synthesisId) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('get_strategic_synthesis_evidence', { p_synthesis_id: synthesisId });
+        if (error) throw error;
+        return data;
+      }
+      return { synthesis_id: synthesisId, explanation: {} };
+    },
+    async transitionSynthesis(synthesisId, newState, notes = '') {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('transition_strategic_synthesis', {
+          p_synthesis_id: synthesisId,
+          p_new_state: newState,
+          p_notes: notes
+        });
+        if (error) throw error;
+        return data;
+      }
+      return { status: 'TRANSITIONED', synthesis_id: synthesisId, new_state: newState };
+    },
+    async acknowledgeSynthesis(synthesisId, notes = '') {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('acknowledge_strategic_synthesis', {
+          p_synthesis_id: synthesisId,
+          p_notes: notes
+        });
+        if (error) throw error;
+        return data;
+      }
+      return { status: 'ACKNOWLEDGED', synthesis_id: synthesisId };
+    },
+    async watchSynthesis(synthesisId, notes = 'Flagged for operational monitoring') {
+      return this.transitionSynthesis(synthesisId, 'WATCH', notes);
+    },
+    async dismissSynthesis(synthesisId, notes = 'Dismissed by operator') {
+      return this.transitionSynthesis(synthesisId, 'INVALIDATED', notes);
+    }
+  };
+
+  LokatorDB.strategicCommand = strategicCommandManager;
   LokatorDB.predictiveGrowth = predictiveGrowthManager;
   LokatorDB.growthIntelligence = growthIntelligenceManager;
   LokatorDB.realtimeGrowth = realtimeGrowthManager;

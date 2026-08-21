@@ -664,6 +664,206 @@ document.addEventListener('DOMContentLoaded', async () => {
             btnRefreshPredictive.textContent = 'Compute Predictions';
           });
         }
+
+        // =========================================================================
+        // 9.0 STRATEGIC INTELLIGENCE COMMAND CENTER (SIMCC) INITIALIZATION
+        // =========================================================================
+        const renderCommandCenter = (cc) => {
+          if (!cc) return;
+          const pulse = cc.executive_pulse || {};
+
+          // 1. Executive Pulse KPIs
+          const elHealth = document.getElementById('simcc-stat-health');
+          const elSubHealth = document.getElementById('simcc-sub-health');
+          const elPressure = document.getElementById('simcc-stat-pressure');
+          const elP0 = document.getElementById('simcc-stat-p0');
+          const elTotalOpps = document.getElementById('simcc-stat-total-opps');
+
+          if (elHealth) {
+            elHealth.textContent = pulse.marketplace_health || 'OPTIMAL';
+            elHealth.style.color = pulse.marketplace_health === 'OPTIMAL' ? '#34D399' : '#F87171';
+          }
+          if (elSubHealth) {
+            if (pulse.top_opportunity) {
+              elSubHealth.textContent = `Top Focus: ${pulse.top_opportunity.category} in ${pulse.top_opportunity.lga}`;
+            } else {
+              elSubHealth.textContent = 'System-wide operational balance';
+            }
+          }
+          if (elPressure) elPressure.textContent = Number(pulse.strategic_pressure_index || 0).toFixed(1);
+          if (elP0) elP0.textContent = pulse.critical_interventions_count || 0;
+          if (elTotalOpps) elTotalOpps.textContent = pulse.total_active_opportunities || 0;
+
+          // 2. Strategic Opportunity Priority Queue
+          const oppContainer = document.getElementById('simcc-opportunities-container');
+          if (oppContainer) {
+            const opps = cc.strategic_opportunities || [];
+            if (!opps || opps.length === 0) {
+              oppContainer.innerHTML = `
+                <div style="font-size: 0.85rem; color: #64748B; padding: 16px; background: #080D18; border-radius: 8px; text-align: center;">
+                  No active strategic opportunities synthesized. Run evaluation to correlate active intelligence signals.
+                </div>
+              `;
+            } else {
+              oppContainer.innerHTML = opps.map(item => {
+                const isP0 = item.priority_class === 'P0_CRITICAL_INTERVENTION';
+                const isP1 = item.priority_class === 'P1_HIGH_PRIORITY_EXPANSION';
+                const prioColor = isP0 ? '#EF4444' : (isP1 ? '#F59E0B' : '#6366F1');
+                const prioBg = isP0 ? 'rgba(239, 68, 68, 0.15)' : (isP1 ? 'rgba(245, 158, 11, 0.15)' : 'rgba(99, 102, 241, 0.15)');
+                const score = Number(item.strategic_score || 0).toFixed(1);
+                const expl = item.explanation || {};
+                const m = item.metrics || {};
+                const systems = item.contributing_systems || [];
+
+                const systemsBadges = systems.map(s => `
+                  <span style="font-size: 0.65rem; background: #1E293B; color: #94A3B8; padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.06);">
+                    ${s.replace('_', ' ')}
+                  </span>
+                `).join(' ');
+
+                return `
+                  <div class="panel-card" style="background: #111827; border: 1px solid rgba(255,255,255,0.08); border-left: 4px solid ${prioColor}; padding: 14px; margin-bottom: 8px; border-radius: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px; margin-bottom: 8px;">
+                      <div>
+                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px;">
+                          <span style="font-size: 0.7rem; font-weight: 800; background: ${prioBg}; color: ${prioColor}; padding: 2px 8px; border-radius: 12px; border: 1px solid ${prioColor}40;">
+                            ${item.priority_class.replace('_', ' ')}
+                          </span>
+                          <span style="font-size: 0.7rem; font-weight: 800; background: #312E81; color: #818CF8; padding: 2px 8px; border-radius: 12px;">
+                            SCORE: ${score}/100
+                          </span>
+                          <span style="font-size: 0.65rem; font-weight: 700; background: #064E3B; color: #34D399; padding: 2px 6px; border-radius: 4px;">
+                            ${item.convergence_level.replace('_', ' ')}
+                          </span>
+                        </div>
+                        <h4 style="margin: 0; font-size: 1rem; color: #F9FAFB; font-weight: 700;">
+                          ${item.category} — ${item.lga}, ${item.state}
+                        </h4>
+                      </div>
+                      <div style="display: flex; gap: 6px;">
+                        <button class="btn-action btn-simcc-ack" data-id="${item.id}" style="padding: 4px 8px; font-size: 0.75rem; background: #059669;">Acknowledge</button>
+                        <button class="btn-action btn-simcc-watch" data-id="${item.id}" style="padding: 4px 8px; font-size: 0.75rem; background: #D97706;">Watch</button>
+                        <button class="btn-action btn-simcc-dismiss" data-id="${item.id}" style="padding: 4px 8px; font-size: 0.75rem; background: #4B5563;">Dismiss</button>
+                      </div>
+                    </div>
+
+                    <p style="margin: 6px 0; font-size: 0.82rem; color: #CBD5E1; line-height: 1.4;">
+                      ${expl.summary || expl.what || 'Strategic opportunity detected across market telemetry.'}
+                    </p>
+
+                    ${expl.recommended_action ? `
+                      <div style="font-size: 0.8rem; color: #60A5FA; background: rgba(59,130,246,0.1); border-left: 3px solid #3B82F6; padding: 6px 10px; border-radius: 4px; margin: 8px 0;">
+                        💡 <strong>Recommended Strategic Action:</strong> ${expl.recommended_action}
+                      </div>
+                    ` : ''}
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 0.75rem; color: #94A3B8; margin-top: 8px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.04);">
+                      <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                        <span>Systems:</span> ${systemsBadges}
+                      </div>
+                      <div style="display: flex; gap: 12px;">
+                        <span>N=${m.sample_size || '—'}</span>
+                        <span>k=${m.unique_sessions || '—'}</span>
+                        <span>Demand: ${m.projected_demand || 0}/hr</span>
+                        <span>Supply: ${m.projected_supply || 0}</span>
+                      </div>
+                    </div>
+                  </div>
+                `;
+              }).join('');
+
+              // Wire action buttons
+              oppContainer.querySelectorAll('.btn-simcc-ack').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                  const id = e.target.getAttribute('data-id');
+                  if (LokatorDB.strategicCommand) {
+                    await LokatorDB.strategicCommand.acknowledgeSynthesis(id, 'Acknowledged via SIMCC');
+                    const updated = await LokatorDB.strategicCommand.getCommandCenter();
+                    renderCommandCenter(updated);
+                  }
+                });
+              });
+
+              oppContainer.querySelectorAll('.btn-simcc-watch').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                  const id = e.target.getAttribute('data-id');
+                  if (LokatorDB.strategicCommand) {
+                    await LokatorDB.strategicCommand.watchSynthesis(id, 'Flagged for operational monitoring in SIMCC');
+                    const updated = await LokatorDB.strategicCommand.getCommandCenter();
+                    renderCommandCenter(updated);
+                  }
+                });
+              });
+
+              oppContainer.querySelectorAll('.btn-simcc-dismiss').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                  const id = e.target.getAttribute('data-id');
+                  if (LokatorDB.strategicCommand) {
+                    await LokatorDB.strategicCommand.dismissSynthesis(id, 'Dismissed by operator in SIMCC');
+                    const updated = await LokatorDB.strategicCommand.getCommandCenter();
+                    renderCommandCenter(updated);
+                  }
+                });
+              });
+            }
+          }
+
+          // 3. Regional Matrix
+          const regContainer = document.getElementById('simcc-regional-matrix-container');
+          if (regContainer) {
+            const rows = cc.regional_matrix || [];
+            if (!rows || rows.length === 0) {
+              regContainer.innerHTML = `
+                <div style="font-size: 0.85rem; color: #64748B; padding: 14px; background: #080D18; border-radius: 8px; text-align: center;">
+                  Regional balance optimal. No acute localized supply deficits.
+                </div>
+              `;
+            } else {
+              regContainer.innerHTML = `
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px;">
+                  ${rows.map(r => `
+                    <div style="background: #0E1522; border: 1px solid rgba(255,255,255,0.06); border-radius: 6px; padding: 10px;">
+                      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                        <span style="font-weight: 700; font-size: 0.85rem; color: #E2E8F0;">${r.lga}, ${r.state}</span>
+                        <span style="font-size: 0.7rem; font-weight: 800; color: #F59E0B; background: rgba(245,158,11,0.15); padding: 2px 6px; border-radius: 4px;">
+                          Score: ${Number(r.max_strategic_score || 0).toFixed(1)}
+                        </span>
+                      </div>
+                      <div style="font-size: 0.75rem; color: #94A3B8;">
+                        ${r.active_opportunity_count} Active Opps | ${(r.affected_categories || []).join(', ')}
+                      </div>
+                    </div>
+                  `).join('')}
+                </div>
+              `;
+            }
+          }
+        };
+
+        // Load Command Center data
+        try {
+          if (LokatorDB.strategicCommand && typeof LokatorDB.strategicCommand.getCommandCenter === 'function') {
+            LokatorDB.strategicCommand.getCommandCenter().then(renderCommandCenter).catch((e) => {
+              console.warn('SIMCC Command Center fetch failed:', e.message);
+            });
+          }
+        } catch (e) {
+          console.warn('SIMCC initialization failed:', e.message);
+        }
+
+        const btnRefreshCommandCenter = document.getElementById('btn-refresh-command-center');
+        if (btnRefreshCommandCenter && !btnRefreshCommandCenter.hasAttribute('data-bound')) {
+          btnRefreshCommandCenter.setAttribute('data-bound', 'true');
+          btnRefreshCommandCenter.addEventListener('click', async () => {
+            btnRefreshCommandCenter.textContent = 'Synthesizing...';
+            if (LokatorDB.strategicCommand) {
+              await LokatorDB.strategicCommand.computeSynthesis(true);
+              const latest = await LokatorDB.strategicCommand.getCommandCenter();
+              renderCommandCenter(latest);
+            }
+            btnRefreshCommandCenter.textContent = 'Evaluate Synthesis';
+          });
+        }
       }
 
 

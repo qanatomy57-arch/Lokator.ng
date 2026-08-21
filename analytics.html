@@ -73,6 +73,80 @@
     <!-- Main Dashboard Body (Rendered upon Server Auth Confirmation) -->
     <main id="analytics-content">
       
+      <!-- 9.0 Strategic Intelligence Command Center (SIMCC) -->
+      <section id="section-simcc-command-center" style="margin-bottom: 32px;">
+        <div class="section-title">
+          <span style="display: flex; align-items: center; gap: 8px;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            Strategic Intelligence Command Center (SIMCC)
+          </span>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <span id="simcc-health-badge" class="status-tag status-good" style="font-size: 0.75rem; background: rgba(99, 102, 241, 0.2); color: #818CF8; border: 1px solid rgba(99, 102, 241, 0.4);">UNIFIED_SYNTHESIS</span>
+            <span class="status-tag status-notice" style="font-size: 0.7rem; background: #1E293B; color: #94A3B8;">AIR_GAPPED</span>
+          </div>
+        </div>
+
+        <div class="panel-card" style="border: 1px solid rgba(99, 102, 241, 0.3); background: #0E1526; box-shadow: 0 8px 24px rgba(0,0,0,0.35);">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.06);">
+            <div style="font-size: 0.85rem; color: #94A3B8;">
+              Deterministic multi-system synthesis (Realtime + Operational + Predictive + Recommendations). Observational decision support air-gapped from search ranking.
+            </div>
+            <button id="btn-refresh-command-center" class="btn-action" style="background: #4F46E5; padding: 6px 14px; font-size: 0.8rem;">Evaluate Synthesis</button>
+          </div>
+
+          <!-- Executive Pulse KPIs -->
+          <div class="grid-kpis" style="margin-bottom: 20px;">
+            <div class="kpi-card" style="background: #141C30; border-left: 4px solid #6366F1;">
+              <div class="kpi-label">Marketplace Pulse</div>
+              <div class="kpi-value" id="simcc-stat-health" style="font-size: 1.5rem; color: #818CF8;">OPTIMAL</div>
+              <div class="kpi-sub" id="simcc-sub-health">System-wide operational balance</div>
+            </div>
+            <div class="kpi-card" style="background: #141C30; border-left: 4px solid #F59E0B;">
+              <div class="kpi-label">Strategic Pressure Index</div>
+              <div class="kpi-value" id="simcc-stat-pressure" style="font-size: 1.5rem; color: #FBBF24;">0.0</div>
+              <div class="kpi-sub">Avg score of active opportunities</div>
+            </div>
+            <div class="kpi-card" style="background: #141C30; border-left: 4px solid #EF4444;">
+              <div class="kpi-label">Critical Interventions (P0)</div>
+              <div class="kpi-value" id="simcc-stat-p0" style="font-size: 1.5rem; color: #F87171;">0</div>
+              <div class="kpi-sub">Urgent supply/demand actions</div>
+            </div>
+            <div class="kpi-card" style="background: #141C30; border-left: 4px solid #10B981;">
+              <div class="kpi-label">Active Opportunities</div>
+              <div class="kpi-value" id="simcc-stat-total-opps" style="font-size: 1.5rem; color: #34D399;">0</div>
+              <div class="kpi-sub">Synthesized strategic items</div>
+            </div>
+          </div>
+
+          <!-- Strategic Priority Opportunities Queue -->
+          <div style="margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+              <div style="font-size: 0.9rem; font-weight: 700; color: #F1F5F9; display: flex; align-items: center; gap: 8px;">
+                <span>🎯 Prioritized Strategic Opportunities</span>
+                <span class="status-tag status-notice" style="font-size: 0.65rem;">Ranked by Strategic Score</span>
+              </div>
+            </div>
+            <div id="simcc-opportunities-container" style="display: flex; flex-direction: column; gap: 10px;">
+              <div style="font-size: 0.85rem; color: #64748B; padding: 16px; background: #080D18; border-radius: 8px; text-align: center;">
+                No active strategic opportunities synthesized. Run evaluation to correlate active intelligence signals.
+              </div>
+            </div>
+          </div>
+
+          <!-- Regional Opportunity Matrix -->
+          <div>
+            <div style="font-size: 0.9rem; font-weight: 700; color: #F1F5F9; margin-bottom: 10px;">
+              🗺️ Regional Opportunity Matrix (Top Demand vs Supply Pressures)
+            </div>
+            <div id="simcc-regional-matrix-container" style="display: flex; flex-direction: column; gap: 8px;">
+              <div style="font-size: 0.85rem; color: #64748B; padding: 14px; background: #080D18; border-radius: 8px; text-align: center;">
+                Regional balance optimal. No acute localized supply deficits.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- 1. Executive Platform Pulse -->
       <section>
         <div class="section-title">1. Executive Platform Health Pulse</div>
