@@ -194,6 +194,87 @@
         </div>
       </section>
 
+      <!-- 9.2. Continuous Strategic Orchestration & Executive Intelligence (CSOEI) -->
+      <section id="section-strategic-orchestration">
+        <div class="section-title">
+          <span>9.2. Continuous Strategic Orchestration & Executive Intelligence (CSOEI)</span>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <span class="status-tag status-good" style="font-size: 0.7rem;">CONTINUOUS_ORCHESTRATION</span>
+            <span class="status-tag status-notice" style="font-size: 0.7rem;">DECISION_SUPPORT</span>
+            <span class="status-tag status-good" style="font-size: 0.7rem;">AIR_GAPPED</span>
+          </div>
+        </div>
+
+        <div style="background: #111827; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+          <!-- Executive Pulse KPIs -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+            <div style="font-size: 0.9rem; font-weight: 700; color: #F1F5F9;">
+              📊 Executive Strategic Pulse & Portfolio Health
+            </div>
+            <button id="btn-evaluate-orchestration-cycle" class="btn-action" style="padding: 4px 12px; font-size: 0.75rem; background: #6366F1;">
+              Evaluate Orchestration Cycle
+            </button>
+          </div>
+
+          <div class="grid-kpis" style="grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); margin-bottom: 16px;">
+            <div class="kpi-card" style="background: #141C30; border-left: 4px solid #10B981;">
+              <div class="kpi-label">Portfolio Health</div>
+              <div class="kpi-value" id="orchestration-stat-health" style="font-size: 1.3rem; color: #34D399;">100.0%</div>
+              <div class="kpi-sub">Macro operational index</div>
+            </div>
+            <div class="kpi-card" style="background: #141C30; border-left: 4px solid #3B82F6;">
+              <div class="kpi-label">Decision Velocity</div>
+              <div class="kpi-value" id="orchestration-stat-velocity" style="font-size: 1.3rem; color: #60A5FA;">0/wk</div>
+              <div class="kpi-sub">Decisions in past 7d</div>
+            </div>
+            <div class="kpi-card" style="background: #141C30; border-left: 4px solid #EF4444;">
+              <div class="kpi-label">Overdue Action Plans</div>
+              <div class="kpi-value" id="orchestration-stat-overdue" style="font-size: 1.3rem; color: #F87171;">0</div>
+              <div class="kpi-sub">Past target completion</div>
+            </div>
+            <div class="kpi-card" style="background: #141C30; border-left: 4px solid #F59E0B;">
+              <div class="kpi-label">Awaiting Measurement</div>
+              <div class="kpi-value" id="orchestration-stat-measuring" style="font-size: 1.3rem; color: #FBBF24;">0</div>
+              <div class="kpi-sub">Observation concluded</div>
+            </div>
+            <div class="kpi-card" style="background: #141C30; border-left: 4px solid #8B5CF6;">
+              <div class="kpi-label">Critical Escalations</div>
+              <div class="kpi-value" id="orchestration-stat-escalations" style="font-size: 1.3rem; color: #A78BFA;">0</div>
+              <div class="kpi-sub">P0 urgent attention</div>
+            </div>
+            <div class="kpi-card" style="background: #141C30; border-left: 4px solid #06B6D4;">
+              <div class="kpi-label">Intelligence Freshness</div>
+              <div class="kpi-value" id="orchestration-stat-freshness" style="font-size: 1.3rem; color: #22D3EE;">100%</div>
+              <div class="kpi-sub">Non-decayed syntheses</div>
+            </div>
+          </div>
+
+          <!-- Operator Attention Queue: "WHAT TO DO NOW" -->
+          <div style="margin-bottom: 16px;">
+            <div style="font-size: 0.85rem; font-weight: 700; color: #CBD5E1; margin-bottom: 8px;">
+              🎯 Operator Priority Queue — What to Do Now
+            </div>
+            <div id="orchestration-feed-container" style="display: flex; flex-direction: column; gap: 8px;">
+              <div style="font-size: 0.82rem; color: #64748B; padding: 14px; background: #080D18; border-radius: 8px; text-align: center;">
+                Orchestration queue clear. All strategic decisions, plans, and measurement cycles are current.
+              </div>
+            </div>
+          </div>
+
+          <!-- Strategy Learning & Empirical Track Record -->
+          <div>
+            <div style="font-size: 0.85rem; font-weight: 700; color: #CBD5E1; margin-bottom: 8px;">
+              🧠 Strategy Learning & Empirical Track Record (k &ge; 5, N &ge; 30)
+            </div>
+            <div id="strategy-learning-container" style="display: flex; flex-direction: column; gap: 8px;">
+              <div style="font-size: 0.82rem; color: #64748B; padding: 14px; background: #080D18; border-radius: 8px; text-align: center;">
+                No historical strategy efficacy aggregates available yet.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- 1. Executive Platform Pulse -->
       <section>
         <div class="section-title">1. Executive Platform Health Pulse</div>

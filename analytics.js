@@ -917,8 +917,191 @@ document.addEventListener('DOMContentLoaded', async () => {
             btnRefreshCommandCenter.textContent = 'Evaluate Synthesis';
           });
         }
-      }
 
+        // =====================================================================
+        // SECTION 9.2: CONTINUOUS STRATEGIC ORCHESTRATION & EXECUTIVE INTELLIGENCE
+        // =====================================================================
+        const renderStrategicOrchestration = async () => {
+          if (!LokatorDB.strategicOrchestration) return;
+
+          try {
+            // 1. Fetch Executive Summary KPIs
+            const execSum = await LokatorDB.strategicOrchestration.getExecutiveSummary();
+            if (execSum && execSum.kpis) {
+              const kpis = execSum.kpis;
+              const elHealth = document.getElementById('orchestration-stat-health');
+              const elVelocity = document.getElementById('orchestration-stat-velocity');
+              const elOverdue = document.getElementById('orchestration-stat-overdue');
+              const elMeasuring = document.getElementById('orchestration-stat-measuring');
+              const elEscalations = document.getElementById('orchestration-stat-escalations');
+              const elFreshness = document.getElementById('orchestration-stat-freshness');
+
+              if (elHealth) elHealth.textContent = `${Number(kpis.portfolio_health_score || 100).toFixed(1)}%`;
+              if (elVelocity) elVelocity.textContent = `${kpis.weekly_decision_velocity || 0}/wk`;
+              if (elOverdue) elOverdue.textContent = kpis.overdue_action_plans || 0;
+              if (elMeasuring) elMeasuring.textContent = kpis.plans_awaiting_measurement || 0;
+              if (elEscalations) elEscalations.textContent = kpis.critical_escalations || 0;
+
+              if (elFreshness && execSum.freshness_summary) {
+                const total = execSum.freshness_summary.total_active_syntheses || 0;
+                const fresh = execSum.freshness_summary.fresh_syntheses || 0;
+                const pct = total > 0 ? Math.round((fresh / total) * 100) : 100;
+                elFreshness.textContent = `${pct}%`;
+              }
+            }
+
+            // 2. Fetch Operator Priority Feed
+            const feedData = await LokatorDB.strategicOrchestration.getFeed(20);
+            const feedContainer = document.getElementById('orchestration-feed-container');
+            if (feedContainer && feedData) {
+              const items = [];
+
+              // Critical Escalations
+              (feedData.critical_escalations || []).forEach(e => {
+                items.push(`
+                  <div style="background: #181018; border: 1px solid rgba(244,63,94,0.3); border-left: 4px solid #F43F5E; border-radius: 6px; padding: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                    <div>
+                      <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 3px;">
+                        <span style="font-size: 0.65rem; font-weight: 800; background: #881337; color: #FDA4AF; padding: 2px 6px; border-radius: 4px;">CRITICAL P0</span>
+                        <span style="font-size: 0.8rem; font-weight: 700; color: #FFF1F2;">${e.category} in ${e.lga}, ${e.state}</span>
+                      </div>
+                      <div style="font-size: 0.72rem; color: #FDA4AF;">
+                        Score: ${Number(e.strategic_score || 0).toFixed(1)} | Convergence: ${e.convergence_level} | Immediate operator decision required.
+                      </div>
+                    </div>
+                    <div style="display: flex; gap: 6px;">
+                      <span class="status-tag status-notice" style="font-size: 0.65rem;">RECOMMENDATION</span>
+                      <span class="status-tag status-danger" style="font-size: 0.65rem;">MANUAL ACTION</span>
+                    </div>
+                  </div>
+                `);
+              });
+
+              // Stalled Decisions
+              (feedData.stalled_decisions || []).forEach(d => {
+                items.push(`
+                  <div style="background: #1A1608; border: 1px solid rgba(245,158,11,0.3); border-left: 4px solid #F59E0B; border-radius: 6px; padding: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                    <div>
+                      <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 3px;">
+                        <span style="font-size: 0.65rem; font-weight: 800; background: #78350F; color: #FDE68A; padding: 2px 6px; border-radius: 4px;">STALLED DECISION</span>
+                        <span style="font-size: 0.8rem; font-weight: 700; color: #FEF3C7;">${d.category} in ${d.lga}, ${d.state} (${d.days_idle} days idle)</span>
+                      </div>
+                      <div style="font-size: 0.72rem; color: #FDE68A;">
+                        Rationale: ${d.rationale || 'Decision accepted'} | Action plan not yet generated.
+                      </div>
+                    </div>
+                    <span class="status-tag status-notice" style="font-size: 0.65rem;">MANUAL ACTION</span>
+                  </div>
+                `);
+              });
+
+              // Overdue Action Plans
+              (feedData.overdue_action_plans || []).forEach(p => {
+                items.push(`
+                  <div style="background: #1C1114; border: 1px solid rgba(239,68,68,0.3); border-left: 4px solid #EF4444; border-radius: 6px; padding: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                    <div>
+                      <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 3px;">
+                        <span style="font-size: 0.65rem; font-weight: 800; background: #7F1D1D; color: #FECACA; padding: 2px 6px; border-radius: 4px;">OVERDUE (${p.slippage_days}d)</span>
+                        <span style="font-size: 0.8rem; font-weight: 700; color: #FEE2E2;">${p.objective}</span>
+                      </div>
+                      <div style="font-size: 0.72rem; color: #FECACA;">
+                        ${p.category} in ${p.lga}, ${p.state} | Target Date: ${p.target_completion_date} | Owner: ${p.owner_title}
+                      </div>
+                    </div>
+                    <span class="status-tag status-danger" style="font-size: 0.65rem;">MANUAL ACTION</span>
+                  </div>
+                `);
+              });
+
+              // Awaiting Measurement
+              (feedData.awaiting_measurement || []).forEach(m => {
+                items.push(`
+                  <div style="background: #0E1824; border: 1px solid rgba(59,130,246,0.3); border-left: 4px solid #3B82F6; border-radius: 6px; padding: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                    <div>
+                      <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 3px;">
+                        <span style="font-size: 0.65rem; font-weight: 800; background: #1E3A8A; color: #BFDBFE; padding: 2px 6px; border-radius: 4px;">MEASUREMENT READY</span>
+                        <span style="font-size: 0.8rem; font-weight: 700; color: #EFF6FF;">${m.objective}</span>
+                      </div>
+                      <div style="font-size: 0.72rem; color: #BFDBFE;">
+                        ${m.category} in ${m.lga}, ${m.state} | Window (${m.observation_window_days}d) concluded.
+                      </div>
+                    </div>
+                    <span class="status-tag status-good" style="font-size: 0.65rem;">OBSERVATION</span>
+                  </div>
+                `);
+              });
+
+              if (items.length === 0) {
+                feedContainer.innerHTML = `
+                  <div style="font-size: 0.82rem; color: #64748B; padding: 14px; background: #080D18; border-radius: 8px; text-align: center;">
+                    Orchestration queue clear. All strategic decisions, plans, and measurement cycles are current.
+                  </div>
+                `;
+              } else {
+                feedContainer.innerHTML = items.join('');
+              }
+            }
+
+            // 3. Fetch Strategy Learning Insights
+            const learningData = await LokatorDB.strategicOrchestration.getLearningInsights();
+            const learningContainer = document.getElementById('strategy-learning-container');
+            if (learningContainer && learningData) {
+              const insights = learningData.insights || [];
+              if (insights.length === 0) {
+                learningContainer.innerHTML = `
+                  <div style="font-size: 0.82rem; color: #64748B; padding: 14px; background: #080D18; border-radius: 8px; text-align: center;">
+                    No historical strategy efficacy aggregates available yet. Interventions will be aggregated as outcomes are measured.
+                  </div>
+                `;
+              } else {
+                learningContainer.innerHTML = `
+                  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px;">
+                    ${insights.map(i => `
+                      <div style="background: #0E1522; border: 1px solid rgba(255,255,255,0.06); border-radius: 6px; padding: 10px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                          <span style="font-size: 0.8rem; font-weight: 700; color: #E2E8F0;">${i.action_category}</span>
+                          <span style="font-size: 0.68rem; font-weight: 700; background: #064E3B; color: #34D399; padding: 2px 6px; border-radius: 4px;">
+                            ${i.confidence_rating}
+                          </span>
+                        </div>
+                        <div style="font-size: 0.72rem; color: #94A3B8; margin-bottom: 4px;">
+                          ${i.category} in ${i.state} | ${i.total_interventions} Interventions
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: #64748B;">
+                          <span>Avg Efficacy: <strong style="color: #34D399;">${Number(i.average_effectiveness_score || 0).toFixed(1)}%</strong></span>
+                          <span>Multiplier: <strong style="color: #60A5FA;">${Number(i.strategy_multiplier || 1.0).toFixed(2)}x</strong></span>
+                        </div>
+                      </div>
+                    `).join('')}
+                  </div>
+                `;
+              }
+            }
+          } catch (e) {
+            console.warn('Failed to load strategic orchestration data:', e.message);
+          }
+        };
+
+        // Initialize Section 9.2
+        try {
+          renderStrategicOrchestration();
+        } catch (e) {
+          console.warn('Strategic orchestration initialization failed:', e.message);
+        }
+
+        const btnEvalOrch = document.getElementById('btn-evaluate-orchestration-cycle');
+        if (btnEvalOrch && !btnEvalOrch.hasAttribute('data-bound')) {
+          btnEvalOrch.setAttribute('data-bound', 'true');
+          btnEvalOrch.addEventListener('click', async () => {
+            btnEvalOrch.textContent = 'Evaluating...';
+            if (LokatorDB.strategicOrchestration) {
+              await LokatorDB.strategicOrchestration.evaluateCycle(true);
+              await renderStrategicOrchestration();
+            }
+            btnEvalOrch.textContent = 'Evaluate Orchestration Cycle';
+          });
+        }
+      }
 
     } catch (err) {
       console.error('Failed to load internal analytics:', err);

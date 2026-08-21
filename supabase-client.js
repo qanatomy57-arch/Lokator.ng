@@ -3400,8 +3400,99 @@
     }
   };
 
+  const strategicOrchestrationManager = {
+    async evaluateCycle(forceReevaluate = false) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('evaluate_strategic_orchestration_cycle', {
+          p_force_reevaluate: forceReevaluate
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        status: 'SUCCESS',
+        evaluated_at: new Date().toISOString(),
+        summary: {
+          stalled_decisions: 0,
+          overdue_action_plans: 0,
+          plans_awaiting_measurement: 0,
+          decayed_syntheses: 0,
+          events_generated: 0
+        }
+      };
+    },
+    async getFeed(limit = 20) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('get_strategic_orchestration_feed', {
+          p_limit: limit
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        schema_version: '9.2.0',
+        generated_at: new Date().toISOString(),
+        feed_summary: {
+          critical_escalations_count: 0,
+          stalled_decisions_count: 0,
+          overdue_plans_count: 0,
+          awaiting_measurement_count: 0,
+          stale_syntheses_count: 0
+        },
+        critical_escalations: [],
+        stalled_decisions: [],
+        overdue_action_plans: [],
+        awaiting_measurement: [],
+        stale_syntheses: []
+      };
+    },
+    async getLearningInsights(actionCategory = null, category = null, state = null) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('get_strategy_learning_insights', {
+          p_action_category: actionCategory,
+          p_category: category,
+          p_state: state
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        schema_version: '9.2.0',
+        generated_at: new Date().toISOString(),
+        insights: []
+      };
+    },
+    async getExecutiveSummary() {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('get_executive_strategic_summary');
+        if (error) throw error;
+        return data;
+      }
+      return {
+        schema_version: '9.2.0',
+        generated_at: new Date().toISOString(),
+        kpis: {
+          portfolio_health_score: 100.0,
+          weekly_decision_velocity: 0,
+          active_decisions: 0,
+          active_action_plans: 0,
+          overdue_action_plans: 0,
+          plans_awaiting_measurement: 0,
+          critical_escalations: 0,
+          historical_average_effectiveness: 0.0
+        },
+        freshness_summary: {
+          total_active_syntheses: 0,
+          fresh_syntheses: 0,
+          stale_syntheses: 0
+        }
+      };
+    }
+  };
+
   LokatorDB.strategicCommand = strategicCommandManager;
   LokatorDB.strategicDecision = strategicDecisionManager;
+  LokatorDB.strategicOrchestration = strategicOrchestrationManager;
   LokatorDB.predictiveGrowth = predictiveGrowthManager;
   LokatorDB.growthIntelligence = growthIntelligenceManager;
   LokatorDB.realtimeGrowth = realtimeGrowthManager;
