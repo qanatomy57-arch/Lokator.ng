@@ -332,7 +332,9 @@ document.addEventListener("DOMContentLoaded", () => {
             <!-- Avatar Column -->
             <div class="provider-avatar-col">
               <a href="profile.html?id=${safeId}" style="text-decoration: none;">
-                <div class="big-avatar" style="background: ${safeAvatarBg};">${escapeHtml(initials)}</div>
+                <div class="big-avatar" style="background: ${safeAvatarBg}; overflow: hidden;">
+                  ${provider.avatarUrl ? `<img src="${escapeHtml(provider.avatarUrl)}" alt="${escapeHtml(provider.name)}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" />` : escapeHtml(initials)}
+                </div>
               </a>
               <span class="status-dot ${provider.isAvailable ? 'online' : 'offline'}" title="${provider.isAvailable ? 'Available today' : 'Currently busy'}"></span>
             </div>

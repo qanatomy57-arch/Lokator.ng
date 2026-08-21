@@ -58,9 +58,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const heroAvatar = document.getElementById('hero-avatar');
   if (heroAvatar) {
-    const initials = provider.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-    heroAvatar.textContent = initials;
-    heroAvatar.style.background = provider.avatarBg || 'var(--green)';
+    if (provider.avatarUrl) {
+      heroAvatar.innerHTML = `<img src="${escapeHtml(provider.avatarUrl)}" alt="${escapeHtml(provider.name)}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" />`;
+    } else {
+      const initials = provider.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+      heroAvatar.textContent = initials;
+      heroAvatar.style.background = provider.avatarBg || 'var(--green)';
+    }
   }
 
   const heroStatus = document.getElementById('hero-status-badge');

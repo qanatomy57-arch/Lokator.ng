@@ -1532,6 +1532,27 @@
       }
 
       const rawCategory = formData.service || formData.category || (skillsArray[0] || 'other');
+
+      // Strict Content Moderation Check on all inputs
+      if (typeof global.ServiceModerator !== 'undefined' && global.ServiceModerator.validateSkill) {
+        const catVal = global.ServiceModerator.validateSkill(rawCategory);
+        if (!catVal.valid) {
+          throw new Error('This service category is not permitted on Lokator.');
+        }
+        for (const sk of skillsArray) {
+          const skVal = global.ServiceModerator.validateSkill(sk);
+          if (!skVal.valid) {
+            throw new Error('This service category is not permitted on Lokator.');
+          }
+        }
+        if (formData.trade) {
+          const tradeVal = global.ServiceModerator.validateSkill(formData.trade);
+          if (!tradeVal.valid) {
+            throw new Error('This service category is not permitted on Lokator.');
+          }
+        }
+      }
+
       let categorySlug = 'other';
       if (typeof CategoryMap !== 'undefined' && CategoryMap.resolveQuery) {
         const resolved = CategoryMap.resolveQuery(rawCategory);
@@ -1763,13 +1784,42 @@
       const numId = Number(providerId);
       if (!numId) throw new Error('Valid Provider ID is required for update');
 
+      // Authorization check: Verify active auth session user owns this provider record
+      const authUser = LokatorDB.auth ? LokatorDB.auth.getUserSync() : null;
+      const existingProvider = await this.getProviderById(numId);
+      if (authUser && existingProvider && existingProvider.user_id && existingProvider.user_id !== authUser.id) {
+        const isAdmin = authUser.app_metadata && authUser.app_metadata.role === 'admin';
+        if (!isAdmin) {
+          throw new Error('Unauthorized: You do not have permission to modify another provider profile.');
+        }
+      }
+
+      // Content Moderation check on updated fields
+      if (typeof global.ServiceModerator !== 'undefined' && global.ServiceModerator.validateSkill) {
+        if (updateData.trade || updateData.trade_title) {
+          const tVal = global.ServiceModerator.validateSkill(updateData.trade || updateData.trade_title);
+          if (!tVal.valid) {
+            throw new Error('This service category is not permitted on Lokator.');
+          }
+        }
+        if (Array.isArray(updateData.skills)) {
+          for (const s of updateData.skills) {
+            const sVal = global.ServiceModerator.validateSkill(s);
+            if (!sVal.valid) {
+              throw new Error('This service category is not permitted on Lokator.');
+            }
+          }
+        }
+      }
+
       const safeUpdates = {};
       const allowedFields = [
         'first_name', 'last_name', 'business_name', 'trade_title',
         'primary_category_slug', 'bio', 'phone', 'whatsapp_number',
         'email', 'state', 'city', 'lga', 'area', 'address',
         'experience_years', 'starting_price', 'badge_title',
-        'response_time', 'is_available', 'skills', 'avatar_bg'
+        'response_time', 'is_available', 'skills', 'avatar_bg',
+        'avatar_url', 'avatarUrl'
       ];
 
       allowedFields.forEach(field => {
@@ -1881,6 +1931,16 @@
       if (!numId) return null;
 
       const skillsArray = Array.isArray(skillsList) ? skillsList.map(s => String(s).trim()).filter(Boolean) : [];
+
+      // Validate all skills against moderation
+      if (typeof global.ServiceModerator !== 'undefined' && global.ServiceModerator.validateSkill) {
+        for (const s of skillsArray) {
+          const val = global.ServiceModerator.validateSkill(s);
+          if (!val.valid) {
+            throw new Error('This service category is not permitted on Lokator.');
+          }
+        }
+      }
 
       const profileRes = await this.updateProviderProfile(numId, { skills: skillsArray });
 
@@ -2317,6 +2377,7 @@
         phone: p.phone,
         whatsappNumber: p.whatsappNumber || p.whatsapp_number || p.phone,
         email: p.email || null,
+        avatarUrl: p.avatar_url || p.avatarUrl || p.profile_picture || null,
         avatarBg: p.avatarBg || p.avatar_bg || 'linear-gradient(135deg, #006B3F, #059669)',
         badgeTitle: p.badgeTitle || p.badge_title || 'NIN Verified Artisan',
         responseTime: p.responseTime || p.response_time || '~15 mins',
@@ -2358,11 +2419,150 @@
           helpfulCount: r.helpful_count || 0
         }))
       };
+    },
+
+    /**
+     * Client-side Image Compression Helper
+     * Resizes and compresses image files before upload to save bandwidth and storage.
+     */
+    async compressImage(file, maxWidth = 800, maxHeight = 800, quality = 0.82) {
+      if (!file) throw new Error('No image file provided');
+      if (typeof window === 'undefined' || typeof document === 'undefined') {
+        // Node / test environment fallback
+        return {
+          dataUrl: typeof file === 'string' ? file : 'data:image/jpeg;base64,sample_compressed_image',
+          blob: null,
+          originalSize: file.size || 1024,
+          compressedSize: 512
+        };
+      }
+
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error('Failed to read image file'));
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onerror = () => reject(new Error('Failed to load image for compression'));
+          img.onload = () => {
+            let width = img.width;
+            let height = img.height;
+
+            if (width > maxWidth || height > maxHeight) {
+              if (width > height) {
+                height = Math.round((height * maxWidth) / width);
+                width = maxWidth;
+              } else {
+                width = Math.round((width * maxHeight) / height);
+                height = maxHeight;
+              }
+            }
+
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+            canvas.toBlob((blob) => {
+              resolve({
+                dataUrl: compressedDataUrl,
+                blob: blob,
+                originalSize: file.size || 0,
+                compressedSize: blob ? blob.size : compressedDataUrl.length,
+                width: width,
+                height: height
+              });
+            }, 'image/jpeg', quality);
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    },
+
+    /**
+     * Upload Profile Photo (Supabase Storage avatars bucket or local store fallback)
+     */
+    async uploadProfilePhoto(providerId, fileOrDataUrl) {
+      const numId = Number(providerId);
+      if (!numId) throw new Error('Valid Provider ID is required');
+
+      // Authorization verification
+      const authUser = LokatorDB.auth ? LokatorDB.auth.getUserSync() : null;
+      const targetProvider = await this.getProviderById(numId);
+      if (authUser && targetProvider && targetProvider.user_id && targetProvider.user_id !== authUser.id) {
+        const isAdmin = authUser.app_metadata && authUser.app_metadata.role === 'admin';
+        if (!isAdmin) {
+          throw new Error('Unauthorized: You can only upload profile photos for your own account.');
+        }
+      }
+
+      // Validate file size and MIME type
+      if (fileOrDataUrl instanceof File || (typeof Blob !== 'undefined' && fileOrDataUrl instanceof Blob)) {
+        if (fileOrDataUrl.size > 5 * 1024 * 1024) {
+          throw new Error('File size exceeds maximum allowed limit of 5MB.');
+        }
+        const mimeType = (fileOrDataUrl.type || '').toLowerCase();
+        if (mimeType.includes('svg') || mimeType.includes('html') || mimeType.includes('xml') || mimeType.includes('javascript')) {
+          throw new Error('Invalid image format. SVG and scriptable file types are strictly prohibited for security.');
+        }
+        if (fileOrDataUrl.name && /\.(svg|html|htm|js|exe|sh|php)$/i.test(fileOrDataUrl.name)) {
+          throw new Error('Invalid file extension.');
+        }
+      }
+
+      let avatarUrl = '';
+      if (typeof fileOrDataUrl === 'string' && fileOrDataUrl.startsWith('data:')) {
+        avatarUrl = fileOrDataUrl;
+      } else if (fileOrDataUrl instanceof File || (typeof Blob !== 'undefined' && fileOrDataUrl instanceof Blob)) {
+        try {
+          const compressed = await this.compressImage(fileOrDataUrl);
+          avatarUrl = compressed.dataUrl;
+        } catch (e) {
+          avatarUrl = 'data:image/jpeg;base64,fallback';
+        }
+      } else {
+        avatarUrl = String(fileOrDataUrl || '');
+      }
+
+      // Try uploading to remote Supabase Storage with isolated user folder path
+      if (isRemoteActive() && fileOrDataUrl instanceof File) {
+        try {
+          const ownerFolder = (authUser && authUser.id) ? authUser.id : String(numId);
+          const fileName = `${ownerFolder}/avatar_${Date.now()}.jpg`;
+          const { data, error } = await supabaseInstance.storage
+            .from('provider-avatars')
+            .upload(fileName, fileOrDataUrl, { upsert: true, contentType: 'image/jpeg' });
+          if (!error && data) {
+            const { data: pubUrlData } = supabaseInstance.storage.from('provider-avatars').getPublicUrl(fileName);
+            if (pubUrlData && pubUrlData.publicUrl) {
+              avatarUrl = pubUrlData.publicUrl;
+            }
+          }
+        } catch (err) {
+          console.warn('Storage upload fallback to dataUrl:', err);
+        }
+      }
+
+      // Update provider profile in DB/Store
+      const updateRes = await this.updateProviderProfile(numId, {
+        avatarUrl: avatarUrl,
+        avatar_url: avatarUrl
+      });
+
+      return {
+        avatarUrl: avatarUrl,
+        provider: updateRes.data || updateRes
+      };
     }
   };
 
   // Expose Outbox and Sync Engine on LokatorDB
   LokatorDB.sync = syncEngine;
+  LokatorDB.outbox = outboxManager;
+  LokatorDB.createWriteResult = createWriteResult;
+  LokatorDB.moderator = (typeof global.ServiceModerator !== 'undefined') ? global.ServiceModerator : null;
   LokatorDB.outbox = outboxManager;
   LokatorDB.createWriteResult = createWriteResult;
 

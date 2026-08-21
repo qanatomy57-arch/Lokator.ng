@@ -360,8 +360,221 @@
         'logistics',
         'parcel'
       ]
+    },
+    {
+      id: 'solar-installer',
+      slug: 'solar-installer',
+      name: 'Solar Installer',
+      displayName: 'Solar & Inverter Services',
+      dropdownValue: 'Solar Installer',
+      icon: '☀️',
+      contextualLabel: 'SOLAR & INVERTER',
+      promptText: 'Find certified solar and inverter engineers near you.',
+      ctaText: 'Find Solar Installers',
+      heroStepIndex: null,
+      synonyms: [
+        'solar-installer',
+        'solar installer',
+        'solar',
+        'inverter',
+        'solar engineer',
+        'solar panel',
+        'battery storage',
+        'solar technician'
+      ]
+    },
+    {
+      id: 'ac-technician',
+      slug: 'ac-technician',
+      name: 'AC Technician',
+      displayName: 'Air Conditioning & Refrigeration',
+      dropdownValue: 'AC Technician',
+      icon: '❄️',
+      contextualLabel: 'AC & REFRIGERATION',
+      promptText: 'Find expert AC technicians and fridge repairers.',
+      ctaText: 'Find AC Techs',
+      heroStepIndex: null,
+      synonyms: [
+        'ac-technician',
+        'ac technician',
+        'ac repair',
+        'air condition',
+        'air conditioning',
+        'refrigerator',
+        'fridge',
+        'cold room',
+        'hvac'
+      ]
+    },
+    {
+      id: 'mason',
+      slug: 'mason',
+      name: 'Mason',
+      displayName: 'Masonry & Bricklaying',
+      dropdownValue: 'Mason',
+      icon: '🧱',
+      contextualLabel: 'MASONRY SERVICES',
+      promptText: 'Find experienced masons and bricklayers near you.',
+      ctaText: 'Find Masons',
+      heroStepIndex: null,
+      synonyms: [
+        'mason',
+        'masons',
+        'bricklayer',
+        'bricklaying',
+        'block layer',
+        'plastering',
+        'concrete',
+        'building'
+      ]
+    },
+    {
+      id: 'tiler',
+      slug: 'tiler',
+      name: 'Tiler',
+      displayName: 'Tiling & Flooring',
+      dropdownValue: 'Tiler',
+      icon: '🏛️',
+      contextualLabel: 'TILING SERVICES',
+      promptText: 'Find master tilers and flooring experts near you.',
+      ctaText: 'Find Tilers',
+      heroStepIndex: null,
+      synonyms: [
+        'tiler',
+        'tilers',
+        'tiling',
+        'floor tiles',
+        'wall tiles',
+        'granite',
+        'marble',
+        'interlocking stones'
+      ]
+    },
+    {
+      id: 'makeup-artist',
+      slug: 'makeup-artist',
+      name: 'Makeup Artist',
+      displayName: 'Makeup & Gele Styling',
+      dropdownValue: 'Makeup Artist',
+      icon: '💄',
+      contextualLabel: 'MAKEUP & BEAUTY',
+      promptText: 'Find creative makeup artists for bridal, events and shoots.',
+      ctaText: 'Find Makeup Artists',
+      heroStepIndex: null,
+      synonyms: [
+        'makeup-artist',
+        'makeup artist',
+        'makeup',
+        'gele',
+        'bridal makeup',
+        'mua',
+        'glam'
+      ]
+    },
+    {
+      id: 'event-planner',
+      slug: 'event-planner',
+      name: 'Event Planner',
+      displayName: 'Event Planning & Decor',
+      dropdownValue: 'Event Planner',
+      icon: '🎉',
+      contextualLabel: 'EVENT PLANNING',
+      promptText: 'Find professional event planners and decorators.',
+      ctaText: 'Find Event Planners',
+      heroStepIndex: null,
+      synonyms: [
+        'event-planner',
+        'event planner',
+        'event planning',
+        'event decorator',
+        'party planner',
+        'ushering'
+      ]
     }
   ];
+
+  // ===== CONTENT FILTERING & MODERATION ENGINE =====
+  const BLOCKED_KEYWORDS = [
+    'killer', 'assassin', 'assassination', 'murder', 'hitman',
+    'kidnap', 'kidnapper', 'kidnapping', 'abduction',
+    'fraud', 'scam', 'scammer', '419', 'yahoo', 'yahoo yahoo', 'money ritual', 'ritual',
+    'hack', 'hacker', 'hacking', 'cracker', 'malware', 'virus', 'trojan', 'spyware',
+    'weapon', 'weapons', 'gun', 'guns', 'firearm', 'firearms', 'pistol', 'rifle', 'ammo', 'ammunition', 'bomb', 'explosives',
+    'drug', 'drugs', 'cocaine', 'heroin', 'weed', 'marijuana', 'narcotics', 'tramadol', 'codeine', 'meth',
+    'stolen goods', 'stolen', 'fake document', 'fake documents', 'fake certificate', 'counterfeit', 'forgery',
+    'prostitution', 'prostitute', 'escort', 'sex', 'nude', 'porn', 'adult',
+    'illegal', 'money laundry', 'money laundering', 'organ harvesting', 'human parts',
+    'blackmail', 'extortion', 'pirated', 'contraband'
+  ];
+
+  const ServiceModerator = {
+    blockedKeywords: BLOCKED_KEYWORDS,
+
+    /**
+     * Validates a skill / service input string.
+     * Rejects illegal, harmful, dangerous, or scam services.
+     *
+     * @param {string} skillText
+     * @returns {{ valid: boolean, error?: string, blockedWord?: string, cleanName?: string }}
+     */
+    validateSkill(skillText) {
+      if (!skillText || typeof skillText !== 'string') {
+        return { valid: false, error: 'Skill name cannot be empty.' };
+      }
+
+      const clean = skillText.replace(/^[\p{Emoji}\u200d\uFE0F\s]+/u, '').trim();
+      if (clean.length < 2) {
+        return { valid: false, error: 'Skill name must be at least 2 characters.' };
+      }
+      if (clean.length > 80) {
+        return { valid: false, error: 'Skill name must be under 80 characters.' };
+      }
+
+      const lower = clean.toLowerCase();
+
+      // Check against blocked keywords with word boundaries or substring match
+      for (const word of BLOCKED_KEYWORDS) {
+        // Regex with word boundaries or exact containment for compound terms
+        const regex = new RegExp('(^|[^a-zA-Z0-9])' + word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '($|[^a-zA-Z0-9])', 'i');
+        if (regex.test(lower) || (word.length >= 4 && lower.includes(word))) {
+          return {
+            valid: false,
+            error: `Disallowed service keyword detected ("${word}"). Lokator only lists verified, legal artisan and trade services.`,
+            blockedWord: word
+          };
+        }
+      }
+
+      return {
+        valid: true,
+        cleanName: clean
+      };
+    },
+
+    /**
+     * Returns popular curated suggestion tags for UI chips.
+     */
+    getPopularSuggestions() {
+      return [
+        { name: 'Plumber', icon: '🔧' },
+        { name: 'Electrician', icon: '⚡' },
+        { name: 'Carpenter', icon: '🪚' },
+        { name: 'Painter', icon: '🎨' },
+        { name: 'Mechanic', icon: '🔩' },
+        { name: 'AC Technician', icon: '❄️' },
+        { name: 'Solar Installer', icon: '☀️' },
+        { name: 'Mason', icon: '🧱' },
+        { name: 'Tiler', icon: '🏛️' },
+        { name: 'Tailor', icon: '🧵' },
+        { name: 'Barber', icon: '✂️' },
+        { name: 'Nail Technician', icon: '💅' },
+        { name: 'Makeup Artist', icon: '💄' },
+        { name: 'Cleaner', icon: '✨' },
+        { name: 'Computer Repair', icon: '💻' },
+        { name: 'Phone Repair', icon: '📱' }
+      ];
+    }
+  };
 
   const CategoryMap = {
     categories: SERVICE_CATEGORIES,
@@ -439,5 +652,6 @@
   // Expose to global window
   global.SERVICE_CATEGORIES = SERVICE_CATEGORIES;
   global.CategoryMap = CategoryMap;
+  global.ServiceModerator = ServiceModerator;
 
 })(typeof window !== 'undefined' ? window : this);

@@ -122,31 +122,49 @@
                 <!-- Dynamic Chips -->
               </div>
               <div class="skills-input-row">
-                <input type="text" id="skill-input" placeholder="Type any skill/service (e.g. Recording Studio, Plumber, Makeup) and press Enter..." autocomplete="off" />
+                <input type="text" id="skill-input" placeholder="Type any skill/service and press Enter..." autocomplete="off" />
                 <button type="button" class="btn-add-skill" id="btn-add-skill">+ Add</button>
               </div>
             </div>
+            <div class="moderation-error-alert" id="moderation-alert" role="alert">
+              <span>⚠️</span>
+              <span id="moderation-alert-text">Disallowed service keyword detected. Lokator only lists verified trade services.</span>
+            </div>
             <div class="popular-skills-hints" id="popular-hints">
               <span class="hints-label">Popular suggestions:</span>
-              <span class="popular-skill-pill" data-skill="⚡ Electrician">⚡ Electrician</span>
               <span class="popular-skill-pill" data-skill="🔧 Plumber">🔧 Plumber</span>
-              <span class="popular-skill-pill" data-skill="🎙️ Recording Studio">🎙️ Recording Studio</span>
-              <span class="popular-skill-pill" data-skill="📸 Photographer">📸 Photographer</span>
-              <span class="popular-skill-pill" data-skill="💄 Makeup Artist">💄 Makeup Artist</span>
+              <span class="popular-skill-pill" data-skill="⚡ Electrician">⚡ Electrician</span>
+              <span class="popular-skill-pill" data-skill="🪚 Carpenter">🪚 Carpenter</span>
+              <span class="popular-skill-pill" data-skill="🎨 Painter">🎨 Painter</span>
+              <span class="popular-skill-pill" data-skill="🔩 Mechanic">🔩 Mechanic</span>
+              <span class="popular-skill-pill" data-skill="❄️ AC Technician">❄️ AC Technician</span>
               <span class="popular-skill-pill" data-skill="☀️ Solar Installer">☀️ Solar Installer</span>
-              <span class="popular-skill-pill" data-skill="👗 Tailor">👗 Tailor</span>
-              <span class="popular-skill-pill" data-skill="💅 Nail Technician">💅 Nail Tech</span>
-              <span class="popular-skill-pill" data-skill="💻 Computer Repair">💻 Computer Repair</span>
+              <span class="popular-skill-pill" data-skill="🧱 Mason">🧱 Mason</span>
+              <span class="popular-skill-pill" data-skill="🏛️ Tiler">🏛️ Tiler</span>
             </div>
             <input type="hidden" id="service" name="service" required />
           </div>
           <div class="form-group">
             <label for="location">Your Location / Area *</label>
             <div class="loc-input-wrap">
-              <input type="text" id="location" name="location" required placeholder="e.g. Surulere, Lagos" />
+              <input type="text" id="location" name="location" required placeholder="e.g. Surulere, Lagos, Nigeria" />
               <button type="button" class="gps-btn-form" id="gps-btn-form" aria-label="Use my GPS location">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="8"/></svg>
                 Use GPS
+              </button>
+            </div>
+            <div class="loc-map-container">
+              <div class="loc-map-preview" id="loc-map-preview">
+                <div class="map-placeholder-bg">
+                  <div class="map-pin-marker">
+                    <span class="map-pin-icon">📍</span>
+                    <span class="map-pin-label" id="map-pin-label">Surulere, Lagos</span>
+                  </div>
+                </div>
+              </div>
+              <button type="button" class="loc-gps-quick-btn" id="loc-gps-quick-btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="8"/></svg>
+                Use my current location
               </button>
             </div>
           </div>
@@ -164,6 +182,19 @@
           <div class="form-group">
             <label for="bio">Short Bio (optional)</label>
             <textarea id="bio" name="bio" rows="3" placeholder="Tell customers about your skills and experience..."></textarea>
+          </div>
+          <div class="form-group">
+            <label for="photo-input">Profile Picture</label>
+            <div class="photo-upload-zone" id="photo-upload-zone">
+              <div class="photo-preview-avatar" id="photo-preview-avatar">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              </div>
+              <div class="photo-upload-info">
+                <span class="photo-upload-title" id="photo-title-text">Upload Profile Picture</span>
+                <span class="photo-upload-hint">JPG, PNG (Max 5MB) · Compressed on device</span>
+              </div>
+              <input type="file" id="photo-input" name="photo-input" class="photo-file-hidden" accept="image/png, image/jpeg, image/webp" title="Upload profile picture" aria-label="Upload profile picture" />
+            </div>
           </div>
           <div class="form-check">
             <input type="checkbox" id="terms" name="terms" required />
@@ -264,20 +295,40 @@
     // Hamburger
     const hamburger = document.getElementById('hamburger');
     const navLinks = document.getElementById('nav-links');
-    hamburger.addEventListener('click', () => { const o = navLinks.classList.toggle('open'); hamburger.setAttribute('aria-expanded', o); });
-    navLinks.querySelectorAll('a').forEach(l => l.addEventListener('click', () => { navLinks.classList.remove('open'); hamburger.setAttribute('aria-expanded','false'); }));
+    if (hamburger && navLinks) {
+      hamburger.addEventListener('click', () => { const o = navLinks.classList.toggle('open'); hamburger.setAttribute('aria-expanded', o); });
+      navLinks.querySelectorAll('a').forEach(l => l.addEventListener('click', () => { navLinks.classList.remove('open'); hamburger.setAttribute('aria-expanded','false'); }));
+    }
     
-    // Skills & Services Chips Manager
+    // Skills & Services Chips Manager with Content Moderation
     const skillInput = document.getElementById('skill-input');
     const btnAddSkill = document.getElementById('btn-add-skill');
     const chipsList = document.getElementById('skills-chips-list');
     const serviceHidden = document.getElementById('service');
     const popularHints = document.getElementById('popular-hints');
+    const moderationAlert = document.getElementById('moderation-alert');
+    const moderationAlertText = document.getElementById('moderation-alert-text');
 
     let providerSkills = [];
+    let uploadedAvatarData = null;
 
     function cleanSkillName(name) {
       return name.replace(/^[\p{Emoji}\u200d\uFE0F\s]+/u, '').trim();
+    }
+
+    function showModerationError(msg) {
+      if (!moderationAlert) return;
+      moderationAlertText.textContent = msg;
+      moderationAlert.style.display = 'flex';
+      moderationAlert.style.animation = 'none';
+      void moderationAlert.offsetWidth; // trigger reflow
+      moderationAlert.style.animation = 'shakeAlert 0.3s ease';
+    }
+
+    function hideModerationError() {
+      if (moderationAlert) {
+        moderationAlert.style.display = 'none';
+      }
     }
 
     function renderChips() {
@@ -298,6 +349,18 @@
       if (!name) return;
       const clean = cleanSkillName(name);
       if (!clean) return;
+
+      // 1. Content Moderation Validation
+      if (typeof ServiceModerator !== 'undefined' && ServiceModerator.validateSkill) {
+        const validation = ServiceModerator.validateSkill(clean);
+        if (!validation.valid) {
+          showModerationError(validation.error || 'Disallowed service keyword detected. Lokator only lists verified, legal trade services.');
+          return;
+        }
+      }
+
+      hideModerationError();
+
       if (!providerSkills.some(s => s.toLowerCase() === clean.toLowerCase())) {
         providerSkills.push(clean);
         renderChips();
@@ -320,6 +383,12 @@
         if (e.key === 'Enter' || e.key === ',') {
           e.preventDefault();
           addSkill(skillInput.value.trim());
+        }
+      });
+
+      skillInput.addEventListener('input', () => {
+        if (moderationAlert && moderationAlert.style.display === 'flex') {
+          hideModerationError();
         }
       });
     }
@@ -349,23 +418,82 @@
       addSkill(decodeURIComponent(prefillService));
     }
 
-    // GPS button
+    // Location Map Preview & GPS
     const gpsBtn = document.getElementById('gps-btn-form');
+    const locGpsQuickBtn = document.getElementById('loc-gps-quick-btn');
     const locInput = document.getElementById('location');
+    const mapPinLabel = document.getElementById('map-pin-label');
     let userCoords = null;
 
-    if (gpsBtn) {
-      gpsBtn.addEventListener('click', () => {
-        if ('geolocation' in navigator) {
-          gpsBtn.textContent = 'Detecting...';
-          navigator.geolocation.getCurrentPosition(
-            pos => {
-              userCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-              locInput.value = `${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`;
-              gpsBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Located';
-            },
-            () => { gpsBtn.textContent = 'GPS failed'; }
-          );
+    function updateMapPin(label) {
+      if (mapPinLabel) {
+        mapPinLabel.textContent = label || 'Your Location';
+      }
+    }
+
+    if (locInput) {
+      locInput.addEventListener('input', () => {
+        updateMapPin(locInput.value.trim() || 'Your Location');
+      });
+    }
+
+    function triggerGeolocation() {
+      if ('geolocation' in navigator) {
+        if (gpsBtn) gpsBtn.textContent = 'Detecting...';
+        if (locGpsQuickBtn) locGpsQuickBtn.textContent = 'Detecting your location...';
+        navigator.geolocation.getCurrentPosition(
+          pos => {
+            userCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+            const detectedStr = `Surulere, Lagos (${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)})`;
+            if (locInput) locInput.value = detectedStr;
+            updateMapPin(detectedStr);
+            if (gpsBtn) gpsBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Located';
+            if (locGpsQuickBtn) locGpsQuickBtn.innerHTML = '✓ Current location detected';
+          },
+          () => {
+            if (gpsBtn) gpsBtn.textContent = 'GPS failed';
+            if (locGpsQuickBtn) locGpsQuickBtn.textContent = 'GPS failed (enter manually)';
+          }
+        );
+      }
+    }
+
+    if (gpsBtn) gpsBtn.addEventListener('click', triggerGeolocation);
+    if (locGpsQuickBtn) locGpsQuickBtn.addEventListener('click', triggerGeolocation);
+
+    // Profile Picture Upload with Client-Side Compression
+    const photoZone = document.getElementById('photo-upload-zone');
+    const photoInput = document.getElementById('photo-input');
+    const photoPreview = document.getElementById('photo-preview-avatar');
+    const photoTitleText = document.getElementById('photo-title-text');
+
+    if (photoZone && photoInput) {
+      photoZone.addEventListener('click', () => photoInput.click());
+
+      photoInput.addEventListener('change', async (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+
+        if (file.size > 5 * 1024 * 1024) {
+          alert('Image file is too large (max 5MB). Please choose a smaller photo.');
+          return;
+        }
+
+        try {
+          if (photoTitleText) photoTitleText.textContent = 'Compressing image...';
+          const compressed = (typeof LokatorDB !== 'undefined' && LokatorDB.compressImage)
+            ? await LokatorDB.compressImage(file, 800, 800, 0.82)
+            : { dataUrl: URL.createObjectURL(file) };
+
+          uploadedAvatarData = compressed.dataUrl;
+          if (photoPreview) {
+            photoPreview.innerHTML = `<img src="${compressed.dataUrl}" alt="Profile Preview" />`;
+            photoPreview.style.border = '2px solid var(--green)';
+          }
+          if (photoTitleText) photoTitleText.textContent = 'Change Photo (Selected ✓)';
+        } catch (err) {
+          console.warn('Image preview notice:', err);
+          if (photoTitleText) photoTitleText.textContent = 'Upload Profile Picture';
         }
       });
     }
@@ -393,7 +521,7 @@
         }
 
         if (providerSkills.length === 0) {
-          alert('Please add at least one skill or service you provide.');
+          showModerationError('Please add at least one approved skill or service you provide.');
           if (skillInput) skillInput.focus();
           return;
         }
@@ -413,18 +541,19 @@
         const primarySkill = providerSkills[0];
 
         const formData = {
-          fname: document.getElementById('fname').value,
-          lname: document.getElementById('lname').value,
-          phone: document.getElementById('phone').value,
+          fname: document.getElementById('fname') ? document.getElementById('fname').value : '',
+          lname: document.getElementById('lname') ? document.getElementById('lname').value : '',
+          phone: document.getElementById('phone') ? document.getElementById('phone').value : '',
           email: email,
           service: primarySkill,
           trade: providerSkills.join(' & '),
           skills: providerSkills,
-          location: document.getElementById('location').value,
-          experience: document.getElementById('experience').value,
+          location: document.getElementById('location') ? document.getElementById('location').value : '',
+          experience: document.getElementById('experience') ? document.getElementById('experience').value : '1-3',
           bio: document.getElementById('bio') ? document.getElementById('bio').value : '',
           lat: userCoords ? userCoords.lat : null,
-          lng: userCoords ? userCoords.lng : null
+          lng: userCoords ? userCoords.lng : null,
+          avatarUrl: uploadedAvatarData || null
         };
 
         try {
@@ -436,7 +565,8 @@
                 first_name: formData.fname,
                 last_name: formData.lname,
                 phone: formData.phone,
-                role: 'provider'
+                role: 'provider',
+                avatar_url: formData.avatarUrl
               }
             }
           }, formData);

@@ -215,3 +215,96 @@ ON CONFLICT (id) DO UPDATE SET
   display_name = EXCLUDED.display_name,
   icon = EXCLUDED.icon,
   synonyms = EXCLUDED.synonyms;
+
+-- ============================================================================
+-- SERVER-SIDE CONTENT MODERATION & STORAGE HARDENING
+-- ============================================================================
+CREATE OR REPLACE FUNCTION public.normalize_moderation_text(raw_text TEXT)
+RETURNS TEXT
+LANGUAGE plpgsql
+IMMUTABLE
+AS $$
+DECLARE
+  clean_text TEXT;
+BEGIN
+  IF raw_text IS NULL THEN
+    RETURN '';
+  END IF;
+  clean_text := lower(trim(raw_text));
+  clean_text := regexp_replace(clean_text, '[\-_.,;:!@#$%^&*()+=\\/{}\[\]|<>?~`"''0-9]', ' ', 'g');
+  clean_text := regexp_replace(clean_text, '\s+', ' ', 'g');
+  RETURN trim(clean_text);
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.validate_service_content_moderation()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, extensions, pg_temp
+AS $$
+DECLARE
+  blocked_patterns TEXT[] := ARRAY[
+    'killer', 'kidnap', 'kidnapper', 'kidnapping', 'fraud', 'scam', 'scammer',
+    'hack', 'hacker', 'hacking', 'weapon', 'weapons', 'firearm', 'gun', 'guns',
+    'drug', 'drugs', 'cocaine', 'narcotic', 'narcotics', 'fake document', 'fake documents',
+    'fake certificate', 'counterfeit', 'stolen good', 'stolen goods', 'prostitute',
+    'prostitution', 'escort service', 'bomb', 'malware', 'virus maker', 'piracy',
+    'pirated', 'hacked account', 'hacked accounts', 'yahoo yahoo', 'money ritual',
+    'ritual killing', 'organ trafficking', 'human parts'
+  ];
+  pattern TEXT;
+  normalized_check TEXT;
+  skill_item TEXT;
+BEGIN
+  IF public.is_admin() THEN
+    RETURN NEW;
+  END IF;
+
+  IF TG_TABLE_NAME = 'providers' THEN
+    IF NEW.trade_title IS NOT NULL THEN
+      normalized_check := public.normalize_moderation_text(NEW.trade_title);
+      FOREACH pattern IN ARRAY blocked_patterns LOOP
+        IF normalized_check ~* ('(^|\s)' || pattern || '(\s|$)') OR normalized_check ~* pattern THEN
+          RAISE EXCEPTION 'This service category is not permitted on Lokator.' USING ERRCODE = '23514';
+        END IF;
+      END LOOP;
+    END IF;
+
+    IF NEW.skills IS NOT NULL AND array_length(NEW.skills, 1) > 0 THEN
+      FOREACH skill_item IN ARRAY NEW.skills LOOP
+        normalized_check := public.normalize_moderation_text(skill_item);
+        FOREACH pattern IN ARRAY blocked_patterns LOOP
+          IF normalized_check ~* ('(^|\s)' || pattern || '(\s|$)') OR normalized_check ~* pattern THEN
+            RAISE EXCEPTION 'This service category is not permitted on Lokator.' USING ERRCODE = '23514';
+          END IF;
+        END LOOP;
+      END LOOP;
+    END IF;
+  ELSIF TG_TABLE_NAME = 'provider_services' THEN
+    IF NEW.service_name IS NOT NULL THEN
+      normalized_check := public.normalize_moderation_text(NEW.service_name);
+      FOREACH pattern IN ARRAY blocked_patterns LOOP
+        IF normalized_check ~* ('(^|\s)' || pattern || '(\s|$)') OR normalized_check ~* pattern THEN
+          RAISE EXCEPTION 'This service category is not permitted on Lokator.' USING ERRCODE = '23514';
+        END IF;
+      END LOOP;
+    END IF;
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trigger_validate_provider_moderation ON public.providers;
+CREATE TRIGGER trigger_validate_provider_moderation
+  BEFORE INSERT OR UPDATE ON public.providers
+  FOR EACH ROW
+  EXECUTE FUNCTION public.validate_service_content_moderation();
+
+DROP TRIGGER IF EXISTS trigger_validate_service_moderation ON public.provider_services;
+CREATE TRIGGER trigger_validate_service_moderation
+  BEFORE INSERT OR UPDATE ON public.provider_services
+  FOR EACH ROW
+  EXECUTE FUNCTION public.validate_service_content_moderation();
+
