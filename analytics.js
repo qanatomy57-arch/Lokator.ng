@@ -1195,6 +1195,61 @@ document.addEventListener('DOMContentLoaded', async () => {
             btnRefreshScen.textContent = 'Refresh Simulations';
           });
         }
+
+        // Initialize Section 9.4 (SOPAE)
+        const renderSOPAE = async () => {
+          try {
+            const btnGenerate = document.getElementById('btn-generate-portfolio');
+            if (btnGenerate && !btnGenerate.hasAttribute('data-bound')) {
+              btnGenerate.setAttribute('data-bound', 'true');
+              btnGenerate.addEventListener('click', async () => {
+                try {
+                  btnGenerate.textContent = 'Optimizing...';
+                  btnGenerate.disabled = true;
+                  const res = await LokatorDB.strategicOptimization.generatePortfolio('SOPAE-1.0.0', 100.00, 65.00, 10);
+
+                  if (res && res.portfolio_id) {
+                    const details = await LokatorDB.strategicOptimization.getPortfolio(res.portfolio_id);
+                    document.getElementById('sopae-total-ev').textContent = (details.metrics.aggregate_expected_value || 0).toFixed(2);
+                    document.getElementById('sopae-total-risk').textContent = (details.metrics.aggregate_risk || 0).toFixed(2);
+                    document.getElementById('sopae-total-cost').textContent = '€' + (details.metrics.total_cost || 0).toFixed(2);
+                    document.getElementById('sopae-selected-count').textContent = details.metrics.selected_count || 0;
+
+                    const container = document.getElementById('sopae-allocations-container');
+                    if (details.allocations && details.allocations.length > 0) {
+                      container.innerHTML = details.allocations.map(a => `
+                        <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 12px; display: flex; justify-content: space-between; align-items: center;">
+                          <div>
+                            <div style="font-weight: 700; color: #E2E8F0; font-size: 0.85rem;">
+                              <span style="color: #F59E0B; margin-right: 6px;">#${a.rank}</span> ${a.scenario_title}
+                            </div>
+                            <div style="font-size: 0.72rem; color: #94A3B8; margin-top: 4px;">
+                              Cost: €${Number(a.base_cost).toFixed(2)} | Penalty: ${(Number(a.overlap_penalty) * 100).toFixed(1)}% | Eff Class: ${a.efficiency_class}
+                            </div>
+                          </div>
+                          <div style="text-align: right;">
+                            <div style="color: #64748B; font-size: 0.65rem; text-transform: uppercase;">Adjusted EV</div>
+                            <div style="font-weight: 800; color: #34D399; font-size: 1.1rem;">${Number(a.adjusted_ev).toFixed(2)}</div>
+                          </div>
+                        </div>
+                      `).join('');
+                    } else {
+                      container.innerHTML = '<div style="font-size: 0.85rem; color: #64748B; padding: 12px; background: #0E1522; border-radius: 6px;">No valid candidates met the optimization criteria.</div>';
+                    }
+                  }
+                } catch (e) {
+                  alert('Optimization failed: ' + e.message);
+                } finally {
+                  btnGenerate.textContent = 'Generate Portfolio Allocation';
+                  btnGenerate.disabled = false;
+                }
+              });
+            }
+          } catch (e) {
+            console.warn('SOPAE initialization failed:', e.message);
+          }
+        };
+        renderSOPAE();
       }
 
     } catch (err) {

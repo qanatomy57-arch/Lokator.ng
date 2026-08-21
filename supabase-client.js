@@ -3625,10 +3625,56 @@
     }
   };
 
+  const strategicOptimizationManager = {
+    async generatePortfolio(modelVersion = 'SOPAE-1.0.0', maxBudget = 100.00, maxRisk = 65.00, maxActions = 10) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('generate_strategic_portfolio_allocation', {
+          p_model_version: modelVersion,
+          p_max_budget: maxBudget,
+          p_max_risk: maxRisk,
+          p_max_actions: maxActions
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        status: 'OFFLINE_MOCK',
+        portfolio_id: '00000000-0000-0000-0000-000000000000',
+        model_version: 'SOPAE-1.0.0',
+        executive_brief: {
+          classification: 'DECISION_SUPPORT_RECOMMENDATION',
+          headline: 'Optimized 0 strategic actions for €0.00',
+          aggregate_expected_value: 0.00,
+          aggregate_risk: 0.00,
+          disclaimer: 'RECOMMENDED/SIMULATED ONLY — MANUAL_ACTION_REQUIRED. NOT EXECUTED.'
+        }
+      };
+    },
+
+    async getPortfolio(portfolioId) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('get_strategic_portfolio', {
+          p_portfolio_id: portfolioId
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        status: 'OFFLINE_MOCK',
+        portfolio_id: portfolioId,
+        model_version: 'SOPAE-1.0.0',
+        metrics: { total_cost: 0, aggregate_expected_value: 0, aggregate_risk: 0, selected_count: 0 },
+        allocations: [],
+        executive_brief: {}
+      };
+    }
+  };
+
   LokatorDB.strategicCommand = strategicCommandManager;
   LokatorDB.strategicDecision = strategicDecisionManager;
   LokatorDB.strategicOrchestration = strategicOrchestrationManager;
   LokatorDB.strategicScenario = strategicScenarioManager;
+  LokatorDB.strategicOptimization = strategicOptimizationManager;
   LokatorDB.predictiveGrowth = predictiveGrowthManager;
   LokatorDB.growthIntelligence = growthIntelligenceManager;
   LokatorDB.realtimeGrowth = realtimeGrowthManager;

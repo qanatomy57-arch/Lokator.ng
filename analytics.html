@@ -745,6 +745,53 @@
         </div>
       </section>
 
+      <!-- Phase 9.4 Strategic Optimization (SOPAE) -->
+      <section>
+        <div class="section-title">Phase 9.4: Strategic Optimization (SOPAE)</div>
+        <div class="card" style="margin-bottom: 24px; border-left: 4px solid #F59E0B;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div style="font-size: 0.85rem; color: #94A3B8;">
+              <span class="status-tag" style="background: rgba(245,158,11,0.2); color: #F59E0B; margin-right: 8px;">DECISION_SUPPORT</span>
+              <span class="status-tag" style="background: rgba(56,189,248,0.2); color: #38BDF8; margin-right: 8px;">SIMULATED</span>
+              <span class="status-tag" style="background: rgba(239,68,68,0.2); color: #EF4444; margin-right: 8px;">MANUAL_ACTION_REQUIRED</span>
+            </div>
+            <button id="btn-generate-portfolio" class="btn-action" style="padding: 4px 10px; font-size: 0.75rem; background: #F59E0B;">Generate Portfolio Allocation</button>
+          </div>
+
+          <div style="font-size: 0.75rem; color: #64748B; margin-bottom: 14px;">
+            Optimizes candidates into bounded portfolios maximizing EV minus overlap penalties within constraints.
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 14px;">
+            <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 10px;">
+              <div style="font-size: 0.7rem; color: #64748B; text-transform: uppercase;">Aggregate Expected Value</div>
+              <div id="sopae-total-ev" style="font-size: 1.25rem; font-weight: 800; color: #10B981; margin-top: 4px;">0.00</div>
+            </div>
+            <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 10px;">
+              <div style="font-size: 0.7rem; color: #64748B; text-transform: uppercase;">Aggregate Risk Score</div>
+              <div id="sopae-total-risk" style="font-size: 1.25rem; font-weight: 800; color: #EF4444; margin-top: 4px;">0.00</div>
+            </div>
+            <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 10px;">
+              <div style="font-size: 0.7rem; color: #64748B; text-transform: uppercase;">Total Cost Limit</div>
+              <div id="sopae-total-cost" style="font-size: 1.25rem; font-weight: 800; color: #F59E0B; margin-top: 4px;">0.00</div>
+            </div>
+            <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 10px;">
+              <div style="font-size: 0.7rem; color: #64748B; text-transform: uppercase;">Selected Actions</div>
+              <div id="sopae-selected-count" style="font-size: 1.25rem; font-weight: 800; color: #38BDF8; margin-top: 4px;">0</div>
+            </div>
+          </div>
+
+          <div style="margin-top: 14px;">
+            <div style="font-size: 0.85rem; font-weight: 700; color: #E2E8F0; margin-bottom: 8px;">Recommended Portfolio Allocation</div>
+            <div id="sopae-allocations-container" style="display: flex; flex-direction: column; gap: 8px;">
+              <div style="font-size: 0.85rem; color: #64748B; padding: 12px; background: #0E1522; border-radius: 6px;">
+                No portfolio allocation generated yet. Click Generate.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
     </main>
   </div>
 
