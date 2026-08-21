@@ -2800,6 +2800,85 @@
   LokatorDB.analytics.suppressAlert = analyticsAlertsManager.suppress;
   LokatorDB.analytics.reopenAlert = analyticsAlertsManager.reopen;
 
+  // 4D. DISCOVERY & GROWTH INTELLIGENCE MANAGER (Phase 7.1)
+  const discoveryIntelligenceManager = {
+    async getSummary(days = 30) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('get_growth_intelligence_summary', {
+          p_days: days
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        window_days: days,
+        model_version: 'v1',
+        platform_total_searches: 0,
+        platform_total_zero_results: 0,
+        platform_total_profile_views: 0,
+        platform_total_leads: 0,
+        platform_zero_result_rate: 0,
+        platform_search_to_profile_rate: 0,
+        platform_profile_to_lead_rate: 0,
+        platform_avg_dqs_score: 100.0,
+        categories: [],
+        observational_status: 'OBSERVATIONAL_ONLY',
+        generated_at: new Date().toISOString()
+      };
+    },
+    async getDemandSupplyGaps(days = 30, minSearches = 10) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('get_lga_demand_supply_gaps', {
+          p_days: days,
+          p_min_searches: minSearches
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        window_days: days,
+        min_search_threshold: minSearches,
+        model_version: 'v1',
+        k_anonymity_floor: 5,
+        gaps: [],
+        observational_status: 'OBSERVATIONAL_ONLY',
+        generated_at: new Date().toISOString()
+      };
+    },
+    async getGrowthSignals(days = 14) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('get_growth_signals', {
+          p_days: days
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        window_days: days,
+        signals_count: 0,
+        signals: [],
+        observational_status: 'OBSERVATIONAL_ONLY',
+        generated_at: new Date().toISOString()
+      };
+    },
+    async generateDailySummary(targetDate = null) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('generate_daily_growth_summary', {
+          p_target_date: targetDate || new Date(Date.now() - 86400000).toISOString().split('T')[0]
+        });
+        if (error) throw error;
+        return data;
+      }
+      return { status: 'SUCCESS', target_date: targetDate, records_processed: 0, model_version: 'v1', observational_status: 'OBSERVATIONAL_ONLY' };
+    }
+  };
+
+  LokatorDB.discoveryIntelligence = discoveryIntelligenceManager;
+  LokatorDB.analytics.getGrowthSummary = discoveryIntelligenceManager.getSummary;
+  LokatorDB.analytics.getDemandSupplyGaps = discoveryIntelligenceManager.getDemandSupplyGaps;
+  LokatorDB.analytics.getGrowthSignals = discoveryIntelligenceManager.getGrowthSignals;
+
+
 
   // 5. AUTOMATIC GLOBAL NAVBAR AUTH SYNC
   if (typeof document !== 'undefined') {

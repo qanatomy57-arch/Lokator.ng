@@ -222,10 +222,47 @@
         </div>
       </section>
 
-      <!-- 6. Core Web Vitals (Real-User Performance) -->
+      <!-- 6. Discovery Orchestration & Growth Intelligence (Phase 7.1) -->
+      <section id="section-discovery-growth">
+        <div class="section-title">
+          <span>6. Discovery Orchestration & Growth Intelligence</span>
+          <span id="growth-status-badge" class="status-tag status-good">OPTIMAL</span>
+        </div>
+        <div class="panel-card">
+          <div class="kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); margin-bottom: 16px;">
+            <div class="kpi-box">
+              <div class="kpi-val" id="stat-growth-searches" style="color: #60A5FA;">—</div>
+              <div class="kpi-lbl">Total Searches</div>
+            </div>
+            <div class="kpi-box">
+              <div class="kpi-val" id="stat-growth-zrr" style="color: #F87171;">—</div>
+              <div class="kpi-lbl">Zero-Result Rate</div>
+            </div>
+            <div class="kpi-box">
+              <div class="kpi-val" id="stat-growth-dqs" style="color: #00E676;">—</div>
+              <div class="kpi-lbl">Discovery Score (DQS)</div>
+            </div>
+            <div class="kpi-box">
+              <div class="kpi-val" id="stat-growth-gaps" style="color: #FBBF24;">0</div>
+              <div class="kpi-lbl">LGA Supply Deficits</div>
+            </div>
+          </div>
+
+          <div style="margin-top: 14px;">
+            <div style="font-size: 0.85rem; font-weight: 700; color: #E2E8F0; margin-bottom: 8px;">Top LGA Demand vs. Supply Gaps (k &ge; 5)</div>
+            <div id="growth-gaps-list" style="display: flex; flex-direction: column; gap: 8px;">
+              <div style="font-size: 0.85rem; color: #64748B; padding: 12px; background: #0E1522; border-radius: 6px;">
+                No acute LGA supply deficits detected in the evaluated window.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 7. Core Web Vitals (Real-User Performance) -->
       <section>
         <div class="section-title">
-          <span>6. Core Web Vitals (Real-User Performance)</span>
+          <span>7. Core Web Vitals (Real-User Performance)</span>
           <span id="cwv-status-badge" class="status-tag status-notice">INSTRUMENTATION_ONLY</span>
         </div>
         <div class="cwv-grid">

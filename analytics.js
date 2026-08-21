@@ -255,6 +255,44 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       }
 
+      // 6. Discovery Orchestration & Growth Intelligence (Phase 7.1)
+      if (LokatorDB.discoveryIntelligence && LokatorDB.discoveryIntelligence.getSummary) {
+        const growthSummary = await LokatorDB.discoveryIntelligence.getSummary(days);
+        const gapsSummary = await LokatorDB.discoveryIntelligence.getDemandSupplyGaps(days, 10);
+
+        const statSearches = document.getElementById('stat-growth-searches');
+        const statZrr = document.getElementById('stat-growth-zrr');
+        const statDqs = document.getElementById('stat-growth-dqs');
+        const statGaps = document.getElementById('stat-growth-gaps');
+        const gapsList = document.getElementById('growth-gaps-list');
+
+        if (growthSummary) {
+          if (statSearches) statSearches.textContent = (growthSummary.platform_total_searches || 0).toLocaleString();
+          if (statZrr) statZrr.textContent = (growthSummary.platform_zero_result_rate || 0) + '%';
+          if (statDqs) statDqs.textContent = (growthSummary.platform_avg_dqs_score || 100.0) + '/100';
+        }
+
+        if (gapsSummary && gapsSummary.gaps) {
+          if (statGaps) statGaps.textContent = gapsSummary.gaps.length;
+          if (gapsList && gapsSummary.gaps.length > 0) {
+            gapsList.innerHTML = gapsSummary.gaps.map(g => `
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: #0E1522; border-radius: 6px; border-left: 3px solid #FBBF24;">
+                <div>
+                  <span style="font-weight: 700; color: #E2E8F0; font-size: 0.85rem;">[${g.category}] ${g.lga}, ${g.state}</span>
+                  <div style="font-size: 0.75rem; color: #94A3B8; margin-top: 2px;">
+                    Demand: ${g.aggregate_demand_index} (${g.total_searches} searches) | Supply: ${g.active_verified_providers} providers
+                  </div>
+                </div>
+                <div style="text-align: right;">
+                  <span class="status-tag" style="background: rgba(251, 191, 36, 0.2); color: #FBBF24; font-size: 0.75rem;">Gap: ${g.aggregate_gap_ratio}x</span>
+                </div>
+              </div>
+            `).join('');
+          }
+        }
+      }
+
+
     } catch (err) {
       console.error('Failed to load internal analytics:', err);
       if (err.message && err.message.toLowerCase().includes('unauthorized')) {
