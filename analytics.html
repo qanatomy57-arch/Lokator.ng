@@ -275,6 +275,87 @@
         </div>
       </section>
 
+      <!-- 9.3. Strategic Scenario Forecasting & Decision Simulation Engine (SSFDS) -->
+      <section id="section-strategic-scenarios">
+        <div class="section-title">
+          <span>9.3. Strategic Scenario Forecasting & Decision Simulation (SSFDS)</span>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <span class="status-tag status-notice" style="font-size: 0.7rem;">SIMULATED_PROJECTIONS</span>
+            <span class="status-tag status-good" style="font-size: 0.7rem;">DECISION_SUPPORT</span>
+            <span class="status-tag status-good" style="font-size: 0.7rem;">AIR_GAPPED</span>
+          </div>
+        </div>
+
+        <div style="background: #111827; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+          <!-- Executive Forecast Pulse KPIs -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+            <div style="font-size: 0.9rem; font-weight: 700; color: #F1F5F9;">
+              🔮 Strategic Forecasting Workbench & Decision Simulator
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button id="btn-refresh-scenarios" class="btn-action" style="padding: 4px 12px; font-size: 0.75rem; background: #3B82F6;">
+                Refresh Simulations
+              </button>
+            </div>
+          </div>
+
+          <div class="grid-kpis" style="grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); margin-bottom: 16px;">
+            <div class="kpi-card" style="background: #141C30; border-left: 4px solid #8B5CF6;">
+              <div class="kpi-label">Active Scenarios</div>
+              <div class="kpi-value" id="scenario-stat-total" style="font-size: 1.3rem; color: #A78BFA;">0</div>
+              <div class="kpi-sub">Simulated models</div>
+            </div>
+            <div class="kpi-card" style="background: #141C30; border-left: 4px solid #10B981;">
+              <div class="kpi-label">Avg Expected Value</div>
+              <div class="kpi-value" id="scenario-stat-avg-ev" style="font-size: 1.3rem; color: #34D399;">0.00</div>
+              <div class="kpi-sub">EV in [0.00, 100.00]</div>
+            </div>
+            <div class="kpi-card" style="background: #141C30; border-left: 4px solid #F59E0B;">
+              <div class="kpi-label">Avg Strategic Risk</div>
+              <div class="kpi-value" id="scenario-stat-avg-risk" style="font-size: 1.3rem; color: #FBBF24;">0.00</div>
+              <div class="kpi-sub">Risk index [0.00, 100.00]</div>
+            </div>
+            <div class="kpi-card" style="background: #141C30; border-left: 4px solid #06B6D4;">
+              <div class="kpi-label">Forecast Confidence</div>
+              <div class="kpi-value" id="scenario-stat-avg-conf" style="font-size: 1.3rem; color: #22D3EE;">0.0%</div>
+              <div class="kpi-sub">C_forecast in [0, 1]</div>
+            </div>
+            <div class="kpi-card" style="background: #141C30; border-left: 4px solid #EF4444;">
+              <div class="kpi-label">High-Risk Forecasts</div>
+              <div class="kpi-value" id="scenario-stat-high-risk" style="font-size: 1.3rem; color: #F87171;">0</div>
+              <div class="kpi-sub">Risk score &ge; 70.00</div>
+            </div>
+          </div>
+
+          <!-- Active Scenarios & Simulation Briefings Container -->
+          <div style="margin-bottom: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <div style="font-size: 0.85rem; font-weight: 700; color: #CBD5E1;">
+                📈 Simulated Strategic Scenarios & Decision Briefs
+              </div>
+              <span class="status-tag status-notice" style="font-size: 0.65rem;">PROJECTED_DATA</span>
+            </div>
+            <div id="strategic-scenarios-container" style="display: flex; flex-direction: column; gap: 8px;">
+              <div style="font-size: 0.82rem; color: #64748B; padding: 14px; background: #080D18; border-radius: 8px; text-align: center;">
+                No active scenario simulations. Select an opportunity from the Strategic Synthesis Command Center above to model counterfactual forecasts.
+              </div>
+            </div>
+          </div>
+
+          <!-- Multi-Scenario Comparison Workbench -->
+          <div>
+            <div style="font-size: 0.85rem; font-weight: 700; color: #CBD5E1; margin-bottom: 8px;">
+              ⚖️ Strategic Scenario Comparison Matrix
+            </div>
+            <div id="strategic-comparison-container" style="display: flex; flex-direction: column; gap: 8px;">
+              <div style="font-size: 0.82rem; color: #64748B; padding: 14px; background: #080D18; border-radius: 8px; text-align: center;">
+                Select 2 to 5 simulated scenarios to generate an empirical strategy comparison matrix.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- 1. Executive Platform Pulse -->
       <section>
         <div class="section-title">1. Executive Platform Health Pulse</div>

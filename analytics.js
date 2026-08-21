@@ -1101,6 +1101,100 @@ document.addEventListener('DOMContentLoaded', async () => {
             btnEvalOrch.textContent = 'Evaluate Orchestration Cycle';
           });
         }
+
+        // =====================================================================
+        // SECTION 9.3: STRATEGIC SCENARIO FORECASTING & DECISION SIMULATION
+        // =====================================================================
+        const renderStrategicScenarios = async () => {
+          if (!LokatorDB.strategicScenario) return;
+
+          try {
+            // 1. Fetch Executive Scenario Summary KPIs
+            const exec = await LokatorDB.strategicScenario.getExecutiveSummary();
+            if (exec && exec.kpis) {
+              const kpis = exec.kpis;
+              const elTotal = document.getElementById('scenario-stat-total');
+              const elAvgEv = document.getElementById('scenario-stat-avg-ev');
+              const elAvgRisk = document.getElementById('scenario-stat-avg-risk');
+              const elAvgConf = document.getElementById('scenario-stat-avg-conf');
+              const elHighRisk = document.getElementById('scenario-stat-high-risk');
+
+              if (elTotal) elTotal.textContent = kpis.simulated_scenarios || 0;
+              if (elAvgEv) elAvgEv.textContent = Number(kpis.average_expected_value || 0).toFixed(1);
+              if (elAvgRisk) elAvgRisk.textContent = Number(kpis.average_risk_score || 0).toFixed(1);
+              if (elAvgConf) elAvgConf.textContent = `${Math.round((kpis.average_forecast_confidence || 0) * 100)}%`;
+              if (elHighRisk) elHighRisk.textContent = kpis.high_risk_scenarios_count || 0;
+            }
+
+            // 2. Fetch Scenario History & Simulation Briefs
+            const history = await LokatorDB.strategicScenario.getScenarioHistory(null, null, 20);
+            const container = document.getElementById('strategic-scenarios-container');
+            if (container && history) {
+              const scenarios = history.scenarios || [];
+              if (scenarios.length === 0) {
+                container.innerHTML = `
+                  <div style="font-size: 0.82rem; color: #64748B; padding: 14px; background: #080D18; border-radius: 8px; text-align: center;">
+                    No active scenario simulations. Select an opportunity from the Strategic Synthesis Command Center above to model counterfactual forecasts.
+                  </div>
+                `;
+              } else {
+                container.innerHTML = scenarios.map(s => `
+                  <div style="background: #0E1522; border: 1px solid rgba(255,255,255,0.06); border-radius: 6px; padding: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                    <div>
+                      <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 3px;">
+                        <span style="font-size: 0.65rem; font-weight: 800; background: #4C1D95; color: #DDD6FE; padding: 2px 6px; border-radius: 4px;">
+                          ${s.action_category}
+                        </span>
+                        <span style="font-size: 0.82rem; font-weight: 700; color: #F1F5F9;">
+                          ${s.scenario_title} (${s.category} in ${s.lga}, ${s.state})
+                        </span>
+                        <span class="status-tag status-notice" style="font-size: 0.6rem;">SIMULATED</span>
+                      </div>
+                      <div style="font-size: 0.72rem; color: #94A3B8;">
+                        Horizon: ${s.forecast_horizon_days}d | Model: ${s.model_version || 'SSFDS-1.0.0'} | Status: ${s.scenario_status}
+                      </div>
+                    </div>
+                    <div style="display: flex; gap: 12px; align-items: center; font-size: 0.75rem;">
+                      <div style="text-align: right;">
+                        <div style="color: #64748B; font-size: 0.65rem; text-transform: uppercase;">Expected Value</div>
+                        <div style="font-weight: 800; color: #34D399;">${Number(s.expected_strategic_value || 0).toFixed(1)}</div>
+                      </div>
+                      <div style="text-align: right;">
+                        <div style="color: #64748B; font-size: 0.65rem; text-transform: uppercase;">Risk Score</div>
+                        <div style="font-weight: 800; color: ${Number(s.strategic_risk_score || 0) >= 70 ? '#F87171' : '#FBBF24'};">
+                          ${Number(s.strategic_risk_score || 0).toFixed(1)}
+                        </div>
+                      </div>
+                      <div style="text-align: right;">
+                        <div style="color: #64748B; font-size: 0.65rem; text-transform: uppercase;">Confidence</div>
+                        <div style="font-weight: 800; color: #22D3EE;">${Math.round((s.forecast_confidence || 0) * 100)}%</div>
+                      </div>
+                    </div>
+                  </div>
+                `).join('');
+              }
+            }
+          } catch (e) {
+            console.warn('Failed to load strategic scenario data:', e.message);
+          }
+        };
+
+        // Initialize Section 9.3
+        try {
+          renderStrategicScenarios();
+        } catch (e) {
+          console.warn('Strategic scenarios initialization failed:', e.message);
+        }
+
+        const btnRefreshScen = document.getElementById('btn-refresh-scenarios');
+        if (btnRefreshScen && !btnRefreshScen.hasAttribute('data-bound')) {
+          btnRefreshScen.setAttribute('data-bound', 'true');
+          btnRefreshScen.addEventListener('click', async () => {
+            btnRefreshScen.textContent = 'Refreshing...';
+            await renderStrategicScenarios();
+            btnRefreshScen.textContent = 'Refresh Simulations';
+          });
+        }
       }
 
     } catch (err) {

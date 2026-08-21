@@ -3490,9 +3490,145 @@
     }
   };
 
+  const strategicScenarioManager = {
+    async createScenario({
+      synthesisId,
+      decisionId = null,
+      title = 'Proposed Strategy Simulation',
+      actionCategory = 'PROVIDER_ACQUISITION',
+      forecastHorizonDays = 14,
+      targetCapacityAddition = 5.0
+    }) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('create_strategic_scenario', {
+          p_synthesis_id: synthesisId,
+          p_decision_id: decisionId,
+          p_title: title,
+          p_action_category: actionCategory,
+          p_forecast_horizon_days: forecastHorizonDays,
+          p_target_capacity_addition: targetCapacityAddition
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        status: 'SUCCESS',
+        scenario_id: 'mock-scenario-' + Date.now(),
+        synthesis_id: synthesisId,
+        input_hash: 'mock-hash',
+        model_version: 'SSFDS-1.0.0'
+      };
+    },
+
+    async runScenario(scenarioId) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('run_strategic_scenario', {
+          p_scenario_id: scenarioId
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        status: 'SUCCESS',
+        scenario_id: scenarioId,
+        model_version: 'SSFDS-1.0.0',
+        metrics: {
+          forecast_confidence: 0.8500,
+          strategic_risk_score: 25.00,
+          expected_strategic_value: 75.00,
+          projected_deficit_reduction_pct: 60.00
+        },
+        executive_brief: {
+          classification: 'SIMULATED_PROJECTION',
+          headline: 'Projected 60% deficit reduction over 14 days.',
+          expected_strategic_value: 75.00,
+          strategic_risk_rating: 'LOW',
+          confidence_grade: 'HIGH',
+          advisory_disclaimer: 'SIMULATED PROJECTION ONLY — Not an observed marketplace event.'
+        }
+      };
+    },
+
+    async compareScenarios(synthesisId, scenarioIds, comparisonTitle = 'Strategic Candidate Comparison') {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('compare_strategic_scenarios', {
+          p_synthesis_id: synthesisId,
+          p_scenario_ids: scenarioIds,
+          p_comparison_title: comparisonTitle
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        status: 'SUCCESS',
+        comparison_id: 'mock-comp-' + Date.now(),
+        synthesis_id: synthesisId,
+        recommended_scenario_id: scenarioIds[0] || null,
+        matrix: []
+      };
+    },
+
+    async getScenario(scenarioId) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('get_strategic_scenario', {
+          p_scenario_id: scenarioId
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        scenario: { id: scenarioId, scenario_status: 'DRAFT', model_version: 'SSFDS-1.0.0' },
+        inputs: null,
+        results: null,
+        audit_trail: []
+      };
+    },
+
+    async getScenarioHistory(synthesisId = null, decisionId = null, limit = 20) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('get_strategic_scenario_history', {
+          p_synthesis_id: synthesisId,
+          p_decision_id: decisionId,
+          p_limit: limit
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        schema_version: '9.3.0',
+        generated_at: new Date().toISOString(),
+        scenarios: []
+      };
+    },
+
+    async getExecutiveSummary() {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('get_executive_scenario_summary');
+        if (error) throw error;
+        return data;
+      }
+      return {
+        schema_version: '9.3.0',
+        generated_at: new Date().toISOString(),
+        model_version: 'SSFDS-1.0.0',
+        kpis: {
+          total_scenarios: 0,
+          simulated_scenarios: 0,
+          average_expected_value: 0.0,
+          average_risk_score: 0.0,
+          average_forecast_confidence: 0.0,
+          high_risk_scenarios_count: 0,
+          total_comparisons: 0
+        },
+        top_opportunities: []
+      };
+    }
+  };
+
   LokatorDB.strategicCommand = strategicCommandManager;
   LokatorDB.strategicDecision = strategicDecisionManager;
   LokatorDB.strategicOrchestration = strategicOrchestrationManager;
+  LokatorDB.strategicScenario = strategicScenarioManager;
   LokatorDB.predictiveGrowth = predictiveGrowthManager;
   LokatorDB.growthIntelligence = growthIntelligenceManager;
   LokatorDB.realtimeGrowth = realtimeGrowthManager;
