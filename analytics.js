@@ -1470,6 +1470,56 @@ document.addEventListener('DOMContentLoaded', async () => {
           }
         };
         renderSILCCIE();
+
+        // Phase 9.9 SIOEDSE Controller
+        const renderSIOEDSE = async () => {
+          try {
+            const btnSynthPkg = document.getElementById('btn-synthesize-decision-pkg');
+            if (btnSynthPkg) {
+              btnSynthPkg.addEventListener('click', async () => {
+                btnSynthPkg.textContent = 'Synthesizing Strategic Intelligence...';
+                btnSynthPkg.disabled = true;
+                try {
+                  const res = await LokatorDB.strategicIntelligence.synthesizeDecisionPackage(
+                    'Q3 Strategic Expansion Decision Package',
+                    []
+                  );
+                  if (res && res.package_id) {
+                    document.getElementById('sioedse-synth-conf').textContent = Number(res.synthesized_confidence || 0).toFixed(1) + '%';
+                    document.getElementById('sioedse-readiness').textContent = res.decision_readiness || 'DECISION_READY';
+                    document.getElementById('sioedse-conflict').textContent = res.conflict_status || 'CONSISTENT';
+                    document.getElementById('sioedse-consistency').textContent = res.strategic_consistency || 'ALIGNED';
+
+                    const container = document.getElementById('sioedse-package-container');
+                    container.innerHTML = `
+                      <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 12px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                          <div style="font-weight: 700; color: #E2E8F0; font-size: 0.85rem;">
+                            <span style="color: #EC4899; margin-right: 6px;">${res.package_code}</span> (Digest: ${String(res.package_digest).substring(0, 16)}...)
+                          </div>
+                          <div style="font-size: 0.72rem; color: #94A3B8; margin-top: 4px;">
+                            Readiness: ${res.decision_readiness} | Conflict: ${res.conflict_status} | Guidance: ${res.action_guidance}
+                          </div>
+                        </div>
+                        <div style="text-align: right;">
+                          <span class="status-tag" style="background: rgba(236,72,153,0.2); color: #EC4899;">SEALED_PACKAGE</span>
+                        </div>
+                      </div>
+                    `;
+                  }
+                } catch (e) {
+                  alert('Decision synthesis failed: ' + e.message);
+                } finally {
+                  btnSynthPkg.textContent = 'Synthesize Decision Package';
+                  btnSynthPkg.disabled = false;
+                }
+              });
+            }
+          } catch (e) {
+            console.warn('SIOEDSE initialization failed:', e.message);
+          }
+        };
+        renderSIOEDSE();
       }
 
     } catch (err) {

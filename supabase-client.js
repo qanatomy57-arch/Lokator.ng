@@ -4068,6 +4068,72 @@
     }
   };
 
+  // Phase 9.9: Strategic Intelligence Orchestration & Executive Decision Synthesis Engine (SIOEDSE)
+  const strategicIntelligenceManager = {
+    async synthesizeDecisionPackage(title, recommendationIds = [], synthesisModelVersion = 'SIOEDSE-1.0.0') {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('synthesize_executive_decision_package', {
+          p_title: title,
+          p_recommendation_ids: recommendationIds,
+          p_synthesis_model_version: synthesisModelVersion
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        success: true,
+        package_id: '00000000-0000-0000-0000-000000000000',
+        package_code: 'PKG-20260822-MOCK01',
+        package_digest: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+        decision_readiness: 'DECISION_READY',
+        conflict_status: 'CONSISTENT',
+        strategic_consistency: 'STRONGLY_ALIGNED',
+        synthesized_confidence: 84.50,
+        uncertainty_tier: 'LOW_UNCERTAINTY',
+        options_count: recommendationIds.length || 1,
+        action_guidance: 'DECISION_SUPPORT — HUMAN_REVIEW_REQUIRED'
+      };
+    },
+
+    async getDecisionPackageDetails(packageId) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('get_executive_decision_package_details', {
+          p_package_id: packageId
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        success: true,
+        package_id: packageId,
+        package_code: 'PKG-20260822-MOCK01',
+        title: 'Mock Strategic Package',
+        decision_readiness: 'DECISION_READY',
+        conflict_status: 'CONSISTENT',
+        strategic_consistency: 'STRONGLY_ALIGNED',
+        synthesized_confidence: 84.50,
+        uncertainty_tier: 'LOW_UNCERTAINTY',
+        package_digest: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+        options: []
+      };
+    },
+
+    async compareDecisionOptions(packageId) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('compare_strategic_decision_options', {
+          p_package_id: packageId
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        success: true,
+        package_id: packageId,
+        options_comparison: []
+      };
+    }
+  };
+
   LokatorDB.strategicCommand = strategicCommandManager;
   LokatorDB.strategicDecision = strategicDecisionManager;
   LokatorDB.strategicOrchestration = strategicOrchestrationManager;
@@ -4077,6 +4143,7 @@
   LokatorDB.strategicResilience = strategicResilienceManager;
   LokatorDB.strategicDecisionGovernance = strategicDecisionGovernanceManager;
   LokatorDB.strategicLearning = strategicLearningManager;
+  LokatorDB.strategicIntelligence = strategicIntelligenceManager;
   LokatorDB.predictiveGrowth = predictiveGrowthManager;
   LokatorDB.growthIntelligence = growthIntelligenceManager;
   LokatorDB.realtimeGrowth = realtimeGrowthManager;
