@@ -2590,8 +2590,89 @@
   LokatorDB.outbox = outboxManager;
   LokatorDB.createWriteResult = createWriteResult;
   LokatorDB.moderator = (typeof global.ServiceModerator !== 'undefined') ? global.ServiceModerator : null;
-  LokatorDB.outbox = outboxManager;
-  LokatorDB.createWriteResult = createWriteResult;
+
+  // 6. INTERNAL ANALYTICS API (Admin Aggregations & Retention)
+  LokatorDB.analytics = {
+    async getExecutiveSummary(days = 30) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('get_analytics_executive_summary', { p_days: days });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        window_days: days,
+        total_events: 0,
+        total_sessions_approx: 0,
+        client_error_count: 0,
+        search_count: 0,
+        search_no_results_count: 0,
+        no_results_rate: 0,
+        daily_volume: [],
+        generated_at: new Date().toISOString()
+      };
+    },
+    async getFunnelSummary(days = 30) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('get_analytics_funnel_summary', { p_days: days });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        window_days: days,
+        provider_funnel: {
+          registration_started: 0, validation_failed: 0, registration_submitted: 0,
+          registration_succeeded: 0, login_submitted: 0, login_succeeded: 0, login_failed: 0,
+          dashboard_engagements: 0, form_completion_rate: 0, creation_success_rate: 0, login_success_rate: 0
+        },
+        customer_funnel: {
+          category_browses: 0, searches: 0, search_no_results: 0, profile_views: 0,
+          whatsapp_clicks: 0, phone_clicks: 0, total_contact_leads: 0, reviews_submitted: 0,
+          registration_cta_clicks: 0, profile_lead_conversion_rate: 0, whatsapp_preference_ratio: 0
+        },
+        observational_status: 'OBSERVATIONAL_ONLY',
+        generated_at: new Date().toISOString()
+      };
+    },
+    async getPerformanceSummary(days = 30) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('get_analytics_performance_summary', { p_days: days });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        window_days: days,
+        sample_count: 0,
+        status: 'INSTRUMENTATION_ONLY',
+        p75_metrics: {
+          lcp_ms: null, lcp_p50_ms: null, lcp_p90_ms: null, inp_ms: null,
+          cls: null, ttfb_ms: null, fcp_ms: null, dom_ready_ms: null, pwa_splash_ms: null
+        },
+        thresholds: { lcp_good: '<= 2500ms', inp_good: '<= 200ms', cls_good: '<= 0.10', ttfb_target: '<= 800ms' },
+        generated_at: new Date().toISOString()
+      };
+    },
+    async pruneOldEvents(retentionDays = 60, batchSize = 5000) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('prune_old_analytics_events', {
+          p_retention_days: retentionDays,
+          p_batch_size: batchSize
+        });
+        if (error) throw error;
+        return data;
+      }
+      return { raw_events_deleted: 0, daily_summaries_deleted: 0, completed_at: new Date().toISOString() };
+    },
+    async generateDailySummary(targetDate) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('generate_daily_analytics_summary', {
+          p_target_date: targetDate
+        });
+        if (error) throw error;
+        return data;
+      }
+      return 0;
+    }
+  };
 
   // 5. AUTOMATIC GLOBAL NAVBAR AUTH SYNC
   if (typeof document !== 'undefined') {

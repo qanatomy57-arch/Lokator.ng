@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Internal Analytics & Platform Observability — Lokator.NG</title>
+  <meta name="description" content="Internal platform observability, provider funnel conversion, Core Web Vitals, and telemetry data lifecycle for Lokator Nigeria." />
+  <meta name="theme-color" content="#006B3F" />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="icons/icon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="dashboard.css" />
+  <style>
+    html, body { background-color: #0A0E17; color: #F9FAFB; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+    .analytics-container { max-width: 1200px; margin: 0 auto; padding: 24px 16px 80px; }
+    .analytics-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .analytics-title { font-size: 1.6rem; font-weight: 800; color: #FFFFFF; margin: 0; display: flex; align-items: center; gap: 10px; }
+    .analytics-badge { font-size: 0.75rem; background: rgba(0, 107, 63, 0.2); color: #00A86B; border: 1px solid rgba(0, 107, 63, 0.4); padding: 4px 10px; border-radius: 20px; font-weight: 700; text-transform: uppercase; }
+    .grid-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .kpi-card { background: #131B2A; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 18px 20px; }
+    .kpi-label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: #94A3B8; margin-bottom: 6px; }
+    .kpi-value { font-size: 1.8rem; font-weight: 800; color: #F9FAFB; margin: 0 0 4px; }
+    .kpi-sub { font-size: 0.8rem; color: #64748B; }
+    .section-title { font-size: 1.15rem; font-weight: 700; color: #E2E8F0; margin: 32px 0 16px; display: flex; align-items: center; justify-content: space-between; }
+    .panel-card { background: #131B2A; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+    .funnel-step { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; background: #0E1522; border-radius: 8px; margin-bottom: 8px; border-left: 4px solid #006B3F; }
+    .funnel-name { font-weight: 600; font-size: 0.9rem; color: #E2E8F0; }
+    .funnel-metrics { display: flex; align-items: center; gap: 16px; font-size: 0.9rem; }
+    .funnel-count { font-weight: 700; color: #F9FAFB; }
+    .funnel-rate { font-size: 0.8rem; padding: 2px 8px; background: rgba(212,175,55,0.15); color: #D4AF37; border-radius: 12px; font-weight: 700; }
+    .cwv-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; }
+    .cwv-box { background: #0E1522; border-radius: 8px; padding: 14px; text-align: center; border: 1px solid rgba(255,255,255,0.04); }
+    .cwv-name { font-size: 0.75rem; font-weight: 700; color: #94A3B8; margin-bottom: 6px; }
+    .cwv-val { font-size: 1.4rem; font-weight: 800; color: #F9FAFB; }
+    .cwv-target { font-size: 0.75rem; color: #64748B; margin-top: 4px; }
+    .status-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; }
+    .status-good { background: rgba(0, 107, 63, 0.25); color: #00E676; }
+    .status-notice { background: rgba(212, 175, 55, 0.2); color: #FFD700; }
+    .auth-gate { text-align: center; padding: 60px 20px; background: #131B2A; border-radius: 12px; margin-top: 40px; }
+    .retention-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
+    .btn-action { padding: 8px 16px; border-radius: 6px; font-size: 0.85rem; font-weight: 700; cursor: pointer; border: none; background: #006B3F; color: #FFF; }
+    .btn-action:hover { background: #00874F; }
+  </style>
+</head>
+<body class="dash-body">
+
+  <div class="analytics-container">
+    <!-- Topbar Header -->
+    <header class="analytics-header">
+      <div>
+        <h1 class="analytics-title">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#006B3F" stroke-width="2.5"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+          Platform Observability
+          <span class="analytics-badge">Observational Only</span>
+        </h1>
+        <p style="margin: 4px 0 0; color: #94A3B8; font-size: 0.85rem;">Pre-aggregated telemetry intelligence & retention lifecycle</p>
+      </div>
+      <div style="display: flex; gap: 10px; align-items: center;">
+        <select id="time-window" style="background: #131B2A; color: #FFF; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 8px 12px; font-weight: 600;">
+          <option value="7">Last 7 Days</option>
+          <option value="30" selected>Last 30 Days</option>
+          <option value="90">Last 90 Days</option>
+        </select>
+        <button id="btn-refresh" class="btn-action">Refresh Data</button>
+      </div>
+    </header>
+
+    <!-- Main Dashboard Body (Rendered upon Server Auth Confirmation) -->
+    <main id="analytics-content">
+      
+      <!-- 1. Executive Platform Pulse -->
+      <section>
+        <div class="section-title">1. Executive Platform Health Pulse</div>
+        <div class="grid-kpis">
+          <div class="kpi-card">
+            <div class="kpi-label">Total Telemetry Events</div>
+            <div class="kpi-value" id="kpi-total-events">—</div>
+            <div class="kpi-sub">Ingested across all pages</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Active Sessions (Approx)</div>
+            <div class="kpi-value" id="kpi-total-sessions">—</div>
+            <div class="kpi-sub">Unique session UUIDs</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Client Error Rate</div>
+            <div class="kpi-value" id="kpi-error-rate">—</div>
+            <div class="kpi-sub" id="kpi-error-count">0 errors logged</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Search Zero-Yield Rate</div>
+            <div class="kpi-value" id="kpi-no-results-rate">—</div>
+            <div class="kpi-sub" id="kpi-search-count">0 searches executed</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. Provider Acquisition & Onboarding Funnel -->
+      <section>
+        <div class="section-title">2. Provider Acquisition & Onboarding Funnel</div>
+        <div class="panel-card">
+          <div class="funnel-step">
+            <span class="funnel-name">1. Registration Form Started</span>
+            <div class="funnel-metrics"><span class="funnel-count" id="funnel-reg-started">0</span></div>
+          </div>
+          <div class="funnel-step">
+            <span class="funnel-name">2. Form Validation Failures</span>
+            <div class="funnel-metrics"><span class="funnel-count" id="funnel-reg-val-failed" style="color: #F87171;">0</span></div>
+          </div>
+          <div class="funnel-step">
+            <span class="funnel-name">3. Registration Form Submitted</span>
+            <div class="funnel-metrics">
+              <span class="funnel-count" id="funnel-reg-submitted">0</span>
+              <span class="funnel-rate" id="rate-form-completion">0% Completion</span>
+            </div>
+          </div>
+          <div class="funnel-step">
+            <span class="funnel-name">4. Account & Profile Created in DB</span>
+            <div class="funnel-metrics">
+              <span class="funnel-count" id="funnel-reg-succeeded" style="color: #00E676;">0</span>
+              <span class="funnel-rate" id="rate-creation-success">0% Success</span>
+            </div>
+          </div>
+          <div class="funnel-step">
+            <span class="funnel-name">5. Authentication / Login Succeeded</span>
+            <div class="funnel-metrics">
+              <span class="funnel-count" id="funnel-login-succeeded">0</span>
+              <span class="funnel-rate" id="rate-login-success">0% Login Pass</span>
+            </div>
+          </div>
+          <div class="funnel-step">
+            <span class="funnel-name">6. Post-Registration Profile Enrichment (Dashboard)</span>
+            <div class="funnel-metrics"><span class="funnel-count" id="funnel-dash-engagements">0 updates</span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. Customer Discovery & Conversion Funnel -->
+      <section>
+        <div class="section-title">3. Customer Discovery & Conversion Engine</div>
+        <div class="panel-card">
+          <div class="funnel-step">
+            <span class="funnel-name">1. Category Browse Interactions</span>
+            <div class="funnel-metrics"><span class="funnel-count" id="funnel-cat-browses">0</span></div>
+          </div>
+          <div class="funnel-step">
+            <span class="funnel-name">2. Search Queries Executed</span>
+            <div class="funnel-metrics"><span class="funnel-count" id="funnel-searches">0</span></div>
+          </div>
+          <div class="funnel-step">
+            <span class="funnel-name">3. Provider Profiles Evaluated</span>
+            <div class="funnel-metrics"><span class="funnel-count" id="funnel-profile-views">0</span></div>
+          </div>
+          <div class="funnel-step" style="border-left-color: #25D366;">
+            <span class="funnel-name">4. Direct Contact Leads (WhatsApp + Calls)</span>
+            <div class="funnel-metrics">
+              <span class="funnel-count" id="funnel-total-leads" style="color: #25D366;">0 leads</span>
+              <span class="funnel-rate" id="rate-profile-conversion">0% Lead Rate</span>
+            </div>
+          </div>
+          <div class="funnel-step">
+            <span class="funnel-name">5. Customer Reviews Submitted</span>
+            <div class="funnel-metrics"><span class="funnel-count" id="funnel-reviews">0</span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. Real-User Core Web Vitals (p75 Percentile) -->
+      <section>
+        <div class="section-title">
+          <span>4. Core Web Vitals (75th Percentile)</span>
+          <span class="status-tag status-notice" id="cwv-status-badge">INSTRUMENTATION_ONLY</span>
+        </div>
+        <div class="cwv-grid">
+          <div class="cwv-box">
+            <div class="cwv-name">LCP (p75)</div>
+            <div class="cwv-val" id="cwv-lcp">—</div>
+            <div class="cwv-target">Target: &le; 2500ms</div>
+          </div>
+          <div class="cwv-box">
+            <div class="cwv-name">INP (p75)</div>
+            <div class="cwv-val" id="cwv-inp">—</div>
+            <div class="cwv-target">Target: &le; 200ms</div>
+          </div>
+          <div class="cwv-box">
+            <div class="cwv-name">CLS (p75)</div>
+            <div class="cwv-val" id="cwv-cls">—</div>
+            <div class="cwv-target">Target: &le; 0.10</div>
+          </div>
+          <div class="cwv-box">
+            <div class="cwv-name">TTFB (p75)</div>
+            <div class="cwv-val" id="cwv-ttfb">—</div>
+            <div class="cwv-target">Target: &le; 800ms</div>
+          </div>
+          <div class="cwv-box">
+            <div class="cwv-name">FCP (p75)</div>
+            <div class="cwv-val" id="cwv-fcp">—</div>
+            <div class="cwv-target">Target: &le; 1800ms</div>
+          </div>
+          <div class="cwv-box">
+            <div class="cwv-name">DOM Ready (p75)</div>
+            <div class="cwv-val" id="cwv-dom">—</div>
+            <div class="cwv-target">Target: &le; 500ms</div>
+          </div>
+          <div class="cwv-box">
+            <div class="cwv-name">PWA Splash (p75)</div>
+            <div class="cwv-val" id="cwv-splash">—</div>
+            <div class="cwv-target">Target: &le; 400ms</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. Telemetry Lifecycle & Retention Management -->
+      <section>
+        <div class="section-title">5. Data Retention & Storage Lifecycle</div>
+        <div class="panel-card">
+          <div style="font-size: 0.85rem; color: #94A3B8; margin-bottom: 12px;">
+            Retention Policy: <strong>60-day Hard Delete for Raw Events</strong> | <strong>365-day Retention for Daily Summary Rollups</strong>.
+          </div>
+          <div class="retention-actions">
+            <button id="btn-run-prune" class="btn-action" style="background: #B91C1C;">Execute Bounded 60-Day Pruning</button>
+            <button id="btn-run-summary" class="btn-action" style="background: #1D4ED8;">Generate Daily Summary Rollup</button>
+          </div>
+          <div id="retention-status" style="margin-top: 12px; font-size: 0.85rem; color: #64748B;"></div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="supabase-client.js"></script>
+  <script src="analytics.js"></script>
+</body>
+</html>
