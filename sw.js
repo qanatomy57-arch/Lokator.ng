@@ -22,6 +22,7 @@ const SHELL_ASSETS = [
   '/search.css',
   '/profile.css',
   '/dashboard.css',
+  '/pwa.css',
   '/app.js',
   '/search.js',
   '/profile.js',
@@ -30,6 +31,8 @@ const SHELL_ASSETS = [
   '/providers-data.js',
   '/supabase-client.js',
   '/telemetry.js',
+  '/pwa-manager.js',
+  '/pwa.js',
   '/icons/icon.svg',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
@@ -104,25 +107,29 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Strategy A: HTML Navigation requests -> Network-first with Offline Fallback
+  // Strategy A: HTML Navigation requests -> Instant App Shell from Cache + Background Refresh & Offline Fallback
   if (request.mode === 'navigate' || (request.headers.get('accept') && request.headers.get('accept').includes('text/html'))) {
     event.respondWith(
-      fetch(request)
-        .then((response) => {
-          if (response && response.status === 200) {
-            const copy = response.clone();
-            caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, copy));
-          }
-          return response;
-        })
-        .catch(async () => {
-          const cached = await caches.match(request);
-          if (cached) return cached;
-          const offlinePage = await caches.match('/offline.html');
-          return offlinePage || new Response('You are offline. Please reconnect to continue using Lokator.NG.', {
-            headers: { 'Content-Type': 'text/plain' }
+      caches.match(request).then((cachedResponse) => {
+        const networkFetch = fetch(request)
+          .then((networkResponse) => {
+            if (networkResponse && networkResponse.status === 200) {
+              const copy = networkResponse.clone();
+              caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, copy));
+            }
+            return networkResponse;
+          })
+          .catch(async () => {
+            if (cachedResponse) return cachedResponse;
+            const offlinePage = await caches.match('/offline.html');
+            return offlinePage || new Response('You are offline. Please reconnect to continue using Lokator.NG.', {
+              headers: { 'Content-Type': 'text/plain' }
+            });
           });
-        })
+
+        // Instant startup: return cached HTML shell immediately if available; otherwise await network
+        return cachedResponse || networkFetch;
+      })
     );
     return;
   }
@@ -182,3 +189,11 @@ self.addEventListener('fetch', (event) => {
     })
   );
 });
+
+// 6. CLIENT MESSAGING (Instant update activation)
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.action === 'skipWaiting') {
+    self.skipWaiting();
+  }
+});
+

@@ -17,8 +17,28 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="dashboard.css" />
+  <link rel="stylesheet" href="pwa.css" />
+  <style>
+    html, body { background-color: #0A0E17; color: #F9FAFB; margin: 0; padding: 0; }
+  </style>
 </head>
 <body class="dash-body">
+
+  <!-- ===== INSTANT PWA APP SPLASH SCREEN (Zero-JS Initial Render) ===== -->
+  <div id="pwa-app-splash" aria-hidden="true">
+    <div class="splash-logo-wrap">
+      <div class="splash-logo-ring"></div>
+      <div class="splash-logo-mark">
+        <svg width="32" height="32" viewBox="0 0 30 30" fill="none">
+          <path d="M15 2C10.03 2 6 6.03 6 11c0 6.75 9 17 9 17s9-10.25 9-17c0-4.97-4.03-9-9-9z" fill="#FFFFFF"/>
+          <circle cx="15" cy="11" r="4" fill="#D4AF37"/>
+          <circle cx="15" cy="11" r="2" fill="#006B3F"/>
+        </svg>
+      </div>
+    </div>
+    <h2 class="splash-brand-title">Lokator<span class="splash-brand-accent">.NG</span></h2>
+    <p class="splash-brand-subtitle">Provider Dashboard</p>
+  </div>
 
   <!-- ===== TOPBAR ===== -->
   <header class="dash-topbar" id="dash-topbar">
@@ -620,6 +640,7 @@
   <script src="providers-data.js"></script>
   <script src="supabase-client.js"></script>
   <script src="dashboard.js"></script>
+  <script src="pwa-manager.js"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {

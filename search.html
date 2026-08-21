@@ -17,8 +17,28 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="search.css" />
+  <link rel="stylesheet" href="pwa.css" />
+  <style>
+    html, body { background-color: #0A0E17; color: #F9FAFB; margin: 0; padding: 0; }
+  </style>
 </head>
 <body>
+
+  <!-- ===== INSTANT PWA APP SPLASH SCREEN (Zero-JS Initial Render) ===== -->
+  <div id="pwa-app-splash" aria-hidden="true">
+    <div class="splash-logo-wrap">
+      <div class="splash-logo-ring"></div>
+      <div class="splash-logo-mark">
+        <svg width="32" height="32" viewBox="0 0 30 30" fill="none">
+          <path d="M15 2C10.03 2 6 6.03 6 11c0 6.75 9 17 9 17s9-10.25 9-17c0-4.97-4.03-9-9-9z" fill="#FFFFFF"/>
+          <circle cx="15" cy="11" r="4" fill="#D4AF37"/>
+          <circle cx="15" cy="11" r="2" fill="#006B3F"/>
+        </svg>
+      </div>
+    </div>
+    <h2 class="splash-brand-title">Lokator<span class="splash-brand-accent">.NG</span></h2>
+    <p class="splash-brand-subtitle">Locating Skilled Hands</p>
+  </div>
 
   <!-- ===== NAVBAR ===== -->
   <header class="navbar" id="navbar">
@@ -33,6 +53,10 @@
         <a href="index.html" class="nav-link">Home</a>
         <a href="search.html" class="nav-link active">Find Providers</a>
         <a href="index.html#how-it-works" class="nav-link">How It Works</a>
+        <button type="button" class="pwa-install-nav-btn" id="nav-pwa-install-btn" aria-label="Install Lokator App">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span>Install App</span>
+        </button>
         <a href="register.html" class="btn btn-outline" id="nav-register">List Your Skill</a>
       </nav>
       <button class="hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false">
@@ -288,6 +312,7 @@
   <script src="categories.js"></script>
   <script src="supabase-client.js"></script>
   <script src="search.js"></script>
+  <script src="pwa-manager.js"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
