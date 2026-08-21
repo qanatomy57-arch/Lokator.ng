@@ -355,6 +355,53 @@
         </div>
       </section>
 
+      <!-- 8.2. Predictive Growth Intelligence & Opportunity Detection -->
+      <section id="section-predictive-growth">
+        <div class="section-title">
+          <span>8.2. Predictive Growth Intelligence & Opportunity Detection</span>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <span id="predictive-growth-posture" class="status-tag status-notice" style="font-size: 0.7rem; background: #312E81; color: #818CF8;">DETERMINISTIC_FORECASTING</span>
+            <span class="status-tag status-notice" style="font-size: 0.7rem; background: #1E293B; color: #94A3B8;">AIR_GAPPED</span>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom: 24px; border-left: 4px solid #6366F1;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div style="font-size: 0.85rem; color: #94A3B8;">
+              Deterministic statistical forecasting (damping &phi; = 0.85). Observational opportunities strictly air-gapped from search ranking.
+            </div>
+            <button id="btn-refresh-predictive-growth" class="btn-action" style="padding: 4px 10px; font-size: 0.75rem; background: #6366F1;">Compute Predictions</button>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 14px;">
+            <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 10px;">
+              <div style="font-size: 0.7rem; color: #64748B; text-transform: uppercase;">High Confidence</div>
+              <div id="stat-predictions-high-conf" style="font-size: 1.25rem; font-weight: 800; color: #10B981; margin-top: 4px;">0</div>
+            </div>
+            <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 10px;">
+              <div style="font-size: 0.7rem; color: #64748B; text-transform: uppercase;">Emerging Opportunities</div>
+              <div id="stat-predictions-emerging" style="font-size: 1.25rem; font-weight: 800; color: #38BDF8; margin-top: 4px;">0</div>
+            </div>
+            <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 10px;">
+              <div style="font-size: 0.7rem; color: #64748B; text-transform: uppercase;">Supply Shortages</div>
+              <div id="stat-predictions-shortage" style="font-size: 1.25rem; font-weight: 800; color: #EF4444; margin-top: 4px;">0</div>
+            </div>
+            <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 10px;">
+              <div style="font-size: 0.7rem; color: #64748B; text-transform: uppercase;">Total Active Opportunities</div>
+              <div id="stat-predictions-active" style="font-size: 1.25rem; font-weight: 800; color: #818CF8; margin-top: 4px;">0</div>
+            </div>
+          </div>
+
+          <div style="margin-top: 14px;">
+            <div style="font-size: 0.85rem; font-weight: 700; color: #E2E8F0; margin-bottom: 8px;">Active Market Opportunity Predictions (Next 24 Hours)</div>
+            <div id="predictive-growth-container" style="display: flex; flex-direction: column; gap: 8px;">
+              <div style="font-size: 0.85rem; color: #64748B; padding: 12px; background: #0E1522; border-radius: 6px;">
+                No active predictive growth opportunities detected.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- 9. Core Web Vitals (Real-User Performance) -->
       <section>
         <div class="section-title">

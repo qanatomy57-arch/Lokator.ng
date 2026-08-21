@@ -3154,6 +3154,74 @@
     }
   };
 
+  const predictiveGrowthManager = {
+    async getPredictions() {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('get_predictive_growth_predictions');
+        if (error) throw error;
+        return data;
+      }
+      return { status: 'HEALTHY', posture: 'OBSERVATIONAL_PREDICTIVE_ONLY', predictions: [] };
+    },
+    async getPredictionDelta(since) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('get_predictive_growth_delta', { p_since: since });
+        if (error) throw error;
+        return data;
+      }
+      return { delta: [] };
+    },
+    async computePredictions(forceRefresh = false) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('compute_predictive_growth_intelligence', { p_force_refresh: forceRefresh });
+        if (error) throw error;
+        return data;
+      }
+      return { status: 'SUCCESS', predictions_evaluated: 0 };
+    },
+    async getPredictionEvidence(predictionId) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('get_predictive_growth_evidence', { p_prediction_id: predictionId });
+        if (error) throw error;
+        return data;
+      }
+      return { prediction_id: predictionId, explanation: {} };
+    },
+    async transitionPrediction(predictionId, newState, notes = '') {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('transition_predictive_growth', {
+          p_prediction_id: predictionId,
+          p_new_state: newState,
+          p_notes: notes
+        });
+        if (error) throw error;
+        return data;
+      }
+      return { status: 'TRANSITIONED', prediction_id: predictionId, new_state: newState };
+    },
+    async acknowledgePrediction(predictionId, notes = '') {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('acknowledge_predictive_growth', {
+          p_prediction_id: predictionId,
+          p_notes: notes
+        });
+        if (error) throw error;
+        return data;
+      }
+      return { status: 'ACKNOWLEDGED', prediction_id: predictionId };
+    },
+    async watchPrediction(predictionId, notes = 'Flagged for operational monitoring') {
+      return this.transitionPrediction(predictionId, 'WATCH', notes);
+    },
+    async dismissPrediction(predictionId, notes = 'Dismissed by operator') {
+      return this.transitionPrediction(predictionId, 'INVALIDATED', notes);
+    },
+    getStatus() {
+      return realtimeGrowthStatus;
+    }
+  };
+
+  LokatorDB.predictiveGrowth = predictiveGrowthManager;
   LokatorDB.growthIntelligence = growthIntelligenceManager;
   LokatorDB.realtimeGrowth = realtimeGrowthManager;
   LokatorDB.growthRecommendations = growthRecommendationsManager;

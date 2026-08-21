@@ -539,6 +539,131 @@ document.addEventListener('DOMContentLoaded', async () => {
             btnRefreshRealtime.textContent = 'Evaluate Multi-Window Rollup';
           });
         }
+
+        // -------------------------------------------------------------
+        // SECTION 8.2: PREDICTIVE GROWTH INTELLIGENCE & OPPORTUNITY DETECTION
+        // -------------------------------------------------------------
+        const renderPredictiveGrowthFeed = (data) => {
+          if (!data) return;
+          const statHighConf = document.getElementById('stat-predictions-high-conf');
+          const statEmerging = document.getElementById('stat-predictions-emerging');
+          const statShortage = document.getElementById('stat-predictions-shortage');
+          const statActive = document.getElementById('stat-predictions-active');
+          const container = document.getElementById('predictive-growth-container');
+
+          if (statHighConf) statHighConf.textContent = data.high_confidence_count || 0;
+          if (statEmerging) statEmerging.textContent = data.emerging_count || 0;
+          if (statShortage) statShortage.textContent = data.shortage_count || 0;
+          if (statActive) statActive.textContent = data.total_active_count || (data.predictions ? data.predictions.length : 0);
+
+          if (container && data.predictions) {
+            if (data.predictions.length === 0) {
+              container.innerHTML = `
+                <div style="font-size: 0.85rem; color: #64748B; padding: 12px; background: #0E1522; border-radius: 6px;">
+                  No active predictive growth opportunities detected. Data meets privacy & stability criteria ($k \\ge 5, N \\ge 30$).
+                </div>
+              `;
+            } else {
+              container.innerHTML = data.predictions.map(pred => {
+                const confColor = pred.confidence_tier === 'HIGH' ? '#10B981' : (pred.confidence_tier === 'MEDIUM' ? '#38BDF8' : '#F59E0B');
+                const oppColor = pred.opportunity_class === 'SUPPLY_SHORTAGE' || pred.opportunity_class === 'SERVICE_EXPANSION' ? '#EF4444' : (pred.opportunity_class === 'HIGH_GROWTH_ZONE' ? '#8B5CF6' : '#38BDF8');
+                const growthPct = Math.round((pred.demand_growth_rate || 0) * 100);
+
+                return `
+                  <div class="card" style="padding: 12px; background: #0E1522; border: 1px solid #1E293B; margin-bottom: 6px;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+                      <div>
+                        <span class="status-tag" style="background: ${oppColor}22; color: ${oppColor}; border: 1px solid ${oppColor}55; font-size: 0.7rem; font-weight: 700; margin-right: 6px;">
+                          ${pred.opportunity_class}
+                        </span>
+                        <span class="status-tag" style="background: ${confColor}22; color: ${confColor}; border: 1px solid ${confColor}55; font-size: 0.7rem; font-weight: 700;">
+                          CONFIDENCE: ${pred.confidence_tier} (${Math.round((pred.confidence_score || 0) * 100)}%)
+                        </span>
+                        <span style="font-size: 0.75rem; color: #64748B; margin-left: 8px;">
+                          Horizon: <strong>${pred.forecast_window || 'NEXT_24H'}</strong>
+                        </span>
+                      </div>
+                      <div style="display: flex; gap: 6px;">
+                        <button class="btn-action btn-pred-ack" data-id="${pred.id}" style="padding: 2px 8px; font-size: 0.7rem; background: #059669;">Acknowledge</button>
+                        <button class="btn-action btn-pred-watch" data-id="${pred.id}" style="padding: 2px 8px; font-size: 0.7rem; background: #3B82F6;">Watch</button>
+                        <button class="btn-action btn-pred-dismiss" data-id="${pred.id}" style="padding: 2px 8px; font-size: 0.7rem; background: #64748B;">Dismiss</button>
+                      </div>
+                    </div>
+                    <div style="font-size: 0.9rem; font-weight: 700; color: #F1F5F9; margin-bottom: 4px;">
+                      ${pred.category} — ${pred.lga}, ${pred.state}
+                    </div>
+                    <div style="font-size: 0.8rem; color: #94A3B8; margin-bottom: 6px;">
+                      ${pred.explanation && pred.explanation.summary ? pred.explanation.summary : 'Projected demand surge based on statistical velocity.'}
+                    </div>
+                    <div style="display: flex; gap: 14px; font-size: 0.75rem; color: #64748B; border-top: 1px solid #1E293B; padding-top: 6px; flex-wrap: wrap;">
+                      <span>Projected Demand: <strong style="color: #38BDF8;">${pred.projected_demand}/hr</strong></span>
+                      <span>Supply Capacity: <strong style="color: #10B981;">${pred.projected_supply}/hr</strong></span>
+                      <span>Growth Velocity: <strong style="color: #F59E0B;">+${growthPct}%</strong></span>
+                      <span>Sample Size: <strong>N=${pred.sample_size}, k=${pred.unique_sessions}</strong></span>
+                    </div>
+                  </div>
+                `;
+              }).join('');
+
+              container.querySelectorAll('.btn-pred-ack').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                  const id = e.target.getAttribute('data-id');
+                  if (LokatorDB.predictiveGrowth) {
+                    await LokatorDB.predictiveGrowth.acknowledgePrediction(id, 'Acknowledged by operator');
+                    const updated = await LokatorDB.predictiveGrowth.getPredictions();
+                    renderPredictiveGrowthFeed(updated);
+                  }
+                });
+              });
+
+              container.querySelectorAll('.btn-pred-watch').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                  const id = e.target.getAttribute('data-id');
+                  if (LokatorDB.predictiveGrowth) {
+                    await LokatorDB.predictiveGrowth.watchPrediction(id, 'Flagged for operational monitoring');
+                    const updated = await LokatorDB.predictiveGrowth.getPredictions();
+                    renderPredictiveGrowthFeed(updated);
+                  }
+                });
+              });
+
+              container.querySelectorAll('.btn-pred-dismiss').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                  const id = e.target.getAttribute('data-id');
+                  if (LokatorDB.predictiveGrowth) {
+                    await LokatorDB.predictiveGrowth.dismissPrediction(id, 'Dismissed by operator');
+                    const updated = await LokatorDB.predictiveGrowth.getPredictions();
+                    renderPredictiveGrowthFeed(updated);
+                  }
+                });
+              });
+            }
+          }
+        };
+
+        try {
+          if (LokatorDB.predictiveGrowth && typeof LokatorDB.predictiveGrowth.getPredictions === 'function') {
+            LokatorDB.predictiveGrowth.getPredictions().then(renderPredictiveGrowthFeed).catch((e) => {
+              console.warn('Predictive growth fetch failed:', e.message);
+            });
+          }
+        } catch (e) {
+          console.warn('Predictive growth initialization failed:', e.message);
+        }
+
+        const btnRefreshPredictive = document.getElementById('btn-refresh-predictive-growth');
+        if (btnRefreshPredictive && !btnRefreshPredictive.hasAttribute('data-bound')) {
+          btnRefreshPredictive.setAttribute('data-bound', 'true');
+          btnRefreshPredictive.addEventListener('click', async () => {
+            btnRefreshPredictive.textContent = 'Computing...';
+            if (LokatorDB.predictiveGrowth) {
+              await LokatorDB.predictiveGrowth.computePredictions(true);
+              const latest = await LokatorDB.predictiveGrowth.getPredictions();
+              renderPredictiveGrowthFeed(latest);
+            }
+            btnRefreshPredictive.textContent = 'Compute Predictions';
+          });
+        }
       }
 
 
