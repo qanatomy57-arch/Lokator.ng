@@ -884,6 +884,53 @@
         </div>
       </section>
 
+      <!-- Phase 9.7 Strategic Decision Governance & Recommendation Lifecycle (SDGRLE) -->
+      <section>
+        <div class="section-title">Phase 9.7: Strategic Decision Governance & Lifecycle (SDGRLE)</div>
+        <div class="card" style="margin-bottom: 24px; border-left: 4px solid #6366F1;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div style="font-size: 0.85rem; color: #94A3B8;">
+              <span class="status-tag" style="background: rgba(99,102,241,0.2); color: #6366F1; margin-right: 8px;">GOVERNANCE_ACTIVE</span>
+              <span class="status-tag" style="background: rgba(16,185,129,0.2); color: #10B981; margin-right: 8px;">HUMAN_REVIEW_REQUIRED</span>
+              <span class="status-tag" style="background: rgba(239,68,68,0.2); color: #EF4444; margin-right: 8px;">MANUAL_ACTION_REQUIRED</span>
+            </div>
+            <button id="btn-create-governed-recommendation" class="btn-action" style="padding: 4px 10px; font-size: 0.75rem; background: #6366F1;">Register Governed Recommendation</button>
+          </div>
+
+          <div style="font-size: 0.75rem; color: #64748B; margin-bottom: 14px;">
+            Enforces cryptographic provenance, multi-criteria human review approvals, state machine lifecycle transitions, and post-execution empirical outcome evaluations (VRR, forecast error).
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 14px;">
+            <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 10px;">
+              <div style="font-size: 0.7rem; color: #64748B; text-transform: uppercase;">Lifecycle State</div>
+              <div id="sdgrle-lifecycle-state" style="font-size: 1.25rem; font-weight: 800; color: #6366F1; margin-top: 4px;">DRAFT</div>
+            </div>
+            <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 10px;">
+              <div style="font-size: 0.7rem; color: #64748B; text-transform: uppercase;">Review Score</div>
+              <div id="sdgrle-review-score" style="font-size: 1.25rem; font-weight: 800; color: #10B981; margin-top: 4px;">0.00 / 5.00</div>
+            </div>
+            <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 10px;">
+              <div style="font-size: 0.7rem; color: #64748B; text-transform: uppercase;">Value Realization (VRR)</div>
+              <div id="sdgrle-vrr-ratio" style="font-size: 1.25rem; font-weight: 800; color: #38BDF8; margin-top: 4px;">1.0000</div>
+            </div>
+            <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 10px;">
+              <div style="font-size: 0.7rem; color: #64748B; text-transform: uppercase;">Effectiveness Tier</div>
+              <div id="sdgrle-effectiveness-tier" style="font-size: 1.25rem; font-weight: 800; color: #F59E0B; margin-top: 4px;">INCONCLUSIVE</div>
+            </div>
+          </div>
+
+          <div style="margin-top: 14px;">
+            <div style="font-size: 0.85rem; font-weight: 700; color: #E2E8F0; margin-bottom: 8px;">Decision Provenance & Lifecycle Audit Trail</div>
+            <div id="sdgrle-provenance-container" style="display: flex; flex-direction: column; gap: 8px;">
+              <div style="font-size: 0.85rem; color: #64748B; padding: 12px; background: #0E1522; border-radius: 6px;">
+                No recommendation under active governance. Click Register Governed Recommendation.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
     </main>
   </div>
 

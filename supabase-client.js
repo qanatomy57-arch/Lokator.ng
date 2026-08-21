@@ -3848,6 +3848,141 @@
     }
   };
 
+  // Phase 9.7: Strategic Decision Governance & Recommendation Lifecycle Engine (SDGRLE)
+  const strategicDecisionGovernanceManager = {
+    async createRecommendation(planId, scenarioId, title, objective, validDays = 30, modelVersion = 'SDGRLE-1.0.0') {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('create_strategic_recommendation', {
+          p_plan_id: planId,
+          p_scenario_id: scenarioId,
+          p_title: title,
+          p_objective: objective,
+          p_valid_days: validDays,
+          p_model_version: modelVersion
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        success: true,
+        recommendation_id: '00000000-0000-0000-0000-000000000000',
+        recommendation_code: 'REC-MOCK-001',
+        current_state: 'RECOMMENDED',
+        provenance_hash: 'mock-sha256-hash',
+        valid_until: new Date(Date.now() + validDays * 86400000).toISOString()
+      };
+    },
+
+    async transitionState(recommendationId, targetState, reasonCode, notes = null) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('transition_recommendation_state', {
+          p_recommendation_id: recommendationId,
+          p_target_state: targetState,
+          p_reason_code: reasonCode,
+          p_notes: notes
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        success: true,
+        recommendation_id: recommendationId,
+        from_state: 'RECOMMENDED',
+        to_state: targetState
+      };
+    },
+
+    async submitReview(recommendationId, verdict, alignmentScore, evidenceScore, feasibilityScore, riskScore, rationale, conditions = []) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('submit_recommendation_review', {
+          p_recommendation_id: recommendationId,
+          p_verdict: verdict,
+          p_alignment_score: alignmentScore,
+          p_evidence_score: evidenceScore,
+          p_feasibility_score: feasibilityScore,
+          p_risk_score: riskScore,
+          p_rationale: rationale,
+          p_conditions: conditions
+        });
+        if (error) throw error;
+        return data;
+      }
+      const comp = Number((0.35 * alignmentScore + 0.25 * evidenceScore + 0.25 * feasibilityScore + 0.15 * riskScore).toFixed(2));
+      return {
+        success: true,
+        review_id: '00000000-0000-0000-0000-000000000000',
+        composite_score: comp,
+        verdict: verdict
+      };
+    },
+
+    async recordOutcome(recommendationId, actualEv, actualCost, actualRisk, evidence = {}) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('record_recommendation_outcome', {
+          p_recommendation_id: recommendationId,
+          p_actual_ev: actualEv,
+          p_actual_cost: actualCost,
+          p_actual_risk: actualRisk,
+          p_evidence: evidence
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        success: true,
+        outcome_id: '00000000-0000-0000-0000-000000000000',
+        value_realization_ratio: 1.1500,
+        effectiveness_tier: 'EFFECTIVE',
+        forecast_error_pct: 5.20
+      };
+    },
+
+    async getModelDrift(modelVersion = 'SDGRLE-1.0.0') {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('get_model_performance_drift', {
+          p_model_version: modelVersion
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        success: true,
+        model_version: modelVersion,
+        evaluated_sample_count: 0,
+        avg_forecast_error_ev: 0.00,
+        avg_forecast_error_cost: 0.00,
+        avg_value_realization_ratio: 1.0000,
+        effective_rate_pct: 100.00,
+        parameter_drift_flag: false
+      };
+    },
+
+    async getRecommendationDetails(recommendationId) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('get_strategic_recommendation_details', {
+          p_recommendation_id: recommendationId
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        success: true,
+        recommendation_id: recommendationId,
+        recommendation_code: 'REC-MOCK-001',
+        title: 'Mock Recommendation',
+        objective: 'Test objective',
+        current_state: 'RECOMMENDED',
+        source_phase: 'PHASE_9.5',
+        projected_ev: 100000.00,
+        projected_cost: 50000.00,
+        confidence_score: 0.8500,
+        reviews: [],
+        transitions: [],
+        outcome: null
+      };
+    }
+  };
+
   LokatorDB.strategicCommand = strategicCommandManager;
   LokatorDB.strategicDecision = strategicDecisionManager;
   LokatorDB.strategicOrchestration = strategicOrchestrationManager;
@@ -3855,6 +3990,7 @@
   LokatorDB.strategicOptimization = strategicOptimizationManager;
   LokatorDB.strategicResourceAllocation = strategicResourceAllocationManager;
   LokatorDB.strategicResilience = strategicResilienceManager;
+  LokatorDB.strategicDecisionGovernance = strategicDecisionGovernanceManager;
   LokatorDB.predictiveGrowth = predictiveGrowthManager;
   LokatorDB.growthIntelligence = growthIntelligenceManager;
   LokatorDB.realtimeGrowth = realtimeGrowthManager;

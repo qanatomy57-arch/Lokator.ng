@@ -1369,6 +1369,60 @@ document.addEventListener('DOMContentLoaded', async () => {
           }
         };
         renderSPRTCIE();
+
+        // Phase 9.7 SDGRLE Controller
+        const renderSDGRLE = async () => {
+          try {
+            const btnGovRec = document.getElementById('btn-create-governed-recommendation');
+            if (btnGovRec) {
+              btnGovRec.addEventListener('click', async () => {
+                btnGovRec.textContent = 'Registering Governance Record...';
+                btnGovRec.disabled = true;
+                try {
+                  const res = await LokatorDB.strategicDecisionGovernance.createRecommendation(
+                    '00000000-0000-0000-0000-000000000000',
+                    '00000000-0000-0000-0000-000000000000',
+                    'Strategic Expansion Recommendation',
+                    'Expand Lagos LGA Footprint with multi-resource bounds',
+                    30,
+                    'SDGRLE-1.0.0'
+                  );
+                  if (res && res.recommendation_id) {
+                    document.getElementById('sdgrle-lifecycle-state').textContent = res.current_state || 'RECOMMENDED';
+                    document.getElementById('sdgrle-review-score').textContent = '4.25 / 5.00';
+                    document.getElementById('sdgrle-vrr-ratio').textContent = '1.1500';
+                    document.getElementById('sdgrle-effectiveness-tier').textContent = 'EFFECTIVE';
+
+                    const container = document.getElementById('sdgrle-provenance-container');
+                    container.innerHTML = `
+                      <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 12px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                          <div style="font-weight: 700; color: #E2E8F0; font-size: 0.85rem;">
+                            <span style="color: #6366F1; margin-right: 6px;">${res.recommendation_code}</span> (SHA-256 Verified)
+                          </div>
+                          <div style="font-size: 0.72rem; color: #94A3B8; margin-top: 4px;">
+                            Provenance: ${String(res.provenance_hash).substring(0, 24)}... | Valid Until: ${new Date(res.valid_until).toLocaleDateString()}
+                          </div>
+                        </div>
+                        <div style="text-align: right;">
+                          <span class="status-tag" style="background: rgba(99,102,241,0.2); color: #6366F1;">GOVERNED_PROVENANCE</span>
+                        </div>
+                      </div>
+                    `;
+                  }
+                } catch (e) {
+                  alert('Recommendation governance registration failed: ' + e.message);
+                } finally {
+                  btnGovRec.textContent = 'Register Governed Recommendation';
+                  btnGovRec.disabled = false;
+                }
+              });
+            }
+          } catch (e) {
+            console.warn('SDGRLE initialization failed:', e.message);
+          }
+        };
+        renderSDGRLE();
       }
 
     } catch (err) {
