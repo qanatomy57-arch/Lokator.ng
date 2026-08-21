@@ -3983,6 +3983,91 @@
     }
   };
 
+  // Phase 9.8: Strategic Intelligence Learning, Calibration & Continuous Improvement (SILCCIE)
+  const strategicLearningManager = {
+    async evaluateModelHealth(modelVersion = 'SDGRLE-1.0.0', lookbackDays = 90) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('evaluate_strategic_model_health', {
+          p_model_version: modelVersion,
+          p_lookback_days: lookbackDays
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        success: true,
+        evaluation_id: '00000000-0000-0000-0000-000000000000',
+        target_model_version: modelVersion,
+        learning_engine_version: 'SILCCIE-1.0.0',
+        sample_count: 12,
+        brier_score: 0.0450,
+        expected_calibration_error: 0.0380,
+        model_health_score: 88.50,
+        drift_status: 'STABLE',
+        causality_label: 'OBSERVED_ASSOCIATION'
+      };
+    },
+
+    async simulateCalibration(evaluationId, confidenceScale = 0.90, evBiasOffset = 0.00) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('simulate_calibration_adjustment', {
+          p_evaluation_id: evaluationId,
+          p_confidence_scale: confidenceScale,
+          p_ev_bias_offset: evBiasOffset
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        success: true,
+        simulation_id: '00000000-0000-0000-0000-000000000000',
+        simulation_status: 'SIMULATED_ONLY',
+        proposed_confidence_scale: confidenceScale,
+        projected_health_score: 91.20,
+        projected_ece: 0.0310,
+        action_guidance: 'SIMULATED_CALIBRATION_ADJUSTMENT — NO_PRODUCTION_CHANGE'
+      };
+    },
+
+    async getAssumptionSignals() {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('get_strategic_assumption_signals');
+        if (error) throw error;
+        return data;
+      }
+      return {
+        success: true,
+        causality_label: 'OBSERVED_ASSOCIATION',
+        signals: [
+          {
+            assumption_category: 'DEMAND_GROWTH',
+            signal_type: 'OVERESTIMATION',
+            bias_magnitude_pct: 12.50,
+            observation_count: 18,
+            confidence_tier: 'HIGH'
+          }
+        ]
+      };
+    },
+
+    async compareModels(modelVersions = ['SDGRLE-1.0.0', 'SRACOE-1.0.0'], lookbackDays = 90) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('compare_strategic_models', {
+          p_model_versions: modelVersions,
+          p_lookback_days: lookbackDays
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        success: true,
+        lookback_days: lookbackDays,
+        model_count: modelVersions.length,
+        comparison_results: []
+      };
+    }
+  };
+
   LokatorDB.strategicCommand = strategicCommandManager;
   LokatorDB.strategicDecision = strategicDecisionManager;
   LokatorDB.strategicOrchestration = strategicOrchestrationManager;
@@ -3991,6 +4076,7 @@
   LokatorDB.strategicResourceAllocation = strategicResourceAllocationManager;
   LokatorDB.strategicResilience = strategicResilienceManager;
   LokatorDB.strategicDecisionGovernance = strategicDecisionGovernanceManager;
+  LokatorDB.strategicLearning = strategicLearningManager;
   LokatorDB.predictiveGrowth = predictiveGrowthManager;
   LokatorDB.growthIntelligence = growthIntelligenceManager;
   LokatorDB.realtimeGrowth = realtimeGrowthManager;

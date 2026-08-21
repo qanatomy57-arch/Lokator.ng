@@ -931,6 +931,53 @@
         </div>
       </section>
 
+      <!-- Phase 9.8 Strategic Intelligence Learning, Calibration & Continuous Improvement (SILCCIE) -->
+      <section>
+        <div class="section-title">Phase 9.8: Strategic Learning & Calibration (SILCCIE)</div>
+        <div class="card" style="margin-bottom: 24px; border-left: 4px solid #8B5CF6;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div style="font-size: 0.85rem; color: #94A3B8;">
+              <span class="status-tag" style="background: rgba(139,92,246,0.2); color: #8B5CF6; margin-right: 8px;">META_LEARNING</span>
+              <span class="status-tag" style="background: rgba(56,189,248,0.2); color: #38BDF8; margin-right: 8px;">OBSERVED_ASSOCIATION</span>
+              <span class="status-tag" style="background: rgba(239,68,68,0.2); color: #EF4444; margin-right: 8px;">SIMULATED_CALIBRATION_ONLY</span>
+            </div>
+            <button id="btn-evaluate-model-health" class="btn-action" style="padding: 4px 10px; font-size: 0.75rem; background: #8B5CF6;">Evaluate Model Health & Drift</button>
+          </div>
+
+          <div style="font-size: 0.75rem; color: #64748B; margin-bottom: 14px;">
+            Computes deterministic forecast calibration error (ECE), Brier scoring, rolling drift classification, recurring strategic assumption failure detection, and simulated calibration adjustments.
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 14px;">
+            <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 10px;">
+              <div style="font-size: 0.7rem; color: #64748B; text-transform: uppercase;">Model Health Score</div>
+              <div id="silccie-health-score" style="font-size: 1.25rem; font-weight: 800; color: #8B5CF6; margin-top: 4px;">0.00 / 100</div>
+            </div>
+            <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 10px;">
+              <div style="font-size: 0.7rem; color: #64748B; text-transform: uppercase;">Drift Status</div>
+              <div id="silccie-drift-status" style="font-size: 1.25rem; font-weight: 800; color: #10B981; margin-top: 4px;">STABLE</div>
+            </div>
+            <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 10px;">
+              <div style="font-size: 0.7rem; color: #64748B; text-transform: uppercase;">Calibration Error (ECE)</div>
+              <div id="silccie-ece-score" style="font-size: 1.25rem; font-weight: 800; color: #38BDF8; margin-top: 4px;">0.0000</div>
+            </div>
+            <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 10px;">
+              <div style="font-size: 0.7rem; color: #64748B; text-transform: uppercase;">Brier Score</div>
+              <div id="silccie-brier-score" style="font-size: 1.25rem; font-weight: 800; color: #F59E0B; margin-top: 4px;">0.0000</div>
+            </div>
+          </div>
+
+          <div style="margin-top: 14px;">
+            <div style="font-size: 0.85rem; font-weight: 700; color: #E2E8F0; margin-bottom: 8px;">Learning Signals & Simulated Calibration Adjustments</div>
+            <div id="silccie-learning-container" style="display: flex; flex-direction: column; gap: 8px;">
+              <div style="font-size: 0.85rem; color: #64748B; padding: 12px; background: #0E1522; border-radius: 6px;">
+                No learning evaluation executed yet. Click Evaluate Model Health & Drift.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
     </main>
   </div>
 

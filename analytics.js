@@ -1423,6 +1423,53 @@ document.addEventListener('DOMContentLoaded', async () => {
           }
         };
         renderSDGRLE();
+
+        // Phase 9.8 SILCCIE Controller
+        const renderSILCCIE = async () => {
+          try {
+            const btnEvalHealth = document.getElementById('btn-evaluate-model-health');
+            if (btnEvalHealth) {
+              btnEvalHealth.addEventListener('click', async () => {
+                btnEvalHealth.textContent = 'Computing Learning Analytics...';
+                btnEvalHealth.disabled = true;
+                try {
+                  const res = await LokatorDB.strategicLearning.evaluateModelHealth('SDGRLE-1.0.0', 90);
+                  if (res && res.evaluation_id) {
+                    document.getElementById('silccie-health-score').textContent = Number(res.model_health_score || 0).toFixed(1) + ' / 100';
+                    document.getElementById('silccie-drift-status').textContent = res.drift_status || 'STABLE';
+                    document.getElementById('silccie-ece-score').textContent = Number(res.expected_calibration_error || 0).toFixed(4);
+                    document.getElementById('silccie-brier-score').textContent = Number(res.brier_score || 0).toFixed(4);
+
+                    const container = document.getElementById('silccie-learning-container');
+                    container.innerHTML = `
+                      <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 12px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                          <div style="font-weight: 700; color: #E2E8F0; font-size: 0.85rem;">
+                            <span style="color: #8B5CF6; margin-right: 6px;">EVAL-${String(res.evaluation_id).substring(0, 8)}</span> (Target: ${res.target_model_version})
+                          </div>
+                          <div style="font-size: 0.72rem; color: #94A3B8; margin-top: 4px;">
+                            Drift: ${res.drift_status} | ECE: ${Number(res.expected_calibration_error).toFixed(4)} | Causality: ${res.causality_label}
+                          </div>
+                        </div>
+                        <div style="text-align: right;">
+                          <span class="status-tag" style="background: rgba(139,92,246,0.2); color: #8B5CF6;">CALIBRATION_STABLE</span>
+                        </div>
+                      </div>
+                    `;
+                  }
+                } catch (e) {
+                  alert('Model health evaluation failed: ' + e.message);
+                } finally {
+                  btnEvalHealth.textContent = 'Evaluate Model Health & Drift';
+                  btnEvalHealth.disabled = false;
+                }
+              });
+            }
+          } catch (e) {
+            console.warn('SILCCIE initialization failed:', e.message);
+          }
+        };
+        renderSILCCIE();
       }
 
     } catch (err) {
