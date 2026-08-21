@@ -3294,7 +3294,114 @@
     }
   };
 
+  const strategicDecisionManager = {
+    async recordDecision(synthesisId, decisionType, rationale, expectedOutcome = null, targetMetric = 'SUPPLY_DEFICIT_REDUCTION', targetValue = 0.00, observationWindowDays = 14) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('record_strategic_decision', {
+          p_synthesis_id: synthesisId,
+          p_decision_type: decisionType,
+          p_rationale: rationale,
+          p_expected_outcome: expectedOutcome,
+          p_target_metric: targetMetric,
+          p_target_value: targetValue,
+          p_observation_window_days: observationWindowDays
+        });
+        if (error) throw error;
+        return data;
+      }
+      return { status: 'SUCCESS', synthesis_id: synthesisId, decision_type: decisionType };
+    },
+    async transitionDecision(decisionId, newState, notes = '') {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('transition_strategic_decision', {
+          p_decision_id: decisionId,
+          p_new_state: newState,
+          p_notes: notes
+        });
+        if (error) throw error;
+        return data;
+      }
+      return { status: 'SUCCESS', decision_id: decisionId, new_state: newState };
+    },
+    async createActionPlan(decisionId, objective, actionCategory = 'PROVIDER_ACQUISITION', recommendedAction = 'Initiate provider acquisition outreach', ownerTitle = 'Operations Lead', priority = 'P1', startDate = null, targetCompletionDate = null, expectedOutcome = null, successMetric = 'SUPPLY_DEFICIT_REDUCTION', targetValue = 0.00, notes = '') {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('create_strategic_action_plan', {
+          p_decision_id: decisionId,
+          p_objective: objective,
+          p_action_category: actionCategory,
+          p_recommended_action: recommendedAction,
+          p_owner_title: ownerTitle,
+          p_priority: priority,
+          p_start_date: startDate || new Date().toISOString().split('T')[0],
+          p_target_completion_date: targetCompletionDate,
+          p_expected_outcome: expectedOutcome,
+          p_success_metric: successMetric,
+          p_target_value: targetValue,
+          p_notes: notes
+        });
+        if (error) throw error;
+        return data;
+      }
+      return { status: 'SUCCESS', decision_id: decisionId, objective: objective };
+    },
+    async recordOutcome(actionPlanId, observedMetricValue, sampleSize = 0, uniqueSessions = 0, attributionNotes = 'Observed outcome in post-action observation window.') {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('record_strategic_outcome', {
+          p_action_plan_id: actionPlanId,
+          p_observed_metric_value: observedMetricValue,
+          p_sample_size: sampleSize,
+          p_unique_sessions: uniqueSessions,
+          p_attribution_notes: attributionNotes
+        });
+        if (error) throw error;
+        return data;
+      }
+      return { status: 'SUCCESS', action_plan_id: actionPlanId, observed_metric_value: observedMetricValue };
+    },
+    async getWorkbench(synthesisId) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('get_strategic_decision_workbench', {
+          p_synthesis_id: synthesisId
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        schema_version: '9.1.0',
+        opportunity: { id: synthesisId },
+        decisions: [],
+        action_plans: [],
+        outcomes: [],
+        audit_trail: []
+      };
+    },
+    async getPerformanceSummary() {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('get_strategic_decision_performance_summary');
+        if (error) throw error;
+        return data;
+      }
+      return {
+        schema_version: '9.1.0',
+        kpis: {
+          total_decisions: 0,
+          active_decisions: 0,
+          active_action_plans: 0,
+          decisions_awaiting_measurement: 0,
+          successful_interventions: 0,
+          underperforming_interventions: 0,
+          inconclusive_interventions: 0,
+          average_effectiveness_score: 0.0,
+          conversion_rate: 0.0
+        },
+        recent_decisions: [],
+        recent_action_plans: []
+      };
+    }
+  };
+
   LokatorDB.strategicCommand = strategicCommandManager;
+  LokatorDB.strategicDecision = strategicDecisionManager;
   LokatorDB.predictiveGrowth = predictiveGrowthManager;
   LokatorDB.growthIntelligence = growthIntelligenceManager;
   LokatorDB.realtimeGrowth = realtimeGrowthManager;

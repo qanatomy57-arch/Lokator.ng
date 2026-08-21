@@ -808,7 +808,60 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
           }
 
-          // 3. Regional Matrix
+          // 3. Strategic Decision Performance KPIs & Active Action Plans
+          if (LokatorDB.strategicDecision && typeof LokatorDB.strategicDecision.getPerformanceSummary === 'function') {
+            LokatorDB.strategicDecision.getPerformanceSummary().then(summary => {
+              if (!summary) return;
+              const kpis = summary.kpis || {};
+              const elActiveDec = document.getElementById('simcc-decision-stat-active');
+              const elPlans = document.getElementById('simcc-decision-stat-plans');
+              const elMeasuring = document.getElementById('simcc-decision-stat-measuring');
+              const elSuccessRate = document.getElementById('simcc-decision-stat-success-rate');
+
+              if (elActiveDec) elActiveDec.textContent = kpis.active_decisions || 0;
+              if (elPlans) elPlans.textContent = kpis.active_action_plans || 0;
+              if (elMeasuring) elMeasuring.textContent = kpis.decisions_awaiting_measurement || 0;
+              if (elSuccessRate) elSuccessRate.textContent = `${kpis.conversion_rate || 0}%`;
+
+              const plansContainer = document.getElementById('simcc-action-plans-container');
+              if (plansContainer) {
+                const plans = summary.recent_action_plans || [];
+                if (!plans || plans.length === 0) {
+                  plansContainer.innerHTML = `
+                    <div style="font-size: 0.82rem; color: #64748B; padding: 14px; background: #080D18; border-radius: 8px; text-align: center;">
+                      No active operational action plans. Select an opportunity above to record a decision and generate an action plan.
+                    </div>
+                  `;
+                } else {
+                  plansContainer.innerHTML = plans.map(p => `
+                    <div style="background: #0E1522; border: 1px solid rgba(255,255,255,0.06); border-radius: 6px; padding: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                      <div>
+                        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+                          <span style="font-size: 0.65rem; font-weight: 700; background: #312E81; color: #818CF8; padding: 2px 6px; border-radius: 4px;">
+                            ${p.priority || 'P1'}
+                          </span>
+                          <span style="font-size: 0.65rem; font-weight: 700; background: #064E3B; color: #34D399; padding: 2px 6px; border-radius: 4px;">
+                            ${p.plan_status || 'PLANNED'}
+                          </span>
+                          <span style="font-size: 0.8rem; font-weight: 700; color: #F1F5F9;">
+                            ${p.objective}
+                          </span>
+                        </div>
+                        <div style="font-size: 0.72rem; color: #94A3B8;">
+                          ${p.category} in ${p.lga}, ${p.state} | Target: ${p.target_value} | Due: ${p.target_completion_date}
+                        </div>
+                      </div>
+                      <span class="status-tag status-notice" style="font-size: 0.65rem;">
+                        MANUAL EXECUTION
+                      </span>
+                    </div>
+                  `).join('');
+                }
+              }
+            }).catch(e => console.warn('Failed to load strategic decision performance:', e.message));
+          }
+
+          // 4. Regional Matrix
           const regContainer = document.getElementById('simcc-regional-matrix-container');
           if (regContainer) {
             const rows = cc.regional_matrix || [];
