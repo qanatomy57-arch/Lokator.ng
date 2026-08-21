@@ -1,0 +1,63 @@
+{
+  "name": "Lokator.NG",
+  "short_name": "Lokator",
+  "description": "Nigeria-wide local service provider discovery marketplace. Locate verified plumbers, electricians, mechanics, tailors, and skilled artisans near you.",
+  "start_url": "/index.html",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#006B3F",
+  "background_color": "#0A0E17",
+  "categories": ["business", "utilities", "lifestyle"],
+  "lang": "en-NG",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Search Providers",
+      "short_name": "Search",
+      "description": "Find skilled artisans near you",
+      "url": "/search.html",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Provider Dashboard",
+      "short_name": "Dashboard",
+      "description": "Manage your artisan profile and leads",
+      "url": "/dashboard.html",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Register as Provider",
+      "short_name": "Register",
+      "description": "Join 18,000+ verified Nigerian artisans",
+      "url": "/register.html",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

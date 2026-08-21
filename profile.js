@@ -116,10 +116,29 @@ document.addEventListener('DOMContentLoaded', async () => {
   );
 
   const btnCallHero = document.getElementById('btn-call-hero');
-  if (btnCallHero) btnCallHero.href = `tel:${cleanPhone}`;
+  if (btnCallHero) {
+    btnCallHero.href = `tel:${cleanPhone}`;
+    btnCallHero.addEventListener('click', () => {
+      if (typeof LokatorTelemetry !== 'undefined') {
+        LokatorTelemetry.trackEvent('phone_clicked', { providerId: provider.id, trade: provider.trade, city: provider.city });
+      }
+    });
+  }
 
   const btnWaHero = document.getElementById('btn-wa-hero');
-  if (btnWaHero) btnWaHero.href = `https://wa.me/${cleanWa}?text=${initialWaMsg}`;
+  if (btnWaHero) {
+    btnWaHero.href = `https://wa.me/${cleanWa}?text=${initialWaMsg}`;
+    btnWaHero.addEventListener('click', () => {
+      if (typeof LokatorTelemetry !== 'undefined') {
+        LokatorTelemetry.trackEvent('whatsapp_clicked', { providerId: provider.id, trade: provider.trade, city: provider.city });
+      }
+    });
+  }
+
+  // Track profile view
+  if (typeof LokatorTelemetry !== 'undefined') {
+    LokatorTelemetry.trackEvent('provider_profile_viewed', { providerId: provider.id, trade: provider.trade, city: provider.city });
+  }
 
   // Share profile
   const btnShare = document.getElementById('btn-share-profile');

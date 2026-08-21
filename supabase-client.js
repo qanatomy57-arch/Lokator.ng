@@ -211,6 +211,10 @@
         userId: mutation.userId || null
       };
 
+      if (typeof LokatorTelemetry !== 'undefined') {
+        LokatorTelemetry.trackEvent('offline_action_queued', { type: mutation.type });
+      }
+
       const db = await this._getDb();
       if (db) {
         return new Promise((resolve) => {
@@ -537,8 +541,14 @@
 
       if (failedCount > 0) {
         notifyConnectionListeners('SYNC_FAILED', { synced: syncedCount, failed: failedCount });
+        if (typeof LokatorTelemetry !== 'undefined') {
+          LokatorTelemetry.trackEvent('offline_sync_failed', { failedCount, syncedCount });
+        }
       } else if (syncedCount > 0) {
         notifyConnectionListeners('SYNCED', { synced: syncedCount });
+        if (typeof LokatorTelemetry !== 'undefined') {
+          LokatorTelemetry.trackEvent('offline_sync_completed', { syncedCount });
+        }
         setTimeout(() => {
           if (connectionState === 'SYNCED') {
             notifyConnectionListeners('ONLINE');
@@ -599,7 +609,7 @@
     } catch (e) {}
   }
 
-  const STOP_WORDS = new Set(['my', 'a', 'an', 'the', 'to', 'in', 'at', 'and', 'or', 'of', 'for', 'with', 'on', 'me', 'you', 'is', 'it', 'do', 'i', 'we', 'be', 'so', 'can', 'somewhere', 'someone']);
+  const STOP_WORDS = new Set(['my', 'a', 'an', 'the', 'to', 'in', 'at', 'and', 'or', 'of', 'for', 'with', 'on', 'me', 'you', 'is', 'it', 'do', 'i', 'we', 'be', 'so', 'can', 'who', 'somewhere', 'someone', 'please', 'help', 'need', 'find']);
 
   // 3.1 NATURAL QUERY & SEARCH INTENT EXTRACTOR
   function parseSearchQuery(rawQuery) {
@@ -622,7 +632,7 @@
 
     // Strip conversational filler phrases
     const cleanQuery = q
-      .replace(/\b(?:i need|where can i find|looking for|someone to|somewhere to|a place to|how to find|best|top|near me|for my|to fix|to repair|to build|services?)\b/gi, ' ')
+      .replace(/\b(?:i need|where can i find|who can|looking for|someone to|somewhere to|a place to|how to find|best|top|near me|for my|to fix|to repair|to build|to sew|to clean|services?)\b/gi, ' ')
       .replace(/[^\w\s-]/g, ' ')
       .replace(/\s+/g, ' ')
       .trim();
@@ -854,6 +864,23 @@
       getUserSync() {
         const session = this.getSessionSync();
         return session && session.user ? session.user : null;
+      },
+
+      /**
+       * Internal test helper to simulate authenticated user synchronously
+       */
+      _setUserSync(user) {
+        if (!user) {
+          try { localStorage.removeItem(DB_AUTH_SESSION_KEY); } catch (e) {}
+          return;
+        }
+        const session = {
+          access_token: 'lokator_test_token_' + Date.now(),
+          token_type: 'bearer',
+          expires_in: 3600,
+          user: user
+        };
+        setLocalStore(DB_AUTH_SESSION_KEY, session);
       },
 
       /**
@@ -2427,7 +2454,7 @@
      */
     async compressImage(file, maxWidth = 800, maxHeight = 800, quality = 0.82) {
       if (!file) throw new Error('No image file provided');
-      if (typeof window === 'undefined' || typeof document === 'undefined') {
+      if (typeof window === 'undefined' || typeof document === 'undefined' || typeof FileReader === 'undefined') {
         // Node / test environment fallback
         return {
           dataUrl: typeof file === 'string' ? file : 'data:image/jpeg;base64,sample_compressed_image',
@@ -2499,8 +2526,8 @@
       }
 
       // Validate file size and MIME type
-      if (fileOrDataUrl instanceof File || (typeof Blob !== 'undefined' && fileOrDataUrl instanceof Blob)) {
-        if (fileOrDataUrl.size > 5 * 1024 * 1024) {
+      if (fileOrDataUrl && (typeof fileOrDataUrl === 'object' || (typeof File !== 'undefined' && fileOrDataUrl instanceof File) || (typeof Blob !== 'undefined' && fileOrDataUrl instanceof Blob))) {
+        if (fileOrDataUrl.size && fileOrDataUrl.size > 5 * 1024 * 1024) {
           throw new Error('File size exceeds maximum allowed limit of 5MB.');
         }
         const mimeType = (fileOrDataUrl.type || '').toLowerCase();

@@ -25,10 +25,18 @@
         'inverter',
         'solar',
         'generator',
+        'generator repair',
+        'generator repairer',
+        'generator technician',
+        'someone to fix my generator',
+        'fix my generator',
+        'fix my wiring',
         'rewiring',
         'conduit',
         'fault diagnosis',
-        'circuit'
+        'circuit',
+        'light fault',
+        'electrical fault'
       ]
     },
     {
@@ -56,7 +64,12 @@
         'borehole',
         'leak',
         'soakaway',
-        'bathroom fitting'
+        'bathroom fitting',
+        'someone to fix my pipe',
+        'fix my water heater',
+        'fix my pumping machine',
+        'plumbing repair',
+        'water leak'
       ]
     },
     {
@@ -86,7 +99,11 @@
         'lashes',
         'acrylic',
         'gel nails',
-        'esthetician'
+        'esthetician',
+        'fix my nails',
+        'nail technician near me',
+        'pedicure manicure',
+        'acrylic nails'
       ]
     },
     {
@@ -113,7 +130,12 @@
         'sewing',
         'native wear',
         'alterations',
-        'bespoke suits'
+        'bespoke suits',
+        'someone to sew my clothes',
+        'sew my clothes',
+        'make my agbada',
+        'tailoring services',
+        'bespoke tailor'
       ]
     },
     {
@@ -139,7 +161,13 @@
         'suspension',
         'computer diagnostics',
         'car',
-        'roadside rescue'
+        'roadside rescue',
+        'my car is broken down',
+        'car is broken down',
+        'fix my car',
+        'car breakdown',
+        'engine repair',
+        'car diagnostic'
       ]
     },
     {
@@ -192,7 +220,13 @@
         'fumigation',
         'laundry',
         'clean',
-        'home cleaning'
+        'home cleaning',
+        'someone to clean my house',
+        'clean my house',
+        'home cleaner',
+        'deep clean',
+        'housekeeper',
+        'house cleaning'
       ]
     },
     {
@@ -213,7 +247,11 @@
         'fades',
         'hair stylist',
         'beard grooming',
-        'hair'
+        'hair',
+        'barbing salon',
+        'celebrity barber',
+        'give me a haircut',
+        'haircut near me'
       ]
     },
     {
@@ -234,7 +272,9 @@
         'screeding',
         'wallpaper',
         'wall artist',
-        'wall panels'
+        'wall panels',
+        'paint my house',
+        'house painter'
       ]
     },
     {
@@ -256,7 +296,12 @@
         'gates',
         'burglar proof',
         'iron work',
-        'tank stands'
+        'tank stands',
+        'who can weld my gate',
+        'someone to weld my gate',
+        'weld my gate',
+        'iron gate repair',
+        'metal welding'
       ]
     },
     {
@@ -277,7 +322,21 @@
         'laptop repair',
         'screen replacement',
         'gadget',
-        'computer repair'
+        'computer repair',
+        'someone to repair my phone',
+        'repair my phone',
+        'fix my phone',
+        'my phone is faulty',
+        'phone is faulty',
+        'phone technician',
+        'phone engineer',
+        'my screen is broken',
+        'screen is broken',
+        'fix my iphone',
+        'fix my android',
+        'phone repairer',
+        'phone engineering',
+        'faulty phone'
       ]
     },
     {
@@ -299,7 +358,9 @@
         'baking',
         'cake',
         'small chops',
-        'party jollof'
+        'party jollof',
+        'event food',
+        'pastry'
       ]
     },
     {
@@ -319,6 +380,10 @@
         'photography',
         'photoshoot',
         'videographer',
+        'videography',
+        'photo studio',
+        'wedding photoshoot',
+        'portrait',
         'camera'
       ]
     },
@@ -403,7 +468,14 @@
         'refrigerator',
         'fridge',
         'cold room',
-        'hvac'
+        'hvac',
+        'my ac is not cooling',
+        'ac is not cooling',
+        'fix my ac',
+        'ac not blowing cold',
+        'fridge repairer',
+        'refrigerator repair',
+        'air condition repair'
       ]
     },
     {
@@ -592,7 +664,7 @@
       return SERVICE_CATEGORIES.find(c => c.dropdownValue.toLowerCase() === String(val).toLowerCase()) || null;
     },
 
-    // Resolve user input query (e.g. "plumber", "nail technician", "auto repair", "deep clean")
+    // Resolve user input query (e.g. "plumber", "nail technician", "auto repair", "deep clean", "someone to repair my phone")
     resolveQuery(query) {
       if (!query) return null;
       const q = String(query).toLowerCase().trim();
@@ -622,6 +694,23 @@
       );
       if (partialMatch) return partialMatch;
 
+      // 5. Conversational intent stripping match
+      const cleanIntent = q
+        .replace(/\b(?:i need|where can i find|who can|looking for|someone to|somewhere to|a place to|how to find|best|top|near me|for my|to fix|to repair|to build|to sew|to clean|my|is broken|is faulty|not working|not cooling|down)\b/gi, ' ')
+        .replace(/[^\w\s-]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      if (cleanIntent && cleanIntent !== q) {
+        const cleanSlug = cleanIntent.replace(/_/g, '-').replace(/\s+/g, '-');
+        const cleanDirect = this.getBySlug(cleanSlug) ||
+          SERVICE_CATEGORIES.find(c => 
+            c.name.toLowerCase() === cleanIntent ||
+            c.synonyms.some(syn => syn.toLowerCase() === cleanIntent || cleanIntent.includes(syn.toLowerCase()))
+          );
+        if (cleanDirect) return cleanDirect;
+      }
+
       return null;
     },
 
@@ -649,9 +738,14 @@
     }
   };
 
-  // Expose to global window
+  // Expose to global window / module
   global.SERVICE_CATEGORIES = SERVICE_CATEGORIES;
   global.CategoryMap = CategoryMap;
   global.ServiceModerator = ServiceModerator;
 
-})(typeof window !== 'undefined' ? window : this);
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { SERVICE_CATEGORIES, CategoryMap, ServiceModerator };
+  }
+
+})(typeof window !== 'undefined' ? window : (typeof global !== 'undefined' ? global : this));
+

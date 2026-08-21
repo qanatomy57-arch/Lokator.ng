@@ -1348,4 +1348,9 @@
   global.PROVIDERS_DATA = DEFAULT_PROVIDERS_DATA;
   global.ProviderStore = ProviderStore;
 
-})(typeof window !== 'undefined' ? window : this);
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { DEFAULT_PROVIDERS_DATA, ProviderStore, PROVIDERS_DATA: DEFAULT_PROVIDERS_DATA };
+  }
+
+})(typeof window !== 'undefined' ? window : (typeof global !== 'undefined' ? global : this));
+

@@ -238,6 +238,15 @@ document.addEventListener("DOMContentLoaded", () => {
       const userLng = state.userCoords ? state.userCoords.lng : null;
 
       // Query database via LokatorDB
+      if (typeof LokatorTelemetry !== 'undefined') {
+        LokatorTelemetry.trackEvent('search_submitted', {
+          category: categorySlug,
+          keyword: state.keyword,
+          city: loc,
+          verifiedOnly: state.verifiedOnly
+        });
+      }
+
       const result = await LokatorDB.getProviders({
         category: categorySlug,
         city: loc,
@@ -256,6 +265,14 @@ document.addEventListener("DOMContentLoaded", () => {
       state.isLoading = false;
       const providers = result.data || [];
       state.totalCount = result.totalCount || providers.length;
+
+      if (typeof LokatorTelemetry !== 'undefined') {
+        if (providers.length === 0) {
+          LokatorTelemetry.trackEvent('search_no_results', { query: state.keyword, category: categorySlug });
+        } else {
+          LokatorTelemetry.trackEvent('search_result_viewed', { totalCount: state.totalCount, page: state.page });
+        }
+      }
 
       // Offline Search Status Notice
       let offlineBanner = document.getElementById('search-offline-banner');
