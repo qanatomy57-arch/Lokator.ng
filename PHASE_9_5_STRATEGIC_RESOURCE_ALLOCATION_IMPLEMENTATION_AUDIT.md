@@ -1,5 +1,4 @@
-# LOKATOR.NG — PHASE 9.5 IMPLEMENTATION AUDIT
-## STRATEGIC RESOURCE ALLOCATION & CONSTRAINT OPTIMIZATION ENGINE (SRACOE)
+# LOKATOR.NG — PHASE 9.5 IMPLEMENTATION AUDIT: STRATEGIC RESOURCE ALLOCATION & CONSTRAINT OPTIMIZATION ENGINE (SRACOE)
 
 **Status:** GREEN  
 **Phase:** 9.5 Implementation  
@@ -8,7 +7,7 @@
 
 ---
 
-### 1. IMPLEMENTATION SUMMARY
+## 1. IMPLEMENTATION SUMMARY
 
 Phase 9.5 introduces the Strategic Resource Allocation & Constraint Optimization Engine (SRACOE), providing multi-dimensional, bounded, and deterministic resource allocation capabilities over the candidate strategic actions output by Phase 9.4.
 
@@ -22,30 +21,35 @@ Phase 9.5 introduces the Strategic Resource Allocation & Constraint Optimization
 
 ---
 
-### 2. INVARIANT VERIFICATION
+## 2. INVARIANT VERIFICATION
 
-#### A. RANKING AIR-GAP
+### 2.1 Ranking Air-Gap
+
 - **Status:** PASS (100% Isolated)
 - **Details:** `search.js` and `discovery-orchestrator.js` contain zero references, imports, or queries against `analytics_strategic_resource_*` tables or RPCs.
 
-#### B. BUSINESS TRUTH IMMUTABILITY
+### 2.2 Business Truth Immutability
+
 - **Status:** PASS (0 Mutations)
 - **Details:** Zero INSERT, UPDATE, or DELETE statements against `providers`, `reviews`, or `provider_services`.
 
-#### C. OBSERVATIONAL INTEGRITY (ACCEPTED != EXECUTED)
+### 2.3 Observational Integrity (Accepted != Executed)
+
 - **Status:** PASS
 - **Details:** UI badges explicitly display `DECISION_SUPPORT`, `SIMULATED`, and `MANUAL_ACTION_REQUIRED`. SRACOE operates strictly in an advisory capacity.
 
-#### D. DETERMINISTIC HEURISTIC
+### 2.4 Deterministic Heuristic
+
 - **Status:** PASS
 - **Details:** Multi-dimensional dominance knapsack sorting employs an exhaustive 6-level tie-breaker: `efficiency_class DESC`, `finite_efficiency DESC`, `adjusted_ev DESC`, `risk ASC`, `conf DESC`, `scenario_id ASC`.
 
-#### E. ZERO-RESOURCE & SENTINEL ARITHMETIC
+### 2.5 Zero-Resource & Sentinel Arithmetic
+
 - **Status:** PASS
 - **Details:** Composite resource ratio $\rho_i$ isolates zero-denominator cases into Sentinel Class 2, preventing division-by-zero, NaN, or Infinity.
 
 ---
 
-### 3. CONCLUSION
+## 3. CONCLUSION
 
 Phase 9.5 is structurally complete, mathematically sound, and fully implements the approved architecture specification.

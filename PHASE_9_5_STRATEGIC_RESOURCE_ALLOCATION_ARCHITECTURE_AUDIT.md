@@ -1,6 +1,4 @@
-# LOKATOR.NG — PHASE 9.5 ARCHITECTURE AUDIT
-# STRATEGIC RESOURCE ALLOCATION & CONSTRAINT OPTIMIZATION ENGINE (SRACOE)
-# READ-ONLY ARCHITECTURAL DESIGN GATE — NO IMPLEMENTATION
+# LOKATOR.NG — PHASE 9.5 ARCHITECTURE AUDIT: STRATEGIC RESOURCE ALLOCATION & CONSTRAINT OPTIMIZATION ENGINE (SRACOE)
 
 **Phase:** 9.5 Architecture Gate  
 **Engine:** Strategic Resource Allocation & Constraint Optimization Engine (SRACOE)  
@@ -15,6 +13,7 @@
 Phase 9.5 introduces the **Strategic Resource Allocation & Constraint Optimization Engine (SRACOE)** to Lokator.NG. SRACOE builds directly upon the Phase 9.4 Strategic Optimization & Portfolio Allocation Engine (SOPAE), providing executive decision-support for distributing multi-dimensional, finite resource envelopes (capital, operational bandwidth, personnel, campaign slots, geographic bounds, and execution time) across recommended strategic actions.
 
 SRACOE operates strictly in an advisory capacity:
+
 - **Decision Support Only:** Zero autonomous execution, zero webhook firing, zero provider mutations.
 - **Air-Gapped:** Live marketplace search ranking (`search.js`) and discovery orchestration (`discovery-orchestrator.js`) are 100% isolated from resource optimization computations.
 - **Deterministic:** Given identical inputs, resource envelopes, and model versions, the output allocation plan is mathematically reproducible.
@@ -26,7 +25,7 @@ SRACOE operates strictly in an advisory capacity:
 
 SRACOE is downstream from the certified Phase 9.0–9.4 intelligence stack:
 
-```
+```text
 [Phase 9.0: SIMCC Synthesis]
         │
         ▼
@@ -39,44 +38,20 @@ SRACOE is downstream from the certified Phase 9.0–9.4 intelligence stack:
 [Phase 9.3: Scenario Forecasting (SSFDS)]
         │
         ▼
-[Phase 9.4: Portfolio Optimization (SOPAE)]
+[Phase 9.4: Strategic Optimization (SOPAE)]
         │
-        ▼ (Consumes Optimized Portfolios & Candidate Allocations)
-[Phase 9.5: Resource Allocation & Constraint Optimization (SRACOE)]
-        │
-        ▼ (Downstream Advisory Only)
-[Executive Dashboard UI (analytics.html / analytics.js)]
+        ▼
+[Phase 9.5: Resource Allocation & Constraints (SRACOE)]
 ```
-
-- **Upstream Tables Consumed (Read-Only):**
-  - `analytics_strategic_optimization_portfolios`
-  - `analytics_strategic_optimization_allocations`
-  - `analytics_strategic_scenarios`
-  - `analytics_strategic_scenario_results`
-  - `analytics_strategic_scenario_inputs`
-- **Core Platform Isolation:**
-  - `providers`, `reviews`, `provider_services` remain 100% untouched.
 
 ---
 
-## 3. DATA FLOW ARCHITECTURE
+## 3. ENGINE OBJECTIVES
 
-```mermaid
-graph TD
-    A[Admin Request via SDK / UI] -->|p_portfolio_id, p_envelope, p_model_version| B[generate_strategic_resource_allocation RPC]
-    B -->|Verify auth.uid() & public.is_admin()| C{Access Gate}
-    C -->|Unauthorized| D[Raise 42501 Fail-Closed]
-    C -->|Authorized| E[Read Phase 9.4 Portfolio & Scenario Records]
-    E --> F[Resource Normalization & Validation Engine]
-    F --> G[Multi-Resource Knapsack Allocation Engine]
-    G --> H[Marginal Value & Shadow Price Evaluator]
-    H --> I[Sensitivity & Robustness Classifier]
-    I --> J[Resource Concentration Risk Engine]
-    J --> K[Persist to analytics_strategic_resource_plans]
-    K --> L[Persist to analytics_strategic_resource_allocations]
-    L --> M[Log Immutable Event to analytics_strategic_resource_audit_log]
-    M --> N[Return Executive Resource Allocation JSON]
-```
+1. **Multi-Constraint Optimization:** Solve simultaneous resource feasibility across 6 heterogeneous constraint dimensions.
+2. **Sentinel Arithmetic:** Guarantee zero division-by-zero, NaN, or Infinity through Sentinel Class 2 zero-resource handling.
+3. **Marginal Value & Shadow Pricing:** Provide mathematically sound marginal returns and binding constraint sensitivity.
+4. **Adversarial Resilience:** Maintain strict security boundaries, fail-closed authorization, and zero side-effects.
 
 ---
 
@@ -87,7 +62,7 @@ A Resource Envelope $\mathcal{E}$ represents a bounded multi-vector of organizat
 $$\mathcal{E} = \langle B_{\text{cap}}, K_{\text{ops}}, K_{\text{pers}}, K_{\text{camp}}, K_{\text{geo}}, K_{\text{time}} \rangle$$
 
 | Dimension | Identifier | Type | Lower Bound | Canonical Upper Bound | Description |
-|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- |
 | Capital Budget | `budget_capital` | `NUMERIC(12,2)` | `0.00` | `100,000,000.00` | Financial expenditure ceiling (₦ / €) |
 | Operational Units | `capacity_operations` | `NUMERIC(8,2)` | `0.00` | `10,000.00` | Onboarding / vetting bandwidth units |
 | Personnel Headcount | `capacity_personnel` | `INT` | `0` | `500` | Operations staff full-time equivalents |
@@ -100,6 +75,7 @@ $$\mathcal{E} = \langle B_{\text{cap}}, K_{\text{ops}}, K_{\text{pers}}, K_{\tex
 ## 5. MATHEMATICAL OPTIMIZATION MODEL
 
 ### 5.1 Objective Function
+
 For a set of $N$ candidate actions drawn from Phase 9.4 portfolio allocations ($i \in \{1, \dots, N\}$), let $x_i \in \{0, 1\}$ denote the binary selection indicator.
 
 Maximize total adjusted strategic value subject to resource penalties:
@@ -109,6 +85,7 @@ $$\max \mathcal{Z} = \sum_{i=1}^N x_i \cdot \text{AdjustedEV}_i \cdot \left(1 - 
 where $\omega_i \in [0.0, 0.5]$ is the risk discount factor (default $\omega_i = 0.10$).
 
 ### 5.2 Hard Resource Constraints
+
 A feasible allocation $X = (x_1, \dots, x_N)$ must satisfy all simultaneous resource bounds:
 
 $$\sum_{i=1}^N x_i \cdot c_{i, m} \le R_m \quad \forall m \in \{\text{cap}, \text{ops}, \text{pers}, \text{camp}, \text{geo}, \text{time}\}$$
@@ -144,6 +121,7 @@ To guarantee $O(M \cdot N \log N)$ computational safety and avoid $O(2^N)$ NP-ha
 ## 8. ZERO-RESOURCE & BOUNDARY MATHEMATICS
 
 To prevent Division-by-Zero, `NaN`, or `Infinity`:
+
 - When $\rho_i = 0$, no division is performed. Candidate $i$ is assigned `efficiency_class = 2` if $\text{AdjustedEV}_i > 0$, or `efficiency_class = 0` if $\text{AdjustedEV}_i = 0$.
 - Sentinel Class 2 ranks strictly above Class 1 ($E_i < \infty$), ensuring zero-resource actions with positive return are prioritized without numeric instability.
 
@@ -174,6 +152,7 @@ $$\lambda_m \approx \frac{\mathcal{Z}(R_m + \Delta R_m) - \mathcal{Z}(R_m)}{\Del
 ## 11. SENSITIVITY MODEL
 
 SRACOE simulates 4 standard deterministic perturbation scenarios:
+
 1. **Capital Contraction (-10% Budget):** Assesses vulnerability to budget cuts.
 2. **Capital Expansion (+10% Budget):** Identifies next-in-line strategic opportunities.
 3. **Capacity Shock (-20% Operational Bandwidth):** Tests operational resilience.
@@ -188,7 +167,7 @@ Let $\mathcal{J}(X, X_{\text{perturbed}})$ denote the Jaccard similarity index o
 $$\text{RobustnessIndex} = \frac{1}{4} \sum_{k=1}^4 \mathcal{J}(X, X^{(k)})$$
 
 | Robustness Index Range | Classification | Action Guidance |
-|---|---|---|
+| --- | --- | --- |
 | $[0.85, 1.00]$ | `ROBUST` | Highly stable under operational variations |
 | $[0.65, 0.85)$ | `STABLE` | Minor allocation shifts under severe shocks |
 | $[0.40, 0.65)$ | `SENSITIVE` | Sensitive to budget or capacity changes |
@@ -211,6 +190,7 @@ $$R_{\text{resource}} = 0.35 \cdot \text{ConcentrationRisk} + 0.35 \cdot \text{C
 ## 14. DETERMINISM PROOF
 
 SRACOE strictly eliminates non-deterministic execution paths:
+
 1. Candidate Ordering uses an exhaustive 6-key tie-breaker:
    `efficiency_class DESC`, `finite_efficiency DESC`, `adjusted_ev DESC`, `risk ASC`, `conf DESC`, `scenario_id ASC`.
 2. Dynamic Knapsack iteration follows deterministic single-pass loops.
@@ -287,7 +267,7 @@ SRACOE strictly eliminates non-deterministic execution paths:
 ## 23. THREAT MODEL & MITIGATION MATRIX
 
 | Threat ID | Threat Vector | Mitigation Strategy |
-|---|---|---|
+| --- | --- | --- |
 | T-01 | Division by zero on zero-resource candidate | Sentinel Class 2 classification isolates zero-denominator cases |
 | T-02 | Negative resource envelope injection | Strict `R_m >= 0` check; returns `ERRCODE 22023` on negative inputs |
 | T-03 | Search path hijacking in SECURITY DEFINER RPC | Fixed `SET search_path = public, extensions, pg_temp;` |
@@ -413,6 +393,7 @@ SET search_path = public, extensions, pg_temp;
 ## 26. TEST STRATEGY
 
 When authorized, implementation testing will feature 4 zero-dependency, self-contained suites:
+
 1. **Unit Test Suite (`scratch/test_phase95_strategic_resource_allocation.js`):** Schema verification, multi-constraint boundary checking, sentinel class zero-resource math, and tie-breaking determinism (80+ assertions).
 2. **Adversarial Security Suite (`scratch/test_phase95b_adversarial_security.js`):** Unauthenticated fail-closed gates, negative budget rejection, SQLi resistance, ranking air-gap validation, and business truth immutability (30+ assertions).
 3. **Live Verification Suite (`scratch/test_phase95c_live_verification.js`):** Production HTTP endpoints and Supabase REST RPC authorization checks.
@@ -423,6 +404,7 @@ When authorized, implementation testing will feature 4 zero-dependency, self-con
 ## 27. ROLLBACK STRATEGY
 
 Should rollback be required:
+
 1. Revert `analytics.html`, `analytics.js`, and `supabase-client.js` to commit `803df6b`.
 2. Execute teardown script dropping `analytics_strategic_resource_*` tables and RPCs.
 3. Verify zero impact on Phase 9.0–9.4 tables or core platform operations.
