@@ -350,8 +350,15 @@
           const password = passwordInput.value;
 
           if (!email || !password) {
+            if (typeof LokatorTelemetry !== 'undefined') {
+              LokatorTelemetry.trackEvent('provider_login_failed', { reason: 'validation', method: 'password' });
+            }
             showAlert('Please enter both your email and password.');
             return;
+          }
+
+          if (typeof LokatorTelemetry !== 'undefined') {
+            LokatorTelemetry.trackEvent('provider_login_submitted', { method: 'password' });
           }
 
           submitBtn.disabled = true;
@@ -360,10 +367,20 @@
           try {
             const res = await LokatorDB.auth.signInWithPassword({ email, password });
             if (res.error) {
+              if (typeof LokatorTelemetry !== 'undefined') {
+                const coarseReason = (res.error.message && res.error.message.toLowerCase().includes('network'))
+                  ? 'network'
+                  : 'authentication';
+                LokatorTelemetry.trackEvent('provider_login_failed', { reason: coarseReason, method: 'password' });
+              }
               showAlert(res.error.message || 'Login failed. Please verify your credentials.');
               submitBtn.disabled = false;
               submitBtn.textContent = 'Sign In to Dashboard';
               return;
+            }
+
+            if (typeof LokatorTelemetry !== 'undefined') {
+              LokatorTelemetry.trackEvent('provider_login_succeeded', { method: 'password' });
             }
 
             showAlert('Login successful! Redirecting to Dashboard...', false);
@@ -371,6 +388,9 @@
               window.location.href = 'dashboard.html';
             }, 600);
           } catch (err) {
+            if (typeof LokatorTelemetry !== 'undefined') {
+              LokatorTelemetry.trackEvent('provider_login_failed', { reason: 'unknown', method: 'password' });
+            }
             showAlert(err.message || 'An unexpected error occurred during login.');
             submitBtn.disabled = false;
             submitBtn.textContent = 'Sign In to Dashboard';
@@ -383,13 +403,22 @@
         btn.addEventListener('click', async () => {
           const pid = btn.dataset.providerId;
           btn.style.opacity = '0.6';
+          if (typeof LokatorTelemetry !== 'undefined') {
+            LokatorTelemetry.trackEvent('provider_login_submitted', { method: 'demo' });
+          }
           showAlert(`Signing in as Demo Provider #${pid}...`, false);
           try {
             await LokatorDB.auth.demoLogin(pid);
+            if (typeof LokatorTelemetry !== 'undefined') {
+              LokatorTelemetry.trackEvent('provider_login_succeeded', { method: 'demo' });
+            }
             setTimeout(() => {
               window.location.href = 'dashboard.html';
             }, 400);
           } catch (err) {
+            if (typeof LokatorTelemetry !== 'undefined') {
+              LokatorTelemetry.trackEvent('provider_login_failed', { reason: 'authentication', method: 'demo' });
+            }
             showAlert('Demo sign-in error: ' + err.message);
             btn.style.opacity = '1';
           }

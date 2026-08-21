@@ -545,10 +545,24 @@ document.addEventListener("DOMContentLoaded", () => {
   if (categorySelect) {
     categorySelect.addEventListener("change", (e) => {
       state.category = e.target.value;
+      if (typeof LokatorTelemetry !== 'undefined' && e.target.value !== 'all') {
+        const canonicalCat = (typeof CategoryMap !== 'undefined' && CategoryMap.resolveQuery)
+          ? CategoryMap.resolveQuery(e.target.value)
+          : e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        LokatorTelemetry.trackEvent('category_browse_clicked', { category: canonicalCat, source: 'search_filter' });
+      }
       state.page = 1;
       render();
     });
   }
+
+  // Registration CTA click tracker
+  document.addEventListener('click', (e) => {
+    const cta = e.target.closest('a[href*="register.html"]');
+    if (cta && typeof LokatorTelemetry !== 'undefined') {
+      LokatorTelemetry.trackEvent('registration_cta_clicked', { source: 'search_page' });
+    }
+  });
 
   if (citySelect) {
     citySelect.addEventListener("change", (e) => {

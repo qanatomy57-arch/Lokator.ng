@@ -145,6 +145,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       try {
         const res = await LokatorDB.updateProviderAvailability(currentProvider.id, isOnline);
         currentProvider.isAvailable = isOnline;
+        if (typeof LokatorTelemetry !== 'undefined') {
+          LokatorTelemetry.trackEvent('provider_availability_toggled', { is_available: isOnline });
+        }
         if (res && res.status === 'OFFLINE_PENDING') {
           showToast(res.message, 'info');
         } else if (res && res.status === 'REMOTE_FAILURE') {
@@ -556,6 +559,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       try {
         const res = await LokatorDB.updateProviderServices(currentProvider.id, dashSkills);
         currentProvider = res.data || res;
+        if (typeof LokatorTelemetry !== 'undefined') {
+          LokatorTelemetry.trackEvent('provider_services_updated', { total_skills: dashSkills.length });
+        }
         if (res && res.status === 'OFFLINE_PENDING') {
           showToast(res.message, 'info');
         } else if (res && res.status === 'REMOTE_FAILURE') {
@@ -631,6 +637,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       try {
         currentProvider.pricingGuide = updatedPricing;
         const res = await LokatorDB.updateProviderProfile(currentProvider.id, { pricingGuide: updatedPricing });
+        if (typeof LokatorTelemetry !== 'undefined') {
+          LokatorTelemetry.trackEvent('provider_pricing_updated', { total_items: updatedPricing.length });
+        }
         if (res && res.status === 'OFFLINE_PENDING') {
           showToast(res.message, 'info');
         } else if (res && res.status === 'REMOTE_FAILURE') {
@@ -674,6 +683,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       try {
         const res = await LokatorDB.updateProviderWorkingHours(currentProvider.id, hoursData);
         currentProvider.workingHours = hoursData;
+        if (typeof LokatorTelemetry !== 'undefined') {
+          LokatorTelemetry.trackEvent('provider_hours_updated', {
+            has_weekday: Boolean(hoursData.weekday),
+            has_weekend: Boolean(hoursData.saturday || hoursData.sunday)
+          });
+        }
         if (res && res.status === 'OFFLINE_PENDING') {
           showToast(res.message, 'info');
         } else if (res && res.status === 'REMOTE_FAILURE') {
@@ -758,6 +773,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!currentProvider.portfolio) currentProvider.portfolio = [];
         currentProvider.portfolio.unshift(newItem);
         renderPortfolio();
+        if (typeof LokatorTelemetry !== 'undefined') {
+          const canonicalCat = (typeof CategoryMap !== 'undefined' && CategoryMap.resolveQuery)
+            ? CategoryMap.resolveQuery(category)
+            : 'trade';
+          LokatorTelemetry.trackEvent('provider_portfolio_uploaded', { category: canonicalCat });
+        }
         modalPortfolio.style.display = 'none';
         formAddPort.reset();
         if (res && res.status === 'OFFLINE_PENDING') {

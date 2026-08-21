@@ -628,7 +628,36 @@ async function loadDynamicTopProviders() {
 }
 
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', loadDynamicTopProviders);
+  document.addEventListener('DOMContentLoaded', () => {
+    loadDynamicTopProviders();
+    setupFunnelTelemetryListeners();
+  });
 } else {
   loadDynamicTopProviders();
+  setupFunnelTelemetryListeners();
+}
+
+function setupFunnelTelemetryListeners() {
+  // Category browse clicks on homepage
+  document.querySelectorAll('.cat-item').forEach(cat => {
+    cat.addEventListener('click', () => {
+      if (typeof LokatorTelemetry !== 'undefined') {
+        const href = cat.getAttribute('href') || '';
+        const catSlug = href.includes('service=') ? href.split('service=')[1].split('&')[0] : 'all';
+        LokatorTelemetry.trackEvent('category_browse_clicked', {
+          category: catSlug,
+          source: 'home_categories'
+        });
+      }
+    });
+  });
+
+  // Registration CTA clicks on homepage
+  document.querySelectorAll('a[href*="register.html"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (typeof LokatorTelemetry !== 'undefined') {
+        LokatorTelemetry.trackEvent('registration_cta_clicked', { source: 'home_page' });
+      }
+    });
+  });
 }

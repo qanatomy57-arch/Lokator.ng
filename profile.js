@@ -410,6 +410,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       const res = await LokatorDB.submitReview(providerId, reviewData);
       
+      if (typeof LokatorTelemetry !== 'undefined') {
+        LokatorTelemetry.trackEvent('provider_review_submitted', {
+          rating: selectedRating,
+          page: 'profile'
+        });
+      }
+
       // Update local provider object
       if (!provider.reviews) provider.reviews = [];
       provider.reviews.unshift({
@@ -433,6 +440,16 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
       reviewModal.classList.remove('active');
       reviewModal.setAttribute('aria-hidden', 'true');
+    });
+  }
+
+  // Registration CTA listener
+  const navRegister = document.getElementById('nav-register');
+  if (navRegister) {
+    navRegister.addEventListener('click', () => {
+      if (typeof LokatorTelemetry !== 'undefined') {
+        LokatorTelemetry.trackEvent('registration_cta_clicked', { source: 'profile_navbar' });
+      }
     });
   }
 

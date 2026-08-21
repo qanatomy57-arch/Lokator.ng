@@ -389,6 +389,9 @@
         const validation = ServiceModerator.validateSkill(clean);
         if (!validation.valid) {
           showModerationError(validation.error || 'Disallowed service keyword detected. Lokator only lists verified, legal trade services.');
+          if (typeof LokatorTelemetry !== 'undefined') {
+            LokatorTelemetry.trackEvent('provider_registration_validation_failed', { reason: 'moderation_rejected' });
+          }
           return;
         }
       }
@@ -398,6 +401,12 @@
       if (!providerSkills.some(s => s.toLowerCase() === clean.toLowerCase())) {
         providerSkills.push(clean);
         renderChips();
+        if (typeof LokatorTelemetry !== 'undefined') {
+          const canonicalSlug = (typeof CategoryMap !== 'undefined' && CategoryMap.resolveQuery)
+            ? CategoryMap.resolveQuery(clean)
+            : clean.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+          LokatorTelemetry.trackEvent('provider_skill_selected', { trade_slug: canonicalSlug });
+        }
       }
       if (skillInput) skillInput.value = '';
     }
@@ -407,15 +416,31 @@
       renderChips();
     }
 
+    // Funnel: Track registration form started (once per session)
+    let registrationStartedTracked = false;
+    function trackRegStarted() {
+      if (!registrationStartedTracked && typeof LokatorTelemetry !== 'undefined') {
+        registrationStartedTracked = true;
+        LokatorTelemetry.trackEvent('provider_registration_started', { form: 'artisan_register' });
+      }
+    }
+
+    const regFormEl = document.getElementById('reg-form');
+    if (regFormEl) {
+      regFormEl.addEventListener('focusin', trackRegStarted, { once: true });
+    }
+
     if (btnAddSkill && skillInput) {
       btnAddSkill.addEventListener('click', (e) => {
         e.preventDefault();
+        trackRegStarted();
         addSkill(skillInput.value.trim());
       });
 
       skillInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ',') {
           e.preventDefault();
+          trackRegStarted();
           addSkill(skillInput.value.trim());
         }
       });
@@ -440,6 +465,7 @@
       popularHints.addEventListener('click', (e) => {
         const pill = e.target.closest('.popular-skill-pill');
         if (pill && pill.dataset.skill) {
+          trackRegStarted();
           addSkill(pill.dataset.skill);
         }
       });
@@ -556,6 +582,9 @@
 
         if (providerSkills.length === 0) {
           showModerationError('Please add at least one approved skill or service you provide.');
+          if (typeof LokatorTelemetry !== 'undefined') {
+            LokatorTelemetry.trackEvent('provider_registration_validation_failed', { reason: 'missing_skills' });
+          }
           if (skillInput) skillInput.focus();
           return;
         }
@@ -564,8 +593,18 @@
         const password = document.getElementById('password') ? document.getElementById('password').value : '';
 
         if (!email || !password || password.length < 6) {
+          if (typeof LokatorTelemetry !== 'undefined') {
+            LokatorTelemetry.trackEvent('provider_registration_validation_failed', { reason: 'short_password' });
+          }
           alert('Please provide a valid email and a password of at least 6 characters.');
           return;
+        }
+
+        if (typeof LokatorTelemetry !== 'undefined') {
+          LokatorTelemetry.trackEvent('provider_registration_submitted', {
+            trade_count: providerSkills.length,
+            has_avatar: Boolean(uploadedAvatarData)
+          });
         }
 
         const btn = document.getElementById('submit-btn');
@@ -612,6 +651,13 @@
           const registered = (authRes.data && authRes.data.provider) || await LokatorDB.registerProvider(formData);
           const serviceSlug = registered.primary_category_slug || encodeURIComponent(primarySkill);
           
+          if (typeof LokatorTelemetry !== 'undefined') {
+            LokatorTelemetry.trackEvent('provider_registration_succeeded', {
+              trade_slug: serviceSlug,
+              has_location: Boolean(userCoords)
+            });
+          }
+
           form.innerHTML = `
             <div class="success-msg" style="text-align: center; padding: 24px;">
               <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#006B3F" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="16 8 10 16 7 13"/></svg>
