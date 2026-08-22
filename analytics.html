@@ -1213,6 +1213,53 @@
         </div>
       </section>
 
+      <!-- Phase 10.4 Strategic Demand Forecasting Engine (SDFE) -->
+      <section>
+        <div class="section-title">Phase 10.4: Strategic Demand Forecasting (SDFE)</div>
+        <div class="card" style="margin-bottom: 24px; border-left: 4px solid #EC4899;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div style="font-size: 0.85rem; color: #94A3B8;">
+              <span class="status-tag" style="background: rgba(236,72,153,0.2); color: #EC4899; margin-right: 8px;">DEMAND_FORECASTING</span>
+              <span class="status-tag" style="background: rgba(16,185,129,0.2); color: #10B981; margin-right: 8px;">BALANCED</span>
+              <span class="status-tag" style="background: rgba(239,68,68,0.2); color: #EF4444; margin-right: 8px;">DECISION_SUPPORT</span>
+            </div>
+            <button id="btn-generate-demand-fc" class="btn-action" style="padding: 4px 10px; font-size: 0.75rem; background: #EC4899; color: #FFFFFF; font-weight: 700;">Forecast Strategic Demand</button>
+          </div>
+
+          <div style="font-size: 0.75rem; color: #64748B; margin-bottom: 14px;">
+            Multi-horizon strategic demand forecasting, category & geographic distribution analysis, volatility classification, and demand-to-capacity gap detection.
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 14px;">
+            <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 10px;">
+              <div style="font-size: 0.7rem; color: #64748B; text-transform: uppercase;">Demand Gap Tier</div>
+              <div id="sdfe-gap-tier" style="font-size: 1.25rem; font-weight: 800; color: #10B981; margin-top: 4px;">BALANCED</div>
+            </div>
+            <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 10px;">
+              <div style="font-size: 0.7rem; color: #64748B; text-transform: uppercase;">Projected Demand</div>
+              <div id="sdfe-projected-demand" style="font-size: 1.25rem; font-weight: 800; color: #38BDF8; margin-top: 4px;">380k</div>
+            </div>
+            <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 10px;">
+              <div style="font-size: 0.7rem; color: #64748B; text-transform: uppercase;">Volatility Tier</div>
+              <div id="sdfe-volatility-tier" style="font-size: 1.25rem; font-weight: 800; color: #F59E0B; margin-top: 4px;">WATCH</div>
+            </div>
+            <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 10px;">
+              <div style="font-size: 0.7rem; color: #64748B; text-transform: uppercase;">Confidence Score</div>
+              <div id="sdfe-confidence-score" style="font-size: 1.25rem; font-weight: 800; color: #EC4899; margin-top: 4px;">89.50%</div>
+            </div>
+          </div>
+
+          <div style="margin-top: 14px;">
+            <div style="font-size: 0.85rem; font-weight: 700; color: #E2E8F0; margin-bottom: 8px;">Executive Demand Intelligence Brief & Signals</div>
+            <div id="sdfe-forecast-container" style="display: flex; flex-direction: column; gap: 8px;">
+              <div style="font-size: 0.85rem; color: #64748B; padding: 12px; background: #0E1522; border-radius: 6px;">
+                No demand forecast generated yet. Click Forecast Strategic Demand.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
     </main>
   </div>
 

@@ -4418,6 +4418,80 @@
     }
   };
 
+  // Phase 10.4: Strategic Demand Forecasting Engine (SDFE)
+  const strategicDemandManager = {
+    async createDemandBaseline(planId, category = 'Health & Medical', state = 'Lagos', modelVersion = 'SDFE-1.0.0') {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('create_strategic_demand_baseline', {
+          p_plan_id: planId,
+          p_category: category,
+          p_state: state,
+          p_model_version: modelVersion
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        success: true,
+        baseline_id: '00000000-0000-0000-0000-000000000000',
+        baseline_code: 'DEM-20260822-MOCK01',
+        baseline_digest: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+        category: category,
+        state: state,
+        observed_volume: 320000.00,
+        demand_growth_pct: 18.50,
+        volatility_tier: 'WATCH',
+        status: 'DEMAND_BASELINE_FROZEN'
+      };
+    },
+
+    async generateDemandForecast(baselineId, horizon = 'MEDIUM_TERM', modelVersion = 'SDFE-1.0.0') {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('generate_demand_forecast', {
+          p_baseline_id: baselineId,
+          p_planning_horizon: horizon,
+          p_model_version: modelVersion
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        success: true,
+        forecast_id: '00000000-0000-0000-0000-000000000000',
+        baseline_id: baselineId,
+        planning_horizon: horizon,
+        projected_demand: 380000.00,
+        demand_lower_bound: 350000.00,
+        demand_upper_bound: 410000.00,
+        demand_gap_tier: 'BALANCED',
+        confidence_score: 89.50,
+        guidance: 'DECISION_SUPPORT — MANUAL_ACTION_REQUIRED'
+      };
+    },
+
+    async getDemandReport(baselineId) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('get_strategic_demand_report', {
+          p_baseline_id: baselineId
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        success: true,
+        baseline_id: baselineId,
+        baseline_code: 'DEM-20260822-MOCK01',
+        category: 'Health & Medical',
+        state: 'Lagos',
+        observed_volume: 320000.00,
+        demand_growth_pct: 18.50,
+        volatility_tier: 'WATCH',
+        baseline_digest: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+        forecasts: []
+      };
+    }
+  };
+
   LokatorDB.strategicCommand = strategicCommandManager;
   LokatorDB.strategicDecision = strategicDecisionManager;
   LokatorDB.strategicOrchestration = strategicOrchestrationManager;
@@ -4432,6 +4506,7 @@
   LokatorDB.strategicPlanning = strategicPlanningManager;
   LokatorDB.strategicMonitoring = strategicMonitoringManager;
   LokatorDB.strategicCapacity = strategicCapacityManager;
+  LokatorDB.strategicDemand = strategicDemandManager;
   LokatorDB.predictiveGrowth = predictiveGrowthManager;
   LokatorDB.growthIntelligence = growthIntelligenceManager;
   LokatorDB.realtimeGrowth = realtimeGrowthManager;

@@ -1723,6 +1723,56 @@ document.addEventListener('DOMContentLoaded', async () => {
           }
         };
         renderSCFFRPE();
+
+        // Phase 10.4 SDFE Controller
+        const renderSDFE = async () => {
+          try {
+            const btnGenDemandFc = document.getElementById('btn-generate-demand-fc');
+            if (btnGenDemandFc) {
+              btnGenDemandFc.addEventListener('click', async () => {
+                btnGenDemandFc.textContent = 'Forecasting Strategic Demand...';
+                btnGenDemandFc.disabled = true;
+                try {
+                  const res = await LokatorDB.strategicDemand.generateDemandForecast(
+                    '00000000-0000-0000-0000-000000000000',
+                    'MEDIUM_TERM'
+                  );
+                  if (res && res.forecast_id) {
+                    document.getElementById('sdfe-gap-tier').textContent = res.demand_gap_tier || 'BALANCED';
+                    document.getElementById('sdfe-projected-demand').textContent = Number(res.projected_demand / 1000).toFixed(0) + 'k';
+                    document.getElementById('sdfe-volatility-tier').textContent = 'WATCH';
+                    document.getElementById('sdfe-confidence-score').textContent = Number(res.confidence_score || 89.5).toFixed(2) + '%';
+
+                    const container = document.getElementById('sdfe-forecast-container');
+                    container.innerHTML = `
+                      <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 12px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                          <div style="font-weight: 700; color: #E2E8F0; font-size: 0.85rem;">
+                            <span style="color: #EC4899; margin-right: 6px;">${res.planning_horizon}</span> (Demand: NGN ${Number(res.projected_demand).toLocaleString()})
+                          </div>
+                          <div style="font-size: 0.72rem; color: #94A3B8; margin-top: 4px;">
+                            Gap Tier: ${res.demand_gap_tier} | Bounds: [NGN ${Number(res.demand_lower_bound).toLocaleString()} - ${Number(res.demand_upper_bound).toLocaleString()}] | Confidence: ${res.confidence_score}%
+                          </div>
+                        </div>
+                        <div style="text-align: right;">
+                          <span class="status-tag" style="background: rgba(236,72,153,0.2); color: #EC4899;">DEMAND_FORECAST_ACTIVE</span>
+                        </div>
+                      </div>
+                    `;
+                  }
+                } catch (e) {
+                  alert('Demand forecasting failed: ' + e.message);
+                } finally {
+                  btnGenDemandFc.textContent = 'Forecast Strategic Demand';
+                  btnGenDemandFc.disabled = false;
+                }
+              });
+            }
+          } catch (e) {
+            console.warn('SDFE initialization failed:', e.message);
+          }
+        };
+        renderSDFE();
       }
 
     } catch (err) {
