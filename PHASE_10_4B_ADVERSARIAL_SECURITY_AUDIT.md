@@ -10,7 +10,7 @@
 ## 1. PENETRATION TEST VECTOR COVERAGE
 
 | Threat Vector | Attack Scenario | Defensive Control | Result |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | **Anonymous Access** | Unauthenticated REST/RPC query against `analytics_strategic_demand_baselines` | `REVOKE ALL FROM PUBLIC, anon;` and server-side `is_admin()` gate | REJECTED (HTTP 401/42501) |
 | **Privilege Escalation** | Authenticated non-admin JWT calling `create_strategic_demand_baseline` | `public.is_admin()` server-side enforcement | BLOCKED (ERRCODE 42501) |
 | **Identity Spoofing** | Caller passing spoofed `p_created_by` parameter | RPC strictly derives actor identity from `auth.uid()` | PREVENTED |

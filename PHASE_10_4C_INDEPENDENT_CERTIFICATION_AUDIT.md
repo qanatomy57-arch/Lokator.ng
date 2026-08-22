@@ -1,4 +1,5 @@
 # LOKATOR.NG — PHASE 10.4C INDEPENDENT CERTIFICATION AUDIT
+
 ## STRATEGIC DEMAND FORECASTING ENGINE (SDFE)
 
 **Engine:** Strategic Demand Forecasting Engine (SDFE)  
@@ -12,7 +13,7 @@
 ## 1. INDEPENDENT VERIFICATION MATRIX
 
 | Certification Dimension | Requirements & Safeguards | Status | Score |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | **Phase 10.4 Unit Tests** | Demand baseline creation, multi-horizon forecasts, 5 volatility tiers, gap classification, bounded scenarios, signals, 12-section brief | PASS | 51 / 51 PASS |
 | **Phase 10.4B Adversarial Security** | RLS enforcement, public.is_admin() server gate, search_path pinning, immutability, zero-denominator guards, inverted bounds rejection | PASS | 32 / 32 PASS |
 | **Phase 10.4C Live Verification** | Production endpoint availability, RPC fail-closed security, SDK export verification | PASS | 8 / 8 PASS |
