@@ -207,6 +207,11 @@
       <!-- RIGHT RESULTS AREA -->
       <main class="results-main">
         
+        <!-- Phase 10.9: Marketplace Discovery Breadcrumbs Bar -->
+        <nav class="marketplace-breadcrumbs-nav" id="marketplace-breadcrumbs" aria-label="Breadcrumbs">
+          <!-- Injected via JavaScript -->
+        </nav>
+
         <!-- Results Bar: count & sort -->
         <div class="results-toolbar">
           <div class="results-count-wrap">
@@ -239,11 +244,12 @@
           <!-- Dynamic JS Injection of Provider Cards -->
         </div>
 
-        <!-- Empty State (Hidden by default) -->
+        <!-- Empty State (Hidden by default, with Phase 10.9 Intelligent Recovery) -->
         <div class="empty-results-state" id="empty-state">
           <div class="empty-icon">🔍</div>
-          <h3>No providers match your search</h3>
-          <p>Try widening your distance radius, changing your city, or selecting a different service.</p>
+          <h3 id="empty-title">No providers match your search</h3>
+          <p id="empty-subtitle">Try widening your distance radius, changing your city, or selecting a different service.</p>
+          <div id="zero-result-suggestions" class="zero-result-suggestions-wrap"></div>
           <button class="btn btn-primary" id="clear-all-empty-btn">Reset All Filters</button>
         </div>
 

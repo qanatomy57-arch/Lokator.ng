@@ -22,8 +22,7 @@
         'electrical',
         'electrical services',
         'wiring',
-        'inverter',
-        'solar',
+        'house wiring',
         'generator',
         'generator repair',
         'generator repairer',
@@ -270,6 +269,9 @@
         'painters',
         'painting',
         'screeding',
+        'pop',
+        'pop ceiling',
+        'pop installation',
         'wallpaper',
         'wall artist',
         'wall panels',
@@ -444,6 +446,10 @@
         'inverter',
         'solar engineer',
         'solar panel',
+        'solar panel installation',
+        'solar installation',
+        'inverter technician',
+        'inverter installation',
         'battery storage',
         'solar technician'
       ]
@@ -869,6 +875,282 @@
         });
       });
       return skills;
+    },
+
+    // Phase 10.9: Governed Related Skills Graph (Offline/Client in-memory resolution)
+    relationships: {
+      'solar-installer': [
+        { id: 'inverter-technician', name: 'Inverter Technician', icon: '🔋', type: 'COMPLEMENTARY', strength: 0.95 },
+        { id: 'electrician', name: 'Electrician', icon: '⚡', type: 'COMPLEMENTARY', strength: 0.90 },
+        { id: 'generator-technician', name: 'Generator Technician', icon: '⚙️', type: 'SUBSTITUTE', strength: 0.80 }
+      ],
+      'electrician': [
+        { id: 'generator-technician', name: 'Generator Technician', icon: '⚙️', type: 'COMPLEMENTARY', strength: 0.85 },
+        { id: 'solar-installer', name: 'Solar Installer', icon: '☀️', type: 'COMPLEMENTARY', strength: 0.90 },
+        { id: 'cctv-installer', name: 'CCTV Installer', icon: '📹', type: 'COMPLEMENTARY', strength: 0.80 }
+      ],
+      'plumber': [
+        { id: 'borehole-technician', name: 'Borehole Specialist', icon: '💧', type: 'COMPLEMENTARY', strength: 0.95 },
+        { id: 'tiler', name: 'Tiler', icon: '🧱', type: 'COMPLEMENTARY', strength: 0.85 }
+      ],
+      'mechanic': [
+        { id: 'auto-electrician', name: 'Auto Rewire / Electrician', icon: '⚡', type: 'COMPLEMENTARY', strength: 0.95 },
+        { id: 'auto-ac-technician', name: 'Auto AC Technician', icon: '❄️', type: 'COMPLEMENTARY', strength: 0.90 },
+        { id: 'panel-beater', name: 'Panel Beater', icon: '🔨', type: 'COMPLEMENTARY', strength: 0.85 },
+        { id: 'vulcanizer', name: 'Vulcanizer', icon: '🛞', type: 'COMPLEMENTARY', strength: 0.80 }
+      ],
+      'hair-stylist': [
+        { id: 'braider', name: 'Braider', icon: '💇‍♀️', type: 'COMPLEMENTARY', strength: 0.90 },
+        { id: 'nail-technician', name: 'Nail Technician', icon: '💅', type: 'COMPLEMENTARY', strength: 0.85 },
+        { id: 'makeup-artist', name: 'Makeup Artist', icon: '💄', type: 'COMPLEMENTARY', strength: 0.90 }
+      ],
+      'barber': [
+        { id: 'hair-stylist', name: 'Hair Stylist', icon: '💇', type: 'RELATED', strength: 0.75 },
+        { id: 'personal-trainer', name: 'Fitness Trainer', icon: '🏃', type: 'RELATED', strength: 0.60 }
+      ],
+      'painter': [
+        { id: 'pop-installer', name: 'POP Installer', icon: '🏗️', type: 'COMPLEMENTARY', strength: 0.90 },
+        { id: 'carpenter', name: 'Carpenter', icon: '🪚', type: 'COMPLEMENTARY', strength: 0.80 }
+      ],
+      'carpenter': [
+        { id: 'furniture-maker', name: 'Furniture Maker', icon: '🛋️', type: 'COMPLEMENTARY', strength: 0.85 },
+        { id: 'painter', name: 'Painter', icon: '🎨', type: 'COMPLEMENTARY', strength: 0.80 }
+      ],
+      'event-planner': [
+        { id: 'caterer', name: 'Event Caterer', icon: '🍲', type: 'COMPLEMENTARY', strength: 0.95 },
+        { id: 'dj', name: 'Disc Jockey (DJ)', icon: '🎧', type: 'COMPLEMENTARY', strength: 0.90 },
+        { id: 'photographer', name: 'Photographer', icon: '📸', type: 'COMPLEMENTARY', strength: 0.90 }
+      ],
+      'deep-cleaner': [
+        { id: 'fumigator', name: 'Fumigator', icon: '🧪', type: 'COMPLEMENTARY', strength: 0.90 },
+        { id: 'laundry', name: 'Dry Cleaner & Laundry', icon: '👔', type: 'COMPLEMENTARY', strength: 0.85 }
+      ],
+      'phone-repairer': [
+        { id: 'computer-repairer', name: 'Computer & Laptop Repairer', icon: '💻', type: 'COMPLEMENTARY', strength: 0.90 },
+        { id: 'cctv-installer', name: 'CCTV Installer', icon: '📹', type: 'RELATED', strength: 0.75 }
+      ]
+    },
+
+    getRelatedSkills(skillSlug, limit = 6) {
+      if (!skillSlug) return [];
+      const normalizedSlug = CategoryMap.resolveSlug(skillSlug);
+      if (this.relationships[normalizedSlug]) {
+        return this.relationships[normalizedSlug].slice(0, limit);
+      }
+      // Fallback: popular skills in same industry
+      const ind = SKILL_INDUSTRIES.find(i => i.popularSkills.includes(normalizedSlug));
+      if (ind) {
+        return ind.popularSkills
+          .filter(s => s !== normalizedSlug)
+          .slice(0, limit)
+          .map(s => {
+            const cat = CategoryMap.getBySlug(s);
+            return {
+              id: s,
+              name: cat ? cat.name : s,
+              icon: cat ? cat.icon : '✨',
+              type: 'SAME_INDUSTRY',
+              strength: 0.70
+            };
+          });
+      }
+      return [];
+    },
+
+    // Specializations dictionary
+    specializations: {
+      'solar-installer': [
+        { slug: 'residential-solar', name: 'Residential Home Solar' },
+        { slug: 'commercial-solar', name: 'Commercial & Industrial Solar' },
+        { slug: 'solar-inverter', name: 'Solar Inverter Installation' },
+        { slug: 'solar-battery', name: 'Lithium & Tubular Battery Setup' },
+        { slug: 'solar-maintenance', name: 'Solar Panel Cleaning & Maintenance' }
+      ],
+      'electrician': [
+        { slug: 'house-wiring', name: 'House Conduit Wiring' },
+        { slug: 'fault-troubleshooting', name: 'Electrical Fault Tracing' },
+        { slug: 'industrial-wiring', name: '3-Phase Industrial Wiring' },
+        { slug: 'lighting-fixtures', name: 'Chandelier & LED Strip Fitting' }
+      ],
+      'plumber': [
+        { slug: 'burst-pipes', name: 'Burst Pipe & Leak Repair' },
+        { slug: 'drainage-unblocking', name: 'Drainage & Soakaway Unblocking' },
+        { slug: 'bathroom-fixtures', name: 'Water Closet & Shower Installation' },
+        { slug: 'water-pumping', name: 'Pumping Machine Installation' }
+      ],
+      'mechanic': [
+        { slug: 'engine-overhaul', name: 'Engine Overhaul & Servicing' },
+        { slug: 'toyota-specialist', name: 'Toyota / Lexus Diagnostic Expert' },
+        { slug: 'honda-specialist', name: 'Honda Diagnostic Specialist' },
+        { slug: 'mercedes-bmw', name: 'German Car Specialist (Benz/BMW)' },
+        { slug: 'brake-suspension', name: 'Brake, Hub & Suspension Repair' }
+      ]
+    },
+
+    getSpecializations(skillSlug) {
+      if (!skillSlug) return [];
+      const normalizedSlug = CategoryMap.resolveSlug(skillSlug);
+      return this.specializations[normalizedSlug] || [];
+    },
+
+    // Build Discovery Context Model
+    buildDiscoveryContext(options = {}) {
+      const {
+        industry = null,
+        category = null,
+        service = null,
+        skill = null,
+        specialization = null,
+        state = null,
+        city = null,
+        location = null,
+        source = 'marketplace'
+      } = options;
+
+      const rawSkill = skill || service;
+      let resolvedSkillSlug = null;
+      let skillObj = null;
+      let resolvedIndustry = null;
+
+      if (rawSkill) {
+        skillObj = CategoryMap.resolveQuery(rawSkill) || CategoryMap.getBySlug(rawSkill);
+        resolvedSkillSlug = skillObj ? skillObj.slug : CategoryMap.resolveSlug(rawSkill);
+      }
+
+      if (industry) {
+        resolvedIndustry = this.getIndustryById(industry);
+      } else if (resolvedSkillSlug) {
+        resolvedIndustry = SKILL_INDUSTRIES.find(i => i.popularSkills.includes(resolvedSkillSlug)) || null;
+      }
+
+      const effectiveState = state || location || null;
+      const effectiveCity = city || null;
+
+      const context = {
+        industry: resolvedIndustry ? { id: resolvedIndustry.id, name: resolvedIndustry.name, icon: resolvedIndustry.icon } : null,
+        category: category ? { id: category, name: category } : null,
+        skill: skillObj ? { id: skillObj.slug, name: skillObj.name, displayName: skillObj.displayName, icon: skillObj.icon, promptText: skillObj.promptText, ctaText: skillObj.ctaText } : (rawSkill ? { id: rawSkill, name: rawSkill } : null),
+        specialization: specialization ? { slug: specialization, name: specialization.replace(/-/g, ' ') } : null,
+        location: { state: effectiveState, city: effectiveCity },
+        source: source,
+        modelVersion: 'MDCIE-1.0.0'
+      };
+
+      context.breadcrumbs = this.generateBreadcrumbs(context);
+      context.relatedSkills = resolvedSkillSlug ? this.getRelatedSkills(resolvedSkillSlug) : [];
+
+      return context;
+    },
+
+    // Generate Clickable Breadcrumbs
+    generateBreadcrumbs(context) {
+      const crumbs = [{ level: 'home', label: 'Home', url: 'index.html' }];
+
+      if (context.industry) {
+        crumbs.push({
+          level: 'industry',
+          id: context.industry.id,
+          label: context.industry.name,
+          icon: context.industry.icon,
+          url: `search.html?industry=${encodeURIComponent(context.industry.id)}`
+        });
+      }
+
+      if (context.category) {
+        crumbs.push({
+          level: 'category',
+          id: context.category.id,
+          label: context.category.name,
+          url: `search.html?category=${encodeURIComponent(context.category.id)}`
+        });
+      }
+
+      if (context.skill) {
+        crumbs.push({
+          level: 'skill',
+          id: context.skill.id,
+          label: context.skill.displayName || context.skill.name,
+          icon: context.skill.icon,
+          url: `search.html?service=${encodeURIComponent(context.skill.id)}`
+        });
+      }
+
+      if (context.specialization) {
+        crumbs.push({
+          level: 'specialization',
+          id: context.specialization.slug,
+          label: context.specialization.name,
+          url: `search.html?service=${encodeURIComponent(context.skill ? context.skill.id : '')}&spec=${encodeURIComponent(context.specialization.slug)}`
+        });
+      }
+
+      if (context.location && context.location.state && context.location.state !== 'all') {
+        const stateName = context.location.state;
+        const skillPart = context.skill ? `service=${encodeURIComponent(context.skill.id)}&` : '';
+        crumbs.push({
+          level: 'state',
+          label: stateName,
+          url: `search.html?${skillPart}state=${encodeURIComponent(stateName)}`
+        });
+      }
+
+      if (context.location && context.location.city && context.location.city !== 'all') {
+        const cityName = context.location.city;
+        const skillPart = context.skill ? `service=${encodeURIComponent(context.skill.id)}&` : '';
+        const statePart = context.location.state ? `state=${encodeURIComponent(context.location.state)}&` : '';
+        crumbs.push({
+          level: 'city',
+          label: cityName,
+          url: `search.html?${skillPart}${statePart}city=${encodeURIComponent(cityName)}`
+        });
+      }
+
+      return crumbs;
+    },
+
+    // Zero-Result Recommendations Helper
+    getZeroResultRecommendations(context) {
+      const recs = {
+        title: 'No exact matches in this specific area yet',
+        suggestions: []
+      };
+
+      if (context.location && context.location.city && context.location.state) {
+        recs.suggestions.push({
+          type: 'EXPAND_TO_STATE',
+          label: `Expand search to all of ${context.location.state}`,
+          url: `search.html?service=${encodeURIComponent(context.skill ? context.skill.id : '')}&state=${encodeURIComponent(context.location.state)}`
+        });
+      }
+
+      if (context.skill) {
+        const related = this.getRelatedSkills(context.skill.id, 4);
+        if (related.length > 0) {
+          recs.relatedSkills = related;
+        }
+      }
+
+      if (context.industry) {
+        recs.suggestions.push({
+          type: 'VIEW_INDUSTRY',
+          label: `Browse all trades in ${context.industry.name}`,
+          url: `search.html?industry=${encodeURIComponent(context.industry.id)}`
+        });
+      }
+
+      recs.suggestions.push({
+        type: 'SEARCH_ALL_NIGERIA',
+        label: 'View all verified providers across Nigeria',
+        url: context.skill ? `search.html?service=${encodeURIComponent(context.skill.id)}` : 'search.html'
+      });
+
+      recs.suggestions.push({
+        type: 'BECOME_PROVIDER',
+        label: 'Are you an artisan? List your skill on Lokator free',
+        url: 'register.html'
+      });
+
+      return recs;
     }
   };
 

@@ -4923,6 +4923,103 @@
     }
   };
 
+  // Phase 10.9: Marketplace Discovery & Conversion Intelligence Engine (MDCIE)
+  const marketplaceDiscoveryManager = {
+    async getContext(options = {}) {
+      const { industry, category, skill, specialization, state, city } = options;
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('get_marketplace_discovery_context', {
+          p_industry: industry || null,
+          p_category: category || null,
+          p_skill: skill || null,
+          p_specialization: specialization || null,
+          p_state: state || null,
+          p_city: city || null
+        });
+        if (error) throw error;
+        return data;
+      }
+      if (typeof MarketplaceTaxonomy !== 'undefined') {
+        return MarketplaceTaxonomy.buildDiscoveryContext(options);
+      }
+      return {
+        industry: null,
+        category: null,
+        skill: null,
+        specialization: null,
+        location: { state: state || null, city: city || null },
+        breadcrumbs: [{ level: 'home', label: 'Home', url: 'index.html' }],
+        related_skills: [],
+        model_version: 'MDCIE-1.0.0'
+      };
+    },
+
+    async getHierarchyTree() {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('get_hierarchical_taxonomy_tree');
+        if (error) throw error;
+        return data;
+      }
+      if (typeof MarketplaceTaxonomy !== 'undefined') {
+        return MarketplaceTaxonomy.getIndustries();
+      }
+      return [];
+    },
+
+    async getRelatedSkills(skillId, limit = 6) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('get_related_canonical_skills', {
+          p_skill_id: skillId,
+          p_limit: limit
+        });
+        if (error) throw error;
+        return data;
+      }
+      if (typeof MarketplaceTaxonomy !== 'undefined') {
+        return MarketplaceTaxonomy.getRelatedSkills(skillId, limit);
+      }
+      return [];
+    },
+
+    async trackDiscoveryEvent(eventType, context = {}, sessionId = null) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('log_marketplace_discovery_event', {
+          p_event_type: eventType,
+          p_context: context,
+          p_session_id: sessionId
+        });
+        if (error) {
+          console.warn('MDCIE Telemetry warn:', error.message);
+          return null;
+        }
+        return data;
+      }
+      return '00000000-0000-0000-0000-000000000000';
+    },
+
+    async getDiscoverySignals(timeframeDays = 30) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('get_discovery_conversion_signals', {
+          p_timeframe_days: timeframeDays
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        timeframe_days: timeframeDays,
+        total_events: 120,
+        top_demand_skills: [
+          { skill_id: 'solar-installer', search_volume: 48 },
+          { skill_id: 'electrician', search_volume: 36 },
+          { skill_id: 'plumber', search_volume: 24 }
+        ],
+        contact_conversions: 32,
+        zero_result_rate_pct: 4.20,
+        model_version: 'MDCIE-1.0.0'
+      };
+    }
+  };
+
   LokatorDB.strategicCommand = strategicCommandManager;
   LokatorDB.strategicDecision = strategicDecisionManager;
   LokatorDB.strategicOrchestration = strategicOrchestrationManager;
@@ -4947,6 +5044,8 @@
   LokatorDB.strategicPortfolioGovernanceEngine = strategicPortfolioGovernanceManager;
   LokatorDB.skillsMarketplace = skillsMarketplaceManager;
   LokatorDB.skills = skillsMarketplaceManager;
+  LokatorDB.marketplaceDiscovery = marketplaceDiscoveryManager;
+  LokatorDB.mdcie = marketplaceDiscoveryManager;
   LokatorDB.predictiveGrowth = predictiveGrowthManager;
   LokatorDB.growthIntelligence = growthIntelligenceManager;
   LokatorDB.realtimeGrowth = realtimeGrowthManager;

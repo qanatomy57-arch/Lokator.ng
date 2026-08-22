@@ -13,9 +13,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const state = {
     keyword: "",
     category: "all",
+    industry: "all",
+    specialization: "all",
     city: "all",
     state: "all",
     locationQuery: "",
+    source: "marketplace",
     maxDistance: 50,
     minRating: 0,
     verifiedOnly: false,
@@ -51,6 +54,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const modalBody = document.getElementById("modal-body");
   const modalCloseBtn = document.getElementById("modal-close-btn");
   const applyMainSearchBtn = document.getElementById("apply-main-search");
+  const breadcrumbsNav = document.getElementById("marketplace-breadcrumbs");
 
   // Debounce Utility
   function debounce(func, wait) {
@@ -64,16 +68,23 @@ document.addEventListener("DOMContentLoaded", () => {
   // 1. Initialize from URL Search Parameters
   function initFromUrlParams() {
     const params = new URLSearchParams(window.location.search);
-    const serviceParam = params.get("service") || params.get("category");
+    const serviceParam = params.get("service") || params.get("skill") || params.get("category");
+    const industryParam = params.get("industry");
+    const specParam = params.get("spec") || params.get("specialization");
     const qParam = params.get("q");
     const locParam = params.get("location");
     const stateParam = params.get("state");
     const cityParam = params.get("city");
+    const sourceParam = params.get("source") || "marketplace";
     const verifiedParam = params.get("verified");
     const availableParam = params.get("available");
     const minRatingParam = params.get("minRating");
     const sortParam = params.get("sort");
     const pageParam = params.get("page");
+
+    state.source = sourceParam;
+    if (industryParam) state.industry = industryParam;
+    if (specParam) state.specialization = specParam;
 
     // If q parameter exists (from free-form natural search)
     if (qParam) {
@@ -148,6 +159,58 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       }
     }
+
+    if (sortParam && sortSelect) {
+      sortSelect.value = sortParam;
+      state.sortBy = sortParam;
+    }
+
+    if (pageParam && !isNaN(parseInt(pageParam, 10))) {
+      state.page = Math.max(1, parseInt(pageParam, 10));
+    }
+
+    // Render breadcrumbs immediately on init
+    renderBreadcrumbs();
+  }
+
+  // Phase 10.9: Render Marketplace Discovery Breadcrumbs
+  function renderBreadcrumbs() {
+    if (!breadcrumbsNav || typeof MarketplaceTaxonomy === 'undefined') return;
+
+    const context = MarketplaceTaxonomy.buildDiscoveryContext({
+      industry: state.industry !== 'all' ? state.industry : null,
+      category: state.category !== 'all' ? state.category : null,
+      skill: state.category !== 'all' ? state.category : (state.keyword || null),
+      specialization: state.specialization !== 'all' ? state.specialization : null,
+      state: state.state !== 'all' ? state.state : (state.locationQuery || null),
+      city: state.city !== 'all' ? state.city : null,
+      source: state.source
+    });
+
+    if (context.breadcrumbs && context.breadcrumbs.length > 1) {
+      breadcrumbsNav.innerHTML = `
+        <ol class="breadcrumb-trail-list">
+          ${context.breadcrumbs.map((crumb, idx) => {
+            const isLast = idx === context.breadcrumbs.length - 1;
+            const iconHtml = crumb.icon ? `<span class="crumb-icon">${escapeHtml(crumb.icon)}</span> ` : '';
+            return `
+              <li class="breadcrumb-item ${isLast ? 'is-active' : ''}">
+                ${isLast ? `
+                  <span class="crumb-current" aria-current="page">${iconHtml}${escapeHtml(crumb.label)}</span>
+                ` : `
+                  <a href="${escapeHtml(crumb.url)}" class="crumb-link">${iconHtml}${escapeHtml(crumb.label)}</a>
+                  <span class="crumb-separator" aria-hidden="true">›</span>
+                `}
+              </li>
+            `;
+          }).join('')}
+        </ol>
+      `;
+      breadcrumbsNav.style.display = "block";
+    } else {
+      breadcrumbsNav.style.display = "none";
+    }
+  }
 
     if (sortParam && sortSelect) {
       sortSelect.value = sortParam;
@@ -291,7 +354,8 @@ document.addEventListener("DOMContentLoaded", () => {
         offlineBanner.style.display = 'none';
       }
 
-      // Update Result Counter
+      // Update Result Counter & Breadcrumbs
+      renderBreadcrumbs();
       if (resultsCountText) {
         resultsCountText.textContent = `Found ${state.totalCount} verified professional${state.totalCount === 1 ? "" : "s"} near you`;
       }
@@ -301,12 +365,61 @@ document.addEventListener("DOMContentLoaded", () => {
         if (emptyState) {
           emptyState.style.display = "flex";
           const currentQuery = state.keyword || (state.category !== 'all' ? state.category : '');
+          
+          let recsHtml = '';
+          if (typeof MarketplaceTaxonomy !== 'undefined') {
+            const context = MarketplaceTaxonomy.buildDiscoveryContext({
+              industry: state.industry !== 'all' ? state.industry : null,
+              category: state.category !== 'all' ? state.category : null,
+              skill: state.category !== 'all' ? state.category : (state.keyword || null),
+              specialization: state.specialization !== 'all' ? state.specialization : null,
+              state: state.state !== 'all' ? state.state : (state.locationQuery || null),
+              city: state.city !== 'all' ? state.city : null
+            });
+            const recs = MarketplaceTaxonomy.getZeroResultRecommendations(context);
+            
+            recsHtml = `
+              <div class="zero-recovery-card">
+                <h4 class="recovery-heading">${escapeHtml(recs.title)}</h4>
+                <div class="recovery-suggestions-grid">
+                  ${recs.suggestions.map(s => `
+                    <a href="${escapeHtml(s.url)}" class="recovery-btn-chip">
+                      <span>${escapeHtml(s.label)}</span> →
+                    </a>
+                  `).join('')}
+                </div>
+                ${recs.relatedSkills && recs.relatedSkills.length > 0 ? `
+                  <div class="related-skills-box">
+                    <span class="related-label">Looking for related trades?</span>
+                    <div class="related-chips-wrap">
+                      ${recs.relatedSkills.map(r => `
+                        <a href="search.html?service=${encodeURIComponent(r.id)}${state.state !== 'all' ? `&state=${encodeURIComponent(state.state)}` : ''}" class="related-skill-pill">
+                          <span>${escapeHtml(r.icon || '⚡')}</span> ${escapeHtml(r.name)}
+                        </a>
+                      `).join('')}
+                    </div>
+                  </div>
+                ` : ''}
+              </div>
+            `;
+
+            // Non-invasive MDCIE Telemetry
+            if (typeof LokatorDB !== 'undefined' && LokatorDB.marketplaceDiscovery) {
+              LokatorDB.marketplaceDiscovery.trackDiscoveryEvent('zero_results', {
+                keyword: state.keyword,
+                category: categorySlug,
+                state: state.state,
+                city: loc
+              }).catch(() => {});
+            }
+          }
+
           emptyState.innerHTML = `
             <div class="empty-icon">🔍</div>
-            <h3>${currentQuery ? `No providers found for "${escapeHtml(currentQuery)}" yet` : 'No providers match your search'}</h3>
-            <p>We are actively onboarding verified artisans and professionals across Nigeria. Search another skill, broaden your location, or list your skill on Lokator.</p>
-            <div class="empty-actions-row">
-              ${currentQuery ? `<a href="register.html?service=${encodeURIComponent(currentQuery)}" class="btn btn-primary">List Your Skill for Free →</a>` : ''}
+            <h3>${currentQuery ? `No verified providers found for "${escapeHtml(currentQuery)}" in this area yet` : 'No providers match your exact search filters'}</h3>
+            <p>We are actively verifying skilled hands across all 36 Nigerian states. Try exploring nearby locations or related trades below:</p>
+            ${recsHtml}
+            <div class="empty-actions-row" style="margin-top: 20px;">
               <button class="btn btn-outline" id="clear-all-empty-btn">Reset All Filters</button>
             </div>
           `;
@@ -319,6 +432,16 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         if (paginationControls) paginationControls.innerHTML = "";
         return;
+      }
+
+      // Non-invasive MDCIE Telemetry for positive results view
+      if (typeof LokatorDB !== 'undefined' && LokatorDB.marketplaceDiscovery) {
+        LokatorDB.marketplaceDiscovery.trackDiscoveryEvent('provider_results_viewed', {
+          count: state.totalCount,
+          category: categorySlug,
+          state: state.state,
+          city: loc
+        }).catch(() => {});
       }
 
       if (emptyState) emptyState.style.display = "none";

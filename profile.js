@@ -52,9 +52,43 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Update Page Title & Meta
   document.title = `${provider.name} — ${provider.trade} | Lokator`;
 
-  // 3. Populate Breadcrumbs & Hero Header
-  const crumbName = document.getElementById('crumb-provider-name');
-  if (crumbName) crumbName.textContent = provider.name;
+  // 3. Populate Breadcrumbs & Hero Header with Phase 10.9 Discovery Context
+  const skillParam = params.get('skill') || params.get('service');
+  const stateParam = params.get('state');
+  const cityParam = params.get('city');
+  const indParam = params.get('industry');
+  const sourceParam = params.get('source');
+
+  const breadcrumbsEl = document.querySelector('.profile-breadcrumbs');
+  if (breadcrumbsEl && typeof MarketplaceTaxonomy !== 'undefined') {
+    const context = MarketplaceTaxonomy.buildDiscoveryContext({
+      industry: indParam,
+      skill: skillParam || provider.trade,
+      state: stateParam || provider.city || provider.area,
+      city: cityParam,
+      source: sourceParam || 'profile'
+    });
+
+    const crumbs = [{ label: 'Home', url: 'index.html' }];
+    if (context.industry) {
+      crumbs.push({ label: context.industry.name, url: `search.html?industry=${encodeURIComponent(context.industry.id)}` });
+    }
+    crumbs.push({ label: provider.trade, url: `search.html?service=${encodeURIComponent(provider.trade)}` });
+    if (stateParam) {
+      crumbs.push({ label: stateParam, url: `search.html?service=${encodeURIComponent(provider.trade)}&state=${encodeURIComponent(stateParam)}` });
+    }
+    crumbs.push({ label: provider.name, url: null });
+
+    breadcrumbsEl.innerHTML = crumbs.map((c, i) => {
+      if (i === crumbs.length - 1) {
+        return `<span class="current" id="crumb-provider-name">${escapeHtml(c.label)}</span>`;
+      }
+      return `<a href="${escapeHtml(c.url)}">${escapeHtml(c.label)}</a><span class="sep">/</span>`;
+    }).join(' ');
+  } else {
+    const crumbName = document.getElementById('crumb-provider-name');
+    if (crumbName) crumbName.textContent = provider.name;
+  }
 
   const heroAvatar = document.getElementById('hero-avatar');
   if (heroAvatar) {
@@ -122,6 +156,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (typeof LokatorTelemetry !== 'undefined') {
         LokatorTelemetry.trackEvent('phone_clicked', { providerId: provider.id, trade: provider.trade, city: provider.city });
       }
+      if (typeof LokatorDB !== 'undefined' && LokatorDB.marketplaceDiscovery) {
+        LokatorDB.marketplaceDiscovery.trackDiscoveryEvent('phone_clicked', {
+          provider_id: provider.id,
+          trade: provider.trade,
+          city: provider.city,
+          state: provider.state || stateParam
+        }).catch(() => {});
+      }
     });
   }
 
@@ -132,12 +174,28 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (typeof LokatorTelemetry !== 'undefined') {
         LokatorTelemetry.trackEvent('whatsapp_clicked', { providerId: provider.id, trade: provider.trade, city: provider.city });
       }
+      if (typeof LokatorDB !== 'undefined' && LokatorDB.marketplaceDiscovery) {
+        LokatorDB.marketplaceDiscovery.trackDiscoveryEvent('whatsapp_clicked', {
+          provider_id: provider.id,
+          trade: provider.trade,
+          city: provider.city,
+          state: provider.state || stateParam
+        }).catch(() => {});
+      }
     });
   }
 
   // Track profile view
   if (typeof LokatorTelemetry !== 'undefined') {
     LokatorTelemetry.trackEvent('provider_profile_viewed', { providerId: provider.id, trade: provider.trade, city: provider.city });
+  }
+  if (typeof LokatorDB !== 'undefined' && LokatorDB.marketplaceDiscovery) {
+    LokatorDB.marketplaceDiscovery.trackDiscoveryEvent('provider_profile_opened', {
+      provider_id: provider.id,
+      trade: provider.trade,
+      city: provider.city,
+      state: provider.state || stateParam
+    }).catch(() => {});
   }
 
   // Share profile
