@@ -738,13 +738,149 @@
     }
   };
 
+  // ===== PHASE 10.8 CANONICAL NIGERIAN SKILLS MARKETPLACE TAXONOMY =====
+  const SKILL_INDUSTRIES = [
+    {
+      id: 'home-repairs',
+      name: 'Home & Technical Repairs',
+      icon: '🔧',
+      description: 'Electrical, plumbing, carpentry, and building services',
+      popularSkills: ['electrician', 'plumber', 'carpenter', 'painter', 'welder', 'solar-installer', 'ac-technician', 'generator-technician']
+    },
+    {
+      id: 'beauty-wellness',
+      name: 'Beauty, Hair & Personal Care',
+      icon: '💅',
+      description: 'Barbing, hair braiding, makeup, nails, and spa wellness',
+      popularSkills: ['barber', 'hair-stylist', 'braider', 'nail-technician', 'makeup-artist', 'lash-technician']
+    },
+    {
+      id: 'fashion-tailoring',
+      name: 'Fashion, Bespoke & Tailoring',
+      icon: '🧵',
+      description: 'Custom tailoring, agbada, aso-ebi, and leathercraft',
+      popularSkills: ['tailor', 'fashion-designer', 'shoemaker']
+    },
+    {
+      id: 'auto-transport',
+      name: 'Automotive, Repairs & Transport',
+      icon: '🔩',
+      description: 'Car mechanics, auto rewire, vulcanizing, and towing',
+      popularSkills: ['mechanic', 'auto-electrician', 'auto-ac-technician', 'vulcanizer', 'panel-beater']
+    },
+    {
+      id: 'cleaning-home',
+      name: 'Cleaning, Hygiene & Fumigation',
+      icon: '✨',
+      description: 'Deep home cleaning, fumigation, laundry, and gardening',
+      popularSkills: ['cleaner', 'fumigator', 'laundry']
+    },
+    {
+      id: 'food-hospitality',
+      name: 'Catering, Baking & Culinary Arts',
+      icon: '🍽️',
+      description: 'Party jollof catering, small chops, and custom cakes',
+      popularSkills: ['caterer', 'baker']
+    },
+    {
+      id: 'events-entertainment',
+      name: 'Events, Sound & Entertainment',
+      icon: '🎉',
+      description: 'Event planning, decoration, DJs, MCs, and party rentals',
+      popularSkills: ['event-planner', 'dj', 'mc-hypeman']
+    },
+    {
+      id: 'digital-technology',
+      name: 'Digital, IT & Phone Repair',
+      icon: '📱',
+      description: 'Phone screen fixing, laptop repair, web development, and CCTV',
+      popularSkills: ['phone-repairer', 'computer-repairer', 'web-developer', 'graphic-designer', 'cctv-installer']
+    },
+    {
+      id: 'construction-engineering',
+      name: 'Construction, Masonry & Built Trades',
+      icon: '🧱',
+      description: 'Bricklaying, roofing, tiling, POP, and land surveying',
+      popularSkills: ['bricklayer', 'pop-installer', 'tiler']
+    },
+    {
+      id: 'education-training',
+      name: 'Education, Tutoring & Music',
+      icon: '📚',
+      description: 'Academic home tutoring, WAEC/JAMB prep, and music lessons',
+      popularSkills: ['tutor']
+    },
+    {
+      id: 'agriculture-livestock',
+      name: 'Agriculture, Poultry & Farming',
+      icon: '🌱',
+      description: 'Poultry farm setup, catfish hatching, and crop services',
+      popularSkills: ['poultry-farmer']
+    },
+    {
+      id: 'logistics-commerce',
+      name: 'Logistics, Dispatch & Moving',
+      icon: '🏍️',
+      description: 'Express motorcycle dispatch and professional house movers',
+      popularSkills: ['dispatch-rider', 'house-mover']
+    },
+    {
+      id: 'photography-media',
+      name: 'Photography, Video & Creative Media',
+      icon: '📸',
+      description: 'Portrait studio shoots, wedding coverage, and drone videography',
+      popularSkills: ['photographer', 'videographer']
+    },
+    {
+      id: 'personal-lifestyle',
+      name: 'Fitness, Lifestyle & Family Care',
+      icon: '🏃',
+      description: 'Personal fitness trainers, nannies, and home caregivers',
+      popularSkills: ['personal-trainer']
+    }
+  ];
+
+  const MarketplaceTaxonomy = {
+    industries: SKILL_INDUSTRIES,
+
+    getIndustries() {
+      return SKILL_INDUSTRIES;
+    },
+
+    getIndustryById(id) {
+      return SKILL_INDUSTRIES.find(i => i.id === id) || null;
+    },
+
+    getAllPopularSkills() {
+      const skills = [];
+      SKILL_INDUSTRIES.forEach(ind => {
+        ind.popularSkills.forEach(sSlug => {
+          const cat = CategoryMap.getBySlug(sSlug);
+          if (cat) {
+            skills.push({
+              slug: cat.slug,
+              name: cat.name,
+              displayName: cat.displayName,
+              icon: cat.icon,
+              industryId: ind.id,
+              industryName: ind.name
+            });
+          }
+        });
+      });
+      return skills;
+    }
+  };
+
   // Expose to global window / module
   global.SERVICE_CATEGORIES = SERVICE_CATEGORIES;
   global.CategoryMap = CategoryMap;
   global.ServiceModerator = ServiceModerator;
+  global.SKILL_INDUSTRIES = SKILL_INDUSTRIES;
+  global.MarketplaceTaxonomy = MarketplaceTaxonomy;
 
   if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { SERVICE_CATEGORIES, CategoryMap, ServiceModerator };
+    module.exports = { SERVICE_CATEGORIES, CategoryMap, ServiceModerator, SKILL_INDUSTRIES, MarketplaceTaxonomy };
   }
 
 })(typeof window !== 'undefined' ? window : (typeof global !== 'undefined' ? global : this));

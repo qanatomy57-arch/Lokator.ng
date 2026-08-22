@@ -4857,6 +4857,72 @@
     }
   };
 
+  // Phase 10.8: Nigeria Skills Marketplace & Canonical Service Taxonomy (NSMT)
+  const skillsMarketplaceManager = {
+    async getTaxonomy() {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('get_canonical_marketplace_taxonomy');
+        if (error) throw error;
+        return data;
+      }
+      return {
+        success: true,
+        taxonomy: typeof MarketplaceTaxonomy !== 'undefined' ? MarketplaceTaxonomy.getIndustries() : [],
+        model_version: 'NSMT-1.0.0'
+      };
+    },
+
+    async resolveSkill(query) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('resolve_canonical_skill', {
+          p_query: query
+        });
+        if (error) throw error;
+        return data;
+      }
+      if (typeof CategoryMap !== 'undefined') {
+        const res = CategoryMap.resolveQuery(query);
+        if (res) {
+          return {
+            success: true,
+            resolved: true,
+            skill_id: res.slug,
+            name: res.name,
+            display_name: res.displayName,
+            icon: res.icon,
+            category_id: 'general'
+          };
+        }
+      }
+      return { success: true, resolved: false };
+    },
+
+    async assignProviderSkills(providerId, skillIds, primarySkillId = null) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('assign_provider_canonical_skills', {
+          p_provider_id: providerId,
+          p_skill_ids: skillIds,
+          p_primary_skill_id: primarySkillId
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        success: true,
+        provider_id: providerId,
+        skills_assigned: skillIds ? skillIds.length : 0,
+        primary_skill: primarySkillId
+      };
+    },
+
+    getPopularSkills() {
+      if (typeof MarketplaceTaxonomy !== 'undefined') {
+        return MarketplaceTaxonomy.getAllPopularSkills();
+      }
+      return [];
+    }
+  };
+
   LokatorDB.strategicCommand = strategicCommandManager;
   LokatorDB.strategicDecision = strategicDecisionManager;
   LokatorDB.strategicOrchestration = strategicOrchestrationManager;
@@ -4879,6 +4945,8 @@
   LokatorDB.strategicCommandCenter = strategicIntegrationManager;
   LokatorDB.strategicPortfolioGovernance = strategicPortfolioGovernanceManager;
   LokatorDB.strategicPortfolioGovernanceEngine = strategicPortfolioGovernanceManager;
+  LokatorDB.skillsMarketplace = skillsMarketplaceManager;
+  LokatorDB.skills = skillsMarketplaceManager;
   LokatorDB.predictiveGrowth = predictiveGrowthManager;
   LokatorDB.growthIntelligence = growthIntelligenceManager;
   LokatorDB.realtimeGrowth = realtimeGrowthManager;
