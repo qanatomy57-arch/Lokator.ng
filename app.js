@@ -510,7 +510,7 @@ const revealObserver = new IntersectionObserver((entries) => {
 }, { threshold: 0.12 });
 
 const revealElements = document.querySelectorAll(
-  '.step, .cat-item, .why-card, .tp-card, .testi-card, .provider-card'
+  '.step, .cat-item, .why-card, .tp-card, .provider-card'
 );
 
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -647,16 +647,25 @@ function setupFunnelTelemetryListeners() {
   // Testimonials Continuous Marquee Touch Pause & Resume
   const testiTrack = document.getElementById('testi-track');
   if (testiTrack) {
+    let touchResumeTimer = null;
+    const resumeTrack = () => {
+      if (touchResumeTimer) {
+        clearTimeout(touchResumeTimer);
+        touchResumeTimer = null;
+      }
+      testiTrack.classList.remove('is-paused');
+    };
+
     testiTrack.addEventListener('touchstart', () => {
       testiTrack.classList.add('is-paused');
+      if (touchResumeTimer) clearTimeout(touchResumeTimer);
+      // Auto-resume after 4s safeguard even if touchend was cancelled by vertical document scroll
+      touchResumeTimer = setTimeout(resumeTrack, 4000);
     }, { passive: true });
 
-    testiTrack.addEventListener('touchend', () => {
-      testiTrack.classList.remove('is-paused');
-    }, { passive: true });
-
-    testiTrack.addEventListener('touchcancel', () => {
-      testiTrack.classList.remove('is-paused');
-    }, { passive: true });
+    testiTrack.addEventListener('touchend', resumeTrack, { passive: true });
+    testiTrack.addEventListener('touchcancel', resumeTrack, { passive: true });
+    testiTrack.addEventListener('pointerup', resumeTrack, { passive: true });
+    testiTrack.addEventListener('pointercancel', resumeTrack, { passive: true });
   }
 }

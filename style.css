@@ -341,7 +341,7 @@ body {
   transform: scale(1);
 }
 
-/* Contrast scrim overlay per slide */
+/* Contrast scrim overlay per slide — strengthened right side for mobile readability */
 .hero-slide > .hero-video-scrim {
   position: absolute;
   inset: 0;
@@ -349,15 +349,15 @@ body {
   pointer-events: none;
   background:
     linear-gradient(90deg,
-      rgba(4, 12, 6, 0.78) 0%,
-      rgba(4, 12, 6, 0.52) 42%,
-      rgba(4, 12, 6, 0.15) 75%,
-      transparent 100%),
+      rgba(4, 12, 6, 0.82) 0%,
+      rgba(4, 12, 6, 0.58) 42%,
+      rgba(4, 12, 6, 0.32) 75%,
+      rgba(4, 12, 6, 0.18) 100%),
     linear-gradient(180deg,
-      rgba(4, 12, 6, 0.45) 0%,
-      transparent 25%,
-      transparent 70%,
-      rgba(4, 12, 6, 0.6) 100%);
+      rgba(4, 12, 6, 0.50) 0%,
+      rgba(4, 12, 6, 0.12) 25%,
+      rgba(4, 12, 6, 0.12) 70%,
+      rgba(4, 12, 6, 0.65) 100%);
 }
 
 /* Ambient glow per slide */
@@ -1394,6 +1394,22 @@ body {
 .testimonials {
   overflow: hidden;
   position: relative;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+/* Explicit contrast for testimonials section header on any body background */
+.testimonials .section-header h2 {
+  color: var(--fg);
+}
+
+.testimonials .section-header p {
+  color: var(--fg-muted);
+}
+
+.testimonials .badge-pill {
+  background: var(--green-light);
+  color: var(--green);
 }
 
 .testi-viewport {
@@ -2338,22 +2354,23 @@ body {
     -webkit-mask-image: none !important;
     mask-image: none !important;
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+    padding: 12px 16px 24px;
   }
 
   .testi-track {
     animation: none !important;
-    flex-wrap: wrap;
-    justify-content: center;
-    width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
+    flex-wrap: nowrap;
+    width: max-content;
     gap: 20px;
   }
 
   .testi-card {
-    width: calc(33.333% - 14px);
+    width: 340px;
     min-width: 280px;
     max-width: 380px;
+    scroll-snap-align: center;
   }
 
   .testi-card[aria-hidden="true"] {
@@ -2401,12 +2418,12 @@ body {
     overscroll-behavior: contain;
     padding: 18px 16px;
     border-radius: 18px;
-    background: rgba(8, 18, 12, 0.84);
-    -webkit-backdrop-filter: blur(24px);
-    backdrop-filter: blur(24px);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-top-color: rgba(82, 229, 140, 0.35);
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65), 0 0 24px rgba(0, 107, 63, 0.2);
+    background: rgba(6, 14, 10, 0.90);
+    -webkit-backdrop-filter: blur(28px);
+    backdrop-filter: blur(28px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-top-color: rgba(82, 229, 140, 0.4);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.70), 0 0 24px rgba(0, 107, 63, 0.25);
     gap: 8px;
   }
 

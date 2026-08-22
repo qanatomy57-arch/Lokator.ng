@@ -3,7 +3,7 @@
 // Progressive Web App Offline Shell & Resilient Runtime Caching Engine
 // ============================================================================
 
-const CACHE_VERSION = 'lokator-v1.1.0';
+const CACHE_VERSION = 'lokator-v1.2.0';
 const STATIC_CACHE = `lokator-static-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `lokator-runtime-${CACHE_VERSION}`;
 
@@ -107,29 +107,25 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Strategy A: HTML Navigation requests -> Instant App Shell from Cache + Background Refresh & Offline Fallback
+  // Strategy A: HTML Navigation requests -> Network-first with runtime cache & offline fallback
   if (request.mode === 'navigate' || (request.headers.get('accept') && request.headers.get('accept').includes('text/html'))) {
     event.respondWith(
-      caches.match(request).then((cachedResponse) => {
-        const networkFetch = fetch(request)
-          .then((networkResponse) => {
-            if (networkResponse && networkResponse.status === 200) {
-              const copy = networkResponse.clone();
-              caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, copy));
-            }
-            return networkResponse;
-          })
-          .catch(async () => {
-            if (cachedResponse) return cachedResponse;
-            const offlinePage = await caches.match('/offline.html');
-            return offlinePage || new Response('You are offline. Please reconnect to continue using Lokator.NG.', {
-              headers: { 'Content-Type': 'text/plain' }
-            });
+      fetch(request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const copy = networkResponse.clone();
+            caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, copy));
+          }
+          return networkResponse;
+        })
+        .catch(async () => {
+          const cached = await caches.match(request);
+          if (cached) return cached;
+          const offlinePage = await caches.match('/offline.html');
+          return offlinePage || new Response('You are offline. Please reconnect to continue using Lokator.NG.', {
+            headers: { 'Content-Type': 'text/plain' }
           });
-
-        // Instant startup: return cached HTML shell immediately if available; otherwise await network
-        return cachedResponse || networkFetch;
-      })
+        })
     );
     return;
   }
