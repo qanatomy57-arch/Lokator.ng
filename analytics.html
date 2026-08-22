@@ -1166,6 +1166,53 @@
         </div>
       </section>
 
+      <!-- Phase 10.3 Strategic Capacity Forecasting & Future Resource Planning (SCFFRPE) -->
+      <section>
+        <div class="section-title">Phase 10.3: Strategic Capacity Forecasting (SCFFRPE)</div>
+        <div class="card" style="margin-bottom: 24px; border-left: 4px solid #F59E0B;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div style="font-size: 0.85rem; color: #94A3B8;">
+              <span class="status-tag" style="background: rgba(245,158,11,0.2); color: #F59E0B; margin-right: 8px;">CAPACITY_FORECASTING</span>
+              <span class="status-tag" style="background: rgba(56,189,248,0.2); color: #38BDF8; margin-right: 8px;">MEDIUM_TERM</span>
+              <span class="status-tag" style="background: rgba(239,68,68,0.2); color: #EF4444; margin-right: 8px;">DECISION_SUPPORT</span>
+            </div>
+            <button id="btn-generate-capacity-fc" class="btn-action" style="padding: 4px 10px; font-size: 0.75rem; background: #F59E0B; color: #0E1522; font-weight: 700;">Forecast Strategic Capacity</button>
+          </div>
+
+          <div style="font-size: 0.75rem; color: #64748B; margin-bottom: 14px;">
+            Multi-horizon strategic capacity forecasting, demand projection, pre-emptive bottleneck detection, resilience buffering, and scenario analysis.
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 14px;">
+            <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 10px;">
+              <div style="font-size: 0.7rem; color: #64748B; text-transform: uppercase;">Utilization Tier</div>
+              <div id="scffrpe-utilization-tier" style="font-size: 1.25rem; font-weight: 800; color: #10B981; margin-top: 4px;">HEALTHY</div>
+            </div>
+            <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 10px;">
+              <div style="font-size: 0.7rem; color: #64748B; text-transform: uppercase;">Forecast Utilization</div>
+              <div id="scffrpe-forecast-util" style="font-size: 1.25rem; font-weight: 800; color: #38BDF8; margin-top: 4px;">84.00%</div>
+            </div>
+            <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 10px;">
+              <div style="font-size: 0.7rem; color: #64748B; text-transform: uppercase;">Bottleneck Risk</div>
+              <div id="scffrpe-bottleneck-risk" style="font-size: 1.25rem; font-weight: 800; color: #F59E0B; margin-top: 4px;">WATCH</div>
+            </div>
+            <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 10px;">
+              <div style="font-size: 0.7rem; color: #64748B; text-transform: uppercase;">Confidence Score</div>
+              <div id="scffrpe-confidence-score" style="font-size: 1.25rem; font-weight: 800; color: #A855F7; margin-top: 4px;">88.50%</div>
+            </div>
+          </div>
+
+          <div style="margin-top: 14px;">
+            <div style="font-size: 0.85rem; font-weight: 700; color: #E2E8F0; margin-bottom: 8px;">Executive Capacity Planning Brief & Scenarios</div>
+            <div id="scffrpe-forecast-container" style="display: flex; flex-direction: column; gap: 8px;">
+              <div style="font-size: 0.85rem; color: #64748B; padding: 12px; background: #0E1522; border-radius: 6px;">
+                No capacity forecast generated yet. Click Forecast Strategic Capacity.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
     </main>
   </div>
 

@@ -1673,6 +1673,56 @@ document.addEventListener('DOMContentLoaded', async () => {
           }
         };
         renderSPORE();
+
+        // Phase 10.3 SCFFRPE Controller
+        const renderSCFFRPE = async () => {
+          try {
+            const btnGenFc = document.getElementById('btn-generate-capacity-fc');
+            if (btnGenFc) {
+              btnGenFc.addEventListener('click', async () => {
+                btnGenFc.textContent = 'Forecasting Strategic Capacity...';
+                btnGenFc.disabled = true;
+                try {
+                  const res = await LokatorDB.strategicCapacity.generateCapacityForecast(
+                    '00000000-0000-0000-0000-000000000000',
+                    'MEDIUM_TERM'
+                  );
+                  if (res && res.forecast_id) {
+                    document.getElementById('scffrpe-utilization-tier').textContent = 'HEALTHY';
+                    document.getElementById('scffrpe-forecast-util').textContent = Number(res.forecast_utilization || 84.0).toFixed(2) + '%';
+                    document.getElementById('scffrpe-bottleneck-risk').textContent = res.bottleneck_risk || 'WATCH';
+                    document.getElementById('scffrpe-confidence-score').textContent = Number(res.confidence_score || 88.5).toFixed(2) + '%';
+
+                    const container = document.getElementById('scffrpe-forecast-container');
+                    container.innerHTML = `
+                      <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 12px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                          <div style="font-weight: 700; color: #E2E8F0; font-size: 0.85rem;">
+                            <span style="color: #F59E0B; margin-right: 6px;">${res.planning_horizon}</span> (Projected Demand: NGN ${Number(res.projected_demand).toLocaleString()})
+                          </div>
+                          <div style="font-size: 0.72rem; color: #94A3B8; margin-top: 4px;">
+                            Forecast Util: ${res.forecast_utilization}% | Bottleneck: ${res.bottleneck_risk} | Buffer: NGN ${Number(res.recommended_buffer).toLocaleString()}
+                          </div>
+                        </div>
+                        <div style="text-align: right;">
+                          <span class="status-tag" style="background: rgba(245,158,11,0.2); color: #F59E0B;">FORECAST_ACTIVE</span>
+                        </div>
+                      </div>
+                    `;
+                  }
+                } catch (e) {
+                  alert('Capacity forecasting failed: ' + e.message);
+                } finally {
+                  btnGenFc.textContent = 'Forecast Strategic Capacity';
+                  btnGenFc.disabled = false;
+                }
+              });
+            }
+          } catch (e) {
+            console.warn('SCFFRPE initialization failed:', e.message);
+          }
+        };
+        renderSCFFRPE();
       }
 
     } catch (err) {

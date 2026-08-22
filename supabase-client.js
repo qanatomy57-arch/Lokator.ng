@@ -4348,6 +4348,76 @@
     }
   };
 
+  // Phase 10.3: Strategic Capacity Forecasting & Future Resource Planning Engine (SCFFRPE)
+  const strategicCapacityManager = {
+    async createCapacityBaseline(planId, modelVersion = 'SCFFRPE-1.0.0') {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('create_strategic_capacity_baseline', {
+          p_plan_id: planId,
+          p_model_version: modelVersion
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        success: true,
+        baseline_id: '00000000-0000-0000-0000-000000000000',
+        baseline_code: 'CAP-20260822-MOCK01',
+        baseline_digest: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+        current_capacity: 500000.00,
+        allocated_capacity: 360000.00,
+        utilization_rate: 72.00,
+        utilization_tier: 'HEALTHY',
+        status: 'CAPACITY_BASELINE_FROZEN'
+      };
+    },
+
+    async generateCapacityForecast(baselineId, horizon = 'MEDIUM_TERM', modelVersion = 'SCFFRPE-1.0.0') {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('generate_capacity_forecast', {
+          p_baseline_id: baselineId,
+          p_planning_horizon: horizon,
+          p_model_version: modelVersion
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        success: true,
+        forecast_id: '00000000-0000-0000-0000-000000000000',
+        baseline_id: baselineId,
+        planning_horizon: horizon,
+        projected_demand: 420000.00,
+        forecast_utilization: 84.00,
+        bottleneck_risk: 'WATCH',
+        recommended_buffer: 50000.00,
+        confidence_score: 88.50,
+        guidance: 'DECISION_SUPPORT — MANUAL_ACTION_REQUIRED'
+      };
+    },
+
+    async getCapacityReport(baselineId) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('get_strategic_capacity_report', {
+          p_baseline_id: baselineId
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        success: true,
+        baseline_id: baselineId,
+        baseline_code: 'CAP-20260822-MOCK01',
+        current_capacity: 500000.00,
+        allocated_capacity: 360000.00,
+        utilization_rate: 72.00,
+        utilization_tier: 'HEALTHY',
+        baseline_digest: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+        forecasts: []
+      };
+    }
+  };
+
   LokatorDB.strategicCommand = strategicCommandManager;
   LokatorDB.strategicDecision = strategicDecisionManager;
   LokatorDB.strategicOrchestration = strategicOrchestrationManager;
@@ -4361,6 +4431,7 @@
   LokatorDB.strategicIntelligence = strategicIntelligenceManager;
   LokatorDB.strategicPlanning = strategicPlanningManager;
   LokatorDB.strategicMonitoring = strategicMonitoringManager;
+  LokatorDB.strategicCapacity = strategicCapacityManager;
   LokatorDB.predictiveGrowth = predictiveGrowthManager;
   LokatorDB.growthIntelligence = growthIntelligenceManager;
   LokatorDB.realtimeGrowth = realtimeGrowthManager;
