@@ -122,8 +122,6 @@ class ScrollDiscoveryEngine {
     this.videos = Array.from(document.querySelectorAll('.hero-video'));
     this.timelineSteps = Array.from(document.querySelectorAll('.t-step'));
     this.scrollPrompt = document.getElementById('scroll-prompt');
-    this.counterCurrent = document.getElementById('hnc-current');
-    this.counterTotal = document.getElementById('hnc-total');
 
     this.currentIndex = 0;
     this.isHeroInViewport = true;
@@ -134,12 +132,7 @@ class ScrollDiscoveryEngine {
   }
 
   init() {
-    // 1. Initialize dynamic counter total from slides count
-    if (this.counterTotal) {
-      this.counterTotal.textContent = String(this.slides.length).padStart(2, '0');
-    }
-
-    // 2. Configure and prime initial video preloads
+    // 1. Configure and prime initial video preloads
     this.primeAllVideos();
 
     // 3. IntersectionObserver for slide visibility within hero container
@@ -181,7 +174,6 @@ class ScrollDiscoveryEngine {
 
     // 8. Initial active state on slide 0
     this.updateActiveSlide(0);
-    this.updateCounter(0);
     this.bindVideoProgress(0);
     this.playVideo(0);
   }
@@ -281,23 +273,14 @@ class ScrollDiscoveryEngine {
       }
     });
 
-    // 6. Update dynamic position counter
-    this.updateCounter(newIndex);
-
-    // 7. Bind active video playback progress
+    // 6. Bind active video playback progress
     this.bindVideoProgress(newIndex);
 
-    // 8. Smoothly fade scroll prompt when navigating away from first slide
+    // 7. Smoothly fade scroll prompt when navigating away from first slide
     if (this.scrollPrompt) {
       this.scrollPrompt.style.opacity = newIndex === 0 ? '1' : '0';
       this.scrollPrompt.style.pointerEvents = newIndex === 0 ? 'auto' : 'none';
       this.scrollPrompt.style.transition = 'opacity 0.4s ease';
-    }
-  }
-
-  updateCounter(idx) {
-    if (this.counterCurrent) {
-      this.counterCurrent.textContent = String(idx + 1).padStart(2, '0');
     }
   }
 
