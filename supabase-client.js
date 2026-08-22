@@ -4282,11 +4282,78 @@
     }
   };
 
+  // Phase 10.2: Strategic Performance Optimization & Resource Rebalancing Engine (SPORE)
+  const strategicOptimizationManager = {
+    async createOptimizationBaseline(planId, modelVersion = 'SPORE-1.0.0') {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('create_strategic_optimization_baseline', {
+          p_plan_id: planId,
+          p_model_version: modelVersion
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        success: true,
+        baseline_id: '00000000-0000-0000-0000-000000000000',
+        baseline_code: 'OPT-20260822-MOCK01',
+        baseline_digest: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+        current_efficiency_score: 82.50,
+        efficiency_tier: 'HIGH',
+        portfolio_efficiency: 'EFFICIENT',
+        primary_bottleneck: 'WATCH',
+        status: 'OPTIMIZATION_BASELINE_FROZEN'
+      };
+    },
+
+    async generateRebalancingCandidates(baselineId, modelVersion = 'SPORE-1.0.0') {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('generate_rebalancing_candidates', {
+          p_baseline_id: baselineId,
+          p_model_version: modelVersion
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        success: true,
+        baseline_id: baselineId,
+        candidates_count: 3,
+        optimal_candidate_code: 'CAND-01',
+        optimal_score: 91.50,
+        frontier_stability: 'ROBUST',
+        guidance: 'DECISION_SUPPORT — MANUAL_ACTION_REQUIRED'
+      };
+    },
+
+    async getOptimizationReport(baselineId) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('get_strategic_optimization_report', {
+          p_baseline_id: baselineId
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        success: true,
+        baseline_id: baselineId,
+        baseline_code: 'OPT-20260822-MOCK01',
+        current_efficiency_score: 82.50,
+        efficiency_tier: 'HIGH',
+        portfolio_efficiency: 'EFFICIENT',
+        primary_bottleneck: 'WATCH',
+        baseline_digest: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+        candidates: []
+      };
+    }
+  };
+
   LokatorDB.strategicCommand = strategicCommandManager;
   LokatorDB.strategicDecision = strategicDecisionManager;
   LokatorDB.strategicOrchestration = strategicOrchestrationManager;
   LokatorDB.strategicScenario = strategicScenarioManager;
   LokatorDB.strategicOptimization = strategicOptimizationManager;
+  LokatorDB.strategicPerformance = strategicOptimizationManager;
   LokatorDB.strategicResourceAllocation = strategicResourceAllocationManager;
   LokatorDB.strategicResilience = strategicResilienceManager;
   LokatorDB.strategicDecisionGovernance = strategicDecisionGovernanceManager;

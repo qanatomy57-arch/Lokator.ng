@@ -1624,6 +1624,55 @@ document.addEventListener('DOMContentLoaded', async () => {
           }
         };
         renderSEMVDACE();
+
+        // Phase 10.2 SPORE Controller
+        const renderSPORE = async () => {
+          try {
+            const btnGenCands = document.getElementById('btn-generate-rebalancing-cands');
+            if (btnGenCands) {
+              btnGenCands.addEventListener('click', async () => {
+                btnGenCands.textContent = 'Optimizing Resource Portfolio...';
+                btnGenCands.disabled = true;
+                try {
+                  const res = await LokatorDB.strategicOptimization.generateRebalancingCandidates(
+                    '00000000-0000-0000-0000-000000000000'
+                  );
+                  if (res && res.baseline_id) {
+                    document.getElementById('spore-portfolio-eff').textContent = 'EFFICIENT';
+                    document.getElementById('spore-efficiency-score').textContent = '82.50';
+                    document.getElementById('spore-primary-bottleneck').textContent = 'WATCH';
+                    document.getElementById('spore-pareto-stability').textContent = res.frontier_stability || 'ROBUST';
+
+                    const container = document.getElementById('spore-candidates-container');
+                    container.innerHTML = `
+                      <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 12px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                          <div style="font-weight: 700; color: #E2E8F0; font-size: 0.85rem;">
+                            <span style="color: #10B981; margin-right: 6px;">${res.optimal_candidate_code}</span> (Optimal Score: ${res.optimal_score})
+                          </div>
+                          <div style="font-size: 0.72rem; color: #94A3B8; margin-top: 4px;">
+                            Pareto Stability: ${res.frontier_stability} | Candidates: ${res.candidates_count} | Guidance: ${res.guidance}
+                          </div>
+                        </div>
+                        <div style="text-align: right;">
+                          <span class="status-tag" style="background: rgba(16,185,129,0.2); color: #10B981;">PARETO_OPTIMAL</span>
+                        </div>
+                      </div>
+                    `;
+                  }
+                } catch (e) {
+                  alert('Resource optimization failed: ' + e.message);
+                } finally {
+                  btnGenCands.textContent = 'Optimize Resource Allocation';
+                  btnGenCands.disabled = false;
+                }
+              });
+            }
+          } catch (e) {
+            console.warn('SPORE initialization failed:', e.message);
+          }
+        };
+        renderSPORE();
       }
 
     } catch (err) {

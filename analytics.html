@@ -1119,6 +1119,53 @@
         </div>
       </section>
 
+      <!-- Phase 10.2 Strategic Performance Optimization & Resource Rebalancing (SPORE) -->
+      <section>
+        <div class="section-title">Phase 10.2: Strategic Performance Optimization (SPORE)</div>
+        <div class="card" style="margin-bottom: 24px; border-left: 4px solid #10B981;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div style="font-size: 0.85rem; color: #94A3B8;">
+              <span class="status-tag" style="background: rgba(16,185,129,0.2); color: #10B981; margin-right: 8px;">PERFORMANCE_OPTIMIZATION</span>
+              <span class="status-tag" style="background: rgba(56,189,248,0.2); color: #38BDF8; margin-right: 8px;">PARETO_ROBUST</span>
+              <span class="status-tag" style="background: rgba(239,68,68,0.2); color: #EF4444; margin-right: 8px;">DECISION_SUPPORT</span>
+            </div>
+            <button id="btn-generate-rebalancing-cands" class="btn-action" style="padding: 4px 10px; font-size: 0.75rem; background: #10B981; color: #0E1522; font-weight: 700;">Optimize Resource Allocation</button>
+          </div>
+
+          <div style="font-size: 0.75rem; color: #64748B; margin-bottom: 14px;">
+            Deterministic multi-objective strategic optimization, marginal value curve analysis, bottleneck detection, and Pareto-optimal resource rebalancing candidates.
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 14px;">
+            <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 10px;">
+              <div style="font-size: 0.7rem; color: #64748B; text-transform: uppercase;">Portfolio Efficiency</div>
+              <div id="spore-portfolio-eff" style="font-size: 1.25rem; font-weight: 800; color: #10B981; margin-top: 4px;">EFFICIENT</div>
+            </div>
+            <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 10px;">
+              <div style="font-size: 0.7rem; color: #64748B; text-transform: uppercase;">Efficiency Score</div>
+              <div id="spore-efficiency-score" style="font-size: 1.25rem; font-weight: 800; color: #38BDF8; margin-top: 4px;">82.50</div>
+            </div>
+            <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 10px;">
+              <div style="font-size: 0.7rem; color: #64748B; text-transform: uppercase;">Primary Bottleneck</div>
+              <div id="spore-primary-bottleneck" style="font-size: 1.25rem; font-weight: 800; color: #F59E0B; margin-top: 4px;">WATCH</div>
+            </div>
+            <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 10px;">
+              <div style="font-size: 0.7rem; color: #64748B; text-transform: uppercase;">Pareto Stability</div>
+              <div id="spore-pareto-stability" style="font-size: 1.25rem; font-weight: 800; color: #A855F7; margin-top: 4px;">ROBUST</div>
+            </div>
+          </div>
+
+          <div style="margin-top: 14px;">
+            <div style="font-size: 0.85rem; font-weight: 700; color: #E2E8F0; margin-bottom: 8px;">Rebalancing Candidates & Pareto Frontier</div>
+            <div id="spore-candidates-container" style="display: flex; flex-direction: column; gap: 8px;">
+              <div style="font-size: 0.85rem; color: #64748B; padding: 12px; background: #0E1522; border-radius: 6px;">
+                No rebalancing candidates evaluated yet. Click Optimize Resource Allocation.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
     </main>
   </div>
 
