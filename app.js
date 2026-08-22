@@ -643,4 +643,20 @@ function setupFunnelTelemetryListeners() {
       }
     });
   });
+
+  // Testimonials Continuous Marquee Touch Pause & Resume
+  const testiTrack = document.getElementById('testi-track');
+  if (testiTrack) {
+    testiTrack.addEventListener('touchstart', () => {
+      testiTrack.classList.add('is-paused');
+    }, { passive: true });
+
+    testiTrack.addEventListener('touchend', () => {
+      testiTrack.classList.remove('is-paused');
+    }, { passive: true });
+
+    testiTrack.addEventListener('touchcancel', () => {
+      testiTrack.classList.remove('is-paused');
+    }, { passive: true });
+  }
 }
