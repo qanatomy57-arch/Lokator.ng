@@ -4492,6 +4492,75 @@
     }
   };
 
+  // Phase 10.5: Strategic Intelligence Integration & Executive Roadmap Command Center (SIERCC)
+  const strategicIntegrationManager = {
+    async generateExecutiveSnapshot(planId, modelVersion = 'SIERCC-1.0.0') {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('generate_executive_intelligence_snapshot', {
+          p_plan_id: planId,
+          p_model_version: modelVersion
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        success: true,
+        snapshot_id: '00000000-0000-0000-0000-000000000000',
+        snapshot_code: 'SNAP-20260822-MOCK01',
+        model_health: 'OPTIMAL',
+        drift_status: 'MINIMAL',
+        execution_status: 'ON_TRACK',
+        capacity_tier: 'HEALTHY',
+        demand_gap_tier: 'BALANCED',
+        decision_readiness: 95.50,
+        snapshot_digest: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+        status: 'EXECUTIVE_SNAPSHOT_SEALED'
+      };
+    },
+
+    async synthesizeRoadmap(snapshotId, modelVersion = 'SIERCC-1.0.0') {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('synthesize_strategic_roadmap', {
+          p_snapshot_id: snapshotId,
+          p_model_version: modelVersion
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        success: true,
+        snapshot_id: snapshotId,
+        milestones_synthesized: 3,
+        guidance: 'DECISION_SUPPORT — MANUAL_ACTION_REQUIRED'
+      };
+    },
+
+    async getCommandCenterReport(snapshotId) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('get_executive_command_center_report', {
+          p_snapshot_id: snapshotId
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        success: true,
+        snapshot_id: snapshotId,
+        snapshot_code: 'SNAP-20260822-MOCK01',
+        model_health: 'OPTIMAL',
+        drift_status: 'MINIMAL',
+        execution_status: 'ON_TRACK',
+        capacity_tier: 'HEALTHY',
+        demand_gap_tier: 'BALANCED',
+        decision_readiness: 95.50,
+        snapshot_digest: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+        unified_metrics: {},
+        executive_command_brief: {},
+        roadmap: []
+      };
+    }
+  };
+
   LokatorDB.strategicCommand = strategicCommandManager;
   LokatorDB.strategicDecision = strategicDecisionManager;
   LokatorDB.strategicOrchestration = strategicOrchestrationManager;
@@ -4507,6 +4576,8 @@
   LokatorDB.strategicMonitoring = strategicMonitoringManager;
   LokatorDB.strategicCapacity = strategicCapacityManager;
   LokatorDB.strategicDemand = strategicDemandManager;
+  LokatorDB.strategicIntegration = strategicIntegrationManager;
+  LokatorDB.strategicCommandCenter = strategicIntegrationManager;
   LokatorDB.predictiveGrowth = predictiveGrowthManager;
   LokatorDB.growthIntelligence = growthIntelligenceManager;
   LokatorDB.realtimeGrowth = realtimeGrowthManager;

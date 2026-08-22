@@ -1773,6 +1773,55 @@ document.addEventListener('DOMContentLoaded', async () => {
           }
         };
         renderSDFE();
+
+        // Phase 10.5 SIERCC Controller
+        const renderSIERCC = async () => {
+          try {
+            const btnGenExecSnap = document.getElementById('btn-generate-executive-snap');
+            if (btnGenExecSnap) {
+              btnGenExecSnap.addEventListener('click', async () => {
+                btnGenExecSnap.textContent = 'Synthesizing Executive Roadmap...';
+                btnGenExecSnap.disabled = true;
+                try {
+                  const snapRes = await LokatorDB.strategicIntegration.generateExecutiveSnapshot(
+                    '00000000-0000-0000-0000-000000000000'
+                  );
+                  if (snapRes && snapRes.snapshot_id) {
+                    document.getElementById('siercc-model-health').textContent = snapRes.model_health || 'OPTIMAL';
+                    document.getElementById('siercc-execution-status').textContent = snapRes.execution_status || 'ON_TRACK';
+                    document.getElementById('siercc-decision-readiness').textContent = Number(snapRes.decision_readiness || 95.5).toFixed(2) + '%';
+                    document.getElementById('siercc-roadmap-alignment').textContent = 'SYNCHRONIZED';
+
+                    const container = document.getElementById('siercc-roadmap-container');
+                    container.innerHTML = `
+                      <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 12px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                          <div style="font-weight: 700; color: #E2E8F0; font-size: 0.85rem;">
+                            <span style="color: #8B5CF6; margin-right: 6px;">${snapRes.snapshot_code}</span> (Readiness: ${snapRes.decision_readiness}%)
+                          </div>
+                          <div style="font-size: 0.72rem; color: #94A3B8; margin-top: 4px;">
+                            Model: ${snapRes.model_health} | Drift: ${snapRes.drift_status} | Execution: ${snapRes.execution_status} | Capacity: ${snapRes.capacity_tier} | Gap: ${snapRes.demand_gap_tier}
+                          </div>
+                        </div>
+                        <div style="text-align: right;">
+                          <span class="status-tag" style="background: rgba(139,92,246,0.2); color: #8B5CF6;">EXECUTIVE_SNAPSHOT_ACTIVE</span>
+                        </div>
+                      </div>
+                    `;
+                  }
+                } catch (e) {
+                  alert('Executive roadmap synthesis failed: ' + e.message);
+                } finally {
+                  btnGenExecSnap.textContent = 'Synthesize Executive Roadmap';
+                  btnGenExecSnap.disabled = false;
+                }
+              });
+            }
+          } catch (e) {
+            console.warn('SIERCC initialization failed:', e.message);
+          }
+        };
+        renderSIERCC();
       }
 
     } catch (err) {
