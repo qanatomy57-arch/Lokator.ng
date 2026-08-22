@@ -145,44 +145,63 @@ document.addEventListener('DOMContentLoaded', async () => {
   // 5. Hero Action Buttons (Direct Call & WhatsApp)
   const cleanPhone = (provider.phone || '').replace(/[^0-9]/g, '');
   const cleanWa = (provider.whatsappNumber || provider.phone || '').replace(/[^0-9]/g, '');
+  // P2 Fix: guard against null/undefined area in customer-facing message
+  const providerLocation = provider.area || provider.city || 'your area';
   const initialWaMsg = encodeURIComponent(
-    `Hello ${provider.name}, I found your verified profile on Lokator and I'd like to inquire about your ${provider.trade} service in ${provider.area}.`
+    `Hello ${provider.name}, I found your verified profile on Lokator and I'd like to inquire about your ${provider.trade} service in ${providerLocation}.`
   );
 
   const btnCallHero = document.getElementById('btn-call-hero');
   if (btnCallHero) {
-    btnCallHero.href = `tel:${cleanPhone}`;
-    btnCallHero.addEventListener('click', () => {
-      if (typeof LokatorTelemetry !== 'undefined') {
-        LokatorTelemetry.trackEvent('phone_clicked', { providerId: provider.id, trade: provider.trade, city: provider.city });
-      }
-      if (typeof LokatorDB !== 'undefined' && LokatorDB.marketplaceDiscovery) {
-        LokatorDB.marketplaceDiscovery.trackDiscoveryEvent('phone_clicked', {
-          provider_id: provider.id,
-          trade: provider.trade,
-          city: provider.city,
-          state: provider.state || stateParam
-        }).catch(() => {});
-      }
-    });
+    if (cleanPhone) {
+      btnCallHero.href = `tel:${cleanPhone}`;
+      btnCallHero.addEventListener('click', () => {
+        if (typeof LokatorTelemetry !== 'undefined') {
+          LokatorTelemetry.trackEvent('phone_clicked', { providerId: provider.id, trade: provider.trade, city: provider.city });
+        }
+        if (typeof LokatorDB !== 'undefined' && LokatorDB.marketplaceDiscovery) {
+          LokatorDB.marketplaceDiscovery.trackDiscoveryEvent('phone_clicked', {
+            provider_id: provider.id,
+            trade: provider.trade,
+            city: provider.city,
+            state: provider.state || stateParam
+          }).catch(() => {});
+        }
+      });
+    } else {
+      // No phone number available — hide call button
+      btnCallHero.style.display = 'none';
+    }
   }
 
   const btnWaHero = document.getElementById('btn-wa-hero');
   if (btnWaHero) {
-    btnWaHero.href = `https://wa.me/${cleanWa}?text=${initialWaMsg}`;
-    btnWaHero.addEventListener('click', () => {
-      if (typeof LokatorTelemetry !== 'undefined') {
-        LokatorTelemetry.trackEvent('whatsapp_clicked', { providerId: provider.id, trade: provider.trade, city: provider.city });
-      }
-      if (typeof LokatorDB !== 'undefined' && LokatorDB.marketplaceDiscovery) {
-        LokatorDB.marketplaceDiscovery.trackDiscoveryEvent('whatsapp_clicked', {
-          provider_id: provider.id,
-          trade: provider.trade,
-          city: provider.city,
-          state: provider.state || stateParam
-        }).catch(() => {});
-      }
-    });
+    // P2 Fix: Only render WhatsApp button if a valid number exists
+    if (cleanWa) {
+      btnWaHero.href = `https://wa.me/${cleanWa}?text=${initialWaMsg}`;
+      btnWaHero.addEventListener('click', () => {
+        if (typeof LokatorTelemetry !== 'undefined') {
+          LokatorTelemetry.trackEvent('whatsapp_clicked', { providerId: provider.id, trade: provider.trade, city: provider.city });
+        }
+        if (typeof LokatorDB !== 'undefined' && LokatorDB.marketplaceDiscovery) {
+          LokatorDB.marketplaceDiscovery.trackDiscoveryEvent('whatsapp_clicked', {
+            provider_id: provider.id,
+            trade: provider.trade,
+            city: provider.city,
+            state: provider.state || stateParam
+          }).catch(() => {});
+        }
+      });
+    } else if (cleanPhone) {
+      // Fallback: redirect WhatsApp button to phone call when no WA number exists
+      btnWaHero.href = `tel:${cleanPhone}`;
+      btnWaHero.textContent = 'Call Provider';
+      btnWaHero.className = btnWaHero.className.replace('btn-gold', 'btn-outline');
+      btnWaHero.setAttribute('title', 'WhatsApp not available — tap to call');
+    } else {
+      // No contact info available — hide WhatsApp button
+      btnWaHero.style.display = 'none';
+    }
   }
 
   // Track profile view

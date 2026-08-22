@@ -3104,3 +3104,256 @@ body {
   background: #D4AF37;
   color: #0A0E17;
 }
+
+/* ==============================================================================
+   PHASE 10.10: MARKETPLACE EXPERIENCE & BROWSE-BY-INDUSTRY DISCOVERY ENGINE
+   ============================================================================== */
+
+/* Mobile Filter Backdrop Overlay */
+.filter-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 14, 23, 0.75);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  z-index: 140;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.filter-backdrop.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.filter-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mobile-filter-close-btn {
+  display: none;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--fg, #F9FAFB);
+  font-size: 20px;
+  line-height: 1;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.mobile-filter-close-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #EF4444;
+}
+
+/* Mobile Sidebar Drawer Styling Overrides */
+@media (max-width: 860px) {
+  .mobile-filter-close-btn {
+    display: inline-flex;
+  }
+
+  .filter-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 85%;
+    max-width: 360px;
+    height: 100vh;
+    background: #0D1520;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+    z-index: 150;
+    overflow-y: auto;
+    padding: 20px;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: block !important;
+  }
+
+  .filter-sidebar.open,
+  .filter-sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  .filter-card {
+    max-width: 100%;
+    margin: 0;
+    background: transparent;
+    border: none;
+    padding: 0;
+    box-shadow: none;
+  }
+}
+
+/* Browse by Industry Section */
+.marketplace-browse-section {
+  margin-bottom: 24px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: var(--radius-lg, 12px);
+  transition: all 0.3s ease;
+}
+
+.browse-section-header {
+  margin-bottom: 16px;
+}
+
+.browse-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--green, #006B3F);
+  background: rgba(0, 107, 63, 0.12);
+  border: 1px solid rgba(0, 107, 63, 0.25);
+  padding: 3px 8px;
+  border-radius: 4px;
+  margin-bottom: 6px;
+}
+
+.browse-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--fg, #F9FAFB);
+  margin: 0 0 4px;
+  letter-spacing: -0.3px;
+}
+
+.browse-subtitle {
+  font-size: 13px;
+  color: var(--fg-muted, #9CA3AF);
+  margin: 0;
+}
+
+.industry-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.industry-browse-card {
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md, 10px);
+  padding: 14px;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.industry-browse-card:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(0, 107, 63, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+.industry-browse-card.is-selected {
+  background: rgba(0, 107, 63, 0.1);
+  border-color: var(--green, #006B3F);
+}
+
+.industry-card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.industry-card-icon {
+  font-size: 22px;
+  line-height: 1;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.industry-card-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--fg, #F9FAFB);
+  line-height: 1.2;
+}
+
+.industry-card-desc {
+  font-size: 11.5px;
+  color: var(--fg-muted, #9CA3AF);
+  line-height: 1.4;
+  margin: 0 0 10px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.industry-popular-skills-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.industry-skill-pill-tag {
+  font-size: 10.5px;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--fg-muted, #9CA3AF);
+  padding: 2px 7px;
+  border-radius: 12px;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.industry-skill-pill-tag:hover {
+  background: var(--green, #006B3F);
+  border-color: var(--green, #006B3F);
+  color: #FFFFFF;
+}
+
+/* Collapse browse section when specific filter/search query is actively queried */
+.marketplace-browse-section.is-compact {
+  padding: 12px 16px;
+  margin-bottom: 16px;
+}
+
+.marketplace-browse-section.is-compact .industry-cards-grid {
+  display: none;
+}
+
+.browse-toggle-btn {
+  background: none;
+  border: none;
+  color: var(--green, #006B3F);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 4px 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}

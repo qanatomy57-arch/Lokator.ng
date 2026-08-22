@@ -55,6 +55,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const modalCloseBtn = document.getElementById("modal-close-btn");
   const applyMainSearchBtn = document.getElementById("apply-main-search");
   const breadcrumbsNav = document.getElementById("marketplace-breadcrumbs");
+  const browseSection = document.getElementById("marketplace-browse-section");
+  const industryCardsGrid = document.getElementById("industry-cards-grid");
+  const filterBackdrop = document.getElementById("filter-backdrop");
+  const mobileFilterCloseBtn = document.getElementById("mobile-filter-close-btn");
 
   // Debounce Utility
   function debounce(func, wait) {
@@ -212,13 +216,85 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-    if (sortParam && sortSelect) {
-      sortSelect.value = sortParam;
-      state.sortBy = sortParam;
+  // Phase 10.10: Render Canonical Nigerian Marketplace Industries Browse Grid
+  function buildIndustryCardsHtml(industries) {
+    return industries.map(ind => {
+      const isSelected = state.industry === ind.id;
+      const skillsHtml = (ind.popularSkills || []).slice(0, 4).map(skillSlug => {
+        const catObj = (typeof CategoryMap !== 'undefined') ? CategoryMap.getBySlug(skillSlug) : null;
+        const skillName = catObj ? catObj.displayName || catObj.name : skillSlug.replace(/-/g, ' ');
+        return `<span class="industry-skill-pill-tag" data-skill-slug="${escapeHtml(skillSlug)}">${escapeHtml(skillName)}</span>`;
+      }).join('');
+
+      return `
+        <div class="industry-browse-card ${isSelected ? 'is-selected' : ''}" data-industry-id="${escapeHtml(ind.id)}" role="button" tabindex="0" title="Browse ${escapeHtml(ind.name)}">
+          <div class="industry-card-head">
+            <span class="industry-card-icon" aria-hidden="true">${escapeHtml(ind.icon || '⚡')}</span>
+            <div class="industry-card-name">${escapeHtml(ind.name)}</div>
+          </div>
+          <p class="industry-card-desc">${escapeHtml(ind.description || '')}</p>
+          <div class="industry-popular-skills-wrap">
+            ${skillsHtml}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderBrowseGrid() {
+    if (!browseSection || typeof MarketplaceTaxonomy === 'undefined') return;
+
+    const industries = MarketplaceTaxonomy.getIndustries();
+    if (!industries || industries.length === 0) {
+      browseSection.style.display = "none";
+      return;
     }
 
-    if (pageParam && !isNaN(parseInt(pageParam, 10))) {
-      state.page = parseInt(pageParam, 10);
+    browseSection.style.display = "block";
+    const hasActiveQuery = Boolean(state.keyword || (state.category && state.category !== 'all') || (state.industry && state.industry !== 'all'));
+
+    if (hasActiveQuery) {
+      browseSection.classList.add('is-compact');
+      const activeInd = state.industry !== 'all' ? MarketplaceTaxonomy.getIndustryById(state.industry) : null;
+      browseSection.innerHTML = `
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 14px;">⚡</span>
+            <span style="font-size: 13px; font-weight: 700; color: var(--fg);">${activeInd ? `Industry: ${escapeHtml(activeInd.name)}` : 'Browse all 15 trades & industries'}</span>
+          </div>
+          <button type="button" class="browse-toggle-btn" id="toggle-browse-grid-btn" aria-expanded="false">
+            <span>${activeInd ? 'Change Industry' : 'Explore All Trades'}</span> ↓
+          </button>
+        </div>
+        <div class="industry-cards-grid" id="industry-cards-grid-inner" style="display: none; margin-top: 14px;">
+          ${buildIndustryCardsHtml(industries)}
+        </div>
+      `;
+      const toggleBtn = document.getElementById('toggle-browse-grid-btn');
+      const gridInner = document.getElementById('industry-cards-grid-inner');
+      if (toggleBtn && gridInner) {
+        toggleBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          const isHidden = gridInner.style.display === 'none';
+          gridInner.style.display = isHidden ? 'grid' : 'none';
+          toggleBtn.setAttribute('aria-expanded', String(isHidden));
+          toggleBtn.innerHTML = isHidden ? `<span>Collapse Trades</span> ↑` : `<span>${activeInd ? 'Change Industry' : 'Explore All Trades'}</span> ↓`;
+        });
+      }
+    } else {
+      browseSection.classList.remove('is-compact');
+      browseSection.innerHTML = `
+        <div class="browse-section-header">
+          <div class="browse-header-text">
+            <span class="browse-badge">⚡ Explore by Trade</span>
+            <h3 class="browse-title">Browse Nigeria's Canonical Trades & Industries</h3>
+            <p class="browse-subtitle">Select an industry or popular trade to find verified artisans and specialists near you.</p>
+          </div>
+        </div>
+        <div class="industry-cards-grid" id="industry-cards-grid-inner">
+          ${buildIndustryCardsHtml(industries)}
+        </div>
+      `;
     }
   }
 
@@ -354,8 +430,9 @@ document.addEventListener("DOMContentLoaded", () => {
         offlineBanner.style.display = 'none';
       }
 
-      // Update Result Counter & Breadcrumbs
+      // Update Result Counter, Breadcrumbs & Canonical Industry Browse Grid
       renderBreadcrumbs();
+      renderBrowseGrid();
       if (resultsCountText) {
         resultsCountText.textContent = `Found ${state.totalCount} verified professional${state.totalCount === 1 ? "" : "s"} near you`;
       }
@@ -452,20 +529,42 @@ document.addEventListener("DOMContentLoaded", () => {
         const initials = getInitials(provider.name);
         const cleanPhone = (provider.phone || '').replace(/[^0-9]/g, '');
         const cleanWa = (provider.whatsappNumber || provider.phone || '').replace(/[^0-9]/g, '');
+        // P2 Fix: guard against null/undefined area in customer-facing message
+        const providerArea = provider.area || provider.city || 'your area';
         const waMsg = encodeURIComponent(
-          `Hello ${provider.name}, I found your verified profile on Lokator and I'd like to inquire about your ${provider.trade} service in ${provider.area}. Are you available?`
+          `Hello ${provider.name}, I found your verified profile on Lokator and I'd like to inquire about your ${provider.trade} service in ${providerArea}. Are you available?`
         );
 
-        // Distance text
+        // Distance text — safe fallback for missing area
         const distText = (provider.distanceKm != null) 
-          ? `📍 ${provider.distanceKm} km away • ${provider.area}`
-          : `📍 ${provider.area}`;
+          ? `📍 ${provider.distanceKm} km away • ${providerArea}`
+          : `📍 ${providerArea}`;
 
         const skillsList = Array.isArray(provider.skills) ? provider.skills : [provider.trade];
         const safeRating = Number(provider.rating || 5).toFixed(1);
         const safeReviewsCount = parseInt(provider.reviewsCount || 0, 10);
         const safeExpYrs = parseInt(provider.experienceYrs || 3, 10);
         const safeAvatarBg = (provider.avatarBg && typeof provider.avatarBg === 'string' && provider.avatarBg.startsWith('linear-gradient')) ? provider.avatarBg : 'var(--green)';
+
+        // P2 Fix: build contact actions based on available contact info
+        const callBtnHtml = cleanPhone
+          ? `<a href="tel:${cleanPhone}" class="action-btn call-btn" aria-label="Call ${escapeHtml(provider.name)}">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              Call Now
+            </a>`
+          : '';
+
+        const waBtnHtml = cleanWa
+          ? `<a href="https://wa.me/${cleanWa}?text=${waMsg}" target="_blank" rel="noopener" class="action-btn wa-btn" aria-label="WhatsApp ${escapeHtml(provider.name)}">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.625.846 5.059 2.284 7.034L.789 23.492a.5.5 0 0 0 .611.611l4.458-1.495A11.952 11.952 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22a9.94 9.94 0 0 1-5.39-1.585l-.386-.231-2.646.887.887-2.646-.231-.386A9.94 9.94 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
+              WhatsApp
+            </a>`
+          : (cleanPhone
+              ? `<a href="tel:${cleanPhone}" class="action-btn call-btn" title="WhatsApp not available — tap to call" aria-label="Call ${escapeHtml(provider.name)} (no WhatsApp)">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                  Call Only
+                </a>`
+              : '');
 
         return `
           <article class="provider-item-card ${provider.isVerified ? 'is-verified' : ''}" id="card-prov-${safeId}">
@@ -513,14 +612,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
             <!-- Direct Actions Column -->
             <div class="provider-actions-col">
-              <a href="tel:${cleanPhone}" class="action-btn call-btn" aria-label="Call ${escapeHtml(provider.name)}">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                Call Now
-              </a>
-              <a href="https://wa.me/${cleanWa}?text=${waMsg}" target="_blank" rel="noopener" class="action-btn wa-btn" aria-label="WhatsApp ${escapeHtml(provider.name)}">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.625.846 5.059 2.284 7.034L.789 23.492a.5.5 0 0 0 .611.611l4.458-1.495A11.952 11.952 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22a9.94 9.94 0 0 1-5.39-1.585l-.386-.231-2.646.887.887-2.646-.231-.386A9.94 9.94 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
-                WhatsApp
-              </a>
+              ${callBtnHtml}
+              ${waBtnHtml}
               <a href="profile.html?id=${safeId}" class="btn-view-profile" style="text-decoration: none; text-align: center;">
                 View Full Profile →
               </a>
@@ -833,6 +926,8 @@ document.addEventListener("DOMContentLoaded", () => {
     resetFiltersBtn.addEventListener("click", () => {
       state.keyword = "";
       state.category = "all";
+      state.industry = "all";
+      state.specialization = "all";
       state.city = "all";
       state.state = "all";
       state.locationQuery = "";
@@ -867,14 +962,105 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Mobile filters toggle
-  const mobileFilterBtn = document.getElementById("mobile-filter-btn");
-  const filterSidebar = document.getElementById("filter-sidebar");
-  if (mobileFilterBtn && filterSidebar) {
-    mobileFilterBtn.addEventListener("click", () => {
-      filterSidebar.classList.toggle("open");
+  // Phase 10.10: Browse-by-Industry Click Handler (Delegated)
+  if (browseSection) {
+    browseSection.addEventListener("click", (e) => {
+      // 1. If clicked on a specific skill chip tag
+      const skillPill = e.target.closest(".industry-skill-pill-tag");
+      if (skillPill && skillPill.dataset.skillSlug) {
+        e.preventDefault();
+        e.stopPropagation();
+        const slug = skillPill.dataset.skillSlug;
+        const catObj = (typeof CategoryMap !== 'undefined') ? CategoryMap.getBySlug(slug) : null;
+        state.category = slug;
+        state.keyword = "";
+        if (searchInput) searchInput.value = "";
+        if (categorySelect && catObj) {
+          categorySelect.value = catObj.dropdownValue || catObj.name;
+        }
+        state.page = 1;
+
+        if (typeof LokatorTelemetry !== 'undefined') {
+          LokatorTelemetry.trackEvent('skill_selected', { skill: slug, source: 'browse_grid' });
+        }
+        if (typeof LokatorDB !== 'undefined' && LokatorDB.marketplaceDiscovery) {
+          LokatorDB.marketplaceDiscovery.trackDiscoveryEvent('skill_selected', { skill: slug, source: 'browse_grid' }).catch(() => {});
+        }
+
+        render();
+        window.scrollTo({ top: 260, behavior: 'smooth' });
+        return;
+      }
+
+      // 2. If clicked on the industry card itself
+      const card = e.target.closest(".industry-browse-card");
+      if (card && card.dataset.industryId) {
+        e.preventDefault();
+        const indId = card.dataset.industryId;
+        state.industry = (state.industry === indId) ? "all" : indId;
+        state.page = 1;
+
+        if (typeof LokatorTelemetry !== 'undefined') {
+          LokatorTelemetry.trackEvent('industry_selected', { industry: indId, source: 'browse_grid' });
+        }
+        if (typeof LokatorDB !== 'undefined' && LokatorDB.marketplaceDiscovery) {
+          LokatorDB.marketplaceDiscovery.trackDiscoveryEvent('industry_selected', { industry: indId, source: 'browse_grid' }).catch(() => {});
+        }
+
+        render();
+        window.scrollTo({ top: 260, behavior: 'smooth' });
+      }
     });
   }
+
+  // Phase 10.10: Mobile Filter Drawer & Backdrop Management
+  function openFilterDrawer() {
+    if (filterSidebar) {
+      filterSidebar.classList.add("open", "mobile-open");
+    }
+    if (filterBackdrop) {
+      filterBackdrop.classList.add("active");
+    }
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeFilterDrawer() {
+    if (filterSidebar) {
+      filterSidebar.classList.remove("open", "mobile-open");
+    }
+    if (filterBackdrop) {
+      filterBackdrop.classList.remove("active");
+    }
+    document.body.style.overflow = "";
+  }
+
+  if (mobileFilterBtn) {
+    mobileFilterBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      openFilterDrawer();
+    });
+  }
+
+  if (mobileFilterCloseBtn) {
+    mobileFilterCloseBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      closeFilterDrawer();
+    });
+  }
+
+  if (filterBackdrop) {
+    filterBackdrop.addEventListener("click", (e) => {
+      e.preventDefault();
+      closeFilterDrawer();
+    });
+  }
+
+  // Close drawer on Escape key press
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && filterSidebar && (filterSidebar.classList.contains("open") || filterSidebar.classList.contains("mobile-open"))) {
+      closeFilterDrawer();
+    }
+  });
 
   // Handle browser back/forward navigation
   window.addEventListener("popstate", () => {

@@ -99,12 +99,18 @@
   <section class="explore-section">
     <div class="container explore-layout">
       
+      <!-- Phase 10.10: Mobile Filter Backdrop Overlay -->
+      <div class="filter-backdrop" id="filter-backdrop" aria-hidden="true"></div>
+
       <!-- LEFT FILTERS SIDEBAR -->
       <aside class="filter-sidebar" id="filter-sidebar">
         <div class="filter-card">
           <div class="filter-header">
             <h3>Filters</h3>
-            <button id="reset-filters" class="reset-btn">Clear all</button>
+            <div class="filter-header-actions">
+              <button id="reset-filters" class="reset-btn">Clear all</button>
+              <button class="mobile-filter-close-btn" id="mobile-filter-close-btn" aria-label="Close filters">&times;</button>
+            </div>
           </div>
 
           <!-- Category Filter -->
@@ -211,6 +217,20 @@
         <nav class="marketplace-breadcrumbs-nav" id="marketplace-breadcrumbs" aria-label="Breadcrumbs">
           <!-- Injected via JavaScript -->
         </nav>
+
+        <!-- Phase 10.10: Browse by Industry Discovery Grid -->
+        <section class="marketplace-browse-section" id="marketplace-browse-section" aria-label="Browse services by industry">
+          <div class="browse-section-header">
+            <div class="browse-header-text">
+              <span class="browse-badge">⚡ Explore by Trade</span>
+              <h3 class="browse-title">Browse Nigeria's Canonical Trades & Industries</h3>
+              <p class="browse-subtitle">Select an industry to explore verified artisans and specialists near your location.</p>
+            </div>
+          </div>
+          <div class="industry-cards-grid" id="industry-cards-grid">
+            <!-- Injected via JavaScript from MarketplaceTaxonomy.getIndustries() -->
+          </div>
+        </section>
 
         <!-- Results Bar: count & sort -->
         <div class="results-toolbar">

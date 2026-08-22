@@ -934,11 +934,11 @@
     getRelatedSkills(skillSlug, limit = 6) {
       if (!skillSlug) return [];
       const normalizedSlug = CategoryMap.resolveSlug(skillSlug);
-      if (this.relationships[normalizedSlug]) {
+      if (Array.isArray(this.relationships[normalizedSlug])) {
         return this.relationships[normalizedSlug].slice(0, limit);
       }
       // Fallback: popular skills in same industry
-      const ind = SKILL_INDUSTRIES.find(i => i.popularSkills.includes(normalizedSlug));
+      const ind = SKILL_INDUSTRIES.find(i => Array.isArray(i.popularSkills) && i.popularSkills.includes(normalizedSlug));
       if (ind) {
         return ind.popularSkills
           .filter(s => s !== normalizedSlug)
@@ -990,7 +990,7 @@
     getSpecializations(skillSlug) {
       if (!skillSlug) return [];
       const normalizedSlug = CategoryMap.resolveSlug(skillSlug);
-      return this.specializations[normalizedSlug] || [];
+      return Array.isArray(this.specializations[normalizedSlug]) ? this.specializations[normalizedSlug] : [];
     },
 
     // Build Discovery Context Model
