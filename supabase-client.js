@@ -4697,6 +4697,166 @@
     }
   };
 
+  // Phase 10.7: Strategic Portfolio Governance & Decision Control Engine (SPGDCE)
+  const strategicPortfolioGovernanceManager = {
+    async registerPortfolio(name, budgetEnvelope, horizon = 'MEDIUM_TERM', modelVersion = 'SPGDCE-1.0.0') {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('register_strategic_portfolio', {
+          p_portfolio_name: name,
+          p_budget_envelope: budgetEnvelope,
+          p_strategic_horizon: horizon,
+          p_model_version: modelVersion
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        success: true,
+        portfolio_id: '00000000-0000-0000-0000-000000000000',
+        portfolio_code: 'PORT-20260822-MOCK01',
+        portfolio_name: name,
+        total_budget_envelope: budgetEnvelope,
+        strategic_horizon: horizon,
+        status: 'ACTIVE',
+        digest: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+        guidance: 'DECISION_SUPPORT_ONLY — MANUAL_ACTION_REQUIRED'
+      };
+    },
+
+    async addInitiative(portfolioId, planId, objectiveClass = 'GROWTH', allocatedBudget = 50000.00, modelVersion = 'SPGDCE-1.0.0') {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('add_portfolio_initiative', {
+          p_portfolio_id: portfolioId,
+          p_plan_id: planId,
+          p_objective_class: objectiveClass,
+          p_allocated_budget: allocatedBudget,
+          p_model_version: modelVersion
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        success: true,
+        portfolio_id: portfolioId,
+        initiative_id: '00000000-0000-0000-0000-000000000000',
+        initiative_code: 'INIT-20260822-MOCK01',
+        objective_class: objectiveClass,
+        allocated_budget: allocatedBudget,
+        priority_score: 88.00,
+        status: 'EVALUATED',
+        guidance: 'DECISION_SUPPORT_ONLY — MANUAL_ACTION_REQUIRED'
+      };
+    },
+
+    async evaluateConflictsAndDependencies(portfolioId, modelVersion = 'SPGDCE-1.0.0') {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('evaluate_portfolio_conflicts_and_dependencies', {
+          p_portfolio_id: portfolioId,
+          p_model_version: modelVersion
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        success: true,
+        portfolio_id: portfolioId,
+        conflicts_detected: 0,
+        dependency_bottlenecks: 0,
+        conflict_status: 'CONFLICT_FREE',
+        digest: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+        guidance: 'DECISION_SUPPORT_ONLY — MANUAL_ACTION_REQUIRED'
+      };
+    },
+
+    async evaluateRiskAndConcentration(portfolioId, modelVersion = 'SPGDCE-1.0.0') {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('evaluate_portfolio_risk_and_concentration', {
+          p_portfolio_id: portfolioId,
+          p_model_version: modelVersion
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        success: true,
+        portfolio_id: portfolioId,
+        resource_hhi: 0.2200,
+        geo_hhi: 0.1850,
+        category_hhi: 0.1950,
+        systemic_exposure_tier: 'LOW',
+        risk_tier: 'BALANCED',
+        concentration_digest: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+        guidance: 'DECISION_SUPPORT_ONLY — MANUAL_ACTION_REQUIRED'
+      };
+    },
+
+    async generateTradeoffsAndRecommendations(portfolioId, modelVersion = 'SPGDCE-1.0.0') {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('generate_portfolio_tradeoffs_and_recommendations', {
+          p_portfolio_id: portfolioId,
+          p_model_version: modelVersion
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        success: true,
+        portfolio_id: portfolioId,
+        tradeoffs_evaluated: 1,
+        recommendations_generated: 1,
+        pareto_frontier_status: 'OPTIMAL',
+        guidance: 'DECISION_SUPPORT_ONLY — MANUAL_ACTION_REQUIRED'
+      };
+    },
+
+    async recordExecutiveDecision(portfolioId, initiativeId, recommendationId, decisionAction, rationale, modelVersion = 'SPGDCE-1.0.0') {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('record_executive_governance_decision', {
+          p_portfolio_id: portfolioId,
+          p_initiative_id: initiativeId,
+          p_recommendation_id: recommendationId,
+          p_decision_action: decisionAction,
+          p_rationale: rationale,
+          p_model_version: modelVersion
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        success: true,
+        portfolio_id: portfolioId,
+        decision_id: '00000000-0000-0000-0000-000000000000',
+        decision_code: 'DEC-20260822-MOCK01',
+        decision_action: decisionAction,
+        initiative_status: 'AUTHORIZED',
+        decision_digest: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+        guidance: 'DECISION_SUPPORT_ONLY — MANUAL_ACTION_REQUIRED'
+      };
+    },
+
+    async getGovernanceReport(portfolioId) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('get_strategic_portfolio_governance_report', {
+          p_portfolio_id: portfolioId
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        success: true,
+        portfolio: {},
+        initiatives: [],
+        conflicts: [],
+        dependencies: [],
+        risk_concentration: {},
+        tradeoffs: [],
+        recommendations: [],
+        executive_decisions: [],
+        guidance: 'DECISION_SUPPORT_ONLY — MANUAL_ACTION_REQUIRED'
+      };
+    }
+  };
+
   LokatorDB.strategicCommand = strategicCommandManager;
   LokatorDB.strategicDecision = strategicDecisionManager;
   LokatorDB.strategicOrchestration = strategicOrchestrationManager;
@@ -4717,6 +4877,8 @@
   LokatorDB.strategicDemand = strategicDemandManager;
   LokatorDB.strategicIntegration = strategicIntegrationManager;
   LokatorDB.strategicCommandCenter = strategicIntegrationManager;
+  LokatorDB.strategicPortfolioGovernance = strategicPortfolioGovernanceManager;
+  LokatorDB.strategicPortfolioGovernanceEngine = strategicPortfolioGovernanceManager;
   LokatorDB.predictiveGrowth = predictiveGrowthManager;
   LokatorDB.growthIntelligence = growthIntelligenceManager;
   LokatorDB.realtimeGrowth = realtimeGrowthManager;

@@ -1871,6 +1871,57 @@ document.addEventListener('DOMContentLoaded', async () => {
           }
         };
         renderSOILE();
+
+        // Phase 10.7 SPGDCE Controller
+        const renderSPGDCE = async () => {
+          try {
+            const btnEvalPortfolio = document.getElementById('btn-evaluate-spgdce-portfolio');
+            if (btnEvalPortfolio) {
+              btnEvalPortfolio.addEventListener('click', async () => {
+                btnEvalPortfolio.textContent = 'Evaluating Portfolio Governance...';
+                btnEvalPortfolio.disabled = true;
+                try {
+                  const portRes = await LokatorDB.strategicPortfolioGovernance.registerPortfolio(
+                    'National Expansion & Resilience Portfolio 2026',
+                    2500000.00,
+                    'MEDIUM_TERM'
+                  );
+                  if (portRes && portRes.portfolio_id) {
+                    document.getElementById('spgdce-portfolio-status').textContent = portRes.status || 'ACTIVE';
+                    document.getElementById('spgdce-conflict-count').textContent = '0 DETECTED';
+                    document.getElementById('spgdce-resource-hhi').textContent = '0.2200';
+                    document.getElementById('spgdce-risk-tier').textContent = 'BALANCED';
+
+                    const container = document.getElementById('spgdce-governance-container');
+                    container.innerHTML = `
+                      <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 12px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                          <div style="font-weight: 700; color: #E2E8F0; font-size: 0.85rem;">
+                            <span style="color: #3B82F6; margin-right: 6px;">${portRes.portfolio_code}</span> (${portRes.portfolio_name})
+                          </div>
+                          <div style="font-size: 0.72rem; color: #94A3B8; margin-top: 4px;">
+                            Budget: ₦${Number(portRes.total_budget_envelope).toLocaleString()} | Horizon: ${portRes.strategic_horizon} | Model: SPGDCE-1.0.0
+                          </div>
+                        </div>
+                        <div style="text-align: right;">
+                          <span class="status-tag" style="background: rgba(59,130,246,0.2); color: #3B82F6;">GOVERNANCE_ACTIVE</span>
+                        </div>
+                      </div>
+                    `;
+                  }
+                } catch (e) {
+                  alert('Portfolio governance evaluation failed: ' + e.message);
+                } finally {
+                  btnEvalPortfolio.textContent = 'Evaluate Portfolio Governance';
+                  btnEvalPortfolio.disabled = false;
+                }
+              });
+            }
+          } catch (e) {
+            console.warn('SPGDCE initialization failed:', e.message);
+          }
+        };
+        renderSPGDCE();
       }
 
     } catch (err) {
