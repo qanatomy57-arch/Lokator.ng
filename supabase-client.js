@@ -4561,6 +4561,142 @@
     }
   };
 
+  // Phase 10.6: Strategic Outcome Intelligence & Learning Engine (SOILE)
+  const strategicOutcomeLearningManager = {
+    async reconcileOutcome(planId, actualEv = null, actualCost = null, modelVersion = 'SOILE-1.0.0') {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('reconcile_strategic_outcome', {
+          p_plan_id: planId,
+          p_actual_ev: actualEv,
+          p_actual_cost: actualCost,
+          p_model_version: modelVersion
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        success: true,
+        reconciliation_id: '00000000-0000-0000-0000-000000000000',
+        reconciliation_code: 'REC-20260822-MOCK01',
+        status: 'RECONCILED_ON_TARGET',
+        ev_variance_pct: 4.00,
+        cost_variance_pct: -4.00,
+        confidence: 96.50,
+        digest: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+        guidance: 'DECISION_SUPPORT_ONLY — MANUAL_ACTION_REQUIRED'
+      };
+    },
+
+    async evaluateForecastAccuracy(reconciliationId, modelVersion = 'SOILE-1.0.0') {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('evaluate_forecast_accuracy', {
+          p_reconciliation_id: reconciliationId,
+          p_model_version: modelVersion
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        success: true,
+        reconciliation_id: reconciliationId,
+        forecasts_evaluated: 2,
+        overall_accuracy_tier: 'HIGH_PRECISION',
+        guidance: 'DECISION_SUPPORT_ONLY — MANUAL_ACTION_REQUIRED'
+      };
+    },
+
+    async attributeVariance(reconciliationId, modelVersion = 'SOILE-1.0.0') {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('attribute_strategic_variance', {
+          p_reconciliation_id: reconciliationId,
+          p_model_version: modelVersion
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        success: true,
+        reconciliation_id: reconciliationId,
+        primary_attribution: 'EXECUTION_VARIANCE',
+        attribution_confidence: 92.00,
+        guidance: 'DECISION_SUPPORT_ONLY — MANUAL_ACTION_REQUIRED'
+      };
+    },
+
+    async generateLessons(reconciliationId, modelVersion = 'SOILE-1.0.0') {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('generate_strategic_lessons', {
+          p_reconciliation_id: reconciliationId,
+          p_model_version: modelVersion
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        success: true,
+        reconciliation_id: reconciliationId,
+        lessons_generated: 1,
+        guidance: 'DECISION_SUPPORT_ONLY — MANUAL_ACTION_REQUIRED'
+      };
+    },
+
+    async validateAssumptions(reconciliationId, modelVersion = 'SOILE-1.0.0') {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('validate_strategic_assumptions', {
+          p_reconciliation_id: reconciliationId,
+          p_model_version: modelVersion
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        success: true,
+        reconciliation_id: reconciliationId,
+        assumptions_evaluated: 1,
+        validation_status: 'VALIDATED',
+        guidance: 'DECISION_SUPPORT_ONLY — MANUAL_ACTION_REQUIRED'
+      };
+    },
+
+    async generateCalibrationSignals(reconciliationId, modelVersion = 'SOILE-1.0.0') {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('generate_calibration_signals', {
+          p_reconciliation_id: reconciliationId,
+          p_model_version: modelVersion
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        success: true,
+        reconciliation_id: reconciliationId,
+        signal_code: 'SIG-20260822-01',
+        action: 'NO_CALIBRATION_REQUIRED',
+        guidance: 'DECISION_SUPPORT_ONLY — MANUAL_ACTION_REQUIRED'
+      };
+    },
+
+    async getLearningReport(reconciliationId) {
+      if (isRemoteActive()) {
+        const { data, error } = await supabaseInstance.rpc('get_strategic_learning_report', {
+          p_reconciliation_id: reconciliationId
+        });
+        if (error) throw error;
+        return data;
+      }
+      return {
+        success: true,
+        reconciliation: {},
+        forecast_evaluations: [],
+        variance_attributions: [],
+        lessons: [],
+        assumption_validations: [],
+        calibration_signals: [],
+        guidance: 'DECISION_SUPPORT_ONLY — MANUAL_ACTION_REQUIRED'
+      };
+    }
+  };
+
   LokatorDB.strategicCommand = strategicCommandManager;
   LokatorDB.strategicDecision = strategicDecisionManager;
   LokatorDB.strategicOrchestration = strategicOrchestrationManager;
@@ -4571,6 +4707,9 @@
   LokatorDB.strategicResilience = strategicResilienceManager;
   LokatorDB.strategicDecisionGovernance = strategicDecisionGovernanceManager;
   LokatorDB.strategicLearning = strategicLearningManager;
+  LokatorDB.strategicOutcomeLearning = strategicOutcomeLearningManager;
+  LokatorDB.strategicOutcomeIntelligence = strategicOutcomeLearningManager;
+  LokatorDB.strategicLearningEngine = strategicOutcomeLearningManager;
   LokatorDB.strategicIntelligence = strategicIntelligenceManager;
   LokatorDB.strategicPlanning = strategicPlanningManager;
   LokatorDB.strategicMonitoring = strategicMonitoringManager;

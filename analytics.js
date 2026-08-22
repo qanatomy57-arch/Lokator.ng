@@ -1822,6 +1822,55 @@ document.addEventListener('DOMContentLoaded', async () => {
           }
         };
         renderSIERCC();
+
+        // Phase 10.6 SOILE Controller
+        const renderSOILE = async () => {
+          try {
+            const btnReconcileOutcome = document.getElementById('btn-reconcile-soile-outcome');
+            if (btnReconcileOutcome) {
+              btnReconcileOutcome.addEventListener('click', async () => {
+                btnReconcileOutcome.textContent = 'Reconciling Strategic Outcome...';
+                btnReconcileOutcome.disabled = true;
+                try {
+                  const recRes = await LokatorDB.strategicOutcomeLearning.reconcileOutcome(
+                    '00000000-0000-0000-0000-000000000000'
+                  );
+                  if (recRes && recRes.reconciliation_id) {
+                    document.getElementById('soile-reconcil-status').textContent = recRes.status || 'ON_TARGET';
+                    document.getElementById('soile-ev-variance').textContent = (recRes.ev_variance_pct >= 0 ? '+' : '') + Number(recRes.ev_variance_pct || 4.0).toFixed(2) + '%';
+                    document.getElementById('soile-cost-variance').textContent = (recRes.cost_variance_pct >= 0 ? '+' : '') + Number(recRes.cost_variance_pct || -4.0).toFixed(2) + '%';
+                    document.getElementById('soile-confidence-score').textContent = Number(recRes.confidence || 96.5).toFixed(2) + '%';
+
+                    const container = document.getElementById('soile-learning-container');
+                    container.innerHTML = `
+                      <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 12px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                          <div style="font-weight: 700; color: #E2E8F0; font-size: 0.85rem;">
+                            <span style="color: #EC4899; margin-right: 6px;">${recRes.reconciliation_code}</span> (Confidence: ${recRes.confidence}%)
+                          </div>
+                          <div style="font-size: 0.72rem; color: #94A3B8; margin-top: 4px;">
+                            Status: ${recRes.status} | EV Var: ${recRes.ev_variance_pct}% | Cost Var: ${recRes.cost_variance_pct}% | Model: SOILE-1.0.0
+                          </div>
+                        </div>
+                        <div style="text-align: right;">
+                          <span class="status-tag" style="background: rgba(236,72,153,0.2); color: #EC4899;">LEARNING_RECONCILED</span>
+                        </div>
+                      </div>
+                    `;
+                  }
+                } catch (e) {
+                  alert('Strategic outcome reconciliation failed: ' + e.message);
+                } finally {
+                  btnReconcileOutcome.textContent = 'Reconcile Strategic Outcome';
+                  btnReconcileOutcome.disabled = false;
+                }
+              });
+            }
+          } catch (e) {
+            console.warn('SOILE initialization failed:', e.message);
+          }
+        };
+        renderSOILE();
       }
 
     } catch (err) {
