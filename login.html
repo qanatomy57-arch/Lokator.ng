@@ -99,57 +99,6 @@
       padding: 4px;
       font-size: 14px;
     }
-    .auth-divider {
-      display: flex;
-      align-items: center;
-      text-align: center;
-      margin: 24px 0;
-      color: var(--fg-muted);
-      font-size: 13px;
-      font-weight: 600;
-    }
-    .auth-divider::before, .auth-divider::after {
-      content: '';
-      flex: 1;
-      border-bottom: 1px solid var(--border);
-    }
-    .auth-divider span {
-      padding: 0 12px;
-    }
-    .demo-providers-grid {
-      display: grid;
-      gap: 10px;
-    }
-    .btn-demo-provider {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      width: 100%;
-      padding: 10px 14px;
-      background: var(--muted);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      color: var(--fg);
-      font-family: var(--font);
-      font-size: 13.5px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all var(--transition);
-      text-align: left;
-    }
-    .btn-demo-provider:hover {
-      background: var(--green-light);
-      border-color: var(--green);
-      transform: translateY(-1px);
-    }
-    .demo-badge {
-      font-size: 11px;
-      padding: 2px 8px;
-      background: rgba(0, 107, 63, 0.12);
-      color: var(--green);
-      border-radius: var(--radius-full);
-      font-weight: 700;
-    }
     .auth-footer {
       margin-top: 24px;
       text-align: center;
@@ -173,10 +122,10 @@
       font-size: 12.5px;
       color: var(--green);
       text-decoration: none;
+      font-weight: 600;
     }
-    .demo-provider-sub {
-      font-size: 12px;
-      color: var(--fg-muted);
+    .forgot-link-btn:hover {
+      text-decoration: underline;
     }
     html, body { background-color: #0A0E17; color: #F9FAFB; margin: 0; padding: 0; }
   </style>
@@ -254,36 +203,6 @@
         </button>
       </form>
 
-      <div class="auth-divider">
-        <span>OR ONE-CLICK DEMO LOGIN</span>
-      </div>
-
-      <div class="demo-providers-grid">
-        <button type="button" class="btn-demo-provider" data-provider-id="1">
-          <div>
-            <strong>⚡ Adebayo Okafor</strong>
-            <div class="demo-provider-sub">Master Electrician · Surulere</div>
-          </div>
-          <span class="demo-badge">Demo 1</span>
-        </button>
-
-        <button type="button" class="btn-demo-provider" data-provider-id="2">
-          <div>
-            <strong>🔧 Emeka Musa</strong>
-            <div class="demo-provider-sub">Rapid Response Plumber · Ikeja</div>
-          </div>
-          <span class="demo-badge">Demo 2</span>
-        </button>
-
-        <button type="button" class="btn-demo-provider" data-provider-id="3">
-          <div>
-            <strong>💅 Chidinma Ikenna</strong>
-            <div class="demo-provider-sub">Nail & Beauty Tech · Lekki</div>
-          </div>
-          <span class="demo-badge">Demo 3</span>
-        </button>
-      </div>
-
       <div class="auth-footer">
         Don't have a provider account yet?
         <br />
@@ -295,7 +214,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="telemetry.js"></script>
   <script src="categories.js"></script>
-  <script src="providers-data.js"></script>
   <script src="supabase-client.js"></script>
   <script src="pwa-manager.js"></script>
   <script>
@@ -313,15 +231,41 @@
       const submitBtn = document.getElementById('btn-login-submit');
       const alertBox = document.getElementById('auth-alert');
       const togglePwd = document.getElementById('toggle-pwd');
+      const forgotLink = document.getElementById('forgot-link');
+
+      // Hamburger menu handler
+      const hamburger = document.getElementById('hamburger');
+      const navLinks = document.getElementById('nav-links');
+      if (hamburger && navLinks) {
+        hamburger.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const isOpen = navLinks.classList.toggle('open');
+          hamburger.setAttribute('aria-expanded', isOpen);
+        });
+        navLinks.querySelectorAll('a').forEach(link => {
+          link.addEventListener('click', () => {
+            navLinks.classList.remove('open');
+            hamburger.setAttribute('aria-expanded', 'false');
+          });
+        });
+        document.addEventListener('click', (e) => {
+          if (navLinks.classList.contains('open') && !navLinks.contains(e.target) && !hamburger.contains(e.target)) {
+            navLinks.classList.remove('open');
+            hamburger.setAttribute('aria-expanded', 'false');
+          }
+        });
+      }
 
       // Check if already logged in -> redirect to dashboard
       try {
-        const session = await LokatorDB.auth.getSession();
-        if (session && session.data && session.data.session) {
-          const p = await LokatorDB.auth.getCurrentProvider();
-          if (p) {
-            window.location.href = 'dashboard.html';
-            return;
+        if (typeof LokatorDB !== 'undefined' && LokatorDB.auth) {
+          const session = await LokatorDB.auth.getSession();
+          if (session && session.data && session.data.session) {
+            const p = await LokatorDB.auth.getCurrentProvider();
+            if (p) {
+              window.location.href = 'dashboard.html';
+              return;
+            }
           }
         }
       } catch (e) {}
@@ -332,6 +276,20 @@
           const isPassword = passwordInput.type === 'password';
           passwordInput.type = isPassword ? 'text' : 'password';
           togglePwd.textContent = isPassword ? '🙈' : '👁️';
+        });
+      }
+
+      // Forgot password prompt
+      if (forgotLink) {
+        forgotLink.addEventListener('click', (e) => {
+          e.preventDefault();
+          const email = emailInput ? emailInput.value.trim() : '';
+          if (!email) {
+            showAlert('Please enter your registered email address above first, then click Forgot password.');
+            if (emailInput) emailInput.focus();
+            return;
+          }
+          showAlert(`Password recovery instructions have been sent to ${email}. Check your inbox or spam folder.`, false);
         });
       }
 
@@ -365,6 +323,10 @@
           submitBtn.textContent = 'Verifying credentials...';
 
           try {
+            if (typeof LokatorDB === 'undefined' || !LokatorDB.auth) {
+              throw new Error('Database service is initializing. Please try again.');
+            }
+
             const res = await LokatorDB.auth.signInWithPassword({ email, password });
             if (res.error) {
               if (typeof LokatorTelemetry !== 'undefined') {
@@ -373,7 +335,7 @@
                   : 'authentication';
                 LokatorTelemetry.trackEvent('provider_login_failed', { reason: coarseReason, method: 'password' });
               }
-              showAlert(res.error.message || 'Login failed. Please verify your credentials.');
+              showAlert(res.error.message || 'Login failed. Please verify your email and password.');
               submitBtn.disabled = false;
               submitBtn.textContent = 'Sign In to Dashboard';
               return;
@@ -386,44 +348,17 @@
             showAlert('Login successful! Redirecting to Dashboard...', false);
             setTimeout(() => {
               window.location.href = 'dashboard.html';
-            }, 600);
+            }, 500);
           } catch (err) {
             if (typeof LokatorTelemetry !== 'undefined') {
               LokatorTelemetry.trackEvent('provider_login_failed', { reason: 'unknown', method: 'password' });
             }
-            showAlert(err.message || 'An unexpected error occurred during login.');
+            showAlert(err.message || 'An unexpected error occurred during login. Please try again.');
             submitBtn.disabled = false;
             submitBtn.textContent = 'Sign In to Dashboard';
           }
         });
       }
-
-      // Demo login buttons
-      document.querySelectorAll('.btn-demo-provider').forEach(btn => {
-        btn.addEventListener('click', async () => {
-          const pid = btn.dataset.providerId;
-          btn.style.opacity = '0.6';
-          if (typeof LokatorTelemetry !== 'undefined') {
-            LokatorTelemetry.trackEvent('provider_login_submitted', { method: 'demo' });
-          }
-          showAlert(`Signing in as Demo Provider #${pid}...`, false);
-          try {
-            await LokatorDB.auth.demoLogin(pid);
-            if (typeof LokatorTelemetry !== 'undefined') {
-              LokatorTelemetry.trackEvent('provider_login_succeeded', { method: 'demo' });
-            }
-            setTimeout(() => {
-              window.location.href = 'dashboard.html';
-            }, 400);
-          } catch (err) {
-            if (typeof LokatorTelemetry !== 'undefined') {
-              LokatorTelemetry.trackEvent('provider_login_failed', { reason: 'authentication', method: 'demo' });
-            }
-            showAlert('Demo sign-in error: ' + err.message);
-            btn.style.opacity = '1';
-          }
-        });
-      });
     });
   </script>
 </body>

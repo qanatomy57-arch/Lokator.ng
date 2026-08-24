@@ -172,7 +172,10 @@ class ScrollDiscoveryEngine {
       });
     }
 
-    // 8. Initial active state on slide 0
+    // 8. Desktop Wheel Control for Scene Scroll Lock
+    this.setupDesktopWheelControl();
+
+    // 9. Initial active state on slide 0
     this.updateActiveSlide(0);
     this.bindVideoProgress(0);
     this.playVideo(0);
@@ -369,6 +372,40 @@ class ScrollDiscoveryEngine {
       behavior: 'smooth'
     });
   }
+
+  setupDesktopWheelControl() {
+    let wheelCooldown = false;
+    const heroEl = this.heroWrapper;
+
+    heroEl.addEventListener('wheel', (e) => {
+      // Only apply on desktop viewports
+      if (window.innerWidth < 769) return;
+      if (wheelCooldown) {
+        if (this.currentIndex < 8 && e.deltaY > 0) e.preventDefault();
+        if (this.currentIndex > 0 && e.deltaY < 0) e.preventDefault();
+        return;
+      }
+
+      if (e.deltaY > 30) {
+        // Scrolling down through scenes
+        if (this.currentIndex < this.slides.length - 1) {
+          e.preventDefault();
+          wheelCooldown = true;
+          this.scrollToStep(this.currentIndex + 1);
+          setTimeout(() => { wheelCooldown = false; }, 600);
+        }
+        // At slide index 8 (scene 9), default scrolling allows proceeding to downstream sections
+      } else if (e.deltaY < -30) {
+        // Scrolling up through scenes
+        if (this.currentIndex > 0 && window.scrollY <= 10) {
+          e.preventDefault();
+          wheelCooldown = true;
+          this.scrollToStep(this.currentIndex - 1);
+          setTimeout(() => { wheelCooldown = false; }, 600);
+        }
+      }
+    }, { passive: false });
+  }
 }
 
 // Initialize Discovery Engine on DOM Ready
@@ -388,7 +425,8 @@ if (navbar) {
 const hamburger = document.getElementById('hamburger');
 const navLinks = document.getElementById('nav-links');
 if (hamburger && navLinks) {
-  hamburger.addEventListener('click', () => {
+  hamburger.addEventListener('click', (e) => {
+    e.stopPropagation();
     const isOpen = navLinks.classList.toggle('open');
     hamburger.setAttribute('aria-expanded', isOpen);
   });
@@ -397,6 +435,12 @@ if (hamburger && navLinks) {
       navLinks.classList.remove('open');
       hamburger.setAttribute('aria-expanded', 'false');
     });
+  });
+  document.addEventListener('click', (e) => {
+    if (navLinks.classList.contains('open') && !navLinks.contains(e.target) && !hamburger.contains(e.target)) {
+      navLinks.classList.remove('open');
+      hamburger.setAttribute('aria-expanded', 'false');
+    }
   });
 }
 

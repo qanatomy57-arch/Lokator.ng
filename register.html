@@ -15,6 +15,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="pwa.css" />
   <style>
@@ -151,7 +152,7 @@
                 <button type="button" class="btn-add-skill" id="btn-add-skill">+ Add</button>
               </div>
             </div>
-            <div class="moderation-error-alert" id="moderation-alert" role="alert">
+            <div class="moderation-error-alert" id="moderation-alert" role="alert" style="display: none;">
               <span>⚠️</span>
               <span id="moderation-alert-text">Disallowed service keyword detected. Lokator only lists verified trade services.</span>
             </div>
@@ -180,12 +181,7 @@
             </div>
             <div class="loc-map-container">
               <div class="loc-map-preview" id="loc-map-preview">
-                <div class="map-placeholder-bg">
-                  <div class="map-pin-marker">
-                    <span class="map-pin-icon">📍</span>
-                    <span class="map-pin-label" id="map-pin-label">Surulere, Lagos</span>
-                  </div>
-                </div>
+                <div id="interactive-reg-map" style="width: 100%; height: 100%; min-height: 150px;"></div>
               </div>
               <button type="button" class="loc-gps-quick-btn" id="loc-gps-quick-btn">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="8"/></svg>
@@ -311,6 +307,7 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="telemetry.js"></script>
   <script src="categories.js"></script>
   <script src="supabase-client.js"></script>
@@ -323,15 +320,35 @@
     }
   </script>
   <script>
+    // Safe HTML Escaping fallback
+    const escapeHtml = (typeof window !== 'undefined' && window.escapeHtml) ||
+      (str => String(str || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m])));
+
     // Navbar scroll
     const navbar = document.getElementById('navbar');
-    window.addEventListener('scroll', () => { navbar.classList.toggle('scrolled', window.scrollY > 20); }, { passive: true });
-    // Hamburger
+    if (navbar) {
+      window.addEventListener('scroll', () => { navbar.classList.toggle('scrolled', window.scrollY > 20); }, { passive: true });
+    }
+
+    // Hamburger menu with outside click dismiss
     const hamburger = document.getElementById('hamburger');
     const navLinks = document.getElementById('nav-links');
     if (hamburger && navLinks) {
-      hamburger.addEventListener('click', () => { const o = navLinks.classList.toggle('open'); hamburger.setAttribute('aria-expanded', o); });
-      navLinks.querySelectorAll('a').forEach(l => l.addEventListener('click', () => { navLinks.classList.remove('open'); hamburger.setAttribute('aria-expanded','false'); }));
+      hamburger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const o = navLinks.classList.toggle('open');
+        hamburger.setAttribute('aria-expanded', o);
+      });
+      navLinks.querySelectorAll('a').forEach(l => l.addEventListener('click', () => {
+        navLinks.classList.remove('open');
+        hamburger.setAttribute('aria-expanded', 'false');
+      }));
+      document.addEventListener('click', (e) => {
+        if (navLinks.classList.contains('open') && !navLinks.contains(e.target) && !hamburger.contains(e.target)) {
+          navLinks.classList.remove('open');
+          hamburger.setAttribute('aria-expanded', 'false');
+        }
+      });
     }
     
     // Skills & Services Chips Manager with Content Moderation
@@ -347,12 +364,12 @@
     let uploadedAvatarData = null;
 
     function cleanSkillName(name) {
-      return name.replace(/^[\p{Emoji}\u200d\uFE0F\s]+/u, '').trim();
+      return (name || '').replace(/^[\p{Emoji}\u200d\uFE0F\s]+/u, '').trim();
     }
 
     function showModerationError(msg) {
       if (!moderationAlert) return;
-      moderationAlertText.textContent = msg;
+      if (moderationAlertText) moderationAlertText.textContent = msg;
       moderationAlert.style.display = 'flex';
       moderationAlert.style.animation = 'none';
       void moderationAlert.offsetWidth; // trigger reflow
@@ -364,6 +381,9 @@
         moderationAlert.style.display = 'none';
       }
     }
+
+    // Ensure hidden on startup
+    hideModerationError();
 
     function renderChips() {
       if (!chipsList) return;
@@ -478,48 +498,118 @@
       addSkill(decodeURIComponent(prefillService));
     }
 
-    // Location Map Preview & GPS
+    // Interactive Real Leaflet Map & GPS Geolocation
     const gpsBtn = document.getElementById('gps-btn-form');
     const locGpsQuickBtn = document.getElementById('loc-gps-quick-btn');
     const locInput = document.getElementById('location');
-    const mapPinLabel = document.getElementById('map-pin-label');
-    let userCoords = null;
+    let userCoords = { lat: 6.5244, lng: 3.3792 }; // Default: Lagos, Nigeria
+    let leafletMap = null;
+    let mapMarker = null;
 
-    function updateMapPin(label) {
-      if (mapPinLabel) {
-        mapPinLabel.textContent = label || 'Your Location';
+    function initInteractiveMap() {
+      const mapContainer = document.getElementById('interactive-reg-map');
+      if (!mapContainer || typeof L === 'undefined') return;
+
+      try {
+        leafletMap = L.map('interactive-reg-map', {
+          zoomControl: true,
+          attributionControl: false
+        }).setView([userCoords.lat, userCoords.lng], 13);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          subdomains: ['a', 'b', 'c']
+        }).addTo(leafletMap);
+
+        const customIcon = L.divIcon({
+          className: 'lokator-leaflet-pin',
+          html: `<div style="display:flex;align-items:center;justify-content:center;width:34px;height:34px;background:#006B3F;border:2.5px solid #FFFFFF;border-radius:50%;box-shadow:0 4px 12px rgba(0,0,0,0.4);color:#FFFFFF;font-size:16px;">📍</div>`,
+          iconSize: [34, 34],
+          iconAnchor: [17, 34]
+        });
+
+        mapMarker = L.marker([userCoords.lat, userCoords.lng], {
+          icon: customIcon,
+          draggable: true
+        }).addTo(leafletMap);
+
+        mapMarker.on('dragend', async (ev) => {
+          const latlng = ev.target.getLatLng();
+          userCoords = { lat: Number(latlng.lat.toFixed(5)), lng: Number(latlng.lng.toFixed(5)) };
+          const addr = await reverseGeocode(userCoords.lat, userCoords.lng);
+          if (locInput) locInput.value = addr;
+        });
+
+        leafletMap.on('click', async (ev) => {
+          const latlng = ev.latlng;
+          userCoords = { lat: Number(latlng.lat.toFixed(5)), lng: Number(latlng.lng.toFixed(5)) };
+          mapMarker.setLatLng(latlng);
+          const addr = await reverseGeocode(userCoords.lat, userCoords.lng);
+          if (locInput) locInput.value = addr;
+        });
+      } catch (err) {
+        console.warn('Map initialization note:', err);
       }
     }
 
-    if (locInput) {
-      locInput.addEventListener('input', () => {
-        updateMapPin(locInput.value.trim() || 'Your Location');
-      });
+    async function reverseGeocode(lat, lng) {
+      try {
+        const resp = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`, {
+          headers: { 'Accept': 'application/json' }
+        });
+        if (resp.ok) {
+          const data = await resp.json();
+          const a = data.address || {};
+          const area = a.suburb || a.neighbourhood || a.quarter || a.city_district || a.town || a.city || 'Surulere';
+          const city = a.city || a.county || a.state_district || 'Lagos';
+          const state = a.state || 'Lagos';
+          return `${area}, ${city}, ${state}`;
+        }
+      } catch (e) {}
+      return `Surulere, Lagos (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+    }
+
+    function setMapLocation(lat, lng, address) {
+      userCoords = { lat: Number(lat.toFixed(5)), lng: Number(lng.toFixed(5)) };
+      if (locInput && address) locInput.value = address;
+      if (leafletMap && mapMarker) {
+        mapMarker.setLatLng([lat, lng]);
+        leafletMap.setView([lat, lng], 15);
+      }
     }
 
     function triggerGeolocation() {
       if ('geolocation' in navigator) {
-        if (gpsBtn) gpsBtn.textContent = 'Detecting...';
-        if (locGpsQuickBtn) locGpsQuickBtn.textContent = 'Detecting your location...';
+        if (gpsBtn) gpsBtn.textContent = 'Detecting GPS...';
+        if (locGpsQuickBtn) locGpsQuickBtn.textContent = 'Detecting accurate location...';
         navigator.geolocation.getCurrentPosition(
-          pos => {
-            userCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-            const detectedStr = `Surulere, Lagos (${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)})`;
-            if (locInput) locInput.value = detectedStr;
-            updateMapPin(detectedStr);
+          async (pos) => {
+            const lat = pos.coords.latitude;
+            const lng = pos.coords.longitude;
+            const address = await reverseGeocode(lat, lng);
+            setMapLocation(lat, lng, address);
             if (gpsBtn) gpsBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Located';
             if (locGpsQuickBtn) locGpsQuickBtn.innerHTML = '✓ Current location detected';
           },
-          () => {
-            if (gpsBtn) gpsBtn.textContent = 'GPS failed';
-            if (locGpsQuickBtn) locGpsQuickBtn.textContent = 'GPS failed (enter manually)';
-          }
+          (err) => {
+            console.warn('Geolocation notice:', err);
+            // Fallback default coordinates (Surulere, Lagos)
+            setMapLocation(6.5000, 3.3585, 'Surulere, Lagos, Nigeria');
+            if (gpsBtn) gpsBtn.textContent = 'Use GPS';
+            if (locGpsQuickBtn) locGpsQuickBtn.textContent = 'GPS permission needed (enter manually)';
+          },
+          { enableHighAccuracy: true, timeout: 8000 }
         );
       }
     }
 
     if (gpsBtn) gpsBtn.addEventListener('click', triggerGeolocation);
     if (locGpsQuickBtn) locGpsQuickBtn.addEventListener('click', triggerGeolocation);
+
+    // Initialize Map after DOM
+    window.addEventListener('DOMContentLoaded', () => {
+      setTimeout(initInteractiveMap, 100);
+    });
 
     // Profile Picture Upload with Client-Side Compression
     const photoZone = document.getElementById('photo-upload-zone');

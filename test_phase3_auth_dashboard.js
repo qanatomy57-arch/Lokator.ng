@@ -177,7 +177,7 @@ async function runPhase3Tests() {
   
   const loginHtml = fs.readFileSync(path.join(__dirname, 'login.html'), 'utf8');
   assert(loginHtml.includes('login-form'), 'login.html contains login-form');
-  assert(loginHtml.includes('btn-demo-provider'), 'login.html contains one-click demo login buttons');
+  assert(!loginHtml.includes('btn-demo-provider'), 'login.html has removed demo login buttons for live production standard');
   assert(loginHtml.includes('supabase-client.js'), 'login.html imports supabase-client.js');
 
   const dashHtml = fs.readFileSync(path.join(__dirname, 'dashboard.html'), 'utf8');

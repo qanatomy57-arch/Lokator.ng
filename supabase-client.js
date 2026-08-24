@@ -11,6 +11,7 @@
   // Primary Project Reference ID: hvxosxhnxauiqrhpyuur
   const TARGET_PROJECT_REF = 'hvxosxhnxauiqrhpyuur';
   const TARGET_DEFAULT_URL = `https://${TARGET_PROJECT_REF}.supabase.co`;
+  const TARGET_DEFAULT_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2eG9zeGhueGF1aXFyaHB5dXVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcwOTI1NTQsImV4cCI6MjEwMjY2ODU1NH0.dshJ5VNRWTVXHUMBWX_8Xq1foohT1L7S3rTwUrNWqNo';
 
   // Dynamic configuration resolution (supports window config, global envs, or target project default)
   const userConfig = (typeof window !== 'undefined' && window.LOKATOR_SUPABASE_CONFIG) || {};
@@ -21,7 +22,7 @@
 
   const CONFIG = {
     url: userConfig.url || envUrl || TARGET_DEFAULT_URL,
-    anonKey: userConfig.anonKey || userConfig.publishableKey || envKey || '',
+    anonKey: userConfig.anonKey || userConfig.publishableKey || envKey || TARGET_DEFAULT_ANON_KEY,
     projectRef: TARGET_PROJECT_REF,
     schema: userConfig.schema || 'public'
   };
@@ -579,20 +580,26 @@
     });
   }
 
+  const memoryStore = new Map();
+
   function getLocalStore(key, defaultValue = []) {
     try {
-      const item = localStorage.getItem(key);
-      if (item) {
-        const parsed = JSON.parse(item);
-        if (key === DB_STORE_KEY && typeof global.PROVIDERS_DATA !== 'undefined' && Array.isArray(global.PROVIDERS_DATA)) {
-          const existingIds = new Set(parsed.map(p => p.id));
-          global.PROVIDERS_DATA.forEach(def => {
-            if (!existingIds.has(def.id)) {
-              parsed.push(def);
-            }
-          });
+      if (typeof localStorage !== 'undefined') {
+        const item = localStorage.getItem(key);
+        if (item) {
+          const parsed = JSON.parse(item);
+          if (key === DB_STORE_KEY && typeof global.PROVIDERS_DATA !== 'undefined' && Array.isArray(global.PROVIDERS_DATA)) {
+            const existingIds = new Set(parsed.map(p => p.id));
+            global.PROVIDERS_DATA.forEach(def => {
+              if (!existingIds.has(def.id)) {
+                parsed.push(def);
+              }
+            });
+          }
+          return parsed;
         }
-        return parsed;
+      } else if (memoryStore.has(key)) {
+        return JSON.parse(JSON.stringify(memoryStore.get(key)));
       }
       if (key === DB_STORE_KEY && typeof global.PROVIDERS_DATA !== 'undefined') {
         return [...global.PROVIDERS_DATA];
@@ -605,7 +612,10 @@
 
   function setLocalStore(key, value) {
     try {
-      localStorage.setItem(key, JSON.stringify(value));
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(key, JSON.stringify(value));
+      }
+      memoryStore.set(key, JSON.parse(JSON.stringify(value)));
     } catch (e) {}
   }
 
@@ -850,12 +860,7 @@
        * Get current session synchronously from local storage cache
        */
       getSessionSync() {
-        try {
-          const raw = localStorage.getItem(DB_AUTH_SESSION_KEY);
-          return raw ? JSON.parse(raw) : null;
-        } catch (e) {
-          return null;
-        }
+        return getLocalStore(DB_AUTH_SESSION_KEY, null);
       },
 
       /**
@@ -871,7 +876,7 @@
        */
       _setUserSync(user) {
         if (!user) {
-          try { localStorage.removeItem(DB_AUTH_SESSION_KEY); } catch (e) {}
+          setLocalStore(DB_AUTH_SESSION_KEY, null);
           return;
         }
         const session = {
@@ -941,15 +946,34 @@
             refresh_token: 'lokator_mock_refresh_' + Date.now(),
             user: authUser
           };
+        }
 
-          users.push({
-            id: mockId,
+        if (authUser) {
+          const users = getLocalStore(DB_USERS_KEY, []);
+          const existingIdx = users.findIndex(u => u.email.toLowerCase() === email.toLowerCase());
+          const userRec = {
+            id: authUser.id,
             email: email,
             password: password,
             metadata: meta,
-            created_at: authUser.created_at
-          });
+            created_at: authUser.created_at || new Date().toISOString()
+          };
+          if (existingIdx >= 0) {
+            users[existingIdx] = userRec;
+          } else {
+            users.push(userRec);
+          }
           setLocalStore(DB_USERS_KEY, users);
+        }
+
+        if (!authSession && authUser) {
+          authSession = {
+            access_token: 'lokator_mock_token_' + Date.now(),
+            token_type: 'bearer',
+            expires_in: 3600,
+            refresh_token: 'lokator_mock_refresh_' + Date.now(),
+            user: authUser
+          };
         }
 
         if (authSession) {
@@ -1605,9 +1629,12 @@
       // Parse coordinates if GPS was used
       let lat = null;
       let lng = null;
-      if (formData.lat && formData.lng) {
+      if (formData.lat != null && formData.lng != null && formData.lat !== '' && formData.lng !== '') {
         lat = Number(formData.lat);
         lng = Number(formData.lng);
+      } else if (formData.latitude != null && formData.longitude != null && formData.latitude !== '' && formData.longitude !== '') {
+        lat = Number(formData.latitude);
+        lng = Number(formData.longitude);
       } else if (locationInput.includes(',') && !isNaN(parseFloat(parts[0])) && !isNaN(parseFloat(parts[1]))) {
         lat = parseFloat(parts[0]);
         lng = parseFloat(parts[1]);
@@ -1639,6 +1666,8 @@
         address: formData.address || area,
         latitude: lat,
         longitude: lng,
+        lat: lat,
+        lng: lng,
         experience_years: parseInt(formData.experience, 10) || 3,
         starting_price: formData.starting_price || '₦3,500 / job',
         avatar_bg: 'linear-gradient(135deg, #006B3F, #059669)',
@@ -1660,9 +1689,47 @@
       // 1. Remote Supabase Insertion
       if (isRemoteActive()) {
         try {
+          const dbRow = {
+            first_name: firstName,
+            last_name: lastName,
+            business_name: formData.business_name || fullName,
+            trade_title: tradeTitle,
+            primary_category_slug: categorySlug,
+            skills: skillsArray,
+            bio: formData.bio || `Certified ${tradeTitle} serving ${area}. Contact directly for instant quotes and prompt service.`,
+            phone: formData.phone.startsWith('+234') ? formData.phone : `+234${formData.phone.replace(/^0+/, '')}`,
+            whatsapp_number: formData.phone.startsWith('+234') ? formData.phone : `+234${formData.phone.replace(/^0+/, '')}`,
+            email: formData.email || null,
+            state: state,
+            city: city,
+            lga: formData.lga || city,
+            area: area,
+            address: formData.address || area,
+            latitude: lat,
+            longitude: lng,
+            experience_years: parseInt(formData.experience, 10) || 3,
+            starting_price: formData.starting_price || '₦3,500 / job',
+            avatar_bg: 'linear-gradient(135deg, #006B3F, #059669)',
+            badge_title: 'NIN Verified Artisan',
+            response_time: '~15 mins',
+            completed_jobs: 1,
+            rating: 5.0,
+            reviews_count: 0,
+            subscription_plan: formData.plan || 'basic',
+            is_verified: false,
+            nin_verified: false,
+            is_available: true,
+            is_active: true,
+            is_public: true,
+            profile_complete: true
+          };
+          if (currentUserId) {
+            dbRow.user_id = currentUserId;
+          }
+
           const { data, error } = await supabaseInstance
             .from('providers')
-            .insert([newProvider])
+            .insert([dbRow])
             .select()
             .single();
 
@@ -1675,7 +1742,11 @@
               is_primary: idx === 0
             }));
             await supabaseInstance.from('provider_services').insert(serviceRows);
-            return data;
+            const sanitized = this._sanitizeProviderDetail(data);
+            const providers = getLocalStore(DB_STORE_KEY, []);
+            providers.unshift(sanitized);
+            setLocalStore(DB_STORE_KEY, providers);
+            return sanitized;
           }
         } catch (e) {
           console.warn('Supabase remote insert error, saving to local store:', e);
@@ -1700,7 +1771,7 @@
       });
       setLocalStore(DB_SERVICES_KEY, services);
 
-      return newProvider;
+      return this._sanitizeProviderDetail(newProvider);
     },
 
     /**
@@ -2378,31 +2449,52 @@
         ? p.skills
         : (services.length > 0 ? services : [trade]);
       
+      const firstName = p.first_name || p.firstName || (p.name ? p.name.split(' ')[0] : 'Provider');
+      const lastName = p.last_name || p.lastName || (p.name ? p.name.split(' ').slice(1).join(' ') : '');
+      const lat = (p.latitude != null) ? Number(p.latitude) : (p.lat != null ? Number(p.lat) : null);
+      const lng = (p.longitude != null) ? Number(p.longitude) : (p.lng != null ? Number(p.lng) : null);
+      
       return {
         id: p.id,
         userId: p.user_id || p.userId || null,
+        user_id: p.user_id || p.userId || null,
         name: name,
         businessName: p.business_name || p.businessName || name,
-        firstName: p.first_name || (p.name ? p.name.split(' ')[0] : 'Provider'),
-        lastName: p.last_name || (p.name ? p.name.split(' ').slice(1).join(' ') : ''),
+        business_name: p.business_name || p.businessName || name,
+        firstName: firstName,
+        lastName: lastName,
+        first_name: firstName,
+        last_name: lastName,
         trade: trade,
+        trade_title: trade,
         category: category,
+        primary_category_slug: category,
         slug: slug,
         city: p.city,
         state: p.state,
         lga: p.lga || p.city,
         area: p.area || `${p.city}, ${p.state}`,
         address: p.address || p.area,
+        lat: lat,
+        lng: lng,
+        latitude: lat,
+        longitude: lng,
         distanceKm: p.distanceKm || null,
         rating: Number(p.rating || 5.0),
         reviewsCount: p.reviewsCount != null ? p.reviewsCount : (p.reviews_count || (p.reviews ? p.reviews.length : 0)),
+        reviews_count: p.reviewsCount != null ? p.reviewsCount : (p.reviews_count || (p.reviews ? p.reviews.length : 0)),
         experienceYrs: p.experienceYrs != null ? p.experienceYrs : (p.experience_years || 2),
+        experience_years: p.experience_years != null ? p.experience_years : (p.experienceYrs || 2),
         isVerified: Boolean(p.is_verified || p.isVerified),
+        is_verified: Boolean(p.is_verified || p.isVerified),
         isAvailable: p.is_available !== false && p.isAvailable !== false,
+        is_available: p.is_available !== false && p.isAvailable !== false,
         isTop: Boolean((p.rating >= 4.8 && p.is_verified) || p.isTop),
         subscriptionPlan: p.subscription_plan || p.subscriptionPlan || (p.isTop ? 'premium' : (p.is_verified || p.isVerified ? 'verified' : 'basic')),
+        subscription_plan: p.subscription_plan || p.subscriptionPlan || (p.isTop ? 'premium' : (p.is_verified || p.isVerified ? 'verified' : 'basic')),
         phone: p.phone,
         whatsappNumber: p.whatsappNumber || p.whatsapp_number || p.phone,
+        whatsapp_number: p.whatsappNumber || p.whatsapp_number || p.phone,
         email: p.email || null,
         avatarUrl: p.avatar_url || p.avatarUrl || p.profile_picture || null,
         avatarBg: p.avatarBg || p.avatar_bg || 'linear-gradient(135deg, #006B3F, #059669)',
@@ -2425,9 +2517,9 @@
         portfolio: p.portfolio_items || p.portfolio || [
           {
             id: "port-1",
-            title: `Completed ${p.trade_title} Project`,
-            category: p.trade_title,
-            description: `Quality ${p.trade_title} craftsmanship delivered for client in ${p.area}.`,
+            title: `Completed ${trade} Project`,
+            category: trade,
+            description: `Quality ${trade} craftsmanship delivered for client in ${p.area}.`,
             isBeforeAfter: false,
             tag: "Verified Work",
             accentColor: "#006B3F",
@@ -2440,7 +2532,7 @@
           location: r.author_location || r.location || p.city,
           date: r.created_at ? new Date(r.created_at).toLocaleDateString('en-GB') : 'Recent',
           rating: r.rating || 5,
-          serviceType: r.service_type || r.serviceType || p.trade_title,
+          serviceType: r.service_type || r.serviceType || trade,
           comment: r.comment,
           isVerifiedCustomer: r.is_verified_customer !== false,
           helpfulCount: r.helpful_count || 0
@@ -4283,7 +4375,7 @@
   };
 
   // Phase 10.2: Strategic Performance Optimization & Resource Rebalancing Engine (SPORE)
-  const strategicOptimizationManager = {
+  const strategicPerformanceManager = {
     async createOptimizationBaseline(planId, modelVersion = 'SPORE-1.0.0') {
       if (isRemoteActive()) {
         const { data, error } = await supabaseInstance.rpc('create_strategic_optimization_baseline', {
@@ -5025,7 +5117,8 @@
   LokatorDB.strategicOrchestration = strategicOrchestrationManager;
   LokatorDB.strategicScenario = strategicScenarioManager;
   LokatorDB.strategicOptimization = strategicOptimizationManager;
-  LokatorDB.strategicPerformance = strategicOptimizationManager;
+  LokatorDB.strategicPerformance = strategicPerformanceManager;
+  LokatorDB.strategicPerformanceOptimization = strategicPerformanceManager;
   LokatorDB.strategicResourceAllocation = strategicResourceAllocationManager;
   LokatorDB.strategicResilience = strategicResilienceManager;
   LokatorDB.strategicDecisionGovernance = strategicDecisionGovernanceManager;
