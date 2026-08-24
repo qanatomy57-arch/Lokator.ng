@@ -172,13 +172,37 @@ class ScrollDiscoveryEngine {
       });
     }
 
-    // 8. Desktop Wheel Control for Scene Scroll Lock
+    // 8. Continuous Scrollbar & Scroll Position Tracker
+    this.setupContinuousScrollTracking();
+
+    // 9. Desktop Wheel Control for Scene Scroll Lock
     this.setupDesktopWheelControl();
 
-    // 9. Initial active state on slide 0
+    // 10. Initial active state on slide 0
     this.updateActiveSlide(0);
     this.bindVideoProgress(0);
     this.playVideo(0);
+  }
+
+  setupContinuousScrollTracking() {
+    let ticking = false;
+
+    this.heroWrapper.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          ticking = false;
+          const scrollTop = this.heroWrapper.scrollTop;
+          const slideHeight = this.heroWrapper.clientHeight || window.innerHeight;
+          const calculatedIndex = Math.round(scrollTop / slideHeight);
+          const clampedIndex = Math.max(0, Math.min(this.slides.length - 1, calculatedIndex));
+
+          if (clampedIndex !== this.currentIndex) {
+            this.onSlideVisible(clampedIndex);
+          }
+        });
+        ticking = true;
+      }
+    }, { passive: true });
   }
 
   primeAllVideos() {

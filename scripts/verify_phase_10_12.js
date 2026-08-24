@@ -81,10 +81,12 @@ async function runBattery() {
     const styleCss = fs.readFileSync(path.join(__dirname, '..', 'style.css'), 'utf8');
     const appJs = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
 
-    // Observation #0 Lead check
+    // Observation #0 Lead & Autocomplete check
     assert(registerHtml.includes('id="moderation-alert" role="alert" style="display: none;"'), 'register.html default state has style="display: none;" on #moderation-alert');
     assert(registerHtml.includes('leaflet.js') && registerHtml.includes('leaflet.css'), 'register.html includes Leaflet interactive map assets');
     assert(registerHtml.includes('id="interactive-reg-map"'), 'register.html contains interactive map container #interactive-reg-map');
+    assert(registerHtml.includes('id="skills-autocomplete-dropdown"'), 'register.html contains live skills autocomplete dropdown');
+    assert(registerHtml.includes('searchSkillMatches'), 'register.html contains real-time skill matching engine');
 
     // Section 2: Demo login removal check
     assert(!loginHtml.includes('OR ONE-CLICK DEMO LOGIN'), 'login.html has removed "OR ONE-CLICK DEMO LOGIN" header');
@@ -93,8 +95,10 @@ async function runBattery() {
     assert(!loginHtml.includes('Chidinma Ikenna'), 'login.html has removed Chidinma Ikenna demo button');
     assert(loginHtml.includes('id="forgot-link"'), 'login.html retains clean forgot-password link');
 
-    // Section 6 & 7: Hero nav & Hamburger menu check
+    // Section 6 & 7: Hero nav, Desktop scrollbar & Hamburger menu check
     assert(styleCss.includes('.hero-timeline-nav') && styleCss.includes('right: 12px;'), 'style.css anchors hero dot navigation to right: 12px');
+    assert(styleCss.includes('.hero-scroll-wrapper::-webkit-scrollbar'), 'style.css configures desktop hero scrollbar styling');
+    assert(appJs.includes('setupContinuousScrollTracking'), 'app.js includes setupContinuousScrollTracking for real-time video/dot sync');
     assert(appJs.includes('setupDesktopWheelControl'), 'app.js includes setupDesktopWheelControl for desktop 9-scene scroll lock');
     assert(appJs.includes('hamburger.setAttribute'), 'app.js includes mobile hamburger menu toggle');
   } catch (err) {

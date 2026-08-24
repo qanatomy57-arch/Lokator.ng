@@ -148,9 +148,10 @@
                 <!-- Dynamic Chips -->
               </div>
               <div class="skills-input-row">
-                <input type="text" id="skill-input" placeholder="Type any skill/service and press Enter..." autocomplete="off" />
+                <input type="text" id="skill-input" placeholder="Type any skill/service (e.g. Electrician, Solar, Plumber)..." autocomplete="off" />
                 <button type="button" class="btn-add-skill" id="btn-add-skill">+ Add</button>
               </div>
+              <div class="skills-autocomplete-dropdown" id="skills-autocomplete-dropdown" style="display: none;" role="listbox"></div>
             </div>
             <div class="moderation-error-alert" id="moderation-alert" role="alert" style="display: none;">
               <span>⚠️</span>
@@ -351,7 +352,7 @@
       });
     }
     
-    // Skills & Services Chips Manager with Content Moderation
+    // Skills & Services Chips Manager with Content Moderation & Live Autocomplete
     const skillInput = document.getElementById('skill-input');
     const btnAddSkill = document.getElementById('btn-add-skill');
     const chipsList = document.getElementById('skills-chips-list');
@@ -359,9 +360,132 @@
     const popularHints = document.getElementById('popular-hints');
     const moderationAlert = document.getElementById('moderation-alert');
     const moderationAlertText = document.getElementById('moderation-alert-text');
+    const autocompleteDropdown = document.getElementById('skills-autocomplete-dropdown');
 
     let providerSkills = [];
     let uploadedAvatarData = null;
+    let currentSuggestions = [];
+    let selectedSuggestionIndex = -1;
+
+    // Comprehensive Nigerian Artisan & Trade Skills Catalog
+    const TRADE_PRESETS = [
+      { name: 'Electrician', category: 'Electrical Services', icon: '⚡', synonyms: ['electrician', 'house wiring', 'conduit', 'breaker', 'fault', 'cctv'] },
+      { name: 'Electrical Wiring & Conduit Installation', category: 'Electrical Services', icon: '⚡', synonyms: ['wiring', 'rewiring', 'conduit', 'cables', 'installation'] },
+      { name: 'Generator Repair & Maintenance', category: 'Electrical Services', icon: '⚡', synonyms: ['generator', 'diesel', 'petrol', 'mikano', 'lister', 'carburetor', 'starter'] },
+      { name: 'Solar Installer & Energy Systems', category: 'Solar & Inverter', icon: '☀️', synonyms: ['solar', 'inverter', 'solar panels', 'battery', 'charge controller', 'clean energy'] },
+      { name: 'Solar Inverter & Battery Technician', category: 'Solar & Inverter', icon: '☀️', synonyms: ['inverter', 'battery', 'solar repair', 'tubular battery', 'lithium'] },
+      { name: 'Plumber', category: 'Plumbing Services', icon: '🔧', synonyms: ['plumber', 'pipe', 'leak', 'drainage', 'toilet', 'tap'] },
+      { name: 'Burst Pipe & Water Leak Specialist', category: 'Plumbing Services', icon: '🔧', synonyms: ['burst pipe', 'water leak', 'piping', 'repairs'] },
+      { name: 'Pumping Machine & Borehole Setup', category: 'Plumbing Services', icon: '🔧', synonyms: ['pumping machine', 'sumo', 'borehole', 'water pump', 'tank installation'] },
+      { name: 'Bathroom & Kitchen Sanitary Fittings', category: 'Plumbing Services', icon: '🔧', synonyms: ['bathroom', 'kitchen', 'shower', 'sink', 'toilet', 'jacuzzi'] },
+      { name: 'AC Technician & Refrigerator Repair', category: 'Cooling & Appliances', icon: '❄️', synonyms: ['ac', 'air conditioner', 'fridge', 'refrigerator', 'freezer', 'gas filling'] },
+      { name: 'Air Conditioning Installation & Servicing', category: 'Cooling & Appliances', icon: '❄️', synonyms: ['ac installation', 'split ac', 'standing ac', 'chiller'] },
+      { name: 'Carpenter & Furniture Maker', category: 'Carpentry & Woodwork', icon: '🪚', synonyms: ['carpenter', 'furniture', 'wardrobe', 'bed frame', 'kitchen cabinet', 'doors'] },
+      { name: 'Roofing & Woodwork Specialist', category: 'Carpentry & Woodwork', icon: '🪚', synonyms: ['roofing', 'woodwork', 'rafters', 'ceiling', 'timber'] },
+      { name: 'Painter & Wall Screeding Specialist', category: 'Painting & Finishing', icon: '🎨', synonyms: ['painter', 'screeding', 'painting', 'wall finish', 'stucco', 'primer'] },
+      { name: 'POP Ceiling Designer & Installer', category: 'Interior & Finishing', icon: '🎨', synonyms: ['pop', 'pop ceiling', 'plaster of paris', 'cornice', 'false ceiling'] },
+      { name: 'Auto Mechanic & Engine Diagnostics', category: 'Automotive', icon: '🔩', synonyms: ['mechanic', 'car repair', 'auto mechanic', 'engine', 'transmission', 'brakes'] },
+      { name: 'Auto Electrician & Car Rewirer', category: 'Automotive', icon: '🔩', synonyms: ['auto electrician', 'car wiring', 'alternator', 'battery', 'brain box'] },
+      { name: 'Tiler & Marble Flooring Installer', category: 'Masonry & Tiling', icon: '🏛️', synonyms: ['tiler', 'tiles', 'marble', 'granite', 'interlocking', 'vitrified'] },
+      { name: 'Bricklayer & Mason', category: 'Building & Construction', icon: '🧱', synonyms: ['mason', 'bricklayer', 'block laying', 'foundation', 'plastering'] },
+      { name: 'Welder & Metal Fabricator', category: 'Metalwork', icon: '🔥', synonyms: ['welder', 'fabricator', 'wrought iron', 'burglary proof', 'metal gate', 'railings'] },
+      { name: 'Aluminum Window & Partition Fabricator', category: 'Metalwork & Glass', icon: '🪟', synonyms: ['aluminum', 'casement', 'sliding doors', 'office partition', 'glass'] },
+      { name: 'Nail Technician & Manicure Tech', category: 'Beauty & Wellness', icon: '💅', synonyms: ['nail', 'pedicure', 'manicure', 'acrylic', 'gel polish', 'nail art'] },
+      { name: 'Hair Stylist & Braider', category: 'Beauty & Hair', icon: '💇‍♀️', synonyms: ['hair', 'braiding', 'wig making', 'dreadlocks', 'weaving', 'hair dressing'] },
+      { name: 'Professional Barber', category: 'Grooming', icon: '✂️', synonyms: ['barber', 'haircut', 'shaving', 'beard grooming', 'fades'] },
+      { name: 'Makeup Artist & Gele Tier', category: 'Beauty & Events', icon: '💄', synonyms: ['makeup', 'gele', 'bridal makeup', 'glam', 'editorial'] },
+      { name: 'Tailor & Fashion Designer', category: 'Fashion & Apparel', icon: '👗', synonyms: ['tailor', 'fashion designer', 'sewing', 'senator', 'agbada', 'dressmaker', 'alterations'] },
+      { name: 'CCTV & Security Camera Installer', category: 'Security & Tech', icon: '📹', synonyms: ['cctv', 'security camera', 'ip camera', 'surveillance', 'intercom', 'access control'] },
+      { name: 'Phone & Computer Repair Technician', category: 'Tech Repair', icon: '📱', synonyms: ['phone repair', 'laptop repair', 'screen replacement', 'iphone', 'samsung', 'macbook'] },
+      { name: 'House Cleaning & Deep Cleaning Service', category: 'Cleaning', icon: '🧹', synonyms: ['cleaning', 'deep clean', 'fumigation', 'post construction', 'office cleaning'] },
+      { name: 'Fumigation & Pest Control Specialist', category: 'Pest Control', icon: '🐜', synonyms: ['fumigation', 'pest control', 'bed bugs', 'cockroaches', 'termites', 'rats'] },
+      { name: 'Recording Studio & Audio Engineer', category: 'Media & Production', icon: '🎙️', synonyms: ['recording', 'studio', 'music production', 'mixing', 'mastering', 'voiceover'] },
+      { name: 'Photographer & Videographer', category: 'Media & Events', icon: '📸', synonyms: ['photographer', 'videographer', 'wedding photo', 'drone', 'video coverage'] }
+    ];
+
+    function searchSkillMatches(query) {
+      if (!query || query.trim().length < 1) return [];
+      const q = query.toLowerCase().trim();
+      const results = [];
+      const seen = new Set();
+
+      TRADE_PRESETS.forEach(item => {
+        const nameMatch = item.name.toLowerCase().includes(q);
+        const synonymMatch = item.synonyms.some(s => s.toLowerCase().includes(q));
+        const catMatch = item.category.toLowerCase().includes(q);
+        if ((nameMatch || synonymMatch || catMatch) && !seen.has(item.name.toLowerCase())) {
+          seen.add(item.name.toLowerCase());
+          let score = 0;
+          if (item.name.toLowerCase().startsWith(q)) score += 100;
+          else if (item.name.toLowerCase().includes(q)) score += 80;
+          else if (item.synonyms.some(s => s.toLowerCase().startsWith(q))) score += 70;
+          else score += 50;
+          results.push({ ...item, score });
+        }
+      });
+
+      // Also dynamically pull from CategoryMap if loaded
+      if (typeof CategoryMap !== 'undefined' && CategoryMap.getAll) {
+        CategoryMap.getAll().forEach(cat => {
+          if (!seen.has(cat.name.toLowerCase())) {
+            const matchesCat = cat.name.toLowerCase().includes(q) || 
+                              (cat.synonyms && cat.synonyms.some(s => s.toLowerCase().includes(q)));
+            if (matchesCat) {
+              seen.add(cat.name.toLowerCase());
+              results.push({
+                name: cat.name,
+                category: cat.displayName || 'Trade Category',
+                icon: cat.icon || '🛠️',
+                score: cat.name.toLowerCase().startsWith(q) ? 90 : 60
+              });
+            }
+          }
+        });
+      }
+
+      results.sort((a, b) => b.score - a.score);
+      return results.slice(0, 6);
+    }
+
+    function renderAutocompleteDropdown(matches, query) {
+      if (!autocompleteDropdown) return;
+      currentSuggestions = matches;
+      selectedSuggestionIndex = -1;
+
+      if (!matches || matches.length === 0) {
+        autocompleteDropdown.innerHTML = '';
+        autocompleteDropdown.style.display = 'none';
+        return;
+      }
+
+      const highlight = (text, q) => {
+        const idx = text.toLowerCase().indexOf(q.toLowerCase());
+        if (idx === -1) return escapeHtml(text);
+        const before = escapeHtml(text.substring(0, idx));
+        const matched = escapeHtml(text.substring(idx, idx + q.length));
+        const after = escapeHtml(text.substring(idx + q.length));
+        return `${before}<strong class="autocomplete-match">${matched}</strong>${after}`;
+      };
+
+      autocompleteDropdown.innerHTML = matches.map((m, i) => `
+        <div class="skills-autocomplete-item" data-index="${i}" data-skill="${escapeHtml(m.name)}" role="option">
+          <div class="autocomplete-main">
+            <span class="autocomplete-icon">${m.icon || '✨'}</span>
+            <span class="autocomplete-text">${highlight(m.name, query)}</span>
+          </div>
+          <span class="autocomplete-category">${escapeHtml(m.category)}</span>
+        </div>
+      `).join('');
+
+      autocompleteDropdown.style.display = 'block';
+    }
+
+    function closeAutocomplete() {
+      if (autocompleteDropdown) {
+        autocompleteDropdown.style.display = 'none';
+        selectedSuggestionIndex = -1;
+      }
+    }
 
     function cleanSkillName(name) {
       return (name || '').replace(/^[\p{Emoji}\u200d\uFE0F\s]+/u, '').trim();
@@ -417,6 +541,7 @@
       }
 
       hideModerationError();
+      closeAutocomplete();
 
       if (!providerSkills.some(s => s.toLowerCase() === clean.toLowerCase())) {
         providerSkills.push(clean);
@@ -428,7 +553,10 @@
           LokatorTelemetry.trackEvent('provider_skill_selected', { trade_slug: canonicalSlug });
         }
       }
-      if (skillInput) skillInput.value = '';
+      if (skillInput) {
+        skillInput.value = '';
+        skillInput.focus();
+      }
     }
 
     function removeSkill(idx) {
@@ -458,6 +586,33 @@
       });
 
       skillInput.addEventListener('keydown', (e) => {
+        if (autocompleteDropdown && autocompleteDropdown.style.display === 'block' && currentSuggestions.length > 0) {
+          const items = autocompleteDropdown.querySelectorAll('.skills-autocomplete-item');
+          if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            selectedSuggestionIndex = (selectedSuggestionIndex + 1) % items.length;
+            items.forEach((it, idx) => it.classList.toggle('is-selected', idx === selectedSuggestionIndex));
+            if (items[selectedSuggestionIndex]) items[selectedSuggestionIndex].scrollIntoView({ block: 'nearest' });
+            return;
+          } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            selectedSuggestionIndex = (selectedSuggestionIndex - 1 + items.length) % items.length;
+            items.forEach((it, idx) => it.classList.toggle('is-selected', idx === selectedSuggestionIndex));
+            if (items[selectedSuggestionIndex]) items[selectedSuggestionIndex].scrollIntoView({ block: 'nearest' });
+            return;
+          } else if (e.key === 'Enter') {
+            if (selectedSuggestionIndex >= 0 && currentSuggestions[selectedSuggestionIndex]) {
+              e.preventDefault();
+              trackRegStarted();
+              addSkill(currentSuggestions[selectedSuggestionIndex].name);
+              return;
+            }
+          } else if (e.key === 'Escape') {
+            closeAutocomplete();
+            return;
+          }
+        }
+
         if (e.key === 'Enter' || e.key === ',') {
           e.preventDefault();
           trackRegStarted();
@@ -468,6 +623,32 @@
       skillInput.addEventListener('input', () => {
         if (moderationAlert && moderationAlert.style.display === 'flex') {
           hideModerationError();
+        }
+
+        const val = skillInput.value.trim();
+        if (val.length >= 1) {
+          const matches = searchSkillMatches(val);
+          renderAutocompleteDropdown(matches, val);
+        } else {
+          closeAutocomplete();
+        }
+      });
+
+      // Dropdown item selection click
+      if (autocompleteDropdown) {
+        autocompleteDropdown.addEventListener('click', (e) => {
+          const item = e.target.closest('.skills-autocomplete-item');
+          if (item && item.dataset.skill) {
+            trackRegStarted();
+            addSkill(item.dataset.skill);
+          }
+        });
+      }
+
+      // Close dropdown on outside click
+      document.addEventListener('click', (e) => {
+        if (!skillInput.contains(e.target) && !autocompleteDropdown.contains(e.target) && !btnAddSkill.contains(e.target)) {
+          closeAutocomplete();
         }
       });
     }
