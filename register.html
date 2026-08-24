@@ -488,7 +488,7 @@
     }
 
     function cleanSkillName(name) {
-      return (name || '').replace(/^[\p{Emoji}\u200d\uFE0F\s]+/u, '').trim();
+      return String(name || '').replace(/[\p{Emoji}\u200d\uFE0F]/gu, '').replace(/\s+/g, ' ').trim();
     }
 
     function showModerationError(msg) {
@@ -760,28 +760,51 @@
     }
 
     function triggerGeolocation() {
-      if ('geolocation' in navigator) {
-        if (gpsBtn) gpsBtn.textContent = 'Detecting GPS...';
-        if (locGpsQuickBtn) locGpsQuickBtn.textContent = 'Detecting accurate location...';
-        navigator.geolocation.getCurrentPosition(
-          async (pos) => {
-            const lat = pos.coords.latitude;
-            const lng = pos.coords.longitude;
-            const address = await reverseGeocode(lat, lng);
-            setMapLocation(lat, lng, address);
-            if (gpsBtn) gpsBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Located';
-            if (locGpsQuickBtn) locGpsQuickBtn.innerHTML = '✓ Current location detected';
-          },
-          (err) => {
-            console.warn('Geolocation notice:', err);
-            // Fallback default coordinates (Surulere, Lagos)
-            setMapLocation(6.5000, 3.3585, 'Surulere, Lagos, Nigeria');
-            if (gpsBtn) gpsBtn.textContent = 'Use GPS';
-            if (locGpsQuickBtn) locGpsQuickBtn.textContent = 'GPS permission needed (enter manually)';
-          },
-          { enableHighAccuracy: true, timeout: 8000 }
-        );
+      if (!('geolocation' in navigator)) {
+        if (locGpsQuickBtn) locGpsQuickBtn.textContent = 'GPS not supported on this browser';
+        return;
       }
+
+      if (gpsBtn) gpsBtn.textContent = 'Detecting GPS...';
+      if (locGpsQuickBtn) locGpsQuickBtn.textContent = 'Acquiring GPS location...';
+
+      const handleSuccess = async (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        const address = await reverseGeocode(lat, lng);
+        setMapLocation(lat, lng, address);
+        if (gpsBtn) gpsBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Located';
+        if (locGpsQuickBtn) locGpsQuickBtn.innerHTML = '✓ Current location detected';
+      };
+
+      const handleFail = (err) => {
+        console.warn('Geolocation notice:', err);
+        if (err && err.code === 3) {
+          // Timeout occurred on high-accuracy mode; retry once with relaxed network accuracy
+          navigator.geolocation.getCurrentPosition(
+            handleSuccess,
+            (finalErr) => {
+              if (gpsBtn) gpsBtn.textContent = 'Use GPS';
+              if (locGpsQuickBtn) locGpsQuickBtn.textContent = (finalErr.code === 1) ? 'GPS permission needed (enter manually)' : 'Location unavailable (enter manually)';
+            },
+            { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 }
+          );
+          return;
+        }
+
+        if (gpsBtn) gpsBtn.textContent = 'Use GPS';
+        if (locGpsQuickBtn) {
+          locGpsQuickBtn.textContent = (err && err.code === 1) 
+            ? 'GPS permission needed (enter manually)' 
+            : 'Could not detect location (enter manually)';
+        }
+      };
+
+      navigator.geolocation.getCurrentPosition(
+        handleSuccess,
+        handleFail,
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
+      );
     }
 
     if (gpsBtn) gpsBtn.addEventListener('click', triggerGeolocation);

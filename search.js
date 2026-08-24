@@ -1055,6 +1055,105 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // GPS / "Near Me" Search Handler with High Accuracy & Reverse Geocoding
+  if (gpsTrigger) {
+    gpsTrigger.addEventListener("click", (e) => {
+      e.preventDefault();
+      if (!('geolocation' in navigator)) {
+        alert('Geolocation is not supported by your browser.');
+        return;
+      }
+
+      gpsTrigger.classList.add('loading');
+      const origHtml = gpsTrigger.innerHTML;
+      gpsTrigger.innerHTML = '<span>Locating...</span>';
+
+      const handleGpsSuccess = async (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        state.userCoords = { lat, lng };
+        state.sortBy = "distance-asc";
+        if (sortSelect) sortSelect.value = "distance-asc";
+
+        try {
+          const resp = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`, {
+            headers: { 'Accept': 'application/json' }
+          });
+          if (resp.ok) {
+            const data = await resp.json();
+            const a = data.address || {};
+            const area = a.suburb || a.neighbourhood || a.quarter || a.city_district || a.town || a.city || 'My Location';
+            const city = a.city || a.county || a.state_district || 'Lagos';
+            const locName = `${area}, ${city}`;
+            if (locationSearch) locationSearch.value = locName;
+            state.locationQuery = locName;
+            try {
+              sessionStorage.setItem('lokator_temp_location_name', locName);
+              sessionStorage.setItem('lokator_temp_lat', lat.toString());
+              sessionStorage.setItem('lokator_temp_lng', lng.toString());
+            } catch (err) {}
+          }
+        } catch (e) {
+          if (locationSearch) locationSearch.value = `Near Me (${lat.toFixed(3)}, ${lng.toFixed(3)})`;
+        }
+
+        gpsTrigger.innerHTML = '<span style="color:#52E58C;">✓ Located</span>';
+        setTimeout(() => { gpsTrigger.innerHTML = origHtml; }, 3000);
+        state.page = 1;
+        render();
+      };
+
+      const handleGpsFail = (err) => {
+        console.warn('Search GPS notice:', err);
+        if (err && err.code === 3) {
+          // Retry with network geolocation
+          navigator.geolocation.getCurrentPosition(
+            handleGpsSuccess,
+            (finalErr) => {
+              gpsTrigger.innerHTML = origHtml;
+              alert(finalErr.code === 1 ? 'Location permission was denied. Please enter your area manually.' : 'Could not acquire GPS fix. Please enter your area manually.');
+            },
+            { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 }
+          );
+          return;
+        }
+        gpsTrigger.innerHTML = origHtml;
+        alert(err && err.code === 1 ? 'Location permission was denied. Please enter your area manually.' : 'Could not detect your current location. Please enter your area manually.');
+      };
+
+      navigator.geolocation.getCurrentPosition(
+        handleGpsSuccess,
+        handleGpsFail,
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
+      );
+    });
+  }
+
+  // Hamburger / Mobile Nav Menu Handler with Outside Click Dismiss
+  const hamburger = document.getElementById('hamburger');
+  const navLinks = document.getElementById('nav-links');
+  if (hamburger && navLinks) {
+    hamburger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = navLinks.classList.toggle('open');
+      hamburger.setAttribute('aria-expanded', isOpen);
+    });
+
+    navLinks.querySelectorAll('a, button').forEach(item => {
+      item.addEventListener('click', () => {
+        navLinks.classList.remove('open');
+        hamburger.setAttribute('aria-expanded', 'false');
+      });
+    });
+
+    document.addEventListener('click', (e) => {
+      if (navLinks.classList.contains('open') && !navLinks.contains(e.target) && !hamburger.contains(e.target)) {
+        navLinks.classList.remove('open');
+        hamburger.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
+
   // Close drawer on Escape key press
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && filterSidebar && (filterSidebar.classList.contains("open") || filterSidebar.classList.contains("mobile-open"))) {

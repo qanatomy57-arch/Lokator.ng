@@ -1574,32 +1574,37 @@
       const lastName = (formData.lname || formData.last_name || '').trim();
       const fullName = `${firstName} ${lastName}`.trim();
       
-      // Parse skills array (from chips/tag input or custom string)
+      // Parse skills array (from chips/tag input or custom string) and strip emojis
       let skillsArray = [];
+      const cleanSkillText = (str) => String(str || '').replace(/[\p{Emoji}\u200d\uFE0F]/gu, '').replace(/\s+/g, ' ').trim();
+
       if (Array.isArray(formData.skills)) {
-        skillsArray = formData.skills.map(s => String(s).trim()).filter(Boolean);
+        skillsArray = formData.skills.map(s => cleanSkillText(s)).filter(Boolean);
       } else if (typeof formData.skills === 'string' && formData.skills.trim()) {
-        skillsArray = formData.skills.split(',').map(s => s.trim()).filter(Boolean);
+        skillsArray = formData.skills.split(',').map(s => cleanSkillText(s)).filter(Boolean);
       }
 
-      const rawCategory = formData.service || formData.category || (skillsArray[0] || 'other');
+      const rawCategory = cleanSkillText(formData.service || formData.category || (skillsArray[0] || 'other'));
 
       // Strict Content Moderation Check on all inputs
       if (typeof global.ServiceModerator !== 'undefined' && global.ServiceModerator.validateSkill) {
-        const catVal = global.ServiceModerator.validateSkill(rawCategory);
-        if (!catVal.valid) {
-          throw new Error('This service category is not permitted on Lokator.');
+        if (rawCategory && rawCategory !== 'other') {
+          const catVal = global.ServiceModerator.validateSkill(rawCategory);
+          if (!catVal.valid) {
+            throw new Error(catVal.error || 'This service category is not permitted on Lokator.');
+          }
         }
         for (const sk of skillsArray) {
           const skVal = global.ServiceModerator.validateSkill(sk);
           if (!skVal.valid) {
-            throw new Error('This service category is not permitted on Lokator.');
+            throw new Error(skVal.error || 'This service category is not permitted on Lokator.');
           }
         }
         if (formData.trade) {
-          const tradeVal = global.ServiceModerator.validateSkill(formData.trade);
+          const cleanTrade = cleanSkillText(formData.trade);
+          const tradeVal = global.ServiceModerator.validateSkill(cleanTrade);
           if (!tradeVal.valid) {
-            throw new Error('This service category is not permitted on Lokator.');
+            throw new Error(tradeVal.error || 'This service category is not permitted on Lokator.');
           }
         }
       }
@@ -1894,17 +1899,18 @@
 
       // Content Moderation check on updated fields
       if (typeof global.ServiceModerator !== 'undefined' && global.ServiceModerator.validateSkill) {
+        const cleanStr = (s) => String(s || '').replace(/[\p{Emoji}\u200d\uFE0F]/gu, '').trim();
         if (updateData.trade || updateData.trade_title) {
-          const tVal = global.ServiceModerator.validateSkill(updateData.trade || updateData.trade_title);
+          const tVal = global.ServiceModerator.validateSkill(cleanStr(updateData.trade || updateData.trade_title));
           if (!tVal.valid) {
-            throw new Error('This service category is not permitted on Lokator.');
+            throw new Error(tVal.error || 'This service category is not permitted on Lokator.');
           }
         }
         if (Array.isArray(updateData.skills)) {
           for (const s of updateData.skills) {
-            const sVal = global.ServiceModerator.validateSkill(s);
+            const sVal = global.ServiceModerator.validateSkill(cleanStr(s));
             if (!sVal.valid) {
-              throw new Error('This service category is not permitted on Lokator.');
+              throw new Error(sVal.error || 'This service category is not permitted on Lokator.');
             }
           }
         }
@@ -2028,14 +2034,15 @@
       const numId = Number(providerId);
       if (!numId) return null;
 
-      const skillsArray = Array.isArray(skillsList) ? skillsList.map(s => String(s).trim()).filter(Boolean) : [];
+      const cleanSkill = (s) => String(s || '').replace(/[\p{Emoji}\u200d\uFE0F]/gu, '').trim();
+      const skillsArray = Array.isArray(skillsList) ? skillsList.map(s => cleanSkill(s)).filter(Boolean) : [];
 
       // Validate all skills against moderation
       if (typeof global.ServiceModerator !== 'undefined' && global.ServiceModerator.validateSkill) {
         for (const s of skillsArray) {
           const val = global.ServiceModerator.validateSkill(s);
           if (!val.valid) {
-            throw new Error('This service category is not permitted on Lokator.');
+            throw new Error(val.error || 'This service category is not permitted on Lokator.');
           }
         }
       }

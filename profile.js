@@ -639,9 +639,24 @@ document.addEventListener('DOMContentLoaded', async () => {
   const hamburger = document.getElementById('hamburger');
   const navLinks = document.getElementById('nav-links');
   if (hamburger && navLinks) {
-    hamburger.addEventListener('click', () => {
+    hamburger.addEventListener('click', (e) => {
+      e.stopPropagation();
       const isOpen = navLinks.classList.toggle('open');
       hamburger.setAttribute('aria-expanded', isOpen);
+    });
+
+    navLinks.querySelectorAll('a, button').forEach(item => {
+      item.addEventListener('click', () => {
+        navLinks.classList.remove('open');
+        hamburger.setAttribute('aria-expanded', 'false');
+      });
+    });
+
+    document.addEventListener('click', (e) => {
+      if (navLinks.classList.contains('open') && !navLinks.contains(e.target) && !hamburger.contains(e.target)) {
+        navLinks.classList.remove('open');
+        hamburger.setAttribute('aria-expanded', 'false');
+      }
     });
   }
 });

@@ -284,7 +284,7 @@ body {
   overflow-y: auto;
   overflow-x: hidden;
   scroll-snap-type: y mandatory;
-  overscroll-behavior-y: contain;
+  overscroll-behavior-y: auto;
   touch-action: pan-y;
   background: #060D07;
   scrollbar-width: thin;
@@ -455,7 +455,7 @@ body {
   padding: 84px 0 24px;
 }
 
-/* Glassmorphism story card with rich dark emerald background for reliable contrast */
+/* Glassmorphism story card with transparent ~2-4% background, crisp blur, and reinforced contrast */
 .story-card {
   display: flex;
   flex-direction: column;
@@ -463,17 +463,17 @@ body {
   gap: 10px;
   width: 100%;
   max-width: 490px;
-  background: rgba(8, 18, 12, 0.92);
-  border: 1.5px solid rgba(82, 229, 140, 0.35);
-  border-top-color: rgba(82, 229, 140, 0.6);
+  background: rgba(6, 14, 8, 0.04);
+  border: 1px solid rgba(82, 229, 140, 0.22);
+  border-top-color: rgba(82, 229, 140, 0.55);
   border-radius: 20px;
   padding: 24px 26px;
-  -webkit-backdrop-filter: blur(24px);
-  backdrop-filter: blur(24px);
-  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.65),
-    0 0 32px rgba(0, 107, 63, 0.25),
-    inset 0 1px 1px rgba(255, 255, 255, 0.2);
-  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5),
+    0 0 24px rgba(0, 107, 63, 0.15),
+    inset 0 1px 1px rgba(255, 255, 255, 0.15);
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.9), 0 1px 3px rgba(0, 0, 0, 0.95);
   opacity: 0.7;
   transform: translateY(8px);
   transition: opacity 0.5s ease,
@@ -492,26 +492,27 @@ body {
   align-items: center;
   gap: 6px;
   width: fit-content;
-  background: rgba(0, 107, 63, 0.5);
-  border: 1px solid rgba(82, 229, 140, 0.55);
-  color: #4ADE80;
+  background: rgba(0, 107, 63, 0.7);
+  border: 1px solid rgba(82, 229, 140, 0.75);
+  color: #52E58C;
   border-radius: var(--radius-full);
-  padding: 4px 12px;
+  padding: 5px 13px;
   font-size: 11.5px;
-  font-weight: 600;
-  letter-spacing: 0.2px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
 }
 
 .hero-title {
   font-size: clamp(22px, 2.3vw, 29px);
-  font-weight: 700;
+  font-weight: 800;
   line-height: 1.22;
   color: #FFFFFF;
   letter-spacing: -0.4px;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.95), 0 1px 4px rgba(0, 0, 0, 0.9);
 }
 
 .highlight {
@@ -519,16 +520,17 @@ body {
   position: relative;
   background: linear-gradient(180deg, transparent 60%, rgba(212, 175, 55, 0.3) 60%);
   padding: 0 3px;
-  font-weight: 700;
+  font-weight: 800;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.9);
 }
 
 .hero-sub {
-  font-size: 14px;
-  font-weight: 450;
-  color: #F1F5F9;
+  font-size: 14.5px;
+  font-weight: 500;
+  color: #FFFFFF;
   line-height: 1.55;
   max-width: 440px;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.95), 0 1px 3px rgba(0, 0, 0, 0.9);
 }
 
 .hero-cta-group {
@@ -536,13 +538,14 @@ body {
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
-  margin-top: 2px;
+  margin-top: 4px;
 }
 
 .hero-cta-group .btn {
-  padding: 9px 18px;
-  font-size: 13.5px;
-  font-weight: 600;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
 }
 
 .hero-cta-group .btn-outline {
@@ -3544,77 +3547,73 @@ body {
 
 /* Browse by Industry Section */
 .marketplace-browse-section {
-  margin-bottom: 24px;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-lg, 14px);
   padding: 20px;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: var(--radius-lg, 12px);
-  transition: all 0.3s ease;
-}
-
-.browse-section-header {
-  margin-bottom: 16px;
+  margin-bottom: 24px;
 }
 
 .browse-badge {
   display: inline-block;
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--green, #006B3F);
-  background: rgba(0, 107, 63, 0.12);
-  border: 1px solid rgba(0, 107, 63, 0.25);
-  padding: 3px 8px;
-  border-radius: 4px;
-  margin-bottom: 6px;
+  color: #52E58C;
+  background: rgba(82, 229, 140, 0.14);
+  border: 1px solid rgba(82, 229, 140, 0.35);
+  padding: 4px 10px;
+  border-radius: 6px;
+  margin-bottom: 8px;
 }
 
 .browse-title {
-  font-size: 18px;
+  font-size: 19px;
   font-weight: 800;
-  color: var(--fg, #F9FAFB);
-  margin: 0 0 4px;
+  color: #FFFFFF;
+  margin: 0 0 6px;
   letter-spacing: -0.3px;
 }
 
 .browse-subtitle {
-  font-size: 13px;
-  color: var(--fg-muted, #9CA3AF);
+  font-size: 13.5px;
+  color: #CBD5E1;
   margin: 0;
+  line-height: 1.5;
 }
 
 .industry-cards-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 12px;
-  margin-top: 14px;
+  margin-top: 16px;
 }
 
 .industry-browse-card {
   display: flex;
   flex-direction: column;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-md, 10px);
   padding: 14px;
   text-decoration: none;
-  color: inherit;
+  color: #F8FAFC;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
 }
 
 .industry-browse-card:hover {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(0, 107, 63, 0.4);
+  background: rgba(30, 41, 59, 0.95);
+  border-color: #52E58C;
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 
 .industry-browse-card.is-selected {
-  background: rgba(0, 107, 63, 0.1);
-  border-color: var(--green, #006B3F);
+  background: rgba(82, 229, 140, 0.15);
+  border-color: #52E58C;
 }
 
 .industry-card-head {
@@ -3627,33 +3626,39 @@ body {
 .industry-card-icon {
   font-size: 22px;
   line-height: 1;
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.08);
   border-radius: 8px;
   flex-shrink: 0;
 }
 
 .industry-card-name {
-  font-size: 14px;
+  font-size: 14.5px;
   font-weight: 700;
-  color: var(--fg, #F9FAFB);
+  color: #FFFFFF;
   line-height: 1.2;
 }
 
 .industry-card-desc {
+  font-size: 12px;
+  color: #94A3B8;
+  line-height: 1.45;
+}
+
+.industry-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
   font-size: 11.5px;
-  color: var(--fg-muted, #9CA3AF);
-  line-height: 1.4;
-  margin: 0 0 10px;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  color: #52E58C;
+  font-weight: 600;
 }
 
 .industry-popular-skills-wrap {

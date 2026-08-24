@@ -579,8 +579,8 @@
     'hack', 'hacker', 'hacking', 'cracker', 'malware', 'virus', 'trojan', 'spyware',
     'weapon', 'weapons', 'gun', 'guns', 'firearm', 'firearms', 'pistol', 'rifle', 'ammo', 'ammunition', 'bomb', 'explosives',
     'drug', 'drugs', 'cocaine', 'heroin', 'weed', 'marijuana', 'narcotics', 'tramadol', 'codeine', 'meth',
-    'stolen goods', 'stolen', 'fake document', 'fake documents', 'fake certificate', 'counterfeit', 'forgery',
-    'prostitution', 'prostitute', 'escort', 'sex', 'nude', 'porn', 'adult',
+    'stolen goods', 'stolen', 'fake document', 'fake documents', 'fake certificate', 'fake certificates', 'counterfeit', 'forgery',
+    'prostitution', 'prostitute', 'escort', 'sex', 'nude', 'porn', 'adult service', 'adult entertainment',
     'illegal', 'money laundry', 'money laundering', 'organ harvesting', 'human parts',
     'blackmail', 'extortion', 'pirated', 'contraband'
   ];
@@ -600,26 +600,31 @@
         return { valid: false, error: 'Skill name cannot be empty.' };
       }
 
-      const clean = skillText.replace(/^[\p{Emoji}\u200d\uFE0F\s]+/u, '').trim();
+      // 1. Remove all emojis and special decorative glyphs globally
+      const clean = skillText.replace(/[\p{Emoji}\u200d\uFE0F]/gu, '').replace(/\s+/g, ' ').trim();
       if (clean.length < 2) {
         return { valid: false, error: 'Skill name must be at least 2 characters.' };
       }
-      if (clean.length > 80) {
-        return { valid: false, error: 'Skill name must be under 80 characters.' };
+      if (clean.length > 300) {
+        return { valid: false, error: 'Skill text must be under 300 characters.' };
       }
 
-      const lower = clean.toLowerCase();
+      // If composite skill string (e.g. "Plumber & Electrician" or "Solar, AC"), validate each sub-token
+      const tokens = clean.split(/[,&]/).map(t => t.trim()).filter(Boolean);
+      for (const token of tokens) {
+        if (token.length < 2) continue;
+        const lower = token.toLowerCase();
 
-      // Check against blocked keywords with word boundaries or substring match
-      for (const word of BLOCKED_KEYWORDS) {
-        // Regex with word boundaries or exact containment for compound terms
-        const regex = new RegExp('(^|[^a-zA-Z0-9])' + word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '($|[^a-zA-Z0-9])', 'i');
-        if (regex.test(lower) || (word.length >= 4 && lower.includes(word))) {
-          return {
-            valid: false,
-            error: `Disallowed service keyword detected ("${word}"). Lokator only lists verified, legal artisan and trade services.`,
-            blockedWord: word
-          };
+        for (const word of BLOCKED_KEYWORDS) {
+          // Strict word boundary regex: match whole word only to prevent false positives (e.g. "weeding", "ammonia")
+          const regex = new RegExp('(^|[^a-zA-Z0-9])' + word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '($|[^a-zA-Z0-9])', 'i');
+          if (regex.test(lower)) {
+            return {
+              valid: false,
+              error: `Disallowed service keyword detected ("${word}"). Lokator only lists verified, legal artisan and trade services.`,
+              blockedWord: word
+            };
+          }
         }
       }
 

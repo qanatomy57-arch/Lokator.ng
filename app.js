@@ -405,8 +405,8 @@ class ScrollDiscoveryEngine {
       // Only apply on desktop viewports
       if (window.innerWidth < 769) return;
       if (wheelCooldown) {
-        if (this.currentIndex < 8 && e.deltaY > 0) e.preventDefault();
-        if (this.currentIndex > 0 && e.deltaY < 0) e.preventDefault();
+        if (this.currentIndex < this.slides.length - 1 && e.deltaY > 0) e.preventDefault();
+        if (this.currentIndex > 0 && e.deltaY < 0 && window.scrollY <= 10) e.preventDefault();
         return;
       }
 
@@ -417,11 +417,21 @@ class ScrollDiscoveryEngine {
           wheelCooldown = true;
           this.scrollToStep(this.currentIndex + 1);
           setTimeout(() => { wheelCooldown = false; }, 600);
+        } else {
+          // At 9th scene (last slide): release scroll lock so page continues to Testimonials/Categories
+          const downstreamSection = document.getElementById('how-it-works') || document.querySelector('.why-lokator') || document.querySelector('footer');
+          if (downstreamSection && window.scrollY <= 10) {
+            downstreamSection.scrollIntoView({ behavior: 'smooth' });
+          }
         }
-        // At slide index 8 (scene 9), default scrolling allows proceeding to downstream sections
       } else if (e.deltaY < -30) {
-        // Scrolling up through scenes
-        if (this.currentIndex > 0 && window.scrollY <= 10) {
+        // If downstream on page, let normal window scroll up to top first
+        if (window.scrollY > 15) {
+          return;
+        }
+
+        // Scrolling up through scenes once at top of document
+        if (this.currentIndex > 0) {
           e.preventDefault();
           wheelCooldown = true;
           this.scrollToStep(this.currentIndex - 1);
