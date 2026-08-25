@@ -2311,6 +2311,33 @@ document.addEventListener('DOMContentLoaded', async () => {
                 commStatusEl.textContent = monSummary.commercial_readiness_classification;
               }
 
+              // Paystack Pilot Orders Table (Phase 10.13E)
+              const ordersTbody = document.getElementById('mon-pilot-orders-tbody');
+              if (ordersTbody && monSummary.pilot_metrics && monSummary.pilot_metrics.orders) {
+                const orders = monSummary.pilot_metrics.orders;
+                if (orders.length === 0) {
+                  ordersTbody.innerHTML = `<tr><td colspan="8" style="padding: 16px; text-align: center; color: #64748B;">No pilot transactions yet recorded in local test store.</td></tr>`;
+                } else {
+                  ordersTbody.innerHTML = orders.map(ord => {
+                    const isFulfilled = ord.status === 'active' || ord.status === 'paid';
+                    const tagClass = isFulfilled ? 'status-good' : 'status-notice';
+                    const expiryStr = ord.expires_at ? new Date(ord.expires_at).toLocaleDateString() : 'Pending Activation';
+                    return `
+                      <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td style="padding: 8px; font-family: monospace; color: #CBD5E1;">${ord.order_id}</td>
+                        <td style="padding: 8px; color: #38BDF8; font-weight: 600;">#${ord.provider_id}</td>
+                        <td style="padding: 8px; color: #F1F5F9;">${ord.product_name || 'Promoted Placement'}</td>
+                        <td style="padding: 8px; color: #34D399; font-weight: 700;">${ord.amount_display || '₦2,000'}</td>
+                        <td style="padding: 8px; font-family: monospace; color: #94A3B8; font-size: 0.75rem;">${ord.reference}</td>
+                        <td style="padding: 8px;"><span class="status-tag ${tagClass}" style="font-size: 0.65rem;">${ord.status.toUpperCase()}</span></td>
+                        <td style="padding: 8px; color: #CBD5E1;">${ord.lga || 'Warri South'}, ${ord.state || 'Delta'}</td>
+                        <td style="padding: 8px; color: #FBBF24; font-size: 0.75rem;">${expiryStr}</td>
+                      </tr>
+                    `;
+                  }).join('');
+                }
+              }
+
               // 0. Finalist Evaluation Table (Phase 10.13D)
               const finTbody = document.getElementById('mon-finalist-tbody');
               if (finTbody && monSummary.first_paid_product_decision && monSummary.first_paid_product_decision.finalist_evaluation) {

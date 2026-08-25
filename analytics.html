@@ -697,18 +697,51 @@
 
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; font-size: 0.75rem;">
             <div style="background: #0E1522; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.04);">
-      <!-- 8.5 Phase 10.13D: Monetization Pilot Readiness & First-Paid-Product Gate -->
+      <!-- 8.5 Phase 10.13E: Paystack Pilot Payment Integration & Pilot Gate -->
       <section id="section-monetization-architecture" style="margin-bottom: 32px;">
         <div class="section-title">
           <span style="display: flex; align-items: center; gap: 8px;">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-            Monetization Pilot Readiness & First-Paid-Product Gate (Phase 10.13D)
+            Paystack Pilot Payment Integration & Pilot Gate (Phase 10.13E)
           </span>
           <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-            <span class="status-tag status-good" id="mon-commercial-status" style="font-size: 0.7rem; font-weight: 700;">PILOT_READY_PAYMENT_STILL_DISABLED</span>
+            <span class="status-tag status-good" id="mon-commercial-status" style="font-size: 0.7rem; font-weight: 700;">PAYMENT_INTEGRATION_TEST_READY</span>
             <span class="status-tag status-good" style="font-size: 0.7rem; font-weight: 700;">0%_COMMISSION_LOCKED</span>
-            <span class="status-tag status-notice" style="font-size: 0.7rem; font-weight: 700;" id="mon-gate-status">PILOT_READY_PAYMENT_STILL_DISABLED</span>
-            <span class="status-tag status-notice" style="font-size: 0.7rem; font-weight: 700; color: #38BDF8; border-color: #38BDF8;">PAYSTACK_RECOMMENDED</span>
+            <span class="status-tag status-notice" style="font-size: 0.7rem; font-weight: 700;" id="mon-gate-status">PAYMENT_INTEGRATION_TEST_READY</span>
+            <span class="status-tag status-notice" style="font-size: 0.7rem; font-weight: 700; color: #38BDF8; border-color: #38BDF8;">PAYSTACK_TEST_MODE</span>
+          </div>
+        </div>
+
+        <!-- Paystack Pilot Orders & Live Entitlement State -->
+        <div class="panel-card" style="margin-bottom: 20px; border-left: 4px solid #10B981; background: linear-gradient(180deg, rgba(16, 185, 129, 0.04) 0%, rgba(15, 23, 42, 0.6) 100%);">
+          <div style="font-size: 0.95rem; font-weight: 700; color: #F1F5F9; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+            <span>💳 Paystack Pilot Orders & Entitlement Lifecycle (14-Day Starter Pilot)</span>
+            <span class="status-tag status-good" style="font-size: 0.7rem;">STARTER: ₦2,000 / 14 DAYS</span>
+          </div>
+          <div style="overflow-x: auto; margin-bottom: 12px;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.78rem; text-align: left;">
+              <thead>
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.08); color: #94A3B8;">
+                  <th style="padding: 8px;">Order ID</th>
+                  <th style="padding: 8px;">Provider ID</th>
+                  <th style="padding: 8px;">Product</th>
+                  <th style="padding: 8px;">Amount</th>
+                  <th style="padding: 8px;">Paystack Ref</th>
+                  <th style="padding: 8px;">Status</th>
+                  <th style="padding: 8px;">Target Locality</th>
+                  <th style="padding: 8px;">Entitlement Expiry</th>
+                </tr>
+              </thead>
+              <tbody id="mon-pilot-orders-tbody">
+                <tr><td colspan="8" style="padding: 16px; text-align: center; color: #64748B;">No pilot transactions yet recorded in local test store.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; font-size: 0.75rem; background: rgba(0,0,0,0.25); padding: 10px; border-radius: 6px;">
+            <div><strong style="color: #34D399;">Server Initialization:</strong> <span style="color: #CBD5E1;">POST /api/paystack-init (200000 kobo)</span></div>
+            <div><strong style="color: #34D399;">Server Verification:</strong> <span style="color: #CBD5E1;">POST /api/paystack-verify (Idempotent)</span></div>
+            <div><strong style="color: #34D399;">Webhook Security:</strong> <span style="color: #CBD5E1;">HMAC-SHA512 Signature Validated</span></div>
+            <div><strong style="color: #34D399;">Live Mode Gate:</strong> <span style="color: #F87171; font-weight: 700;">PAYMENT_LIVE_MODE = false (LOCKED)</span></div>
           </div>
         </div>
 
@@ -782,7 +815,7 @@
         <!-- 1. Key Willingness-to-Pay Cohort KPIs -->
         <div class="panel-card" style="margin-bottom: 20px;">
           <div style="font-size: 0.95rem; font-weight: 700; color: #F1F5F9; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center;">
-            <span>📊 Provider Willingness-to-Pay Cohort Metrics (Phase 10.13D)</span>
+            <span>📊 Provider Willingness-to-Pay Cohort Metrics (Phase 10.13E)</span>
             <span style="font-size: 0.75rem; color: #94A3B8;">Deduplicated Provider-Level vs Event-Level Metrics</span>
           </div>
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">

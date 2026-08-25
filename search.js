@@ -706,6 +706,7 @@ document.addEventListener("DOMContentLoaded", () => {
                   </span>` : ''
                 }
                 ${provider.isTop ? `<span class="badge-tag-top">⭐ Top Pick</span>` : ''}
+                ${(provider.is_sponsored || provider.isSponsored) ? `<span class="badge-tag-sponsored" style="background: rgba(56, 189, 248, 0.15); color: #38BDF8; border: 1px solid rgba(56, 189, 248, 0.4); font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; display: inline-flex; align-items: center; gap: 3px;">⚡ Sponsored</span>` : ''}
               </div>
 
               <div class="provider-specialty">${escapeHtml(provider.trade)}</div>

@@ -1266,6 +1266,83 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       });
     }
+
+    // 7. Phase 10.13E: Paystack Starter Pilot (₦2,000 / 14-Day) Checkout Trigger & Active Promo Display
+    const activePromoBanner = document.getElementById('dash-active-promo-banner');
+    const updateActivePromoDisplay = () => {
+      if (!activePromoBanner || !LokatorDB.monetization || !LokatorDB.monetization.pilot) return;
+      const activePromo = LokatorDB.monetization.pilot.getProviderActivePromotion(providerId);
+      if (activePromo) {
+        const daysLeft = Math.max(1, Math.ceil((new Date(activePromo.effective_until).getTime() - Date.now()) / (24 * 3600 * 1000)));
+        activePromoBanner.style.display = 'block';
+        activePromoBanner.innerHTML = `⚡ Promoted Listing Active — ${daysLeft} day${daysLeft === 1 ? '' : 's'} remaining (${activePromo.lga || 'your locality'})`;
+      } else {
+        activePromoBanner.style.display = 'none';
+      }
+    };
+    updateActivePromoDisplay();
+
+    // Check for Paystack redirect callback in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentRef = urlParams.get('payment_ref');
+    if (paymentRef && LokatorDB.monetization && LokatorDB.monetization.pilot) {
+      LokatorDB.monetization.pilot.verifyPayment(paymentRef, providerId).then(res => {
+        if (res && res.verified) {
+          showToast('🎉 Paystack payment verified! Your 14-day Promoted Placement is now ACTIVE.');
+          updateActivePromoDisplay();
+        }
+      }).catch(err => {
+        console.warn('Payment callback verification notice:', err.message);
+      });
+    }
+
+    const btnStartPilot = document.getElementById('btn-start-paystack-pilot');
+    if (btnStartPilot) {
+      btnStartPilot.addEventListener('click', async () => {
+        if (!LokatorDB.monetization || !LokatorDB.monetization.pilot) return;
+
+        try {
+          btnStartPilot.disabled = true;
+          btnStartPilot.textContent = 'Initializing Paystack...';
+
+          const initRes = await LokatorDB.monetization.pilot.initializePayment(providerId, providerMeta);
+          if (initRes.status === 'error' && initRes.code === 'INVENTORY_LIMIT_REACHED') {
+            alert(`⚠️ Slot Limit Reached: ${initRes.message}`);
+            btnStartPilot.disabled = false;
+            btnStartPilot.innerHTML = `<span>⚡ Launch 14-Day Pilot (₦2,000)</span> <span style="font-size: 9.5px; background: rgba(255,255,255,0.2); padding: 1px 4px; border-radius: 3px;">Test Mode</span>`;
+            return;
+          }
+
+          // Test Mode Simulator: Automatically verify test transaction
+          const confirmPayment = confirm(
+            `🚀 LOKATOR.NG PAYSTACK PILOT (TEST MODE)\n\n` +
+            `Product: Promoted Category Placement\n` +
+            `Duration: 14 Days\n` +
+            `Amount: ₦2,000.00 (200,000 kobo)\n` +
+            `Reference: ${initRes.reference}\n` +
+            `Location: ${providerMeta.lga || 'Warri South'}, ${providerMeta.state || 'Delta'}\n\n` +
+            `Click OK to simulate successful Paystack test payment and activate promotion.`
+          );
+
+          if (confirmPayment) {
+            const verifyRes = await LokatorDB.monetization.pilot.verifyPayment(initRes.reference, providerId);
+            if (verifyRes.verified) {
+              btnStartPilot.textContent = '⚡ Promoted Active (14 Days)';
+              btnStartPilot.style.background = '#059669';
+              showToast('🎉 Paystack Test Payment Confirmed! 14-Day Promoted Placement is LIVE.');
+              updateActivePromoDisplay();
+            }
+          } else {
+            btnStartPilot.disabled = false;
+            btnStartPilot.innerHTML = `<span>⚡ Launch 14-Day Pilot (₦2,000)</span> <span style="font-size: 9.5px; background: rgba(255,255,255,0.2); padding: 1px 4px; border-radius: 3px;">Test Mode</span>`;
+          }
+        } catch (err) {
+          alert(`Payment Initialization Failed: ${err.message}`);
+          btnStartPilot.disabled = false;
+          btnStartPilot.innerHTML = `<span>⚡ Launch 14-Day Pilot (₦2,000)</span> <span style="font-size: 9.5px; background: rgba(255,255,255,0.2); padding: 1px 4px; border-radius: 3px;">Test Mode</span>`;
+        }
+      });
+    }
   }
 
   // 12. Run Initial Render Pipeline
