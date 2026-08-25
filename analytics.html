@@ -697,24 +697,92 @@
 
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; font-size: 0.75rem;">
             <div style="background: #0E1522; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.04);">
-      <!-- 8.5 Phase 10.13C: Monetization Product & Pricing Validation Center -->
+      <!-- 8.5 Phase 10.13D: Monetization Pilot Readiness & First-Paid-Product Gate -->
       <section id="section-monetization-architecture" style="margin-bottom: 32px;">
         <div class="section-title">
           <span style="display: flex; align-items: center; gap: 8px;">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-            Monetization Product & Pricing Validation Center (Phase 10.13C)
+            Monetization Pilot Readiness & First-Paid-Product Gate (Phase 10.13D)
           </span>
           <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-            <span class="status-tag status-notice" id="mon-commercial-status" style="font-size: 0.7rem; font-weight: 700;">PROMISING_BUT_UNVALIDATED</span>
+            <span class="status-tag status-good" id="mon-commercial-status" style="font-size: 0.7rem; font-weight: 700;">PILOT_READY_PAYMENT_STILL_DISABLED</span>
             <span class="status-tag status-good" style="font-size: 0.7rem; font-weight: 700;">0%_COMMISSION_LOCKED</span>
-            <span class="status-tag status-notice" style="font-size: 0.7rem; font-weight: 700;" id="mon-gate-status">ARCHITECTURALLY_READY_BUT_NOT_VALIDATED</span>
+            <span class="status-tag status-notice" style="font-size: 0.7rem; font-weight: 700;" id="mon-gate-status">PILOT_READY_PAYMENT_STILL_DISABLED</span>
+            <span class="status-tag status-notice" style="font-size: 0.7rem; font-weight: 700; color: #38BDF8; border-color: #38BDF8;">PAYSTACK_RECOMMENDED</span>
+          </div>
+        </div>
+
+        <!-- 0. First Paid Product Decision & Finalist Evaluation Panel -->
+        <div class="panel-card" style="margin-bottom: 20px; border-left: 4px solid #38BDF8; background: linear-gradient(180deg, rgba(56, 189, 248, 0.04) 0%, rgba(15, 23, 42, 0.6) 100%);">
+          <div style="font-size: 0.95rem; font-weight: 700; color: #F1F5F9; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+            <span>🏆 First Paid Product Selection & Finalist Evaluation Matrix</span>
+            <span class="status-tag status-good" style="font-size: 0.7rem;">SELECTED: PROMOTED_DISCOVERY_FIRST</span>
+          </div>
+
+          <div style="overflow-x: auto; margin-bottom: 14px;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.78rem; text-align: left;">
+              <thead>
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.08); color: #94A3B8;">
+                  <th style="padding: 8px;">Finalist Product</th>
+                  <th style="padding: 8px;">Research Price</th>
+                  <th style="padding: 8px;">Operational Complexity</th>
+                  <th style="padding: 8px;">Sensitive PII Risk</th>
+                  <th style="padding: 8px;">Fulfillment Simplicity</th>
+                  <th style="padding: 8px;">Refund Complexity</th>
+                  <th style="padding: 8px;">Score</th>
+                  <th style="padding: 8px;">Verdict</th>
+                </tr>
+              </thead>
+              <tbody id="mon-finalist-tbody">
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                  <td style="padding: 8px; font-weight: 600; color: #F59E0B;">Verified Provider Assurance</td>
+                  <td style="padding: 8px; color: #CBD5E1;">₦5,000 one-time</td>
+                  <td style="padding: 8px; color: #F87171;">HIGH (Manual human review queue)</td>
+                  <td style="padding: 8px; color: #F87171;">HIGH (NIN, Govt ID liability)</td>
+                  <td style="padding: 8px; color: #F59E0B;">LOW (Asynchronous bottleneck)</td>
+                  <td style="padding: 8px; color: #F87171;">HIGH (Disputes on audit rejection)</td>
+                  <td style="padding: 8px; font-weight: 700; color: #CBD5E1;">6.8 / 10</td>
+                  <td style="padding: 8px;"><span class="status-tag status-bad" style="font-size: 0.65rem;">REJECTED AS FIRST PILOT</span></td>
+                </tr>
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); background: rgba(56, 189, 248, 0.05);">
+                  <td style="padding: 8px; font-weight: 700; color: #38BDF8;">⚡ Promoted Category Placement</td>
+                  <td style="padding: 8px; color: #34D399; font-weight: 600;">₦3,500 / month</td>
+                  <td style="padding: 8px; color: #34D399;">LOW (100% Automated software delivery)</td>
+                  <td style="padding: 8px; color: #34D399;">NONE (Zero sensitive PII required)</td>
+                  <td style="padding: 8px; color: #34D399;">HIGH (Instant campaign scheduling)</td>
+                  <td style="padding: 8px; color: #34D399;">LOW (Deterministic SLA pro-rate)</td>
+                  <td style="padding: 8px; font-weight: 700; color: #34D399;">9.2 / 10</td>
+                  <td style="padding: 8px;"><span class="status-tag status-good" style="font-size: 0.65rem;">SELECTED AS FIRST PILOT</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pilot Specification Summary Grid -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; font-size: 0.75rem; background: rgba(0,0,0,0.25); padding: 12px; border-radius: 6px;">
+            <div>
+              <strong style="color: #38BDF8; display: block; margin-bottom: 2px;">📍 Pilot Geographic Clusters:</strong>
+              <span style="color: #CBD5E1;">Delta State (Warri South, Ughelli North, Asaba) & Edo State (Oredo)</span>
+            </div>
+            <div>
+              <strong style="color: #38BDF8; display: block; margin-bottom: 2px;">🔒 Inventory Constraints:</strong>
+              <span style="color: #CBD5E1;">Max 2 sponsored listings per Category/LGA (Organic rank untouched)</span>
+            </div>
+            <div>
+              <strong style="color: #38BDF8; display: block; margin-bottom: 2px;">💳 Payment Provider Recommendation:</strong>
+              <span style="color: #CBD5E1;"><strong>PAYSTACK</strong> (Reliable Nigerian card/transfer/USSD + webhook HMAC)</span>
+            </div>
+            <div>
+              <strong style="color: #38BDF8; display: block; margin-bottom: 2px;">🛡️ Stop-Loss Triggers:</strong>
+              <span style="color: #CBD5E1;">Dispute rate > 2%, search latency > 200ms, or entitlement tampering</span>
+            </div>
           </div>
         </div>
 
         <!-- 1. Key Willingness-to-Pay Cohort KPIs -->
         <div class="panel-card" style="margin-bottom: 20px;">
           <div style="font-size: 0.95rem; font-weight: 700; color: #F1F5F9; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center;">
-            <span>📊 Provider Willingness-to-Pay Cohort Metrics (Phase 10.13C)</span>
+            <span>📊 Provider Willingness-to-Pay Cohort Metrics (Phase 10.13D)</span>
             <span style="font-size: 0.75rem; color: #94A3B8;">Deduplicated Provider-Level vs Event-Level Metrics</span>
           </div>
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">

@@ -2311,6 +2311,32 @@ document.addEventListener('DOMContentLoaded', async () => {
                 commStatusEl.textContent = monSummary.commercial_readiness_classification;
               }
 
+              // 0. Finalist Evaluation Table (Phase 10.13D)
+              const finTbody = document.getElementById('mon-finalist-tbody');
+              if (finTbody && monSummary.first_paid_product_decision && monSummary.first_paid_product_decision.finalist_evaluation) {
+                const fin = monSummary.first_paid_product_decision.finalist_evaluation;
+                const rows = [fin.finalist_a_verification, fin.finalist_b_promotion].filter(Boolean);
+                finTbody.innerHTML = rows.map(f => {
+                  const isSelected = f.verdict === 'SELECTED_AS_FIRST_PILOT';
+                  const rowBg = isSelected ? 'background: rgba(56, 189, 248, 0.05);' : '';
+                  const titleColor = isSelected ? '#38BDF8' : '#F59E0B';
+                  const tagClass = isSelected ? 'status-good' : 'status-bad';
+                  const tagText = isSelected ? 'SELECTED AS FIRST PILOT' : 'REJECTED AS FIRST PILOT';
+                  return `
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); ${rowBg}">
+                      <td style="padding: 8px; font-weight: 700; color: ${titleColor};">${isSelected ? '⚡ ' : ''}${f.name}</td>
+                      <td style="padding: 8px; color: #CBD5E1;">${f.research_price}</td>
+                      <td style="padding: 8px; color: ${isSelected ? '#34D399' : '#F87171'};">${f.operational_complexity}</td>
+                      <td style="padding: 8px; color: ${isSelected ? '#34D399' : '#F87171'};">${f.sensitive_pii_risk}</td>
+                      <td style="padding: 8px; color: ${isSelected ? '#34D399' : '#F59E0B'};">${f.fulfillment_simplicity}</td>
+                      <td style="padding: 8px; color: ${isSelected ? '#34D399' : '#F87171'};">${f.refund_complexity}</td>
+                      <td style="padding: 8px; font-weight: 700; color: ${isSelected ? '#34D399' : '#CBD5E1'};">${f.score} / 10</td>
+                      <td style="padding: 8px;"><span class="status-tag ${tagClass}" style="font-size: 0.65rem;">${tagText}</span></td>
+                    </tr>
+                  `;
+                }).join('');
+              }
+
               // 1. Cohort KPIs
               if (monSummary.cohort_metrics) {
                 const elExp = document.getElementById('kpi-mon-exposed');

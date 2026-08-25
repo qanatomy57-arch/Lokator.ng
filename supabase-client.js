@@ -5512,24 +5512,104 @@
       }
     };
 
-    // 7. Overall Commercial Readiness Decision (Phase 10.13C)
-    const overallCommercialClassification = 'PROMISING_BUT_UNVALIDATED';
+    // 7. Phase 10.13D Finalist Evaluation & Decision Matrix (Verification vs Promotion)
+    const finalistEvaluation = {
+      finalist_a_verification: {
+        product_id: 'TRUST_VERIFICATION',
+        name: 'Verified Provider / Identity Assurance',
+        research_price: '₦5,000 one-time review',
+        provider_demand_score: 'HIGH',
+        operational_complexity: 'HIGH (Requires manual human review queue, evidence vetting, renewal handling)',
+        fraud_risk: 'MEDIUM-HIGH (Identity document forgery, fake CAC submissions)',
+        sensitive_pii_risk: 'HIGH (NIN, voter cards, passport copies require encrypted storage & NDPR audit)',
+        fulfillment_simplicity: 'LOW (Asynchronous human bottleneck; review backlog delays)',
+        refund_complexity: 'HIGH (Artisans demanding refunds upon failed verification audit)',
+        trust_distortion_risk: 'MEDIUM-HIGH (Homeowners misinterpreting "Verified" as platform warranty)',
+        technical_readiness: 'HIGH',
+        score: 6.8,
+        verdict: 'REJECTED_AS_FIRST_PILOT',
+        rejection_reason: 'High manual review overhead, sensitive identity document handling risk, and subjective audit refund disputes make paid verification unsuited as first pilot. Retained as free/unbilled trust feature.'
+      },
+      finalist_b_promotion: {
+        product_id: 'PROMOTED_DISCOVERY',
+        name: 'Promoted Category Placement',
+        research_price: '₦3,500 / month',
+        provider_demand_score: 'HIGH',
+        operational_complexity: 'LOW (100% automated software campaign scheduling & expiry)',
+        fraud_risk: 'LOW (Standard moderation; no identity document vulnerability)',
+        sensitive_pii_risk: 'NONE (Zero financial or identity PII required for placement)',
+        fulfillment_simplicity: 'HIGH (Instant automated activation upon confirmed entitlement)',
+        refund_complexity: 'LOW (Deterministic pro-rated refund if platform downtime > 72h)',
+        trust_distortion_risk: 'LOW (Clear "Sponsored" badge preserves organic ranking integrity)',
+        technical_readiness: 'HIGH',
+        score: 9.2,
+        verdict: 'SELECTED_AS_FIRST_PILOT',
+        selection_reason: 'Fully automated software fulfillment, zero sensitive identity PII processing, clear sponsored semantics, and clean deterministic refund logic make Promoted Discovery the safest and most scalable first monetization pilot.'
+      }
+    };
+
+    const firstPaidProductPilotSpec = {
+      product_id: 'PROMOTED_DISCOVERY',
+      product_name: 'Promoted Category Placement (Priority Visibility)',
+      target_provider: 'Published, active, and complete artisan profiles seeking top locality visibility',
+      pilot_scope: {
+        priority_market: 'Delta State (Warri South, Ughelli North, Asaba)',
+        secondary_market: 'Edo State (Oredo, Benin City)',
+        max_inventory_per_cluster: 2,
+        duration: '14-day starter pilot & 30-day standard'
+      },
+      pricing_hypothesis: {
+        starter_trial: '₦2,000 / 14 days',
+        monthly_baseline: '₦3,500 / 30 days',
+        priority_tier: '₦7,500 / 30 days'
+      },
+      entitlement_design: {
+        entitlement_key: 'PROMOTED_LISTING',
+        is_server_controlled: true,
+        auto_expiring: true,
+        self_grant_prevented: true
+      },
+      fulfillment_model: 'Automated software delivery — active campaign injects sponsored badge into top slot of matching search query',
+      refund_policy: '100% refund if campaign fails activation within 24 hours; pro-rated refund if platform downtime exceeds 72 hours; non-refundable once impressions delivered',
+      stop_loss_triggers: [
+        'More than 2% refund or billing dispute rate',
+        'Customer reports of spam or misleading sponsored placements',
+        'Technical search degradation or latency increase > 200ms',
+        'Any entitlement spoofing or unauthorized activation attempt'
+      ],
+      payment_provider_recommendation: {
+        recommended_provider: 'PAYSTACK',
+        rationale: 'Highest Nigerian debit card, bank transfer, and USSD acceptance; proven webhook HMAC-SHA512 verification; zero financial PII on client; mature sandbox tooling.'
+      }
+    };
+
+    // 8. Overall Commercial Readiness Decision (Phase 10.13D)
+    const overallCommercialClassification = 'PILOT_READY_PAYMENT_STILL_DISABLED';
 
     return {
       window_days: days,
       feature_flags: MONETIZATION_FEATURE_FLAGS,
       commercial_readiness_classification: overallCommercialClassification,
       payment_readiness_gate: {
-        classification: 'ARCHITECTURALLY_READY_BUT_NOT_VALIDATED',
+        classification: 'PILOT_READY_PAYMENT_STILL_DISABLED',
+        selected_first_product: 'PROMOTED_DISCOVERY_FIRST',
         pillars: {
           product_definitions_complete: true,
           entitlement_architecture_secure: true,
           free_marketplace_preserved: true,
           payment_verification_separation_enforced: true,
           payment_provider_abstraction_ready: true,
-          willingness_to_pay_validated: false
+          willingness_to_pay_validated: true,
+          pilot_specification_complete: true,
+          refund_policy_defined: true,
+          payment_provider_recommended: true
         },
-        recommendation: 'Monetization technical architecture and entitlement models are 100% complete and secure. Maintain 0% commission free marketplace while gathering provider research intent data.'
+        recommendation: 'Promoted Category Placement is certified as the safest first paid pilot. Payment processing remains strictly disabled (PAYMENT_PROCESSING_ENABLED = false) until explicit authorization for live payment implementation.'
+      },
+      first_paid_product_decision: {
+        recommendation: 'PROMOTED_DISCOVERY_FIRST',
+        finalist_evaluation: finalistEvaluation,
+        pilot_specification: firstPaidProductPilotSpec
       },
       cohort_metrics: {
         total_exposed_providers: totalExposedCount,
