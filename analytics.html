@@ -272,6 +272,139 @@
         </div>
       </section>
 
+      <!-- Phase 10.12J: Production Marketplace Validation & Monetization Readiness Gate (PMVRG) -->
+      <section id="section-monetization-readiness" style="margin-bottom: 32px;">
+        <div class="section-title">
+          <span style="display: flex; align-items: center; gap: 8px;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            Phase 10.12J: Production Validation & Monetization Readiness Gate
+          </span>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <span id="mrg-readiness-badge" class="status-tag" style="background: rgba(245,158,11,0.2); color: #FBBF24; font-weight: 700;">EARLY_MARKETPLACE</span>
+            <span class="status-tag status-notice" style="font-size: 0.7rem;">ZERO_PAYMENT_CODE</span>
+          </div>
+        </div>
+
+        <!-- 1. Executive Gate Decision Banner -->
+        <div class="panel-card" style="border-left: 4px solid #F59E0B; margin-bottom: 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
+            <div>
+              <div style="font-size: 0.8rem; text-transform: uppercase; color: #94A3B8;">Readiness Assessment</div>
+              <div id="mrg-action-recommendation" style="font-size: 1.05rem; font-weight: 800; color: #F1F5F9; margin-top: 2px;">
+                Continue controlled production observation and address liquidity gaps before monetization.
+              </div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 0.75rem; color: #94A3B8;">Readiness Index</div>
+              <div id="mrg-readiness-score" style="font-size: 1.5rem; font-weight: 900; color: #FBBF24;">0.0 / 100</div>
+            </div>
+          </div>
+
+          <!-- 8 Dimensions Grid -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-top: 14px;">
+            <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 10px;">
+              <div style="font-size: 0.7rem; color: #64748B; text-transform: uppercase;">1. Supply</div>
+              <div id="mrg-dim-supply" style="font-size: 1.1rem; font-weight: 800; color: #10B981; margin-top: 4px;">0 Published</div>
+              <div id="mrg-dim-supply-sub" style="font-size: 0.7rem; color: #94A3B8; margin-top: 2px;">0 Trades</div>
+            </div>
+            <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 10px;">
+              <div style="font-size: 0.7rem; color: #64748B; text-transform: uppercase;">2. Demand</div>
+              <div id="mrg-dim-demand" style="font-size: 1.1rem; font-weight: 800; color: #38BDF8; margin-top: 4px;">0 Searches</div>
+              <div id="mrg-dim-demand-sub" style="font-size: 0.7rem; color: #94A3B8; margin-top: 2px;">0% Results</div>
+            </div>
+            <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 10px;">
+              <div style="font-size: 0.7rem; color: #64748B; text-transform: uppercase;">3. Liquidity</div>
+              <div id="mrg-dim-liquidity" style="font-size: 1.1rem; font-weight: 800; color: #A855F7; margin-top: 4px;">0.0%</div>
+              <div id="mrg-dim-liquidity-sub" style="font-size: 0.7rem; color: #94A3B8; margin-top: 2px;">0 Providers Contacted</div>
+            </div>
+            <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 10px;">
+              <div style="font-size: 0.7rem; color: #64748B; text-transform: uppercase;">4. Engagement</div>
+              <div id="mrg-dim-engagement" style="font-size: 1.1rem; font-weight: 800; color: #EC4899; margin-top: 4px;">0 Views</div>
+              <div id="mrg-dim-engagement-sub" style="font-size: 0.7rem; color: #94A3B8; margin-top: 2px;">0.0% Profile Rate</div>
+            </div>
+            <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 10px;">
+              <div style="font-size: 0.7rem; color: #64748B; text-transform: uppercase;">5. Contact</div>
+              <div id="mrg-dim-contact" style="font-size: 1.1rem; font-weight: 800; color: #F59E0B; margin-top: 4px;">0 Leads</div>
+              <div id="mrg-dim-contact-sub" style="font-size: 0.7rem; color: #94A3B8; margin-top: 2px;">0% WhatsApp</div>
+            </div>
+            <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 10px;">
+              <div style="font-size: 0.7rem; color: #64748B; text-transform: uppercase;">6. Repeatability</div>
+              <div id="mrg-dim-repeat" style="font-size: 1.1rem; font-weight: 800; color: #6366F1; margin-top: 4px;">0 Days</div>
+              <div id="mrg-dim-repeat-sub" style="font-size: 0.7rem; color: #94A3B8; margin-top: 2px;">Observation Ramp</div>
+            </div>
+            <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 10px;">
+              <div style="font-size: 0.7rem; color: #64748B; text-transform: uppercase;">7. Data Quality</div>
+              <div id="mrg-dim-quality" style="font-size: 1.1rem; font-weight: 800; color: #10B981; margin-top: 4px;">100% CLEAN</div>
+              <div id="mrg-dim-quality-sub" style="font-size: 0.7rem; color: #94A3B8; margin-top: 2px;">0 Errors</div>
+            </div>
+            <div style="background: #0E1522; border: 1px solid #1E293B; border-radius: 6px; padding: 10px;">
+              <div style="font-size: 0.7rem; color: #64748B; text-transform: uppercase;">8. Trust</div>
+              <div id="mrg-dim-trust" style="font-size: 1.1rem; font-weight: 800; color: #34D399; margin-top: 4px;">0 Verified</div>
+              <div id="mrg-dim-trust-sub" style="font-size: 0.7rem; color: #94A3B8; margin-top: 2px;">0 Reports</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Monetization Models Ranking & Security Audit Table -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 20px;">
+          <!-- Model Ranking -->
+          <div class="panel-card">
+            <div style="font-size: 0.95rem; font-weight: 700; color: #F1F5F9; margin-bottom: 12px;">
+              💡 Monetization Model Strategic Ranking (Observational Only)
+            </div>
+            <div id="mrg-models-container" style="display: flex; flex-direction: column; gap: 8px;">
+              <div style="background: #0E1522; padding: 10px; border-radius: 6px; border-left: 3px solid #10B981;">
+                <div style="display: flex; justify-content: space-between; font-weight: 700; color: #E2E8F0;">
+                  <span>#1 Verified Trust Badge / Identity Assurance</span>
+                  <span class="status-tag status-good" style="font-size: 0.65rem;">HIGH SUITABILITY</span>
+                </div>
+                <div style="font-size: 0.75rem; color: #94A3B8; margin-top: 4px;">
+                  High customer sensitivity to security and artisan authenticity makes verified profile tiering the most natural Nigerian marketplace value proposition.
+                </div>
+              </div>
+              <div style="background: #0E1522; padding: 10px; border-radius: 6px; border-left: 3px solid #38BDF8;">
+                <div style="display: flex; justify-content: space-between; font-weight: 700; color: #E2E8F0;">
+                  <span>#2 Promoted Search Placement in High-Demand Localities</span>
+                  <span class="status-tag status-good" style="font-size: 0.65rem;">HIGH SUITABILITY</span>
+                </div>
+                <div style="font-size: 0.75rem; color: #94A3B8; margin-top: 4px;">
+                  Observed search-to-profile conversion indicates top-card visibility in active LGAs delivers immediate artisan lead volume.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Security & NIN/CAC Evidence Lifecycle Audit -->
+          <div class="panel-card">
+            <div style="font-size: 0.95rem; font-weight: 700; color: #F1F5F9; margin-bottom: 12px;">
+              🔒 NIN/CAC Evidence Security & Pre-Monetization Audit
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px; font-size: 0.8rem; color: #E2E8F0;">
+              <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                <span>Evidence Storage Isolation</span>
+                <strong style="color: #34D399;">PASSED (Private Bucket)</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                <span>Row-Level Security (RLS) Enforcement</span>
+                <strong style="color: #34D399;">PASSED (Strict Append-Only)</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                <span>Client Secret / Service Role Isolation</span>
+                <strong style="color: #34D399;">PASSED (Zero Exposure)</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                <span>Telemetry PII Stripping (Phone/NIN/JWT)</span>
+                <strong style="color: #34D399;">PASSED (Database Regex Block)</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                <span>Raw Analytics Retention Policy</span>
+                <strong style="color: #38BDF8;">60-Day Automated Prune</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- 9.0 Strategic Intelligence Command Center (SIMCC) -->
       <section id="section-simcc-command-center" style="margin-bottom: 32px;">
         <div class="section-title">

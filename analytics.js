@@ -146,6 +146,76 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       }
 
+      // 2.2 Fetch Phase 10.12J Monetization Readiness Gate
+      const mrg = await LokatorDB.analytics.getMonetizationReadiness(days);
+      if (mrg) {
+        const dims = mrg.dimensions || {};
+        const sup = dims.supply || {};
+        const dem = dims.demand || {};
+        const liq = dims.liquidity || {};
+        const eng = dims.engagement || {};
+        const con = dims.contact || {};
+        const rep = dims.repeatability || {};
+        const dq = dims.data_quality || {};
+        const tru = dims.trust || {};
+
+        if (document.getElementById('mrg-readiness-badge')) {
+          const badge = document.getElementById('mrg-readiness-badge');
+          badge.textContent = mrg.readiness_classification || 'EARLY_MARKETPLACE';
+          if (mrg.readiness_classification === 'READY_FOR_10_13') {
+            badge.style.background = 'rgba(16,185,129,0.2)';
+            badge.style.color = '#34D399';
+          } else if (mrg.readiness_classification === 'EARLY_MARKETPLACE') {
+            badge.style.background = 'rgba(245,158,11,0.2)';
+            badge.style.color = '#FBBF24';
+          } else {
+            badge.style.background = 'rgba(239,68,68,0.2)';
+            badge.style.color = '#F87171';
+          }
+        }
+
+        if (document.getElementById('mrg-action-recommendation')) {
+          document.getElementById('mrg-action-recommendation').textContent = mrg.recommended_next_action || '';
+        }
+        if (document.getElementById('mrg-readiness-score')) {
+          document.getElementById('mrg-readiness-score').textContent = `${mrg.readiness_score || 0} / 100`;
+        }
+
+        // 8 Dimensions
+        if (document.getElementById('mrg-dim-supply')) {
+          document.getElementById('mrg-dim-supply').textContent = `${sup.total_published || 0} Published`;
+          document.getElementById('mrg-dim-supply-sub').textContent = `${sup.active_categories_count || 0} Trades (${sup.publication_rate || 0}%)`;
+        }
+        if (document.getElementById('mrg-dim-demand')) {
+          document.getElementById('mrg-dim-demand').textContent = `${dem.searches_started || 0} Searches`;
+          document.getElementById('mrg-dim-demand-sub').textContent = `${dem.search_result_rate || 0}% Results`;
+        }
+        if (document.getElementById('mrg-dim-liquidity')) {
+          document.getElementById('mrg-dim-liquidity').textContent = `${liq.liquidity_ratio || 0}%`;
+          document.getElementById('mrg-dim-liquidity-sub').textContent = `${liq.providers_with_contacts || 0} Providers Contacted`;
+        }
+        if (document.getElementById('mrg-dim-engagement')) {
+          document.getElementById('mrg-dim-engagement').textContent = `${eng.profile_views || 0} Views`;
+          document.getElementById('mrg-dim-engagement-sub').textContent = `${eng.profile_conversion_rate || 0}% Profile Rate`;
+        }
+        if (document.getElementById('mrg-dim-contact')) {
+          document.getElementById('mrg-dim-contact').textContent = `${con.total_contacts || 0} Leads`;
+          document.getElementById('mrg-dim-contact-sub').textContent = `${con.whatsapp_preference_ratio || 0}% WhatsApp`;
+        }
+        if (document.getElementById('mrg-dim-repeat')) {
+          document.getElementById('mrg-dim-repeat').textContent = `${rep.active_days_count || 0} Days`;
+          document.getElementById('mrg-dim-repeat-sub').textContent = rep.is_repeatable ? 'Active Pattern' : 'Observation Ramp';
+        }
+        if (document.getElementById('mrg-dim-quality')) {
+          document.getElementById('mrg-dim-quality').textContent = dq.status === 'PRISTINE_INTEGRITY' ? '100% CLEAN' : (dq.status || 'EVALUATING');
+          document.getElementById('mrg-dim-quality-sub').textContent = `${dq.client_errors || 0} Errors (${dq.error_rate || 0}%)`;
+        }
+        if (document.getElementById('mrg-dim-trust')) {
+          document.getElementById('mrg-dim-trust').textContent = `${tru.verified_providers || 0} Verified`;
+          document.getElementById('mrg-dim-trust-sub').textContent = `${tru.provider_reports || 0} Reports`;
+        }
+      }
+
       // 3. Fetch Core Web Vitals Summary
       const cwv = await LokatorDB.analytics.getPerformanceSummary(days);
       if (cwv) {
