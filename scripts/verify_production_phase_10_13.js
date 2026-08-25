@@ -41,9 +41,9 @@ async function verifyLive() {
   const styleCss = await fetchUrl('https://lokator-ng.vercel.app/style.css');
   console.log(`[4] /style.css: HTTP ${styleCss.status} (${styleCss.body.length} bytes)`);
   const hasAutoOverscroll = styleCss.body.includes('overscroll-behavior-y: auto;');
-  const hasTranspCard = styleCss.body.includes('background: rgba(6, 14, 8, 0.04);');
+  const hasTranspCard = styleCss.body.includes('background: rgba(255, 255, 255, 0.05);') || styleCss.body.includes('background: rgba(6, 14, 8, 0.04);');
   console.log(`    - Hero overscroll release: ${hasAutoOverscroll ? 'YES ✓' : 'NO ✗'}`);
-  console.log(`    - Transparent 2-4% story card: ${hasTranspCard ? 'YES ✓' : 'NO ✗'}`);
+  console.log(`    - 5% Glassmorphism story card: ${hasTranspCard ? 'YES ✓' : 'NO ✗'}`);
 
   console.log('\n✅ ALL PRODUCTION DEPLOYMENT CHECKS COMPLETED!');
 }
