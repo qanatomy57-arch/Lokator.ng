@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Join as a Verified Service Provider — Lokator.NG</title>
+  <meta name="description" content="Get discovered by customers searching for verified artisans and skilled trades across Nigeria. Free registration with direct phone & WhatsApp connections." />
+  <meta name="theme-color" content="#006B3F" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Lokator" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="icons/icon.svg" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="pwa.css" />
+  <style>
+    body {
+      background-color: #0A0E17;
+      color: #F9FAFB;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .join-container {
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 0 20px;
+      flex: 1;
+    }
+    .join-hero-card {
+      background: linear-gradient(145deg, #131A29, #0E1522);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      padding: 40px 32px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    }
+    .join-hero-card::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 400px;
+      height: 250px;
+      background: radial-gradient(circle, rgba(0, 107, 63, 0.25), transparent 70%);
+      pointer-events: none;
+    }
+    .join-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      background: rgba(0, 107, 63, 0.2);
+      border: 1px solid rgba(0, 107, 63, 0.4);
+      color: #34D399;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 18px;
+    }
+    .join-title {
+      font-size: clamp(1.8rem, 4vw, 2.6rem);
+      font-weight: 800;
+      line-height: 1.2;
+      color: #FFFFFF;
+      margin-bottom: 16px;
+    }
+    .join-subtitle {
+      font-size: 1.05rem;
+      color: #94A3B8;
+      max-width: 620px;
+      margin: 0 auto 28px;
+      line-height: 1.6;
+    }
+    .target-highlight-box {
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px dashed rgba(16, 185, 129, 0.35);
+      border-radius: 12px;
+      padding: 14px 20px;
+      max-width: 540px;
+      margin: 0 auto 28px;
+      display: none;
+    }
+    .target-highlight-text {
+      color: #34D399;
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+    .join-cta-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      background: linear-gradient(135deg, #006B3F, #059669);
+      color: #FFFFFF;
+      font-weight: 800;
+      font-size: 1.1rem;
+      padding: 16px 36px;
+      border-radius: 12px;
+      text-decoration: none;
+      box-shadow: 0 8px 24px rgba(0, 107, 63, 0.4);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      min-height: 52px;
+      border: none;
+      cursor: pointer;
+    }
+    .join-cta-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 28px rgba(0, 107, 63, 0.6);
+    }
+    .join-value-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+      margin-top: 36px;
+      text-align: left;
+    }
+    .join-value-card {
+      background: #111827;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 14px;
+      padding: 22px;
+    }
+    .join-value-icon {
+      font-size: 1.8rem;
+      margin-bottom: 12px;
+    }
+    .join-value-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #F1F5F9;
+      margin-bottom: 8px;
+    }
+    .join-value-desc {
+      font-size: 0.85rem;
+      color: #94A3B8;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <!-- Global Header -->
+  <header class="header" role="banner">
+    <div class="header-inner container">
+      <a href="index.html" class="logo" aria-label="Lokator Home">
+        <span class="logo-icon" aria-hidden="true">📍</span>
+        <span class="logo-text">Lokator<span class="logo-dot">.ng</span></span>
+      </a>
+      <nav class="nav" id="main-nav" aria-label="Main Navigation">
+        <a href="search.html" class="nav-link">Find Artisans</a>
+        <a href="register.html" class="nav-link nav-login-highlight">Artisan Registration</a>
+        <a href="login.html" class="nav-link">Provider Login</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Acquisition Content -->
+  <main class="join-container" role="main">
+    <div class="join-hero-card">
+      <div class="join-badge">
+        <span>🇳🇬 Nigeria's Artisan Discovery Directory</span>
+      </div>
+
+      <h1 class="join-title">Expand Your Reach. Get Discovered Locally.</h1>
+      
+      <p class="join-subtitle">
+        Join verified plumbers, electricians, solar installers, mechanics, and skilled artisans across Nigeria. Connect directly with clients via WhatsApp and phone calls with zero middleman fees.
+      </p>
+
+      <!-- Dynamic Targeted Callout -->
+      <div id="target-highlight-box" class="target-highlight-box">
+        <div class="target-highlight-text" id="target-highlight-text">
+          Targeted Expansion: Connecting artisans in your locality
+        </div>
+      </div>
+
+      <!-- Action Button -->
+      <div>
+        <a href="register.html" id="join-primary-cta" class="join-cta-btn">
+          <span>Create Your Free Listing</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+      <div style="font-size: 0.8rem; color: #64748B; margin-top: 12px;">
+        100% Free to list • Direct WhatsApp & Phone • No transaction commissions
+      </div>
+    </div>
+
+    <!-- Value Propositions Grid -->
+    <div class="join-value-grid">
+      <div class="join-value-card">
+        <div class="join-value-icon">💬</div>
+        <div class="join-value-title">Direct WhatsApp & Calls</div>
+        <div class="join-value-desc">
+          Customers in your LGA tap to message or call you directly. No bidding tokens, escrow delays, or platform deductions.
+        </div>
+      </div>
+
+      <div class="join-value-card">
+        <div class="join-value-icon">📍</div>
+        <div class="join-value-title">Hyper-Local Discovery</div>
+        <div class="join-value-desc">
+          Appear in searches across your specific State, Local Government Area, and surrounding neighborhoods.
+        </div>
+      </div>
+
+      <div class="join-value-card">
+        <div class="join-value-icon">🛡️</div>
+        <div class="join-value-title">Authentic Trust Badges</div>
+        <div class="join-value-desc">
+          Stand out with verified contact badges, NIN/CAC compliance verification, and authentic customer reviews.
+        </div>
+      </div>
+
+      <div class="join-value-card">
+        <div class="join-value-icon">⚡</div>
+        <div class="join-value-title">AI Bio & Pricing Helper</div>
+        <div class="join-value-desc">
+          Generate a professional Nigerian trade biography and standard Naira pricing guides in seconds.
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer" style="margin-top: 40px; text-align: center; padding: 24px 0; border-top: 1px solid rgba(255,255,255,0.06); font-size: 0.8rem; color: #64748B;">
+    © 2026 Lokator.NG. Nigeria's verified skills marketplace.
+  </footer>
+
+  <!-- Scripts -->
+  <script src="telemetry.js"></script>
+  <script src="categories.js"></script>
+  <script src="locations.js"></script>
+  <script>
+    (function () {
+      // 1. Parse URL query parameters safely
+      const urlParams = new URLSearchParams(window.location.search);
+      const categoryParam = urlParams.get('category') || '';
+      const stateParam = urlParams.get('state') || '';
+      const lgaParam = urlParams.get('lga') || '';
+      const sourceParam = urlParams.get('source') || 'provider_acquisition_landing';
+      const campaignParam = urlParams.get('campaign') || '';
+
+      // 2. Validate and format targeted callout
+      let targetDesc = '';
+      if (categoryParam && stateParam) {
+        targetDesc = `Active Demand: Looking for verified ${categoryParam.replace(/[-_]/g, ' ')} artisans in ${stateParam}${lgaParam ? ' (' + lgaParam.replace(/[-_]/g, ' ') + ')' : ''}`;
+      } else if (stateParam) {
+        targetDesc = `Priority Market: Welcoming skilled service providers across ${stateParam} State`;
+      } else if (categoryParam) {
+        targetDesc = `In Demand: Connecting verified ${categoryParam.replace(/[-_]/g, ' ')} specialists with clients`;
+      }
+
+      if (targetDesc) {
+        const box = document.getElementById('target-highlight-box');
+        const text = document.getElementById('target-highlight-text');
+        if (box && text) {
+          text.textContent = targetDesc;
+          box.style.display = 'block';
+        }
+      }
+
+      // 3. Build forward registration URL with preserved params
+      const regParams = new URLSearchParams();
+      if (categoryParam) regParams.set('category', categoryParam);
+      if (stateParam) regParams.set('state', stateParam);
+      if (lgaParam) regParams.set('lga', lgaParam);
+      if (sourceParam) regParams.set('source', sourceParam);
+      if (campaignParam) regParams.set('campaign', campaignParam);
+
+      const forwardUrl = 'register.html' + (regParams.toString() ? '?' + regParams.toString() : '');
+      const cta = document.getElementById('join-primary-cta');
+      if (cta) {
+        cta.setAttribute('href', forwardUrl);
+      }
+
+      // 4. Track acquisition landing view telemetry
+      if (typeof LokatorTelemetry !== 'undefined') {
+        LokatorTelemetry.trackEvent('provider_acquisition_landing_viewed', {
+          category: categoryParam,
+          state: stateParam,
+          lga: lgaParam,
+          source: sourceParam,
+          campaign: campaignParam
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

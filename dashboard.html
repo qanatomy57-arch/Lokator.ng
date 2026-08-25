@@ -261,6 +261,37 @@
             <!-- Rendered via JS -->
           </div>
         </div>
+
+        <!-- Phase 10.12K: Provider Community Referral & Invitation Tool -->
+        <div class="dash-card-section dash-section-spaced" id="dash-referral-section" style="border-left: 4px solid #10B981; background: linear-gradient(145deg, #131A29, #0E1522);">
+          <div class="dash-section-header">
+            <div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 1.2rem;">🤝</span>
+                <h2 style="margin: 0; font-size: 1.1rem; color: #FFFFFF;">Invite Fellow Artisans to Lokator</h2>
+              </div>
+              <p style="margin-top: 4px; color: #94A3B8; font-size: 0.85rem;">
+                Help expand verified artisan supply in your state. Share your personal invite link with plumbers, electricians, solar installers, and skilled craftsmen.
+              </p>
+            </div>
+            <span class="status-tag status-good" style="font-size: 0.75rem;">COMMUNITY_GROWTH</span>
+          </div>
+
+          <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+              <input type="text" id="dash-referral-link" readonly style="flex: 1; min-width: 260px; padding: 10px 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: #0A0E17; color: #34D399; font-size: 0.85rem; font-family: monospace;" value="https://lokator-ng.vercel.app/join.html?source=provider_referral" />
+              <button type="button" class="btn btn-primary" id="btn-copy-ref-link" style="display: inline-flex; align-items: center; gap: 6px;">
+                <span>📋 Copy Link</span>
+              </button>
+              <a href="#" target="_blank" rel="noopener noreferrer" class="btn btn-outline" id="btn-share-ref-wa" style="display: inline-flex; align-items: center; gap: 6px; border-color: #25D366; color: #25D366;">
+                <span>💬 Share on WhatsApp</span>
+              </a>
+            </div>
+            <div id="dash-ref-copy-notice" style="display: none; font-size: 0.8rem; color: #34D399; font-weight: 600;">
+              ✅ Referral link copied to clipboard!
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- ===== TAB 2: EDIT PROFILE ===== -->

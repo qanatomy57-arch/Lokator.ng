@@ -1055,6 +1055,59 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  // 11b. Phase 10.12K: Provider Referral Link Generator
+  function renderReferralTool() {
+    const linkInput = document.getElementById('dash-referral-link');
+    const copyBtn = document.getElementById('btn-copy-ref-link');
+    const waShareBtn = document.getElementById('btn-share-ref-wa');
+    const copyNotice = document.getElementById('dash-ref-copy-notice');
+
+    if (!linkInput || !currentProvider) return;
+
+    const baseOrigin = (typeof window !== 'undefined' && window.location.origin) ? window.location.origin : 'https://lokator-ng.vercel.app';
+    const params = new URLSearchParams();
+    params.set('source', 'provider_referral');
+    params.set('ref', `prov_${currentProvider.id}`);
+    if (currentProvider.state) params.set('state', currentProvider.state);
+    if (currentProvider.primary_category_slug || currentProvider.category) {
+      params.set('category', currentProvider.primary_category_slug || currentProvider.category);
+    }
+
+    const shareUrl = `${baseOrigin}/join.html?${params.toString()}`;
+    linkInput.value = shareUrl;
+
+    if (copyBtn) {
+      copyBtn.addEventListener('click', async () => {
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(shareUrl);
+          } else {
+            linkInput.select();
+            document.execCommand('copy');
+          }
+          if (copyNotice) {
+            copyNotice.style.display = 'block';
+            setTimeout(() => { copyNotice.style.display = 'none'; }, 3500);
+          }
+          showToast('Referral link copied to clipboard!');
+          if (typeof LokatorTelemetry !== 'undefined') {
+            LokatorTelemetry.trackEvent('provider_referral_link_generated', {
+              source: 'provider_dashboard',
+              provider_id: currentProvider.id
+            });
+          }
+        } catch (err) {
+          showToast('Failed to copy link', 'error');
+        }
+      });
+    }
+
+    if (waShareBtn) {
+      const shareText = encodeURIComponent(`Hello! Join me on Lokator.NG to get discovered by clients searching for skilled artisans across Nigeria with direct WhatsApp & phone contact:\n${shareUrl}`);
+      waShareBtn.setAttribute('href', `https://wa.me/?text=${shareText}`);
+    }
+  }
+
   // 12. Run Initial Render Pipeline
   await loadMetrics();
   populateProfileForm();
@@ -1062,4 +1115,5 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderPricingRows();
   renderPortfolio();
   renderTrustCenter();
+  renderReferralTool();
 });

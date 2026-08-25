@@ -1333,6 +1333,97 @@
 
     initNigerianLocationPickers();
 
+    // ========================================================================
+    // PHASE 10.12K: TARGETED PROVIDER ACQUISITION & ATTRIBUTION PRESELECTION
+    // ========================================================================
+    let acquisitionAttribution = {
+      source: 'organic',
+      campaign: '',
+      referred_by: ''
+    };
+
+    function handleAcquisitionPreselection() {
+      if (typeof window === 'undefined' || !window.location) return;
+      const urlParams = new URLSearchParams(window.location.search);
+      const catParam = urlParams.get('category') || urlParams.get('trade') || urlParams.get('service') || '';
+      const stateParam = urlParams.get('state') || '';
+      const lgaParam = urlParams.get('lga') || '';
+      const locParam = urlParams.get('locality') || '';
+      const srcParam = urlParams.get('source') || '';
+      const campParam = urlParams.get('campaign') || '';
+      const refParam = urlParams.get('ref') || '';
+
+      // Clean and sanitize attribution
+      if (srcParam) acquisitionAttribution.source = String(srcParam).substring(0, 64).replace(/[^a-zA-Z0-9_\-\.]/g, '');
+      if (campParam) acquisitionAttribution.campaign = String(campParam).substring(0, 64).replace(/[^a-zA-Z0-9_\-\.]/g, '');
+      if (refParam) acquisitionAttribution.referred_by = String(refParam).substring(0, 64).replace(/[^a-zA-Z0-9_\-\.]/g, '');
+
+      // 1. Preselect Category / Trade if valid
+      if (catParam) {
+        let matchedCategory = '';
+        if (typeof CategoryMap !== 'undefined' && CategoryMap.resolveQuery) {
+          const resolved = CategoryMap.resolveQuery(catParam);
+          if (resolved) {
+            const catObj = CategoryMap.getCategory(resolved);
+            if (catObj) matchedCategory = catObj.name;
+          }
+        }
+        if (!matchedCategory) {
+          const normalized = catParam.toLowerCase().trim();
+          const populars = ['Plumber', 'Electrician', 'Carpenter', 'Painter', 'Mechanic', 'AC Technician', 'Solar Installer', 'Mason', 'Tiler'];
+          const found = populars.find(p => p.toLowerCase() === normalized || p.toLowerCase().includes(normalized));
+          if (found) matchedCategory = found;
+        }
+        if (matchedCategory) {
+          addSkill(matchedCategory);
+        }
+      }
+
+      // 2. Preselect State & LGA if valid
+      if (stateParam && typeof NigeriaLocations !== 'undefined') {
+        const states = NigeriaLocations.getStates();
+        const matchedState = states.find(s => 
+          s.name.toLowerCase() === stateParam.toLowerCase() || 
+          s.code.toLowerCase() === stateParam.toLowerCase()
+        );
+        if (matchedState && regStateSelect) {
+          regStateSelect.value = matchedState.name;
+          populateRegLgas(matchedState.name, lgaParam);
+
+          if (lgaParam && regLgaSelect) {
+            const lgas = NigeriaLocations.getLgas(matchedState.name);
+            const matchedLga = lgas.find(l => 
+              l.name.toLowerCase() === lgaParam.toLowerCase() ||
+              l.code.toLowerCase() === lgaParam.toLowerCase()
+            );
+            if (matchedLga) {
+              regLgaSelect.value = matchedLga.name;
+            }
+          }
+          if (locParam && regLocalityInput) {
+            regLocalityInput.value = locParam;
+          }
+          updateLocationHidden();
+        }
+      }
+
+      // 3. Track acquisition telemetry if non-organic
+      if (srcParam || campParam || refParam) {
+        if (typeof LokatorTelemetry !== 'undefined') {
+          LokatorTelemetry.trackEvent('provider_acquisition_source_recorded', {
+            source: acquisitionAttribution.source,
+            campaign: acquisitionAttribution.campaign,
+            category: catParam,
+            state: stateParam,
+            lga: lgaParam
+          });
+        }
+      }
+    }
+
+    // Run acquisition preselection
+    handleAcquisitionPreselection();
+
     // Map & Geolocation
     const gpsBtn = document.getElementById('gps-btn-form');
     const locGpsQuickBtn = document.getElementById('loc-gps-quick-btn');
@@ -1649,7 +1740,10 @@
           bio: bio,
           lat: userCoords ? userCoords.lat : null,
           lng: userCoords ? userCoords.lng : null,
-          avatarUrl: uploadedAvatarData || null
+          avatarUrl: uploadedAvatarData || null,
+          acquisition_source: acquisitionAttribution.source || 'organic',
+          acquisition_campaign: acquisitionAttribution.campaign || null,
+          referred_by: acquisitionAttribution.referred_by || null
         };
 
         try {

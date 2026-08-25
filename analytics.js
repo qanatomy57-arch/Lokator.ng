@@ -216,6 +216,67 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       }
 
+      // 2.3 Fetch Phase 10.12K Marketplace Liquidity Expansion
+      const mle = await LokatorDB.analytics.getLiquidityExpansion(days);
+      if (mle) {
+        const sm = mle.strategic_markets || {};
+        const delta = sm.delta_state || {};
+        const edo = sm.edo_state || {};
+
+        if (document.getElementById('mle-delta-provs')) document.getElementById('mle-delta-provs').textContent = delta.total_providers || 0;
+        if (document.getElementById('mle-delta-searches')) document.getElementById('mle-delta-searches').textContent = delta.searches_count || 0;
+        if (document.getElementById('mle-delta-zero')) document.getElementById('mle-delta-zero').textContent = `${delta.zero_result_rate || 0}%`;
+        if (document.getElementById('mle-delta-contacts')) document.getElementById('mle-delta-contacts').textContent = delta.contacts_count || 0;
+
+        if (document.getElementById('mle-edo-provs')) document.getElementById('mle-edo-provs').textContent = edo.total_providers || 0;
+        if (document.getElementById('mle-edo-searches')) document.getElementById('mle-edo-searches').textContent = edo.searches_count || 0;
+        if (document.getElementById('mle-edo-zero')) document.getElementById('mle-edo-zero').textContent = `${edo.zero_result_rate || 0}%`;
+        if (document.getElementById('mle-edo-contacts')) document.getElementById('mle-edo-contacts').textContent = edo.contacts_count || 0;
+
+        // Render Opportunity Matrix Table
+        const oppTbody = document.getElementById('mle-opportunity-tbody');
+        if (oppTbody && Array.isArray(mle.opportunity_prioritization_matrix)) {
+          if (mle.opportunity_prioritization_matrix.length === 0) {
+            oppTbody.innerHTML = '<tr><td colspan="10" style="padding: 16px; text-align: center; color: #64748B;">No opportunity data available.</td></tr>';
+          } else {
+            oppTbody.innerHTML = mle.opportunity_prioritization_matrix.slice(0, 15).map(row => {
+              let pColor = '#94A3B8';
+              let pBg = 'rgba(148,163,184,0.15)';
+              if (row.acquisition_priority === 'P1_CRITICAL') {
+                pColor = '#F87171'; pBg = 'rgba(239,68,68,0.2)';
+              } else if (row.acquisition_priority === 'P2_HIGH') {
+                pColor = '#FBBF24'; pBg = 'rgba(245,158,11,0.2)';
+              } else if (row.acquisition_priority === 'P3_EXPANSION') {
+                pColor = '#34D399'; pBg = 'rgba(16,185,129,0.2)';
+              }
+
+              const safeState = (typeof escapeHtml === 'function') ? escapeHtml(row.state) : row.state;
+              const safeLga = (typeof escapeHtml === 'function') ? escapeHtml(row.lga) : row.lga;
+              const safeCat = (typeof escapeHtml === 'function') ? escapeHtml(row.category) : row.category;
+
+              return `
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
+                  <td style="padding: 8px; font-weight: 800; color: #F1F5F9;">#${row.rank}</td>
+                  <td style="padding: 8px; font-weight: 700; color: #38BDF8;">${safeState}</td>
+                  <td style="padding: 8px;">${safeLga}</td>
+                  <td style="padding: 8px; font-weight: 600; color: #E2E8F0;">${safeCat}</td>
+                  <td style="padding: 8px; color: ${row.providers_count > 0 ? '#34D399' : '#F87171'}; font-weight: 700;">${row.providers_count}</td>
+                  <td style="padding: 8px;">${row.searches_count}</td>
+                  <td style="padding: 8px; color: ${row.zero_results_count > 0 ? '#F87171' : '#94A3B8'};">${row.zero_results_count}</td>
+                  <td style="padding: 8px; font-weight: 800; color: #FBBF24;">${row.opportunity_score}</td>
+                  <td style="padding: 8px; font-size: 0.75rem; color: #94A3B8;">${row.confidence}</td>
+                  <td style="padding: 8px;">
+                    <span class="status-tag" style="background: ${pBg}; color: ${pColor}; font-size: 0.7rem;">
+                      ${row.acquisition_priority}
+                    </span>
+                  </td>
+                </tr>
+              `;
+            }).join('');
+          }
+        }
+      }
+
       // 3. Fetch Core Web Vitals Summary
       const cwv = await LokatorDB.analytics.getPerformanceSummary(days);
       if (cwv) {

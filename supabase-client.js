@@ -3454,6 +3454,53 @@
 
       const providers = getLocalStore(DB_STORE_KEY, []);
       return computeMonetizationReadinessGate(events, providers, days);
+    },
+
+    /**
+     * Phase 10.12K: Marketplace Liquidity Expansion & Provider Acquisition API
+     */
+    async getLiquidityExpansion(days = 30) {
+      if (isRemoteActive()) {
+        try {
+          const { data: rawEvents, error: evError } = await supabaseInstance
+            .from('analytics_events')
+            .select('event_name, page_path, properties, created_at')
+            .gte('created_at', new Date(Date.now() - days * 86400000).toISOString())
+            .limit(5000);
+
+          const { data: rawProviders, error: provError } = await supabaseInstance
+            .from('providers')
+            .select('id, business_name, trade_title, primary_category_slug, state, lga, city, rating, reviews_count, is_verified, nin_verified, is_available, profile_complete, created_at');
+
+          if (!evError && rawEvents) {
+            const mappedEvents = rawEvents.map(e => ({
+              event: e.event_name,
+              props: e.properties || {},
+              timestamp: e.created_at
+            }));
+            const mappedProviders = rawProviders || [];
+            return computeLiquidityExpansion(mappedEvents, mappedProviders, days);
+          }
+        } catch (e) {
+          // Fallback to local computation
+        }
+      }
+
+      // Collect events from local telemetry buffer / session store
+      let events = [];
+      try {
+        if (typeof sessionStorage !== 'undefined') {
+          const raw = sessionStorage.getItem('lokator_telemetry_events');
+          if (raw) events = JSON.parse(raw);
+        }
+        if (events.length === 0 && typeof localStorage !== 'undefined') {
+          const raw = localStorage.getItem('lokator_telemetry_events');
+          if (raw) events = JSON.parse(raw);
+        }
+      } catch (e) {}
+
+      const providers = getLocalStore(DB_STORE_KEY, []);
+      return computeLiquidityExpansion(events, providers, days);
     }
   };
 
@@ -4034,6 +4081,252 @@
   LokatorDB.monetizationReadiness = {
     compute: computeMonetizationReadinessGate,
     getReadinessSummary: (days) => LokatorDB.analytics.getMonetizationReadiness(days)
+  };
+
+  /**
+   * Phase 10.12K: Marketplace Liquidity Expansion & Provider Acquisition Engine
+   * Evaluates demand vs supply gaps across all Nigerian States and LGAs, with deep-dives
+   * for Delta State (Priority Market), Edo State (Strategic Adjacent), and high-confidence opportunity scoring.
+   */
+  function computeLiquidityExpansion(events = [], providers = [], days = 30) {
+    const now = Date.now();
+    const windowMs = days * 86400000;
+    const filteredEvents = (Array.isArray(events) ? events : []).filter(e => {
+      if (!e.timestamp && !e.created_at) return true;
+      const t = new Date(e.timestamp || e.created_at).getTime();
+      return isNaN(t) || (now - t) <= windowMs;
+    });
+
+    const safeProviders = Array.isArray(providers) ? providers : [];
+    const publishedProviders = safeProviders.filter(p => p.profile_complete !== false && p.is_available !== false);
+
+    // 1. Cluster Aggregator by State + LGA + Category
+    const clusters = {};
+    function getCluster(state = 'Nigeria', lga = 'All', category = 'general') {
+      const s = String(state || 'Nigeria').trim();
+      const l = String(lga || 'All').trim();
+      const c = String(category || 'general').trim();
+      const key = `${s.toLowerCase()}::${l.toLowerCase()}::${c.toLowerCase()}`;
+      if (!clusters[key]) {
+        clusters[key] = {
+          state: s,
+          lga: l,
+          category: c,
+          providers_count: 0,
+          searches_count: 0,
+          zero_results_count: 0,
+          profile_views: 0,
+          contacts_count: 0
+        };
+      }
+      return clusters[key];
+    }
+
+    // Populate provider supply in clusters
+    publishedProviders.forEach(p => {
+      const st = p.state || 'Lagos';
+      const lg = p.lga || p.city || 'All';
+      const cat = p.primary_category_slug || p.category || 'general';
+      const cl = getCluster(st, lg, cat);
+      cl.providers_count++;
+    });
+
+    // Populate customer search & engagement telemetry
+    const acquisitionFunnel = {
+      landing_views: 0,
+      onboarding_starts: 0,
+      onboarding_completes: 0,
+      providers_published: 0,
+      profile_views: 0,
+      contacts_count: 0,
+      by_source: {}
+    };
+
+    filteredEvents.forEach(evt => {
+      const name = String(evt.event || evt.event_name || '').toLowerCase();
+      const props = evt.props || evt.properties || {};
+      const st = props.state || '';
+      const lg = props.lga || props.city || 'All';
+      const cat = props.category || props.trade_slug || 'general';
+
+      if (name === 'search_submitted') {
+        if (st) {
+          const cl = getCluster(st, lg, cat);
+          cl.searches_count++;
+        }
+      } else if (name === 'search_no_results') {
+        if (st) {
+          const cl = getCluster(st, lg, cat);
+          cl.zero_results_count++;
+        }
+      } else if (name === 'provider_profile_viewed') {
+        if (st) {
+          const cl = getCluster(st, lg, cat);
+          cl.profile_views++;
+        }
+      } else if (name === 'phone_clicked' || name === 'whatsapp_clicked') {
+        if (st) {
+          const cl = getCluster(st, lg, cat);
+          cl.contacts_count++;
+        }
+      }
+
+      // Track Acquisition Events
+      const src = props.source || props.acquisition_source || 'organic';
+      if (!acquisitionFunnel.by_source[src]) {
+        acquisitionFunnel.by_source[src] = { landing_views: 0, onboarding_starts: 0, published: 0 };
+      }
+      const srcBucket = acquisitionFunnel.by_source[src];
+
+      if (name === 'provider_acquisition_landing_viewed') {
+        acquisitionFunnel.landing_views++;
+        srcBucket.landing_views++;
+      } else if (name === 'provider_onboarding_started') {
+        acquisitionFunnel.onboarding_starts++;
+        srcBucket.onboarding_starts++;
+      } else if (name === 'provider_onboarding_succeeded') {
+        acquisitionFunnel.providers_published++;
+        srcBucket.published++;
+      }
+    });
+
+    // 2. Score & Rank All Clusters
+    const opportunityRankings = Object.values(clusters).map(cl => {
+      const demand = cl.searches_count;
+      const zeroRate = demand > 0 ? Number(((cl.zero_results_count / demand) * 100).toFixed(1)) : 0;
+      const deficitMultiplier = 1 + (cl.zero_results_count / (demand + 1));
+      const supplyInverted = 1 / (cl.providers_count + 1);
+      const baseScore = demand * deficitMultiplier * supplyInverted * 10;
+
+      // Confidence determination
+      let confidence = 'NO_EVIDENCE';
+      let confMultiplier = 0.1;
+      if (demand >= 50 || cl.zero_results_count >= 10) {
+        confidence = 'HIGH_CONFIDENCE';
+        confMultiplier = 1.2;
+      } else if (demand >= 15 || cl.zero_results_count >= 3) {
+        confidence = 'MEDIUM_CONFIDENCE';
+        confMultiplier = 1.0;
+      } else if (demand >= 1) {
+        confidence = 'LOW_CONFIDENCE';
+        confMultiplier = 0.7;
+      }
+
+      const score = Number((baseScore * confMultiplier).toFixed(1));
+
+      // Priority classification
+      let priority = 'P4_MONITOR';
+      if (score >= 50 || (cl.zero_results_count >= 10 && cl.providers_count === 0)) {
+        priority = 'P1_CRITICAL';
+      } else if (score >= 20 || (cl.zero_results_count >= 3 && cl.providers_count < 2)) {
+        priority = 'P2_HIGH';
+      } else if (score >= 5) {
+        priority = 'P3_EXPANSION';
+      }
+
+      return {
+        state: cl.state,
+        lga: cl.lga,
+        category: cl.category,
+        providers_count: cl.providers_count,
+        searches_count: cl.searches_count,
+        zero_results_count: cl.zero_results_count,
+        zero_result_rate: zeroRate,
+        profile_views: cl.profile_views,
+        contacts_count: cl.contacts_count,
+        opportunity_score: score,
+        confidence: confidence,
+        acquisition_priority: priority
+      };
+    });
+
+    opportunityRankings.sort((a, b) => b.opportunity_score - a.opportunity_score);
+    // Assign rank numbers
+    opportunityRankings.forEach((r, idx) => { r.rank = idx + 1; });
+
+    // 3. Strategic Deep-Dive: Delta State
+    const deltaProviders = safeProviders.filter(p => String(p.state || '').toLowerCase() === 'delta');
+    const deltaSearches = filteredEvents.filter(e => {
+      const name = String(e.event || e.event_name || '').toLowerCase();
+      const st = String((e.props || e.properties || {}).state || '').toLowerCase();
+      return name === 'search_submitted' && st === 'delta';
+    }).length;
+    const deltaZeroResults = filteredEvents.filter(e => {
+      const name = String(e.event || e.event_name || '').toLowerCase();
+      const st = String((e.props || e.properties || {}).state || '').toLowerCase();
+      return name === 'search_no_results' && st === 'delta';
+    }).length;
+    const deltaProfiles = filteredEvents.filter(e => {
+      const name = String(e.event || e.event_name || '').toLowerCase();
+      const st = String((e.props || e.properties || {}).state || '').toLowerCase();
+      return name === 'provider_profile_viewed' && st === 'delta';
+    }).length;
+    const deltaContacts = filteredEvents.filter(e => {
+      const name = String(e.event || e.event_name || '').toLowerCase();
+      const st = String((e.props || e.properties || {}).state || '').toLowerCase();
+      return (name === 'phone_clicked' || name === 'whatsapp_clicked') && st === 'delta';
+    }).length;
+    const deltaGaps = opportunityRankings.filter(r => r.state.toLowerCase() === 'delta').slice(0, 5);
+
+    // 4. Strategic Deep-Dive: Edo State
+    const edoProviders = safeProviders.filter(p => String(p.state || '').toLowerCase() === 'edo');
+    const edoSearches = filteredEvents.filter(e => {
+      const name = String(e.event || e.event_name || '').toLowerCase();
+      const st = String((e.props || e.properties || {}).state || '').toLowerCase();
+      return name === 'search_submitted' && st === 'edo';
+    }).length;
+    const edoZeroResults = filteredEvents.filter(e => {
+      const name = String(e.event || e.event_name || '').toLowerCase();
+      const st = String((e.props || e.properties || {}).state || '').toLowerCase();
+      return name === 'search_no_results' && st === 'edo';
+    }).length;
+    const edoProfiles = filteredEvents.filter(e => {
+      const name = String(e.event || e.event_name || '').toLowerCase();
+      const st = String((e.props || e.properties || {}).state || '').toLowerCase();
+      return name === 'provider_profile_viewed' && st === 'edo';
+    }).length;
+    const edoContacts = filteredEvents.filter(e => {
+      const name = String(e.event || e.event_name || '').toLowerCase();
+      const st = String((e.props || e.properties || {}).state || '').toLowerCase();
+      return (name === 'phone_clicked' || name === 'whatsapp_clicked') && st === 'edo';
+    }).length;
+    const edoGaps = opportunityRankings.filter(r => r.state.toLowerCase() === 'edo').slice(0, 5);
+
+    return {
+      window_days: days,
+      strategic_markets: {
+        delta_state: {
+          market_status: 'PRIORITY_EXPANSION_MARKET',
+          total_providers: deltaProviders.length,
+          searches_count: deltaSearches,
+          zero_results_count: deltaZeroResults,
+          zero_result_rate: deltaSearches > 0 ? Number(((deltaZeroResults / deltaSearches) * 100).toFixed(1)) : 0,
+          profile_views: deltaProfiles,
+          contacts_count: deltaContacts,
+          top_supply_gaps: deltaGaps,
+          candidate_localities: ['Ughelli', 'Warri', 'Sapele', 'Asaba', 'Agbor', 'Effurun']
+        },
+        edo_state: {
+          market_status: 'STRATEGIC_ADJACENT_MARKET',
+          total_providers: edoProviders.length,
+          searches_count: edoSearches,
+          zero_results_count: edoZeroResults,
+          zero_result_rate: edoSearches > 0 ? Number(((edoZeroResults / edoSearches) * 100).toFixed(1)) : 0,
+          profile_views: edoProfiles,
+          contacts_count: edoContacts,
+          top_supply_gaps: edoGaps,
+          candidate_localities: ['Benin City (Oredo)', 'Ugbowo (Egor)', 'Ikpoba Hill', 'Ekpoma', 'Auchi']
+        }
+      },
+      opportunity_prioritization_matrix: opportunityRankings,
+      acquisition_funnel: acquisitionFunnel,
+      generated_at: new Date().toISOString()
+    };
+  }
+
+  LokatorDB.liquidityExpansion = {
+    compute: computeLiquidityExpansion,
+    getExpansionSummary: (days) => LokatorDB.analytics.getLiquidityExpansion(days)
   };
 
   const analyticsAlertsManager = {

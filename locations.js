@@ -323,7 +323,13 @@
         { code: 'etsako-east', name: 'Etsako East', localities: ['Agenebode', 'Okpella (Cement)', 'Weppa'] },
         { code: 'akoko-edo', name: 'Akoko-Edo', localities: ['Igarra', 'Ibillo', 'Ososo'] },
         { code: 'ovia-north-east', name: 'Ovia North-East', localities: ['Okada (Igbinedion Univ)', 'Isiohor', 'Oluku Junction'] },
-        { code: 'ovia-south-west', name: 'Ovia South-West', localities: ['Iguobazuwa', 'Nikorogha', 'Gelegele'] }
+        { code: 'ovia-south-west', name: 'Ovia South-West', localities: ['Iguobazuwa', 'Nikorogha', 'Gelegele'] },
+        { code: 'esan-south-east', name: 'Esan South-East', localities: ['Ubiaja', 'Ilushi', 'Ewohimi'] },
+        { code: 'igueben', name: 'Igueben', localities: ['Igueben Town', 'Amahor', 'Ewossa'] },
+        { code: 'owan-east', name: 'Owan East', localities: ['Afuze', 'Ihonvbe', 'Warrake'] },
+        { code: 'owan-west', name: 'Owan West', localities: ['Sabongidda-Ora', 'Ozalla', 'Sobe'] },
+        { code: 'uhunmwonde', name: 'Uhunmwonde', localities: ['Ehor', 'Oluku', 'Irhirhi'] },
+        { code: 'orhionmwon', name: 'Orhionmwon', localities: ['Abudu', 'Ugo', 'Uronigbe'] }
       ]
     },
     {
