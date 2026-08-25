@@ -183,7 +183,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       btnCallHero.href = heroTelUrl;
       btnCallHero.addEventListener('click', () => {
         if (typeof LokatorTelemetry !== 'undefined') {
-          LokatorTelemetry.trackEvent('phone_clicked', { providerId: provider.id, trade: provider.trade, city: provider.city });
+          LokatorTelemetry.trackEvent('phone_clicked', {
+            providerId: provider.id,
+            trade: provider.trade,
+            category: provider.primary_category_slug || provider.categorySlug || provider.trade,
+            city: provider.city,
+            state: provider.state || stateParam,
+            lga: provider.lga || lgaParam,
+            verificationStatus: provider.verificationStatus || (provider.ninVerified ? 'verified' : (provider.isVerified ? 'reviewed' : 'unverified'))
+          });
         }
         if (typeof LokatorDB !== 'undefined' && LokatorDB.marketplaceDiscovery) {
           LokatorDB.marketplaceDiscovery.trackDiscoveryEvent('phone_clicked', {
@@ -205,7 +213,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       btnWaHero.href = heroWaUrl;
       btnWaHero.addEventListener('click', () => {
         if (typeof LokatorTelemetry !== 'undefined') {
-          LokatorTelemetry.trackEvent('whatsapp_clicked', { providerId: provider.id, trade: provider.trade, city: provider.city });
+          LokatorTelemetry.trackEvent('whatsapp_clicked', {
+            providerId: provider.id,
+            trade: provider.trade,
+            category: provider.primary_category_slug || provider.categorySlug || provider.trade,
+            city: provider.city,
+            state: provider.state || stateParam,
+            lga: provider.lga || lgaParam,
+            verificationStatus: provider.verificationStatus || (provider.ninVerified ? 'verified' : (provider.isVerified ? 'reviewed' : 'unverified'))
+          });
         }
         if (typeof LokatorDB !== 'undefined' && LokatorDB.marketplaceDiscovery) {
           LokatorDB.marketplaceDiscovery.trackDiscoveryEvent('whatsapp_clicked', {
@@ -228,7 +244,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Track profile view
   if (typeof LokatorTelemetry !== 'undefined') {
-    LokatorTelemetry.trackEvent('provider_profile_viewed', { providerId: provider.id, trade: provider.trade, city: provider.city });
+    LokatorTelemetry.trackEvent('provider_profile_viewed', {
+      providerId: provider.id,
+      trade: provider.trade,
+      category: provider.primary_category_slug || provider.categorySlug || provider.trade,
+      city: provider.city,
+      state: provider.state || stateParam,
+      lga: provider.lga || lgaParam,
+      verificationStatus: provider.verificationStatus || (provider.ninVerified ? 'verified' : (provider.isVerified ? 'reviewed' : 'unverified'))
+    });
   }
   if (typeof LokatorDB !== 'undefined' && LokatorDB.marketplaceDiscovery) {
     LokatorDB.marketplaceDiscovery.trackDiscoveryEvent('provider_profile_opened', {

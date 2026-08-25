@@ -277,6 +277,9 @@
 
         const pathStr = (typeof window !== 'undefined' && window.location) ? window.location.pathname.substring(0, 128) : '/';
         const sanitizedProps = sanitizeProperties(properties);
+        if (!sanitizedProps.device_class) {
+          sanitizedProps.device_class = getDeviceClass();
+        }
 
         const payload = {
           event: eventName,
@@ -286,7 +289,7 @@
         };
 
         // 1. Emit custom browser event for local integrations
-        if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
+        if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function' && typeof CustomEvent !== 'undefined') {
           const customEvent = new CustomEvent('lokator:telemetry', { detail: payload });
           window.dispatchEvent(customEvent);
         }

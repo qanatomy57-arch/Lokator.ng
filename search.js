@@ -507,9 +507,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (typeof LokatorTelemetry !== 'undefined') {
         if (providers.length === 0) {
-          LokatorTelemetry.trackEvent('search_no_results', { query: state.keyword, category: categorySlug });
+          LokatorTelemetry.trackEvent('search_no_results', {
+            query: state.keyword,
+            category: categorySlug,
+            state: state.state !== 'all' ? state.state : (state.locationQuery || null),
+            lga: state.lga !== 'all' ? state.lga : null,
+            city: loc !== 'all' ? loc : null
+          });
         } else {
-          LokatorTelemetry.trackEvent('search_result_viewed', { totalCount: state.totalCount, page: state.page });
+          LokatorTelemetry.trackEvent('search_result_viewed', {
+            totalCount: state.totalCount,
+            page: state.page,
+            category: categorySlug,
+            state: state.state !== 'all' ? state.state : (state.locationQuery || null),
+            lga: state.lga !== 'all' ? state.lga : null,
+            city: loc !== 'all' ? loc : null
+          });
         }
       }
 

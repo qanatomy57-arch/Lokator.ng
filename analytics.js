@@ -53,6 +53,99 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('funnel-reviews').textContent = (cf.reviews_submitted || 0).toLocaleString();
       }
 
+      // 2.1 Fetch Phase 10.12I Marketplace Funnel Intelligence
+      const mfi = await LokatorDB.analytics.getMarketplaceFunnelIntelligence(days);
+      if (mfi) {
+        const mpf = mfi.provider_funnel || {};
+        const mpfRates = mpf.step_conversion_rates || {};
+        const mcf = mfi.customer_funnel || {};
+        const dev = mfi.device_funnel || {};
+        const trust = mfi.trust_signals || {};
+        const quality = mpf.profile_quality || {};
+
+        // Provider funnel
+        if (document.getElementById('mfi-prov-starts')) document.getElementById('mfi-prov-starts').textContent = (mpf.registration_started || 0).toLocaleString();
+        if (document.getElementById('mfi-prov-step1')) document.getElementById('mfi-prov-step1').textContent = (mpf.step_1_completed || 0).toLocaleString();
+        if (document.getElementById('mfi-prov-step1-rate')) document.getElementById('mfi-prov-step1-rate').textContent = `${mpfRates.step_1_rate || 0}%`;
+        if (document.getElementById('mfi-prov-step2')) document.getElementById('mfi-prov-step2').textContent = (mpf.step_2_completed || 0).toLocaleString();
+        if (document.getElementById('mfi-prov-step2-rate')) document.getElementById('mfi-prov-step2-rate').textContent = `${mpfRates.step_2_rate || 0}%`;
+        if (document.getElementById('mfi-prov-step3')) document.getElementById('mfi-prov-step3').textContent = (mpf.step_3_completed || 0).toLocaleString();
+        if (document.getElementById('mfi-prov-step3-rate')) document.getElementById('mfi-prov-step3-rate').textContent = `${mpfRates.step_3_rate || 0}%`;
+        if (document.getElementById('mfi-prov-enhance')) document.getElementById('mfi-prov-enhance').textContent = (mpf.enhancement_reached || 0).toLocaleString();
+        if (document.getElementById('mfi-prov-enhance-rate')) document.getElementById('mfi-prov-enhance-rate').textContent = `${mpfRates.enhancement_rate || 0}%`;
+        if (document.getElementById('mfi-prov-preview')) document.getElementById('mfi-prov-preview').textContent = (mpf.preview_reached || 0).toLocaleString();
+        if (document.getElementById('mfi-prov-preview-rate')) document.getElementById('mfi-prov-preview-rate').textContent = `${mpfRates.preview_rate || 0}%`;
+        if (document.getElementById('mfi-prov-published')) document.getElementById('mfi-prov-published').textContent = (mpf.published_succeeded || 0).toLocaleString();
+        if (document.getElementById('mfi-prov-publish-rate')) document.getElementById('mfi-prov-publish-rate').textContent = `${mpfRates.publish_rate || 0}%`;
+        if (document.getElementById('mfi-prov-overall-rate')) document.getElementById('mfi-prov-overall-rate').textContent = `${mpfRates.overall_completion_rate || 0}% Completion`;
+
+        // Customer funnel
+        if (document.getElementById('mfi-cust-searches')) document.getElementById('mfi-cust-searches').textContent = (mcf.searches_started || 0).toLocaleString();
+        if (document.getElementById('mfi-cust-results')) document.getElementById('mfi-cust-results').textContent = (mcf.searches_with_results || 0).toLocaleString();
+        if (document.getElementById('mfi-cust-result-rate')) document.getElementById('mfi-cust-result-rate').textContent = `${mcf.search_result_rate || 0}%`;
+        if (document.getElementById('mfi-cust-cards')) document.getElementById('mfi-cust-cards').textContent = (mcf.provider_card_views || 0).toLocaleString();
+        if (document.getElementById('mfi-cust-profiles')) document.getElementById('mfi-cust-profiles').textContent = (mcf.profile_views || 0).toLocaleString();
+        if (document.getElementById('mfi-cust-profile-rate')) document.getElementById('mfi-cust-profile-rate').textContent = `${mcf.profile_conversion_rate || 0}%`;
+        if (document.getElementById('mfi-cust-contacts')) document.getElementById('mfi-cust-contacts').textContent = (mcf.total_contacts || 0).toLocaleString();
+        if (document.getElementById('mfi-cust-contact-rate')) document.getElementById('mfi-cust-contact-rate').textContent = `${mcf.contact_conversion_rate || 0}%`;
+        if (document.getElementById('mfi-cust-conv-rate')) document.getElementById('mfi-cust-conv-rate').textContent = `${mcf.contact_conversion_rate || 0}% Lead Rate`;
+        if (document.getElementById('mfi-cust-reviews')) document.getElementById('mfi-cust-reviews').textContent = (mcf.reviews_submitted || 0).toLocaleString();
+        if (document.getElementById('mfi-cust-wa-ratio')) document.getElementById('mfi-cust-wa-ratio').textContent = `${mcf.whatsapp_preference_ratio || 0}%`;
+        if (document.getElementById('mfi-cust-zero-rate')) document.getElementById('mfi-cust-zero-rate').textContent = `${mcf.zero_result_rate || 0}%`;
+
+        // Device breakdown
+        if (document.getElementById('mfi-dev-mobile-contact')) document.getElementById('mfi-dev-mobile-contact').textContent = `${dev.mobile ? dev.mobile.contact_conversion_rate : 0}% Contact Rate`;
+        if (document.getElementById('mfi-dev-mobile-onboarding')) document.getElementById('mfi-dev-mobile-onboarding').textContent = `${dev.mobile ? dev.mobile.onboarding_completion_rate : 0}%`;
+        if (document.getElementById('mfi-dev-desktop-contact')) document.getElementById('mfi-dev-desktop-contact').textContent = `${dev.desktop ? dev.desktop.contact_conversion_rate : 0}% Contact Rate`;
+        if (document.getElementById('mfi-dev-desktop-onboarding')) document.getElementById('mfi-dev-desktop-onboarding').textContent = `${dev.desktop ? dev.desktop.onboarding_completion_rate : 0}%`;
+
+        // Trust & Quality
+        if (document.getElementById('mfi-trust-ver-reqs')) document.getElementById('mfi-trust-ver-reqs').textContent = (trust.verification_requests || 0).toLocaleString();
+        if (document.getElementById('mfi-trust-reports')) document.getElementById('mfi-trust-reports').textContent = ((trust.provider_reports || 0) + (trust.review_reports || 0)).toLocaleString();
+        if (document.getElementById('mfi-comp-above-thresh')) document.getElementById('mfi-comp-above-thresh').textContent = (quality.at_or_above_publish_threshold || 0).toLocaleString();
+        if (document.getElementById('mfi-comp-total-provs')) document.getElementById('mfi-comp-total-provs').textContent = (quality.total_providers || 0).toLocaleString();
+
+        // Supply & Demand Table
+        const matrixTbody = document.getElementById('mfi-supply-demand-tbody');
+        if (matrixTbody && Array.isArray(mfi.supply_demand_matrix)) {
+          if (mfi.supply_demand_matrix.length === 0) {
+            matrixTbody.innerHTML = '<tr><td colspan="8" style="padding: 12px; color: #64748B; text-align: center;">No category interactions recorded yet.</td></tr>';
+          } else {
+            matrixTbody.innerHTML = mfi.supply_demand_matrix.map(row => {
+              let classColor = '#34D399';
+              let classBg = 'rgba(52, 211, 153, 0.15)';
+              if (row.classification === 'CRITICAL_SUPPLY_GAP') {
+                classColor = '#F87171';
+                classBg = 'rgba(239, 68, 68, 0.2)';
+              } else if (row.classification === 'HIGH_CONVERSION_OPPORTUNITY') {
+                classColor = '#FBBF24';
+                classBg = 'rgba(245, 158, 11, 0.2)';
+              } else if (row.classification === 'LOW_ENGAGEMENT_AREA') {
+                classColor = '#94A3B8';
+                classBg = 'rgba(148, 163, 184, 0.15)';
+              }
+              const safeCat = (typeof escapeHtml === 'function') ? escapeHtml(row.category) : row.category;
+              return `
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
+                  <td style="padding: 8px; font-weight: 700; color: #F1F5F9;">${safeCat}</td>
+                  <td style="padding: 8px;">${row.providers_count}</td>
+                  <td style="padding: 8px;">${row.searches_count}</td>
+                  <td style="padding: 8px; color: ${row.zero_results_count > 0 ? '#F87171' : '#94A3B8'};">${row.zero_results_count}</td>
+                  <td style="padding: 8px;">${row.profile_views}</td>
+                  <td style="padding: 8px; font-weight: 700; color: #34D399;">${row.contacts_count}</td>
+                  <td style="padding: 8px;">${row.conversion_rate}%</td>
+                  <td style="padding: 8px;">
+                    <span class="status-tag" style="background: ${classBg}; color: ${classColor}; font-size: 0.7rem;">
+                      ${row.classification}
+                    </span>
+                  </td>
+                </tr>
+              `;
+            }).join('');
+          }
+        }
+      }
+
       // 3. Fetch Core Web Vitals Summary
       const cwv = await LokatorDB.analytics.getPerformanceSummary(days);
       if (cwv) {

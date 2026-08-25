@@ -73,6 +73,205 @@
     <!-- Main Dashboard Body (Rendered upon Server Auth Confirmation) -->
     <main id="analytics-content">
       
+      <!-- Phase 10.12I: Marketplace Funnel Intelligence (MFI) -->
+      <section id="section-funnel-intelligence" style="margin-bottom: 32px;">
+        <div class="section-title">
+          <span style="display: flex; align-items: center; gap: 8px;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+            Phase 10.12I: Marketplace Funnel & Conversion Intelligence
+          </span>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <span id="mfi-volume-badge" class="status-tag status-good" style="font-size: 0.75rem; background: rgba(16,185,129,0.15); color: #34D399;">OBSERVATIONAL</span>
+            <span class="status-tag status-notice" style="font-size: 0.7rem;">AIR_GAPPED</span>
+          </div>
+        </div>
+
+        <!-- 1. Funnel Overviews (Provider & Customer side-by-side) -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 20px; margin-bottom: 20px;">
+          
+          <!-- Provider Funnel Card -->
+          <div class="panel-card" style="border-left: 4px solid #10B981;">
+            <div style="font-size: 0.95rem; font-weight: 700; color: #F1F5F9; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+              <span>👷 Provider Onboarding Funnel</span>
+              <span id="mfi-prov-overall-rate" class="status-tag status-good">0.0% Completion</span>
+            </div>
+            
+            <div class="funnel-step">
+              <span class="funnel-name">1. Registration Started</span>
+              <div class="funnel-metrics"><span class="funnel-count" id="mfi-prov-starts">0</span></div>
+            </div>
+            <div class="funnel-step">
+              <span class="funnel-name">2. Step 1 (Identity & Contact)</span>
+              <div class="funnel-metrics">
+                <span class="funnel-count" id="mfi-prov-step1">0</span>
+                <span class="funnel-rate" id="mfi-prov-step1-rate">0.0%</span>
+              </div>
+            </div>
+            <div class="funnel-step">
+              <span class="funnel-name">3. Step 2 (Trade & Skills)</span>
+              <div class="funnel-metrics">
+                <span class="funnel-count" id="mfi-prov-step2">0</span>
+                <span class="funnel-rate" id="mfi-prov-step2-rate">0.0%</span>
+              </div>
+            </div>
+            <div class="funnel-step">
+              <span class="funnel-name">4. Step 3 (Location & Area)</span>
+              <div class="funnel-metrics">
+                <span class="funnel-count" id="mfi-prov-step3">0</span>
+                <span class="funnel-rate" id="mfi-prov-step3-rate">0.0%</span>
+              </div>
+            </div>
+            <div class="funnel-step">
+              <span class="funnel-name">5. Profile Enhancement</span>
+              <div class="funnel-metrics">
+                <span class="funnel-count" id="mfi-prov-enhance">0</span>
+                <span class="funnel-rate" id="mfi-prov-enhance-rate">0.0%</span>
+              </div>
+            </div>
+            <div class="funnel-step">
+              <span class="funnel-name">6. Live Preview Reached</span>
+              <div class="funnel-metrics">
+                <span class="funnel-count" id="mfi-prov-preview">0</span>
+                <span class="funnel-rate" id="mfi-prov-preview-rate">0.0%</span>
+              </div>
+            </div>
+            <div class="funnel-step" style="border-left-color: #00E676;">
+              <span class="funnel-name">7. Published Listing</span>
+              <div class="funnel-metrics">
+                <span class="funnel-count" id="mfi-prov-published">0</span>
+                <span class="funnel-rate" id="mfi-prov-publish-rate" style="background: rgba(0,230,118,0.15); color: #00E676;">0.0%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Customer Funnel Card -->
+          <div class="panel-card" style="border-left: 4px solid #3B82F6;">
+            <div style="font-size: 0.95rem; font-weight: 700; color: #F1F5F9; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+              <span>🔍 Customer Discovery & Contact Funnel</span>
+              <span id="mfi-cust-conv-rate" class="status-tag status-good" style="background: rgba(59,130,246,0.2); color: #60A5FA;">0.0% Lead Rate</span>
+            </div>
+
+            <div class="funnel-step">
+              <span class="funnel-name">1. Searches Started</span>
+              <div class="funnel-metrics"><span class="funnel-count" id="mfi-cust-searches">0</span></div>
+            </div>
+            <div class="funnel-step">
+              <span class="funnel-name">2. Searches with Results</span>
+              <div class="funnel-metrics">
+                <span class="funnel-count" id="mfi-cust-results">0</span>
+                <span class="funnel-rate" id="mfi-cust-result-rate">0.0%</span>
+              </div>
+            </div>
+            <div class="funnel-step">
+              <span class="funnel-name">3. Provider Card Views</span>
+              <div class="funnel-metrics">
+                <span class="funnel-count" id="mfi-cust-cards">0</span>
+              </div>
+            </div>
+            <div class="funnel-step">
+              <span class="funnel-name">4. Provider Profile Viewed</span>
+              <div class="funnel-metrics">
+                <span class="funnel-count" id="mfi-cust-profiles">0</span>
+                <span class="funnel-rate" id="mfi-cust-profile-rate">0.0%</span>
+              </div>
+            </div>
+            <div class="funnel-step" style="border-left-color: #F59E0B;">
+              <span class="funnel-name">5. Contact Actions (Call / WhatsApp)</span>
+              <div class="funnel-metrics">
+                <span class="funnel-count" id="mfi-cust-contacts">0</span>
+                <span class="funnel-rate" id="mfi-cust-contact-rate" style="background: rgba(245,158,11,0.15); color: #FBBF24;">0.0%</span>
+              </div>
+            </div>
+            <div class="funnel-step">
+              <span class="funnel-name">6. Verified Customer Reviews</span>
+              <div class="funnel-metrics">
+                <span class="funnel-count" id="mfi-cust-reviews">0</span>
+              </div>
+            </div>
+            <div style="font-size: 0.8rem; color: #94A3B8; margin-top: 10px; display: flex; justify-content: space-between;">
+              <span>WhatsApp Ratio: <strong id="mfi-cust-wa-ratio" style="color: #25D366;">0.0%</strong></span>
+              <span>Zero-Result Rate: <strong id="mfi-cust-zero-rate" style="color: #F87171;">0.0%</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Supply vs Demand Intelligence Matrix -->
+        <div class="panel-card" style="margin-bottom: 20px;">
+          <div style="font-size: 0.95rem; font-weight: 700; color: #F1F5F9; margin-bottom: 12px;">
+            📊 Category Supply vs. Demand Intelligence Matrix
+          </div>
+          <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: left;">
+              <thead>
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: #94A3B8;">
+                  <th style="padding: 8px;">Category</th>
+                  <th style="padding: 8px;">Providers</th>
+                  <th style="padding: 8px;">Searches</th>
+                  <th style="padding: 8px;">Zero Results</th>
+                  <th style="padding: 8px;">Profile Views</th>
+                  <th style="padding: 8px;">Contacts</th>
+                  <th style="padding: 8px;">Conversion</th>
+                  <th style="padding: 8px;">Marketplace Classification</th>
+                </tr>
+              </thead>
+              <tbody id="mfi-supply-demand-tbody">
+                <tr><td colspan="8" style="padding: 12px; color: #64748B; text-align: center;">No category interactions recorded yet.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 3. Mobile vs Desktop & Profile Completeness Correlation -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
+          <!-- Mobile vs Desktop -->
+          <div class="panel-card">
+            <div style="font-size: 0.9rem; font-weight: 700; color: #F1F5F9; margin-bottom: 12px;">
+              📱 Device Class Conversion Breakdown
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px;" id="mfi-device-breakdown">
+              <div style="background: #0E1522; padding: 10px; border-radius: 6px;">
+                <div style="display: flex; justify-content: space-between; font-weight: 600; color: #E2E8F0;">
+                  <span>Mobile</span>
+                  <span id="mfi-dev-mobile-contact">0.0% Contact Rate</span>
+                </div>
+                <div style="font-size: 0.75rem; color: #94A3B8; margin-top: 4px;">
+                  Onboarding completion: <strong id="mfi-dev-mobile-onboarding">0.0%</strong>
+                </div>
+              </div>
+              <div style="background: #0E1522; padding: 10px; border-radius: 6px;">
+                <div style="display: flex; justify-content: space-between; font-weight: 600; color: #E2E8F0;">
+                  <span>Desktop</span>
+                  <span id="mfi-dev-desktop-contact">0.0% Contact Rate</span>
+                </div>
+                <div style="font-size: 0.75rem; color: #94A3B8; margin-top: 4px;">
+                  Onboarding completion: <strong id="mfi-dev-desktop-onboarding">0.0%</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Completeness & Trust Signals -->
+          <div class="panel-card">
+            <div style="font-size: 0.9rem; font-weight: 700; color: #F1F5F9; margin-bottom: 12px;">
+              🛡️ Trust Signals & Profile Quality Distribution
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+              <div style="background: #0E1522; padding: 10px; border-radius: 6px; text-align: center;">
+                <div style="font-size: 0.75rem; color: #94A3B8;">NIN Verification Reqs</div>
+                <div id="mfi-trust-ver-reqs" style="font-size: 1.2rem; font-weight: 800; color: #10B981;">0</div>
+              </div>
+              <div style="background: #0E1522; padding: 10px; border-radius: 6px; text-align: center;">
+                <div style="font-size: 0.75rem; color: #94A3B8;">Moderation Reports</div>
+                <div id="mfi-trust-reports" style="font-size: 1.2rem; font-weight: 800; color: #F87171;">0</div>
+              </div>
+            </div>
+            <div style="font-size: 0.8rem; color: #94A3B8;">
+              Providers >= 75% Completeness: <strong id="mfi-comp-above-thresh" style="color: #34D399;">0</strong> / <span id="mfi-comp-total-provs">0</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- 9.0 Strategic Intelligence Command Center (SIMCC) -->
       <section id="section-simcc-command-center" style="margin-bottom: 32px;">
         <div class="section-title">

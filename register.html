@@ -578,6 +578,11 @@
     let currentStep = 1;
     const totalSteps = 5;
 
+    // Track provider onboarding funnel initiation
+    if (typeof LokatorTelemetry !== 'undefined') {
+      LokatorTelemetry.trackEvent('provider_onboarding_started', { step: 1, total_steps: totalSteps });
+    }
+
     function getPhoneEngine() {
       return (typeof NigeriaPhone !== 'undefined' ? NigeriaPhone : null) || 
              (typeof window !== 'undefined' ? window.NigeriaPhone : null) ||
@@ -828,6 +833,10 @@
 
       if (typeof LokatorTelemetry !== 'undefined') {
         LokatorTelemetry.trackEvent('provider_onboarding_step_completed', { step: currentStep });
+        if (currentStep === 5) {
+          const compData = calculateCompleteness();
+          LokatorTelemetry.trackEvent('provider_onboarding_preview_reached', { completeness: compData.score });
+        }
       }
 
       const card = document.getElementById('reg-form-card');

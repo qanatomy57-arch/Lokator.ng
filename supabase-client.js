@@ -3375,7 +3375,367 @@
         observational_status: 'OBSERVATIONAL_ONLY',
         generated_at: new Date().toISOString()
       };
+    },
+
+    /**
+     * Phase 10.12I: Marketplace Funnel Intelligence
+     * Calculates mathematically sound provider and customer funnel metrics, zero-result intelligence,
+     * category and location conversion matrices, completeness correlations, and supply vs demand matrix.
+     */
+    async getMarketplaceFunnelIntelligence(days = 30) {
+      if (isRemoteActive()) {
+        try {
+          const { data, error } = await supabaseInstance.rpc('get_marketplace_funnel_intelligence', { p_days: days });
+          if (!error && data) return data;
+        } catch (e) {
+          // Fallback to local computation
+        }
+      }
+
+      // Collect events from local telemetry buffer / session store
+      let events = [];
+      try {
+        if (typeof sessionStorage !== 'undefined') {
+          const raw = sessionStorage.getItem('lokator_telemetry_events');
+          if (raw) events = JSON.parse(raw);
+        }
+        if (events.length === 0 && typeof localStorage !== 'undefined') {
+          const raw = localStorage.getItem('lokator_telemetry_events');
+          if (raw) events = JSON.parse(raw);
+        }
+      } catch (e) {}
+
+      const providers = getLocalStore(DB_STORE_KEY, []);
+      return computeMarketplaceFunnelIntelligence(events, providers, days);
     }
+  };
+
+  /**
+   * Pure Funnel Intelligence Computation Engine
+   */
+  function computeMarketplaceFunnelIntelligence(events = [], providers = [], days = 30) {
+    const now = Date.now();
+    const windowMs = days * 86400000;
+    const filteredEvents = (Array.isArray(events) ? events : []).filter(e => {
+      if (!e.timestamp && !e.created_at) return true;
+      const t = new Date(e.timestamp || e.created_at).getTime();
+      return isNaN(t) || (now - t) <= windowMs;
+    });
+
+    // 1. Provider Funnel Counters
+    let regStarts = 0;
+    let step1 = 0;
+    let step2 = 0;
+    let step3 = 0;
+    let enhance = 0;
+    let preview = 0;
+    let pubAttempt = 0;
+    let pubSuccess = 0;
+
+    // 2. Customer Funnel Counters
+    let searchStarts = 0;
+    let searchResults = 0;
+    let zeroResults = 0;
+    let cardViews = 0;
+    let profViews = 0;
+    let phoneClicks = 0;
+    let waClicks = 0;
+    let reviewsCount = 0;
+
+    // 3. Zero-Result & Categorization Aggregators
+    const zeroByCat = {};
+    const zeroByLoc = {};
+    const zeroIntents = [];
+    const catMatrix = {};
+    const locMatrix = {};
+
+    // 4. Device Segmentation
+    const devFunnel = {
+      mobile: { searches: 0, profileViews: 0, contacts: 0, onboardingStarts: 0, onboardingSuccess: 0 },
+      tablet: { searches: 0, profileViews: 0, contacts: 0, onboardingStarts: 0, onboardingSuccess: 0 },
+      desktop: { searches: 0, profileViews: 0, contacts: 0, onboardingStarts: 0, onboardingSuccess: 0 }
+    };
+
+    // 5. Trust Signals
+    let verReqs = 0;
+    let provReps = 0;
+    let revReps = 0;
+
+    filteredEvents.forEach(evt => {
+      const name = String(evt.event || evt.event_name || '').toLowerCase();
+      const props = evt.props || evt.properties || {};
+      const dev = props.device_class || 'mobile';
+      const devBucket = devFunnel[dev] || devFunnel.mobile;
+
+      // Provider Funnel Events
+      if (name === 'provider_onboarding_started' || name === 'registration_started') {
+        regStarts++;
+        devBucket.onboardingStarts++;
+      } else if (name === 'provider_onboarding_step_completed') {
+        const s = Number(props.step);
+        if (s === 1) step1++;
+        else if (s === 2) step2++;
+        else if (s === 3) step3++;
+        else if (s === 4) enhance++;
+      } else if (name === 'provider_onboarding_preview_reached') {
+        preview++;
+      } else if (name === 'provider_onboarding_submitted' || name === 'registration_submitted') {
+        pubAttempt++;
+      } else if (name === 'provider_onboarding_succeeded' || name === 'registration_succeeded') {
+        pubSuccess++;
+        devBucket.onboardingSuccess++;
+      }
+      // Customer Funnel Events
+      else if (name === 'search_submitted' || name === 'search_started') {
+        searchStarts++;
+        devBucket.searches++;
+        const cat = props.category || 'all';
+        const st = props.state || 'all';
+        if (cat !== 'all') {
+          catMatrix[cat] = catMatrix[cat] || { searches: 0, zeroResults: 0, profileViews: 0, contacts: 0 };
+          catMatrix[cat].searches++;
+        }
+        if (st !== 'all') {
+          locMatrix[st] = locMatrix[st] || { searches: 0, zeroResults: 0, profileViews: 0, contacts: 0 };
+          locMatrix[st].searches++;
+        }
+      } else if (name === 'search_no_results') {
+        zeroResults++;
+        const cat = props.category || 'general';
+        const st = props.state || 'all';
+        zeroByCat[cat] = (zeroByCat[cat] || 0) + 1;
+        zeroByLoc[st] = (zeroByLoc[st] || 0) + 1;
+        if (props.query && zeroIntents.length < 25) {
+          zeroIntents.push({ query: String(props.query).substring(0, 80), category: cat, state: st });
+        }
+        if (cat !== 'general' && cat !== 'all') {
+          catMatrix[cat] = catMatrix[cat] || { searches: 0, zeroResults: 0, profileViews: 0, contacts: 0 };
+          catMatrix[cat].zeroResults++;
+        }
+        if (st !== 'all') {
+          locMatrix[st] = locMatrix[st] || { searches: 0, zeroResults: 0, profileViews: 0, contacts: 0 };
+          locMatrix[st].zeroResults++;
+        }
+      } else if (name === 'search_result_viewed') {
+        searchResults++;
+      } else if (name === 'provider_card_clicked' || name === 'provider_card_viewed') {
+        cardViews++;
+      } else if (name === 'provider_profile_viewed' || name === 'provider_profile_opened') {
+        profViews++;
+        devBucket.profileViews++;
+        const cat = props.category || props.trade || 'general';
+        const st = props.state || 'all';
+        if (cat !== 'general' && cat !== 'all') {
+          catMatrix[cat] = catMatrix[cat] || { searches: 0, zeroResults: 0, profileViews: 0, contacts: 0 };
+          catMatrix[cat].profileViews++;
+        }
+        if (st !== 'all') {
+          locMatrix[st] = locMatrix[st] || { searches: 0, zeroResults: 0, profileViews: 0, contacts: 0 };
+          locMatrix[st].profileViews++;
+        }
+      } else if (name === 'phone_clicked') {
+        phoneClicks++;
+        devBucket.contacts++;
+        const cat = props.category || props.trade || 'general';
+        const st = props.state || 'all';
+        if (cat !== 'general' && cat !== 'all') {
+          catMatrix[cat] = catMatrix[cat] || { searches: 0, zeroResults: 0, profileViews: 0, contacts: 0 };
+          catMatrix[cat].contacts++;
+        }
+        if (st !== 'all') {
+          locMatrix[st] = locMatrix[st] || { searches: 0, zeroResults: 0, profileViews: 0, contacts: 0 };
+          locMatrix[st].contacts++;
+        }
+      } else if (name === 'whatsapp_clicked') {
+        waClicks++;
+        devBucket.contacts++;
+        const cat = props.category || props.trade || 'general';
+        const st = props.state || 'all';
+        if (cat !== 'general' && cat !== 'all') {
+          catMatrix[cat] = catMatrix[cat] || { searches: 0, zeroResults: 0, profileViews: 0, contacts: 0 };
+          catMatrix[cat].contacts++;
+        }
+        if (st !== 'all') {
+          locMatrix[st] = locMatrix[st] || { searches: 0, zeroResults: 0, profileViews: 0, contacts: 0 };
+          locMatrix[st].contacts++;
+        }
+      } else if (name === 'provider_review_submitted' || name === 'review_submitted') {
+        reviewsCount++;
+      } else if (name === 'provider_verification_requested') {
+        verReqs++;
+      } else if (name === 'provider_report_submitted') {
+        provReps++;
+      } else if (name === 'review_report_submitted') {
+        revReps++;
+      }
+    });
+
+    // Profile Completeness Distribution
+    const compBands = {
+      '0-49%': { providers: 0, profileViews: 0, contacts: 0 },
+      '50-74%': { providers: 0, profileViews: 0, contacts: 0 },
+      '75-89%': { providers: 0, profileViews: 0, contacts: 0 },
+      '90-100%': { providers: 0, profileViews: 0, contacts: 0 }
+    };
+
+    let belowThresh = 0;
+    let aboveThresh = 0;
+    const safeProviders = Array.isArray(providers) ? providers : [];
+
+    safeProviders.forEach(p => {
+      let score = 85;
+      if (typeof p.profileCompleteness === 'number') {
+        score = p.profileCompleteness;
+      } else if (typeof calculateCompletenessScore === 'function') {
+        score = calculateCompletenessScore(p).score;
+      }
+
+      if (score < 75) belowThresh++;
+      else aboveThresh++;
+
+      if (score < 50) compBands['0-49%'].providers++;
+      else if (score < 75) compBands['50-74%'].providers++;
+      else if (score < 90) compBands['75-89%'].providers++;
+      else compBands['90-100%'].providers++;
+    });
+
+    // Denominators & Mathematical Calculations
+    const totalContacts = phoneClicks + waClicks;
+    const regCompleteRate = regStarts > 0 ? Number(((pubSuccess / regStarts) * 100).toFixed(1)) : 0;
+    const searchResRate = searchStarts > 0 ? Number(((searchResults / searchStarts) * 100).toFixed(1)) : 0;
+    const zeroResRate = searchStarts > 0 ? Number(((zeroResults / searchStarts) * 100).toFixed(1)) : 0;
+    const profConvRate = searchResults > 0 ? Number(((profViews / searchResults) * 100).toFixed(1)) : 0;
+    const contactConvRate = profViews > 0 ? Number(((totalContacts / profViews) * 100).toFixed(1)) : 0;
+    const waPrefRatio = totalContacts > 0 ? Number(((waClicks / totalContacts) * 100).toFixed(1)) : 0;
+
+    // Step-by-step funnel completion rates
+    const step1Rate = regStarts > 0 ? Number(((step1 / regStarts) * 100).toFixed(1)) : 0;
+    const step2Rate = step1 > 0 ? Number(((step2 / step1) * 100).toFixed(1)) : 0;
+    const step3Rate = step2 > 0 ? Number(((step3 / step2) * 100).toFixed(1)) : 0;
+    const enhanceRate = step3 > 0 ? Number(((enhance / step3) * 100).toFixed(1)) : 0;
+    const prevRate = enhance > 0 ? Number(((preview / enhance) * 100).toFixed(1)) : 0;
+    const pubRate = preview > 0 ? Number(((pubSuccess / preview) * 100).toFixed(1)) : 0;
+
+    // Build Supply vs Demand Matrix
+    const provCountsByCat = {};
+    safeProviders.forEach(p => {
+      const cat = p.primary_category_slug || p.category_slug || (p.trade ? p.trade.toLowerCase().replace(/\s+/g, '-') : 'other');
+      provCountsByCat[cat] = (provCountsByCat[cat] || 0) + 1;
+    });
+
+    const supplyDemandMatrix = [];
+    const allCatKeys = new Set([...Object.keys(catMatrix), ...Object.keys(provCountsByCat), ...Object.keys(zeroByCat)]);
+    allCatKeys.forEach(cat => {
+      const d = catMatrix[cat] || { searches: 0, zeroResults: 0, profileViews: 0, contacts: 0 };
+      const provs = provCountsByCat[cat] || 0;
+      const zeros = zeroByCat[cat] || d.zeroResults || 0;
+
+      let classification = 'BALANCED';
+      if (provs === 0 && (d.searches > 0 || zeros > 0)) {
+        classification = 'CRITICAL_SUPPLY_GAP';
+      } else if (provs > 0 && d.contacts > 0 && (d.contacts / (d.profileViews || 1)) >= 0.15) {
+        classification = 'HIGH_CONVERSION_OPPORTUNITY';
+      } else if (provs >= 2 && d.searches > 3 && d.contacts === 0) {
+        classification = 'LOW_ENGAGEMENT_AREA';
+      }
+
+      supplyDemandMatrix.push({
+        category: cat,
+        providers_count: provs,
+        searches_count: d.searches,
+        zero_results_count: zeros,
+        profile_views: d.profileViews,
+        contacts_count: d.contacts,
+        conversion_rate: d.profileViews > 0 ? Number(((d.contacts / d.profileViews) * 100).toFixed(1)) : 0,
+        classification: classification
+      });
+    });
+    supplyDemandMatrix.sort((a, b) => b.searches_count - a.searches_count);
+
+    return {
+      window_days: days,
+      observational_status: 'OBSERVATIONAL_ONLY',
+      data_volume_assessment: filteredEvents.length < 50 ? 'INSUFFICIENT_PRODUCTION_VOLUME' : 'REPRESENTATIVE_OBSERVATIONAL',
+      provider_funnel: {
+        registration_started: regStarts,
+        step_1_completed: step1,
+        step_2_completed: step2,
+        step_3_completed: step3,
+        enhancement_reached: enhance,
+        preview_reached: preview,
+        publish_attempted: pubAttempt,
+        published_succeeded: pubSuccess,
+        step_conversion_rates: {
+          step_1_rate: step1Rate,
+          step_2_rate: step2Rate,
+          step_3_rate: step3Rate,
+          enhancement_rate: enhanceRate,
+          preview_rate: prevRate,
+          publish_rate: pubRate,
+          overall_completion_rate: regCompleteRate
+        },
+        profile_quality: {
+          total_providers: safeProviders.length,
+          below_publish_threshold: belowThresh,
+          at_or_above_publish_threshold: aboveThresh,
+          completeness_bands: compBands
+        }
+      },
+      customer_funnel: {
+        searches_started: searchStarts,
+        searches_with_results: searchResults,
+        zero_result_searches: zeroResults,
+        search_result_rate: searchResRate,
+        zero_result_rate: zeroResRate,
+        provider_card_views: cardViews,
+        profile_views: profViews,
+        profile_conversion_rate: profConvRate,
+        phone_clicks: phoneClicks,
+        whatsapp_clicks: waClicks,
+        total_contacts: totalContacts,
+        contact_conversion_rate: contactConvRate,
+        whatsapp_preference_ratio: waPrefRatio,
+        reviews_submitted: reviewsCount
+      },
+      zero_result_intelligence: {
+        total_zero_results: zeroResults,
+        zero_result_rate: zeroResRate,
+        by_category: zeroByCat,
+        by_location: zeroByLoc,
+        recurring_intents: zeroIntents
+      },
+      category_intelligence: catMatrix,
+      location_intelligence: locMatrix,
+      device_funnel: {
+        mobile: {
+          ...devFunnel.mobile,
+          contact_conversion_rate: devFunnel.mobile.profileViews > 0 ? Number(((devFunnel.mobile.contacts / devFunnel.mobile.profileViews) * 100).toFixed(1)) : 0,
+          onboarding_completion_rate: devFunnel.mobile.onboardingStarts > 0 ? Number(((devFunnel.mobile.onboardingSuccess / devFunnel.mobile.onboardingStarts) * 100).toFixed(1)) : 0
+        },
+        tablet: {
+          ...devFunnel.tablet,
+          contact_conversion_rate: devFunnel.tablet.profileViews > 0 ? Number(((devFunnel.tablet.contacts / devFunnel.tablet.profileViews) * 100).toFixed(1)) : 0,
+          onboarding_completion_rate: devFunnel.tablet.onboardingStarts > 0 ? Number(((devFunnel.tablet.onboardingSuccess / devFunnel.tablet.onboardingStarts) * 100).toFixed(1)) : 0
+        },
+        desktop: {
+          ...devFunnel.desktop,
+          contact_conversion_rate: devFunnel.desktop.profileViews > 0 ? Number(((devFunnel.desktop.contacts / devFunnel.desktop.profileViews) * 100).toFixed(1)) : 0,
+          onboarding_completion_rate: devFunnel.desktop.onboardingStarts > 0 ? Number(((devFunnel.desktop.onboardingSuccess / devFunnel.desktop.onboardingStarts) * 100).toFixed(1)) : 0
+        }
+      },
+      trust_signals: {
+        verification_requests: verReqs,
+        provider_reports: provReps,
+        review_reports: revReps
+      },
+      supply_demand_matrix: supplyDemandMatrix,
+      generated_at: new Date().toISOString()
+    };
+  }
+
+  LokatorDB.funnelIntelligence = {
+    compute: computeMarketplaceFunnelIntelligence,
+    getMarketplaceFunnelIntelligence: (days) => LokatorDB.analytics.getMarketplaceFunnelIntelligence(days)
   };
 
   const analyticsAlertsManager = {
