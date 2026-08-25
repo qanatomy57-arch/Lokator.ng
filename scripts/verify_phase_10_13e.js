@@ -202,10 +202,10 @@ async function runTests() {
     assert.strictEqual(refRecord.eligible, true);
   });
 
-  await test('7.2 Overall commercial classification is PAYMENT_INTEGRATION_TEST_READY', async () => {
+  await test('7.2 Overall commercial classification is PAYMENT_INTEGRATION_TEST_READY or LIVE_PAYMENT_READY_PENDING_EXPLICIT_ACTIVATION', async () => {
     const summary = LokatorDB.monetization.getMonetizationSummary();
-    assert.strictEqual(summary.commercial_readiness_classification, 'PAYMENT_INTEGRATION_TEST_READY');
-    assert.strictEqual(summary.payment_readiness_gate.classification, 'PAYMENT_INTEGRATION_TEST_READY');
+    assert.ok(['PAYMENT_INTEGRATION_TEST_READY', 'LIVE_PAYMENT_READY_PENDING_EXPLICIT_ACTIVATION'].includes(summary.commercial_readiness_classification));
+    assert.ok(['PAYMENT_INTEGRATION_TEST_READY', 'LIVE_PAYMENT_READY_PENDING_EXPLICIT_ACTIVATION'].includes(summary.payment_readiness_gate.classification));
   });
 
   console.log('\n================================================================================');

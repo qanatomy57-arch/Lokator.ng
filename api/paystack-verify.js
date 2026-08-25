@@ -62,6 +62,18 @@ module.exports = async (req, res) => {
     }
 
     const secretKey = process.env.PAYSTACK_SECRET_KEY;
+    const isLiveMode = process.env.PAYMENT_LIVE_MODE === 'true';
+
+    // Environment consistency validation: Prevent test/live key mixing
+    if (secretKey) {
+      if (isLiveMode && secretKey.startsWith('sk_test_')) {
+        return res.status(500).json({ error: 'Environment Mismatch: Test secret key configured in Live Mode.' });
+      }
+      if (!isLiveMode && secretKey.startsWith('sk_live_')) {
+        return res.status(500).json({ error: 'Environment Mismatch: Live secret key configured in Test Mode.' });
+      }
+    }
+
     const now = Date.now();
     const durationMs = 14 * 24 * 60 * 60 * 1000; // 14 days
     const expiresAt = new Date(now + durationMs).toISOString();

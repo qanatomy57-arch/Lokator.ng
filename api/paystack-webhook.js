@@ -19,6 +19,17 @@ module.exports = async (req, res) => {
   try {
     const signature = req.headers['x-paystack-signature'];
     const secretKey = process.env.PAYSTACK_SECRET_KEY;
+    const isLiveMode = process.env.PAYMENT_LIVE_MODE === 'true';
+
+    // Environment consistency validation: Prevent test/live key mixing
+    if (secretKey) {
+      if (isLiveMode && secretKey.startsWith('sk_test_')) {
+        return res.status(500).json({ error: 'Environment Mismatch: Test secret key configured in Live Mode.' });
+      }
+      if (!isLiveMode && secretKey.startsWith('sk_live_')) {
+        return res.status(500).json({ error: 'Environment Mismatch: Live secret key configured in Test Mode.' });
+      }
+    }
 
     // Retrieve raw request body for HMAC verification
     let rawBody = req.body;

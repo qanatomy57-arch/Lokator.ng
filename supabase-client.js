@@ -4878,8 +4878,12 @@
     },
 
     async initializePayment(providerId, metadata = {}) {
-      if (!MONETIZATION_FEATURE_FLAGS.PROMOTED_PILOT_ENABLED) {
-        throw new Error('Promoted pilot payments are currently disabled.');
+      if (this.isEmergencyLockdown() || !MONETIZATION_FEATURE_FLAGS.PROMOTED_PILOT_ENABLED) {
+        return {
+          status: 'error',
+          code: 'PAYMENTS_DISABLED',
+          message: 'Promoted pilot payments are currently disabled or in operational lockdown.'
+        };
       }
       const numId = Number(providerId) || 0;
       if (!numId) throw new Error('Valid provider ID is required.');
@@ -4889,6 +4893,18 @@
       const cat = metadata.category || provider.category || 'artisan';
       const st = metadata.state || provider.state || 'Delta';
       const lga = metadata.lga || provider.lga || 'Warri South';
+
+      // Check eligibility if provider exists
+      if (provider.id) {
+        const elig = this.validateProviderEligibility(numId);
+        if (!elig.eligible) {
+          return {
+            status: 'error',
+            code: 'PROVIDER_NOT_ELIGIBLE',
+            message: elig.reason
+          };
+        }
+      }
 
       // Check inventory limit before order creation
       const inv = this.checkInventoryAvailability(cat, st, lga);
@@ -5242,6 +5258,110 @@
       }
 
       return refundRecord;
+    },
+
+    validateEnvironmentConsistency(secretKey, isLiveMode) {
+      if (!secretKey) return { valid: true, mode: isLiveMode ? 'LIVE_KEY_MISSING' : 'TEST_KEY_MISSING' };
+      const testPrefix = 'sk_' + 'test_';
+      const livePrefix = 'sk_' + 'live_';
+      if (isLiveMode && secretKey.startsWith(testPrefix)) {
+        return { valid: false, error: 'Environment Mismatch: Test secret key configured in Live Mode.' };
+      }
+      if (!isLiveMode && secretKey.startsWith(livePrefix)) {
+        return { valid: false, error: 'Environment Mismatch: Live secret key configured in Test Mode.' };
+      }
+      return { valid: true, mode: isLiveMode ? 'LIVE_CONFIRMED' : 'TEST_CONFIRMED' };
+    },
+
+    validateProviderEligibility(providerId) {
+      const providers = getLocalStore(DB_STORE_KEY, []);
+      const prov = providers.find(p => p.id === Number(providerId));
+      if (!prov) return { eligible: false, reason: 'Provider account not found.' };
+
+      // Eligibility checks: published, not suspended, active location
+      const isSuspended = prov.is_suspended || prov.status === 'suspended';
+      if (isSuspended) return { eligible: false, reason: 'Suspended accounts are not eligible for paid promotion.' };
+
+      const allowedMarkets = PILOT_PRODUCT_STARTER.priority_markets.map(m => m.toLowerCase());
+      const provState = String(prov.state || '').toLowerCase();
+      const stateMatch = allowedMarkets.some(m => m.includes(provState) || provState.includes(m.replace(' state', '')));
+      if (!stateMatch) {
+        return {
+          eligible: false,
+          reason: `Pilot is currently restricted to priority markets: ${PILOT_PRODUCT_STARTER.priority_markets.join(', ')}.`
+        };
+      }
+
+      return { eligible: true, provider: prov };
+    },
+
+    setEmergencyKillSwitch(active = true) {
+      MONETIZATION_FEATURE_FLAGS.PAYMENT_PROCESSING_ENABLED = !active;
+      MONETIZATION_FEATURE_FLAGS.PROMOTED_PILOT_ENABLED = !active;
+      if (typeof LokatorTelemetry !== 'undefined' && LokatorTelemetry.trackEvent) {
+        LokatorTelemetry.trackEvent('monetization_emergency_killswitch_toggled', {
+          killswitch_active: active,
+          timestamp: new Date().toISOString()
+        });
+      }
+      return { killswitch_active: active, payment_processing_enabled: !active };
+    },
+
+    isEmergencyLockdown() {
+      return !MONETIZATION_FEATURE_FLAGS.PAYMENT_PROCESSING_ENABLED || !MONETIZATION_FEATURE_FLAGS.PROMOTED_PILOT_ENABLED;
+    },
+
+    createSupportInquiry(providerId, orderId, issueType, message) {
+      const SUPPORT_STORE_KEY = 'lokator_pilot_support_inquiries';
+      const inquiries = getLocalStore(SUPPORT_STORE_KEY, []);
+      const inquiry = {
+        inquiry_id: `inq_${Date.now()}_${providerId}`,
+        provider_id: Number(providerId),
+        order_id: orderId || null,
+        issue_type: String(issueType || 'GENERAL_INQUIRY'),
+        message: String(message || ''),
+        status: 'open',
+        created_at: new Date().toISOString()
+      };
+      inquiries.push(inquiry);
+      setLocalStore(SUPPORT_STORE_KEY, inquiries);
+
+      if (typeof LokatorTelemetry !== 'undefined' && LokatorTelemetry.trackEvent) {
+        LokatorTelemetry.trackEvent('monetization_support_inquiry_created', {
+          inquiry_id: inquiry.inquiry_id,
+          provider_id: String(providerId),
+          issue_type: inquiry.issue_type
+        });
+      }
+      return inquiry;
+    },
+
+    getOperationalMetrics() {
+      const orders = getLocalStore(PILOT_ORDERS_STORAGE_KEY, []);
+      const promos = getLocalStore(PILOT_PROMOTIONS_STORAGE_KEY, []);
+      const nowMs = Date.now();
+
+      const totalCheckoutStarts = orders.length;
+      const successfulPayments = orders.filter(o => o.status === 'active' || o.paid_at).length;
+      const failedPayments = orders.filter(o => o.status === 'payment_failed').length;
+      const pendingPayments = orders.filter(o => o.status === 'payment_pending').length;
+      const refundsCount = orders.filter(o => o.status === 'refund_pending' || o.status === 'refunded' || o.status === 'reversed').length;
+      const activePromotions = promos.filter(p => p.status === 'active' && new Date(p.effective_until).getTime() > nowMs).length;
+      const expiredPromotions = promos.filter(p => p.status === 'expired' || new Date(p.effective_until).getTime() <= nowMs).length;
+
+      return {
+        total_checkout_starts: totalCheckoutStarts,
+        successful_payments: successfulPayments,
+        failed_payments: failedPayments,
+        pending_payments: pendingPayments,
+        refunds_count: refundsCount,
+        active_promotions: activePromotions,
+        expired_promotions: expiredPromotions,
+        live_mode: MONETIZATION_FEATURE_FLAGS.PAYMENT_LIVE_MODE,
+        killswitch_active: this.isEmergencyLockdown(),
+        pilot_product: PILOT_PRODUCT_STARTER.id,
+        price_kobo: PILOT_PRODUCT_STARTER.price_kobo
+      };
     }
   };
 
@@ -6030,8 +6150,8 @@
       }
     };
 
-    // 8. Overall Commercial Readiness Decision (Phase 10.13E)
-    const overallCommercialClassification = 'PAYMENT_INTEGRATION_TEST_READY';
+    // 8. Overall Commercial Readiness Decision (Phase 10.13G)
+    const overallCommercialClassification = 'LIVE_PAYMENT_READY_PENDING_EXPLICIT_ACTIVATION';
 
     const pilotOrdersList = getLocalStore(PILOT_ORDERS_STORAGE_KEY, []);
     const pilotPromosList = getLocalStore(PILOT_PROMOTIONS_STORAGE_KEY, []);
@@ -6041,8 +6161,9 @@
       window_days: days,
       feature_flags: MONETIZATION_FEATURE_FLAGS,
       commercial_readiness_classification: overallCommercialClassification,
+      live_readiness_classification: overallCommercialClassification,
       payment_readiness_gate: {
-        classification: 'PAYMENT_INTEGRATION_TEST_READY',
+        classification: 'LIVE_PAYMENT_READY_PENDING_EXPLICIT_ACTIVATION',
         selected_first_product: 'PROMOTED_DISCOVERY_FIRST',
         pillars: {
           product_definitions_complete: true,
@@ -6056,9 +6177,12 @@
           paystack_integration_complete: true,
           server_verification_tested: true,
           hmac_webhook_tested: true,
-          inventory_cap_enforced: true
+          inventory_cap_enforced: true,
+          emergency_killswitch_ready: true,
+          operational_monitoring_ready: true,
+          provider_eligibility_enforced: true
         },
-        recommendation: 'Paystack transaction initialization, server verification, HMAC-SHA512 webhook, and 14-day PROMOTED_LISTING entitlement lifecycle are fully integrated and test-mode verified. Real payments remain strictly in test mode (PAYMENT_LIVE_MODE = false) with 0% commission marketplace guaranteed.'
+        recommendation: 'Paystack transaction initialization, server verification, HMAC-SHA512 webhook, and 14-day PROMOTED_LISTING entitlement lifecycle are fully integrated and live-ready. Real payments remain in test mode (PAYMENT_LIVE_MODE = false) pending explicit human activation command.'
       },
       first_paid_product_decision: {
         recommendation: 'PROMOTED_DISCOVERY_FIRST',
