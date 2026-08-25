@@ -1,10 +1,11 @@
 # LOKATOR.NG — PHASE 10.12F COMPLETION REPORT
+
 ## Mobile Discovery UX, Bottom-Sheet Filters, Location Cascade & Search Composition
 
 **Status:** Certified GREEN  
 **Cumulative Verification:** **317 / 317 assertions passed (100%)**  
 **Production URL:** `https://lokator-ng.vercel.app/`  
-**Execution Timestamp:** 2026-08-25
+**Execution Timestamp:** 2026-08-25  
 
 ---
 
@@ -17,6 +18,7 @@ Phase 10.12F has completed and hardened the **mobile discovery experience** for 
 ## 2. Key Architecture & Technical Implementations
 
 ### A. Mobile Bottom-Sheet UX (`search.html` & `search.css`)
+
 - **Semantic Dialog & Accessibility**:
   - `#filter-sidebar` is configured with `role="dialog"`, `aria-modal="true"`, and `aria-labelledby="filter-heading"`.
   - `#mobile-filter-btn` includes dynamic `aria-expanded` and `aria-controls="filter-sidebar"`.
@@ -33,12 +35,14 @@ Phase 10.12F has completed and hardened the **mobile discovery experience** for 
   - Contains `#mobile-apply-filters-btn` (prominent primary CTA) and `#mobile-reset-filters-btn` (outline CTA).
 
 ### B. Nigerian Location Cascade Engine (`search.js` & `locations.js`)
+
 - **State Selection**: Dynamically populates all 36 Nigerian States + FCT.
 - **State → LGA Cascade**: Selecting a State instantly populates the Local Government Areas and resets any downstream neighborhood selections.
 - **LGA → Neighborhood/Locality Cascade**: Selecting an LGA displays and populates verified local neighborhood clusters (e.g. Lekki Phase 1, Victoria Island, Wuse 2, Maitama, Bodija, Rumuokoro).
 - **Reset Behavior**: Restores all selects to canonical "All" states, clears coordinates, and updates results cleanly without layout jumps.
 
 ### C. Search & Filter Composition (`search.js` & `supabase-client.js`)
+
 - **Multi-Modal Query Composition**:
   - Natural Language Intent (e.g. `"generator mechanic"`, `"plumber wey dey close to me"`, `"who fit repair my AC"`, `"drycleaner"`) composes seamlessly with structured Category, State, LGA, Locality, and Proximity filters.
   - State filtering in `supabase-client.js` is hardened across structured Supabase DB rows and fallback provider models (`(p.state || p.city || p.area)`).
@@ -52,7 +56,7 @@ Phase 10.12F has completed and hardened the **mobile discovery experience** for 
 ## 3. Verification & Test Battery Results
 
 | Suite | Focus Area | Assertions | Result |
-|---|---|:---:|:---:|
+| --- | --- | :---: | :---: |
 | `verify_phase_10_12a.js` | 36 States + FCT Location Intelligence & Autocomplete | 50 / 50 | ✅ PASS (100%) |
 | `verify_phase_10_12b.js` | Nigerian Phone Normalization & WhatsApp Conversion | 39 / 39 | ✅ PASS (100%) |
 | `verify_phase_10_12c.js` | Nigerian Search Language & Pidgin Intent Parsing | 70 / 70 | ✅ PASS (100%) |
@@ -70,6 +74,7 @@ Phase 10.12F has completed and hardened the **mobile discovery experience** for 
 ---
 
 ## 4. Preservation & Non-Regression Guarantees
+
 - **Visual Language & Theme**: Preserved dark theme `#0B0F19`, `#131A29`, emerald accent `#006B3F` / `#059669`, and gold accent `#D97706`.
 - **Cinematic Hero**: Preserved all 9 video slides, posters, scroll synchronization, and network-aware preloading.
 - **PWA Architecture**: Service worker caching and offline directory search preserved.

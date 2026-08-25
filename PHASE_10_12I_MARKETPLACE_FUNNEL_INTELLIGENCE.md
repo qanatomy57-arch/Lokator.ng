@@ -1,4 +1,5 @@
 # LOKATOR.NG — PHASE 10.12I INTERNAL FUNNEL REPORT
+
 ## Marketplace Funnel Intelligence & Decision Support
 
 **Status:** Certified 100% GREEN  
@@ -21,7 +22,7 @@ Lokator.NG's telemetry architecture operates under strict privacy, security, and
 ## 2. Event Inventory & Funnel Mapping
 
 | Event Name | Funnel | Stage | Trigger | Source | Payload (PII-Free) |
-|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- |
 | `provider_onboarding_started` | Provider | Entry | Registration page load / Step 1 init | `register.html` | `{ step: 1, total_steps: 5, device_class }` |
 | `provider_onboarding_step_completed` | Provider | Progress | Step validation & transition (Steps 1–4) | `register.html` | `{ step: 1..4, device_class }` |
 | `provider_onboarding_preview_reached` | Provider | Preview | Entering Step 5 Live Profile Preview | `register.html` | `{ completeness: score, device_class }` |
@@ -36,8 +37,8 @@ Lokator.NG's telemetry architecture operates under strict privacy, security, and
 | `whatsapp_clicked` | Customer | Contact | WhatsApp Chat CTA clicked | `profile.js` / `search.js` | `{ providerId, trade, state, lga, verificationStatus }` |
 | `provider_review_submitted` | Customer | Review | Approved customer review posted | `profile.js` | `{ rating, page }` |
 | `provider_verification_requested` | Trust | Vetting | NIN/CAC compliance request submitted | `supabase-client.js` | `{ providerId, docType }` |
-| `provider_report_submitted` | Trust | Moderation| Listing reported by customer | `supabase-client.js` | `{ targetId, reason }` |
-| `review_report_submitted` | Trust | Moderation| Review flagged by customer | `supabase-client.js` | `{ targetId, reason }` |
+| `provider_report_submitted` | Trust | Moderation | Listing reported by customer | `supabase-client.js` | `{ targetId, reason }` |
+| `review_report_submitted` | Trust | Moderation | Review flagged by customer | `supabase-client.js` | `{ targetId, reason }` |
 
 ---
 
@@ -64,6 +65,7 @@ Lokator.NG's telemetry architecture operates under strict privacy, security, and
 ## 4. Zero-Result & Supply Gap Intelligence
 
 Zero-result searches indicate unmet customer demand across Nigerian localities. The intelligence engine aggregates these into normalized, privacy-safe metrics:
+
 - **Category Supply Gaps:** High search volume + 0 verified providers (e.g. Solar Installers in Ogun / Sagamu).
 - **High-Conversion Opportunities:** Adequate supply ($\ge 1$ provider) + high contact conversion ($\ge 15\%$).
 - **Low-Engagement Areas:** Adequate supply ($\ge 2$ providers) + searches with 0 contact actions.
@@ -73,6 +75,7 @@ Zero-result searches indicate unmet customer demand across Nigerian localities. 
 ## 5. Completeness vs. Contact Rate Correlation
 
 Analyzes aggregate correlation across profile completeness bands:
+
 - `0–49%`: Incomplete profiles (unpublishable)
 - `50–74%`: Sub-threshold profiles (require core trade/location info)
 - `75–89%`: Standard published listings
@@ -85,6 +88,7 @@ Analyzes aggregate correlation across profile completeness bands:
 ## 6. Mobile vs. Desktop Funnel Performance
 
 Segments funnel conversion across device classes:
+
 - **Mobile:** Primary interaction channel for Nigerian customers and on-the-go artisans.
 - **Desktop:** Secondary research and bulk administrative management.
 
