@@ -2320,6 +2320,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const elPntRate = document.getElementById('kpi-mon-intent-rate');
                 const elWtl = document.getElementById('kpi-mon-waitlist');
                 const elWtlRate = document.getElementById('kpi-mon-waitlist-rate');
+                const elRpt = document.getElementById('kpi-mon-repeat');
+                const elRptRate = document.getElementById('kpi-mon-repeat-rate');
 
                 if (elExp) elExp.textContent = monSummary.cohort_metrics.total_exposed_providers;
                 if (elInt) elInt.textContent = monSummary.cohort_metrics.distinct_interested_providers;
@@ -2328,23 +2330,26 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (elPntRate) elPntRate.textContent = `${monSummary.cohort_metrics.intent_rate}% intent rate`;
                 if (elWtl) elWtl.textContent = monSummary.cohort_metrics.distinct_waitlist_providers;
                 if (elWtlRate) elWtlRate.textContent = `${monSummary.cohort_metrics.waitlist_rate}% waitlist rate`;
+                if (elRpt) elRpt.textContent = monSummary.cohort_metrics.repeat_intent_providers || 0;
+                if (elRptRate) elRptRate.textContent = `${monSummary.cohort_metrics.repeat_intent_rate || 0}% repeat rate`;
               }
 
-              // 2. Candidate Products Comparison Table
+              // 2. 5-Stage Candidate Products Funnel Table
               const prodTbody = document.getElementById('mon-product-matrix-tbody');
               if (prodTbody && monSummary.candidate_products && monSummary.candidate_products.length > 0) {
                 prodTbody.innerHTML = monSummary.candidate_products.map(prod => {
-                  const confClass = prod.confidence === 'HIGHER' ? 'status-good' : (prod.confidence === 'MODERATE' ? 'status-notice' : 'status-bad');
-                  const classTagClass = prod.product_classification === 'STRONG_PURCHASE_INTENT' ? 'status-good' : (prod.product_classification === 'PROMISING_INTEREST' ? 'status-good' : (prod.product_classification === 'INSUFFICIENT_DATA' ? 'status-notice' : 'status-bad'));
+                  const confClass = prod.confidence === 'HIGH' ? 'status-good' : (prod.confidence === 'MEDIUM' ? 'status-notice' : 'status-bad');
+                  const classTagClass = prod.product_classification === 'VALIDATED_PRODUCT_CANDIDATE' ? 'status-good' : (prod.product_classification === 'PROMISING_BUT_UNVALIDATED' ? 'status-good' : (prod.product_classification === 'INSUFFICIENT_DATA' ? 'status-notice' : 'status-bad'));
                   return `
                     <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
                       <td style="padding: 8px; font-weight: 700; color: #C084FC;">#${prod.priority_rank}</td>
                       <td style="padding: 8px; font-weight: 600; color: #F1F5F9;">${prod.name}</td>
                       <td style="padding: 8px; color: #94A3B8;">${prod.exposed_providers || prod.sample_size}</td>
                       <td style="padding: 8px; color: #38BDF8; font-weight: 600;">${prod.interest_count || 0}</td>
-                      <td style="padding: 8px; color: #38BDF8;">${prod.interest_rate || 0}%</td>
+                      <td style="padding: 8px; color: #CBD5E1;">${prod.price_select_count || 0}</td>
                       <td style="padding: 8px; color: #34D399; font-weight: 700;">${prod.purchase_intent_count || 0}</td>
                       <td style="padding: 8px; color: #34D399;">${prod.intent_rate || 0}%</td>
+                      <td style="padding: 8px; color: #FBBF24;">${prod.intent_after_interest_rate || 0}%</td>
                       <td style="padding: 8px; color: #FBBF24;">${prod.waitlist_count || 0}</td>
                       <td style="padding: 8px; color: #34D399; font-size: 0.75rem; font-weight: 600;">${prod.preferred_research_price || prod.pricing_placeholder}</td>
                       <td style="padding: 8px;"><span class="status-tag ${confClass}" style="font-size: 0.65rem;">${prod.confidence}</span></td>
@@ -2354,32 +2359,66 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }).join('');
               }
 
-              // 3. Price Sensitivity Matrix Table
+              // 3. Product / Price Hypothesis Matrix Table
               const sensTbody = document.getElementById('mon-price-sensitivity-tbody');
               if (sensTbody && monSummary.candidate_products) {
                 const sensitivityRows = [];
                 monSummary.candidate_products.forEach(prod => {
                   if (prod.price_sensitivity && prod.price_sensitivity.length > 0) {
                     prod.price_sensitivity.forEach((h, hIdx) => {
-                      const totalIntentsForProd = Math.max(1, prod.purchase_intent_count || 1);
-                      const shareOfIntent = Number(((h.intent_count / totalIntentsForProd) * 100).toFixed(0));
+                      const statClass = h.status === 'LEADING_HYPOTHESIS' ? 'status-good' : (h.status === 'PROMISING' ? 'status-good' : (h.status === 'WEAK' ? 'status-bad' : 'status-notice'));
                       sensitivityRows.push(`
                         <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
                           <td style="padding: 8px; font-weight: 600; color: #F1F5F9;">${hIdx === 0 ? prod.name : '↳'}</td>
                           <td style="padding: 8px; color: #34D399; font-weight: 600;">${h.label}</td>
-                          <td style="padding: 8px; color: #94A3B8; font-size: 0.75rem;">${hIdx === 1 ? 'Baseline Hypothesis' : (hIdx === 0 ? 'Entry / Low Band' : 'Premium / High Band')}</td>
-                          <td style="padding: 8px; color: #CBD5E1;">${h.selections_count}</td>
-                          <td style="padding: 8px; color: #38BDF8; font-weight: 700;">${h.intent_count}</td>
-                          <td style="padding: 8px; color: #FBBF24;">${shareOfIntent}%</td>
+                          <td style="padding: 8px; color: #94A3B8; font-size: 0.75rem;">${h.is_baseline ? 'Baseline Hypothesis' : (hIdx === 0 ? 'Entry / Low Band' : 'Premium / High Band')}</td>
+                          <td style="padding: 8px; color: #CBD5E1;">${h.unique_selections} <span style="font-size: 0.68rem; color: #64748B;">(${h.raw_selections} ev)</span></td>
+                          <td style="padding: 8px; color: #38BDF8;">${h.selection_rate}%</td>
+                          <td style="padding: 8px; color: #34D399; font-weight: 700;">${h.unique_intents} <span style="font-size: 0.68rem; color: #64748B;">(${h.raw_intents} ev)</span></td>
+                          <td style="padding: 8px; color: #34D399;">${h.intent_rate}%</td>
+                          <td style="padding: 8px;"><span class="status-tag status-notice" style="font-size: 0.65rem;">${h.confidence}</span></td>
+                          <td style="padding: 8px;"><span class="status-tag ${statClass}" style="font-size: 0.65rem;">${h.status}</span></td>
                         </tr>
                       `);
                     });
                   }
                 });
-                sensTbody.innerHTML = sensitivityRows.length > 0 ? sensitivityRows.join('') : '<tr><td colspan="6" style="padding: 12px; text-align: center; color: #64748B;">No price hypothesis data recorded yet.</td></tr>';
+                sensTbody.innerHTML = sensitivityRows.length > 0 ? sensitivityRows.join('') : '<tr><td colspan="9" style="padding: 12px; text-align: center; color: #64748B;">No price hypothesis data recorded yet.</td></tr>';
               }
 
-              // 4. Provider Segmentation Table
+              // 4. Product Preference Overlap & Feedback Rendering
+              if (monSummary.preference_analysis) {
+                const prefTotalEl = document.getElementById('mon-pref-total');
+                const prefTrustEl = document.getElementById('mon-pref-trust');
+                const prefPromoEl = document.getElementById('mon-pref-promo');
+                const prefLeadEl = document.getElementById('mon-pref-lead');
+                const prefMultiEl = document.getElementById('mon-pref-multi');
+
+                if (prefTotalEl) prefTotalEl.textContent = `${monSummary.preference_analysis.total_interested_providers} interested providers`;
+                if (prefTrustEl) prefTrustEl.textContent = `${monSummary.preference_analysis.exclusive_trust_verification} providers`;
+                if (prefPromoEl) prefPromoEl.textContent = `${monSummary.preference_analysis.exclusive_promoted_discovery} providers`;
+                if (prefLeadEl) prefLeadEl.textContent = `${monSummary.preference_analysis.exclusive_qualified_lead} providers`;
+                if (prefMultiEl) prefMultiEl.textContent = `${monSummary.preference_analysis.multi_product_overlap} providers (${monSummary.preference_analysis.multi_product_rate}%)`;
+              }
+
+              if (monSummary.feedback_analysis) {
+                const fbkContainer = document.getElementById('mon-feedback-container');
+                if (fbkContainer) {
+                  const feedbackEntries = Object.entries(monSummary.feedback_analysis);
+                  const totalFeedback = feedbackEntries.reduce((sum, [_, cnt]) => sum + cnt, 0);
+                  fbkContainer.innerHTML = feedbackEntries.map(([reason, count]) => {
+                    const pct = totalFeedback > 0 ? ((count / totalFeedback) * 100).toFixed(0) : 0;
+                    return `
+                      <div style="display: flex; justify-content: space-between; align-items: center; padding: 5px 8px; background: #0E1522; border-radius: 4px;">
+                        <span style="color: #CBD5E1;">${reason}:</span>
+                        <strong style="color: #38BDF8;">${count} <span style="font-size: 0.7rem; color: #64748B;">(${pct}%)</span></strong>
+                      </div>
+                    `;
+                  }).join('');
+                }
+              }
+
+              // 5. Provider Segmentation Table
               const segTbody = document.getElementById('mon-segmentation-tbody');
               if (segTbody && monSummary.provider_segmentation && monSummary.provider_segmentation.length > 0) {
                 segTbody.innerHTML = monSummary.provider_segmentation.map(seg => `
@@ -2395,7 +2434,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 `).join('');
               }
 
-              // 5. Regional Insights
+              // 6. Regional Insights
               if (monSummary.regional_insights) {
                 const deltaEl = document.getElementById('mon-delta-fit');
                 const edoEl = document.getElementById('mon-edo-fit');
@@ -2416,7 +2455,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
           }
         } catch (err) {
-          console.warn('Phase 10.12K/10.12L/10.13/10.13B analytics render warning:', err.message);
+          console.warn('Phase 10.12K/10.12L/10.13/10.13B/10.13C analytics render warning:', err.message);
         }
       }
 

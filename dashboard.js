@@ -1242,6 +1242,30 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       });
     });
+
+    // 6. Optional Structured Research Feedback Handler
+    const btnSubmitFeedback = document.getElementById('btn-submit-mon-feedback');
+    const feedbackSelect = document.getElementById('mon-feedback-reason-select');
+    if (btnSubmitFeedback && feedbackSelect) {
+      btnSubmitFeedback.addEventListener('click', async () => {
+        const reason = feedbackSelect.value;
+        btnSubmitFeedback.disabled = true;
+        btnSubmitFeedback.textContent = 'Feedback Sent ✓';
+        btnSubmitFeedback.style.borderColor = '#10B981';
+        btnSubmitFeedback.style.color = '#10B981';
+
+        try {
+          if (LokatorDB.monetization && LokatorDB.monetization.research) {
+            await LokatorDB.monetization.research.recordResearchFeedback(
+              providerId, 'GENERAL', reason, '', providerMeta
+            );
+          }
+          showToast(`Feedback recorded: "${reason}". Thank you!`);
+        } catch (err) {
+          console.warn('Feedback recording warning:', err.message);
+        }
+      });
+    }
   }
 
   // 12. Run Initial Render Pipeline

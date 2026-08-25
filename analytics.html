@@ -697,15 +697,15 @@
 
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; font-size: 0.75rem;">
             <div style="background: #0E1522; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.04);">
-      <!-- 8.5 Phase 10.13B: Monetization Architecture & Provider Willingness-to-Pay Validation -->
+      <!-- 8.5 Phase 10.13C: Monetization Product & Pricing Validation Center -->
       <section id="section-monetization-architecture" style="margin-bottom: 32px;">
         <div class="section-title">
           <span style="display: flex; align-items: center; gap: 8px;">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-            Monetization Architecture & Provider Willingness-to-Pay Validation
+            Monetization Product & Pricing Validation Center (Phase 10.13C)
           </span>
           <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-            <span class="status-tag status-notice" id="mon-commercial-status" style="font-size: 0.7rem; font-weight: 700;">EARLY_MONETIZATION_SIGNAL</span>
+            <span class="status-tag status-notice" id="mon-commercial-status" style="font-size: 0.7rem; font-weight: 700;">PROMISING_BUT_UNVALIDATED</span>
             <span class="status-tag status-good" style="font-size: 0.7rem; font-weight: 700;">0%_COMMISSION_LOCKED</span>
             <span class="status-tag status-notice" style="font-size: 0.7rem; font-weight: 700;" id="mon-gate-status">ARCHITECTURALLY_READY_BUT_NOT_VALIDATED</span>
           </div>
@@ -714,7 +714,7 @@
         <!-- 1. Key Willingness-to-Pay Cohort KPIs -->
         <div class="panel-card" style="margin-bottom: 20px;">
           <div style="font-size: 0.95rem; font-weight: 700; color: #F1F5F9; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center;">
-            <span>📊 Provider Willingness-to-Pay Cohort Metrics (Phase 10.13B)</span>
+            <span>📊 Provider Willingness-to-Pay Cohort Metrics (Phase 10.13C)</span>
             <span style="font-size: 0.75rem; color: #94A3B8;">Deduplicated Provider-Level vs Event-Level Metrics</span>
           </div>
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
@@ -738,14 +738,19 @@
               <div style="font-size: 1.3rem; font-weight: 700; color: #FBBF24; margin-top: 2px;" id="kpi-mon-waitlist">--</div>
               <div style="font-size: 0.7rem; color: #FBBF24; margin-top: 2px;" id="kpi-mon-waitlist-rate">--% waitlist rate</div>
             </div>
+            <div style="background: #0E1522; padding: 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">
+              <div style="color: #64748B; font-size: 0.75rem;">Repeat Intent Providers</div>
+              <div style="font-size: 1.3rem; font-weight: 700; color: #C084FC; margin-top: 2px;" id="kpi-mon-repeat">--</div>
+              <div style="font-size: 0.7rem; color: #C084FC; margin-top: 2px;" id="kpi-mon-repeat-rate">--% repeat rate</div>
+            </div>
           </div>
         </div>
 
-        <!-- 2. Candidate Monetization Products Comparison Matrix -->
+        <!-- 2. 5-Stage Candidate Product Funnel & Intent Matrix -->
         <div class="panel-card" style="margin-bottom: 20px;">
           <div style="font-size: 0.95rem; font-weight: 700; color: #F1F5F9; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
-            <span>💼 Candidate Monetization Product Comparison & Intent Matrix</span>
-            <span style="font-size: 0.75rem; color: #94A3B8;">Exposed Providers vs Interest vs Purchase Intent vs Waitlist</span>
+            <span>💼 5-Stage Candidate Product Funnel & Intent Matrix</span>
+            <span style="font-size: 0.75rem; color: #94A3B8;">Exposed → Interested → Price Selected → Purchase Intent → Waitlist</span>
           </div>
           <div style="overflow-x: auto;">
             <table style="width: 100%; border-collapse: collapse; font-size: 0.8rem; text-align: left;">
@@ -753,11 +758,12 @@
                 <tr style="border-bottom: 1px solid rgba(255,255,255,0.08); color: #94A3B8;">
                   <th style="padding: 8px;">Rank</th>
                   <th style="padding: 8px;">Candidate Product</th>
-                  <th style="padding: 8px;">Exposed</th>
+                  <th style="padding: 8px;">Exposed (L0)</th>
                   <th style="padding: 8px;">Interest (L1)</th>
-                  <th style="padding: 8px;">Interest Rate</th>
+                  <th style="padding: 8px;">Price Selected</th>
                   <th style="padding: 8px;">Purchase Intent (L2)</th>
                   <th style="padding: 8px;">Intent Rate</th>
+                  <th style="padding: 8px;">Intent / Interest Conv</th>
                   <th style="padding: 8px;">Waitlist (L3)</th>
                   <th style="padding: 8px;">Preferred Research Price</th>
                   <th style="padding: 8px;">Confidence</th>
@@ -765,17 +771,17 @@
                 </tr>
               </thead>
               <tbody id="mon-product-matrix-tbody">
-                <tr><td colspan="11" style="padding: 16px; text-align: center; color: #64748B;">Loading candidate product comparison...</td></tr>
+                <tr><td colspan="12" style="padding: 16px; text-align: center; color: #64748B;">Loading candidate product comparison...</td></tr>
               </tbody>
             </table>
           </div>
         </div>
 
-        <!-- 3. Price Sensitivity & Price Hypothesis Matrix -->
+        <!-- 3. Product / Price Hypothesis Matrix -->
         <div class="panel-card" style="margin-bottom: 20px;">
           <div style="font-size: 0.95rem; font-weight: 700; color: #F1F5F9; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
-            <span>🔬 Price Sensitivity & Research Hypothesis Matrix</span>
-            <span style="font-size: 0.75rem; color: #94A3B8;">Tested Price Bands & Selection Volume</span>
+            <span>🔬 Product / Price Hypothesis Matrix & Price Sensitivity</span>
+            <span style="font-size: 0.75rem; color: #94A3B8;">Tested Price Bands, Unique Selections, & Intent Conversion</span>
           </div>
           <div style="overflow-x: auto;">
             <table style="width: 100%; border-collapse: collapse; font-size: 0.8rem; text-align: left;">
@@ -784,19 +790,62 @@
                   <th style="padding: 8px;">Product</th>
                   <th style="padding: 8px;">Price Hypothesis (Band)</th>
                   <th style="padding: 8px;">Hypothesis Type</th>
-                  <th style="padding: 8px;">Price Selections</th>
-                  <th style="padding: 8px;">Purchase Intent Actions</th>
-                  <th style="padding: 8px;">Share of Intent</th>
+                  <th style="padding: 8px;">Unique Selections</th>
+                  <th style="padding: 8px;">Selection Rate</th>
+                  <th style="padding: 8px;">Purchase Intent</th>
+                  <th style="padding: 8px;">Intent Rate</th>
+                  <th style="padding: 8px;">Confidence</th>
+                  <th style="padding: 8px;">Hypothesis Status</th>
                 </tr>
               </thead>
               <tbody id="mon-price-sensitivity-tbody">
-                <tr><td colspan="6" style="padding: 16px; text-align: center; color: #64748B;">Loading price sensitivity matrix...</td></tr>
+                <tr><td colspan="9" style="padding: 16px; text-align: center; color: #64748B;">Loading price sensitivity matrix...</td></tr>
               </tbody>
             </table>
           </div>
         </div>
 
-        <!-- 4. Provider Engagement Segmentation -->
+        <!-- 4. Product Preference Overlap & Structured Research Feedback -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-bottom: 20px;">
+          <!-- Product Preference & Overlap Panel -->
+          <div class="panel-card">
+            <div style="font-size: 0.85rem; font-weight: 700; color: #F1F5F9; margin-bottom: 10px; display: flex; justify-content: space-between;">
+              <span>🎯 Product Preference & Overlap</span>
+              <span style="font-size: 0.7rem; color: #94A3B8;" id="mon-pref-total">-- providers</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px; font-size: 0.8rem;" id="mon-preference-container">
+              <div style="display: flex; justify-content: space-between; padding: 6px 10px; background: #0E1522; border-radius: 4px;">
+                <span style="color: #CBD5E1;">Exclusive Trust Verification:</span>
+                <strong style="color: #34D399;" id="mon-pref-trust">--</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 6px 10px; background: #0E1522; border-radius: 4px;">
+                <span style="color: #CBD5E1;">Exclusive Promoted Discovery:</span>
+                <strong style="color: #38BDF8;" id="mon-pref-promo">--</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 6px 10px; background: #0E1522; border-radius: 4px;">
+                <span style="color: #CBD5E1;">Exclusive Priority Leads:</span>
+                <strong style="color: #F59E0B;" id="mon-pref-lead">--</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 6px 10px; background: #0E1522; border-radius: 4px;">
+                <span style="color: #CBD5E1;">Multi-Product Overlap (≥2 products):</span>
+                <strong style="color: #C084FC;" id="mon-pref-multi">--</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- Structured Research Feedback Panel -->
+          <div class="panel-card">
+            <div style="font-size: 0.85rem; font-weight: 700; color: #F1F5F9; margin-bottom: 10px; display: flex; justify-content: space-between;">
+              <span>💡 Provider Interest Drivers (Feedback)</span>
+              <span style="font-size: 0.7rem; color: #94A3B8;">Self-Reported Motives</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 6px; font-size: 0.78rem;" id="mon-feedback-container">
+              <div style="padding: 10px; text-align: center; color: #64748B;">Loading feedback distribution...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. Provider Engagement Segmentation -->
         <div class="panel-card" style="margin-bottom: 20px;">
           <div style="font-size: 0.95rem; font-weight: 700; color: #F1F5F9; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
             <span>👥 Provider Engagement Segmentation & Intent Correlation</span>
@@ -822,7 +871,7 @@
           </div>
         </div>
 
-        <!-- 5. Regional Willingness-to-Pay & Strategic Market Fit -->
+        <!-- 6. Regional Willingness-to-Pay & Strategic Market Fit -->
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px;">
           <div class="panel-card" style="border-left: 4px solid #10B981;">
             <div style="font-size: 0.85rem; font-weight: 700; color: #F1F5F9; margin-bottom: 8px; display: flex; justify-content: space-between;">

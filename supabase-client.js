@@ -5006,11 +5006,11 @@
     }
   }
 
-  // Monetization Research Engine — Phase 10.13B Provider Willingness-to-Pay Engine
+  // Monetization Research Engine — Phase 10.13C Provider Product & Pricing Validation Engine
   const monetizationResearchEngine = {
     async recordProductExposure(providerId, productId, metadata = {}) {
       const researchStore = getLocalStore(MONETIZATION_STORAGE_KEY, {
-        exposures: [], interests: [], price_selections: [], purchase_intents: [], waitlist: []
+        exposures: [], interests: [], price_selections: [], purchase_intents: [], waitlist: [], feedback: []
       });
       if (!researchStore.exposures) researchStore.exposures = [];
 
@@ -5041,12 +5041,13 @@
 
     async recordProductInterest(providerId, productId, notes = '', metadata = {}) {
       const researchStore = getLocalStore(MONETIZATION_STORAGE_KEY, {
-        exposures: [], interests: [], price_selections: [], purchase_intents: [], waitlist: []
+        exposures: [], interests: [], price_selections: [], purchase_intents: [], waitlist: [], feedback: []
       });
       if (!researchStore.interests) researchStore.interests = [];
 
       const numId = Number(providerId) || 0;
       const prodId = String(productId || '');
+      const isRepeat = researchStore.interests.some(i => i.provider_id === numId && i.product_id === prodId);
 
       const record = {
         id: 'int_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
@@ -5055,17 +5056,19 @@
         notes: String(notes || '').trim(),
         category: metadata.category || '',
         state: metadata.state || '',
+        is_repeat: isRepeat,
         recorded_at: new Date().toISOString()
       };
       researchStore.interests.push(record);
       setLocalStore(MONETIZATION_STORAGE_KEY, researchStore);
 
       if (typeof LokatorTelemetry !== 'undefined' && LokatorTelemetry.trackEvent) {
-        LokatorTelemetry.trackEvent('monetization_product_interest', {
+        LokatorTelemetry.trackEvent(isRepeat ? 'monetization_product_repeat_interest' : 'monetization_product_interest', {
           product_id: prodId,
           provider_id: String(numId),
           category: metadata.category || '',
-          state: metadata.state || ''
+          state: metadata.state || '',
+          is_repeat: isRepeat
         });
       }
       return record;
@@ -5073,7 +5076,7 @@
 
     async recordPriceSelection(providerId, productId, priceOption, metadata = {}) {
       const researchStore = getLocalStore(MONETIZATION_STORAGE_KEY, {
-        exposures: [], interests: [], price_selections: [], purchase_intents: [], waitlist: []
+        exposures: [], interests: [], price_selections: [], purchase_intents: [], waitlist: [], feedback: []
       });
       if (!researchStore.price_selections) researchStore.price_selections = [];
 
@@ -5107,7 +5110,7 @@
 
     async recordPurchaseIntent(providerId, productId, priceOption, metadata = {}) {
       const researchStore = getLocalStore(MONETIZATION_STORAGE_KEY, {
-        exposures: [], interests: [], price_selections: [], purchase_intents: [], waitlist: []
+        exposures: [], interests: [], price_selections: [], purchase_intents: [], waitlist: [], feedback: []
       });
       if (!researchStore.purchase_intents) researchStore.purchase_intents = [];
 
@@ -5142,7 +5145,7 @@
 
     async joinProductWaitlist(providerId, productId, contactPhone = '', notes = '', metadata = {}) {
       const researchStore = getLocalStore(MONETIZATION_STORAGE_KEY, {
-        exposures: [], interests: [], price_selections: [], purchase_intents: [], waitlist: []
+        exposures: [], interests: [], price_selections: [], purchase_intents: [], waitlist: [], feedback: []
       });
       if (!researchStore.waitlist) researchStore.waitlist = [];
 
@@ -5173,15 +5176,50 @@
       return record;
     },
 
+    async recordResearchFeedback(providerId, productId, reason, notes = '', metadata = {}) {
+      const researchStore = getLocalStore(MONETIZATION_STORAGE_KEY, {
+        exposures: [], interests: [], price_selections: [], purchase_intents: [], waitlist: [], feedback: []
+      });
+      if (!researchStore.feedback) researchStore.feedback = [];
+
+      const numId = Number(providerId) || 0;
+      const prodId = String(productId || 'GENERAL');
+
+      const record = {
+        id: 'fbk_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+        provider_id: numId,
+        product_id: prodId,
+        reason: String(reason || 'More customers').trim(),
+        notes: String(notes || '').trim(),
+        category: metadata.category || '',
+        state: metadata.state || '',
+        created_at: new Date().toISOString()
+      };
+      researchStore.feedback.push(record);
+      setLocalStore(MONETIZATION_STORAGE_KEY, researchStore);
+
+      if (typeof LokatorTelemetry !== 'undefined' && LokatorTelemetry.trackEvent) {
+        LokatorTelemetry.trackEvent('monetization_research_feedback', {
+          product_id: prodId,
+          provider_id: String(numId),
+          reason: record.reason,
+          category: metadata.category || '',
+          state: metadata.state || ''
+        });
+      }
+      return record;
+    },
+
     getResearchData() {
-      const defaultStore = { exposures: [], interests: [], price_selections: [], purchase_intents: [], waitlist: [] };
+      const defaultStore = { exposures: [], interests: [], price_selections: [], purchase_intents: [], waitlist: [], feedback: [] };
       const raw = getLocalStore(MONETIZATION_STORAGE_KEY, defaultStore);
       return {
         exposures: raw.exposures || [],
         interests: raw.interests || [],
         price_selections: raw.price_selections || [],
         purchase_intents: raw.purchase_intents || [],
-        waitlist: raw.waitlist || []
+        waitlist: raw.waitlist || [],
+        feedback: raw.feedback || []
       };
     }
   };
@@ -5197,16 +5235,18 @@
     const rawPriceSelections = researchData.price_selections || [];
     const rawPurchaseIntents = researchData.purchase_intents || [];
     const rawWaitlist = researchData.waitlist || [];
+    const rawFeedback = researchData.feedback || [];
 
     const distinctExposedProviders = new Set(rawExposures.map(e => e.provider_id).filter(id => id > 0));
     // If no explicit exposures yet recorded, default exposed pool to total active published providers
     const totalExposedCount = distinctExposedProviders.size > 0 ? distinctExposedProviders.size : publishedProviders.length;
 
     const distinctInterestedProviders = new Set(rawInterests.map(i => i.provider_id).filter(id => id > 0));
+    const distinctPriceProviders = new Set(rawPriceSelections.map(p => p.provider_id).filter(id => id > 0));
     const distinctIntentProviders = new Set(rawPurchaseIntents.map(p => p.provider_id).filter(id => id > 0));
     const distinctWaitlistProviders = new Set(rawWaitlist.map(w => w.provider_id).filter(id => id > 0));
 
-    // 1. Compute Product Breakdown Matrix
+    // 1. 5-Stage Product Funnel & Product Breakdown Matrix
     const productStats = CANDIDATE_MONETIZATION_PRODUCTS.map(prod => {
       const prodExposures = rawExposures.filter(e => e.product_id === prod.id || e.product_id === 'ALL');
       const prodExposedSet = new Set(prodExposures.map(e => e.provider_id).filter(id => id > 0));
@@ -5217,17 +5257,23 @@
       const interestCount = prodInterestSet.size;
       const interestRate = exposedCount > 0 ? Number(((interestCount / exposedCount) * 100).toFixed(1)) : 0;
 
+      const prodPriceSelections = rawPriceSelections.filter(s => s.product_id === prod.id);
+      const prodPriceSet = new Set(prodPriceSelections.map(s => s.provider_id));
+      const priceSelectCount = prodPriceSet.size;
+      const priceSelectionRate = exposedCount > 0 ? Number(((priceSelectCount / exposedCount) * 100).toFixed(1)) : 0;
+
       const prodIntents = rawPurchaseIntents.filter(p => p.product_id === prod.id);
       const prodIntentSet = new Set(prodIntents.map(p => p.provider_id));
       const purchaseIntentCount = prodIntentSet.size;
       const intentRate = exposedCount > 0 ? Number(((purchaseIntentCount / exposedCount) * 100).toFixed(1)) : 0;
+      const intentAfterInterestRate = interestCount > 0 ? Number(((purchaseIntentCount / interestCount) * 100).toFixed(1)) : (purchaseIntentCount > 0 ? 100.0 : 0);
 
       const prodWaitlist = rawWaitlist.filter(w => w.product_id === prod.id);
       const prodWaitlistSet = new Set(prodWaitlist.map(w => w.provider_id));
       const waitlistCount = prodWaitlistSet.size;
+      const waitlistRate = exposedCount > 0 ? Number(((waitlistCount / exposedCount) * 100).toFixed(1)) : 0;
 
       // Price Sensitivity & Preferred Price Calculation
-      const prodPriceSelections = rawPriceSelections.filter(s => s.product_id === prod.id);
       const priceFreq = {};
       prodPriceSelections.forEach(s => {
         if (s.price_option) {
@@ -5243,21 +5289,32 @@
         }
       }
 
-      // Confidence & Product Classification
-      let confidence = 'LOW';
-      if (exposedCount >= 15) confidence = 'HIGHER';
-      else if (exposedCount >= 5) confidence = 'MODERATE';
+      // Confidence Model: HIGH (>=15 exposed), MEDIUM (5-14 exposed), LOW (1-4 exposed), INSUFFICIENT_DATA (0)
+      let confidence = 'INSUFFICIENT_DATA';
+      if (exposedCount >= 15) confidence = 'HIGH';
+      else if (exposedCount >= 5) confidence = 'MEDIUM';
+      else if (exposedCount >= 1) confidence = 'LOW';
 
+      // Commercial Classification: VALIDATED_PRODUCT_CANDIDATE, PROMISING_BUT_UNVALIDATED, WEAK_PRODUCT_SIGNAL, INSUFFICIENT_DATA
       let productClassification = 'INSUFFICIENT_DATA';
       if (exposedCount >= 3) {
-        if (purchaseIntentCount >= 5 && intentRate >= 15.0) {
-          productClassification = 'STRONG_PURCHASE_INTENT';
+        if (purchaseIntentCount >= 5 && intentRate >= 15.0 && confidence !== 'LOW') {
+          productClassification = 'VALIDATED_PRODUCT_CANDIDATE';
         } else if (interestCount >= 2 || waitlistCount >= 2 || purchaseIntentCount >= 1) {
-          productClassification = 'PROMISING_INTEREST';
+          productClassification = 'PROMISING_BUT_UNVALIDATED';
         } else {
-          productClassification = 'NO_VALIDATED_DEMAND';
+          productClassification = 'WEAK_PRODUCT_SIGNAL';
         }
       }
+
+      // 5-Stage Funnel Model
+      const funnel = {
+        stage_1_exposed: { count: exposedCount, rate: 100.0 },
+        stage_2_interested: { count: interestCount, rate: interestRate },
+        stage_3_price_selected: { count: priceSelectCount, rate: priceSelectionRate },
+        stage_4_purchase_intent: { count: purchaseIntentCount, rate: intentRate, conversion_from_interest: intentAfterInterestRate },
+        stage_5_waitlist: { count: waitlistCount, rate: waitlistRate }
+      };
 
       return {
         product_id: prod.id,
@@ -5275,24 +5332,119 @@
         exposed_providers: exposedCount,
         interest_count: interestCount,
         interest_rate: interestRate,
+        price_select_count: priceSelectCount,
+        price_selection_rate: priceSelectionRate,
         purchase_intent_count: purchaseIntentCount,
         intent_rate: intentRate,
+        intent_after_interest_rate: intentAfterInterestRate,
         waitlist_count: waitlistCount,
+        waitlist_rate: waitlistRate,
         preferred_research_price: preferredPrice,
-        price_sensitivity: prod.price_hypotheses ? prod.price_hypotheses.map(h => ({
-          hypothesis_id: h.id,
-          label: h.label,
-          amount: h.amount,
-          selections_count: rawPriceSelections.filter(s => s.product_id === prod.id && (s.price_option === h.label || s.price_amount === h.amount)).length,
-          intent_count: rawPurchaseIntents.filter(p => p.product_id === prod.id && (p.price_option === h.label || p.price_amount === h.amount)).length
-        })) : [],
+        price_sensitivity: prod.price_hypotheses ? prod.price_hypotheses.map(h => {
+          const matchingSelections = rawPriceSelections.filter(s => s.product_id === prod.id && (s.price_option === h.label || s.price_amount === h.amount));
+          const uniqueSelectSet = new Set(matchingSelections.map(s => s.provider_id));
+          const matchingIntents = rawPurchaseIntents.filter(p => p.product_id === prod.id && (p.price_option === h.label || p.price_amount === h.amount));
+          const uniqueIntentSet = new Set(matchingIntents.map(p => p.provider_id));
+          const selRate = exposedCount > 0 ? Number(((uniqueSelectSet.size / exposedCount) * 100).toFixed(1)) : 0;
+          const pntRate = exposedCount > 0 ? Number(((uniqueIntentSet.size / exposedCount) * 100).toFixed(1)) : 0;
+          
+          let hypStatus = 'PROMISING';
+          if (h.is_baseline && (uniqueSelectSet.size >= 1 || uniqueIntentSet.size >= 1)) {
+            hypStatus = 'LEADING_HYPOTHESIS';
+          } else if (uniqueSelectSet.size === 0 && uniqueIntentSet.size === 0) {
+            hypStatus = 'INSUFFICIENT_DATA';
+          } else if (pntRate < 5.0) {
+            hypStatus = 'WEAK';
+          }
+
+          return {
+            hypothesis_id: h.id,
+            label: h.label,
+            amount: h.amount,
+            is_baseline: !!h.is_baseline,
+            exposed_providers: exposedCount,
+            unique_selections: uniqueSelectSet.size,
+            raw_selections: matchingSelections.length,
+            selection_rate: selRate,
+            unique_intents: uniqueIntentSet.size,
+            raw_intents: matchingIntents.length,
+            intent_rate: pntRate,
+            confidence: confidence,
+            status: hypStatus
+          };
+        }) : [],
+        funnel: funnel,
+        raw_events: {
+          exposures: prodExposures.length,
+          interests: prodInterests.length,
+          price_selections: prodPriceSelections.length,
+          intents: prodIntents.length,
+          waitlists: prodWaitlist.length
+        },
         sample_size: exposedCount,
         confidence: confidence,
         product_classification: productClassification
       };
     });
 
-    // 2. Provider Engagement Segmentation Analysis
+    // 2. Product Preference & Overlap Analysis
+    const providerProductMap = {};
+    rawInterests.forEach(i => {
+      if (!providerProductMap[i.provider_id]) providerProductMap[i.provider_id] = new Set();
+      providerProductMap[i.provider_id].add(i.product_id);
+    });
+
+    let exclusiveTrustCount = 0;
+    let exclusivePromoCount = 0;
+    let exclusiveLeadCount = 0;
+    let multiProductCount = 0;
+
+    Object.values(providerProductMap).forEach(prods => {
+      if (prods.size === 1) {
+        if (prods.has('TRUST_VERIFICATION')) exclusiveTrustCount++;
+        else if (prods.has('PROMOTED_DISCOVERY')) exclusivePromoCount++;
+        else if (prods.has('QUALIFIED_LEAD_ACCESS')) exclusiveLeadCount++;
+      } else if (prods.size > 1) {
+        multiProductCount++;
+      }
+    });
+
+    const preferenceAnalysis = {
+      total_interested_providers: Object.keys(providerProductMap).length,
+      exclusive_trust_verification: exclusiveTrustCount,
+      exclusive_promoted_discovery: exclusivePromoCount,
+      exclusive_qualified_lead: exclusiveLeadCount,
+      multi_product_overlap: multiProductCount,
+      multi_product_rate: Object.keys(providerProductMap).length > 0
+        ? Number(((multiProductCount / Object.keys(providerProductMap).length) * 100).toFixed(1))
+        : 0
+    };
+
+    // 3. Repeat Intent Analysis
+    const providerEventCountMap = {};
+    [...rawInterests, ...rawPriceSelections, ...rawPurchaseIntents, ...rawWaitlist].forEach(ev => {
+      providerEventCountMap[ev.provider_id] = (providerEventCountMap[ev.provider_id] || 0) + 1;
+    });
+
+    const repeatProviders = Object.values(providerEventCountMap).filter(cnt => cnt >= 2).length;
+    const repeatIntentRate = totalExposedCount > 0 ? Number(((repeatProviders / totalExposedCount) * 100).toFixed(1)) : 0;
+
+    // 4. Research Feedback Reasons Aggregation
+    const feedbackReasons = {
+      'More trust & credibility': 0,
+      'More local visibility': 0,
+      'More direct inquiries': 0,
+      'Urgent repair lead alerts': 0,
+      'Professional profile': 0,
+      'Other': 0
+    };
+
+    rawFeedback.forEach(f => {
+      const matchedKey = Object.keys(feedbackReasons).find(k => k.toLowerCase().includes((f.reason || '').toLowerCase().substring(0, 8))) || 'Other';
+      feedbackReasons[matchedKey]++;
+    });
+
+    // 5. Provider Engagement Segmentation Analysis
     const completenessSegments = {
       high_completeness: publishedProviders.filter(p => p.profile_complete !== false && (p.skills || []).length >= 2),
       verified_trust_signal: publishedProviders.filter(p => p.is_verified || p.nin_verified),
@@ -5320,7 +5472,7 @@
       };
     });
 
-    // 3. Regional Willingness & Demand Insights (Delta, Edo, National)
+    // 6. Regional Willingness & Demand Insights (Delta, Edo, National)
     const deltaProviders = publishedProviders.filter(p => (p.state || '').toLowerCase() === 'delta');
     const edoProviders = publishedProviders.filter(p => (p.state || '').toLowerCase() === 'edo');
 
@@ -5340,7 +5492,7 @@
         purchase_intent_count: new Set(deltaIntents.map(p => p.provider_id)).size,
         top_monetization_fit: 'TRUST_VERIFICATION & PROMOTED_DISCOVERY',
         demand_profile: 'High zero-result search volume in Warri & Ughelli, artisan interest in local discovery',
-        confidence: deltaProviders.length >= 10 ? 'MODERATE' : 'LOW',
+        confidence: deltaProviders.length >= 10 ? 'MEDIUM' : 'LOW',
         status: deltaProviders.length >= 3 ? 'VALIDATING' : 'INSUFFICIENT_DATA'
       },
       edo_strategic_adjacent: {
@@ -5350,7 +5502,7 @@
         purchase_intent_count: new Set(edoIntents.map(p => p.provider_id)).size,
         top_monetization_fit: 'PROMOTED_DISCOVERY',
         demand_profile: 'Commercial corridor artisan clusters in Benin City (Oredo/Ugbowo)',
-        confidence: edoProviders.length >= 10 ? 'MODERATE' : 'LOW',
+        confidence: edoProviders.length >= 10 ? 'MEDIUM' : 'LOW',
         status: edoProviders.length >= 3 ? 'VALIDATING' : 'INSUFFICIENT_DATA'
       },
       national_baseline: {
@@ -5360,8 +5512,8 @@
       }
     };
 
-    // 4. Overall Commercial Readiness Classification (Phase 10.13B)
-    const overallCommercialClassification = 'EARLY_MONETIZATION_SIGNAL';
+    // 7. Overall Commercial Readiness Decision (Phase 10.13C)
+    const overallCommercialClassification = 'PROMISING_BUT_UNVALIDATED';
 
     return {
       window_days: days,
@@ -5383,11 +5535,17 @@
         total_exposed_providers: totalExposedCount,
         distinct_interested_providers: distinctInterestedProviders.size,
         interest_rate: totalExposedCount > 0 ? Number(((distinctInterestedProviders.size / totalExposedCount) * 100).toFixed(1)) : 0,
+        distinct_price_selectors: distinctPriceProviders.size,
+        price_selection_rate: totalExposedCount > 0 ? Number(((distinctPriceProviders.size / totalExposedCount) * 100).toFixed(1)) : 0,
         distinct_purchase_intent_providers: distinctIntentProviders.size,
         intent_rate: totalExposedCount > 0 ? Number(((distinctIntentProviders.size / totalExposedCount) * 100).toFixed(1)) : 0,
         distinct_waitlist_providers: distinctWaitlistProviders.size,
-        waitlist_rate: totalExposedCount > 0 ? Number(((distinctWaitlistProviders.size / totalExposedCount) * 100).toFixed(1)) : 0
+        waitlist_rate: totalExposedCount > 0 ? Number(((distinctWaitlistProviders.size / totalExposedCount) * 100).toFixed(1)) : 0,
+        repeat_intent_providers: repeatProviders,
+        repeat_intent_rate: repeatIntentRate
       },
+      preference_analysis: preferenceAnalysis,
+      feedback_analysis: feedbackReasons,
       candidate_products: productStats,
       candidate_plans: CANDIDATE_PLANS,
       provider_segmentation: providerSegmentation,
@@ -5397,7 +5555,8 @@
         total_interests: rawInterests.length,
         total_price_selections: rawPriceSelections.length,
         total_purchase_intents: rawPurchaseIntents.length,
-        total_waitlist_signups: rawWaitlist.length
+        total_waitlist_signups: rawWaitlist.length,
+        total_feedback: rawFeedback.length
       },
       generated_at: new Date().toISOString()
     };
