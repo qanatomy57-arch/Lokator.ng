@@ -17,6 +17,8 @@ document.addEventListener("DOMContentLoaded", () => {
     specialization: "all",
     city: "all",
     state: "all",
+    lga: "all",
+    locality: "all",
     locationQuery: "",
     source: "marketplace",
     maxDistance: 50,
@@ -35,8 +37,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const searchInput = document.getElementById("keyword-search") || document.getElementById("search-input");
   const suggestionsDropdown = document.getElementById("search-suggestions");
   const categorySelect = document.getElementById("category-select");
+  const stateSelect = document.getElementById("state-select");
+  const lgaSelect = document.getElementById("lga-select");
+  const localitySelect = document.getElementById("locality-select");
+  const lgaFilterGroup = document.getElementById("lga-filter-group");
+  const localityFilterGroup = document.getElementById("locality-filter-group");
   const citySelect = document.getElementById("city-select");
   const locationSearch = document.getElementById("location-search");
+  const locationSuggestions = document.getElementById("location-suggestions");
   const gpsTrigger = document.getElementById("gps-trigger");
   const distanceRange = document.getElementById("distance-range");
   const distanceVal = document.getElementById("distance-val");
@@ -57,8 +65,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const breadcrumbsNav = document.getElementById("marketplace-breadcrumbs");
   const browseSection = document.getElementById("marketplace-browse-section");
   const industryCardsGrid = document.getElementById("industry-cards-grid");
+  const filterSidebar = document.getElementById("filter-sidebar");
   const filterBackdrop = document.getElementById("filter-backdrop");
+  const mobileFilterBtn = document.getElementById("mobile-filter-btn");
   const mobileFilterCloseBtn = document.getElementById("mobile-filter-close-btn");
+  const mobileApplyFiltersBtn = document.getElementById("mobile-apply-filters-btn");
+  const mobileResetFiltersBtn = document.getElementById("mobile-reset-filters-btn");
 
   // Debounce Utility
   function debounce(func, wait) {
@@ -78,6 +90,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const qParam = params.get("q");
     const locParam = params.get("location");
     const stateParam = params.get("state");
+    const lgaParam = params.get("lga");
+    const localityParam = params.get("locality") || params.get("area");
     const cityParam = params.get("city");
     const sourceParam = params.get("source") || "marketplace";
     const verifiedParam = params.get("verified");
@@ -117,9 +131,9 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    if (stateParam) {
-      state.state = stateParam;
-    }
+    if (stateParam) state.state = stateParam;
+    if (lgaParam) state.lga = lgaParam;
+    if (localityParam) state.locality = localityParam;
 
     if (cityParam) {
       state.city = cityParam;
@@ -173,8 +187,86 @@ document.addEventListener("DOMContentLoaded", () => {
       state.page = Math.max(1, parseInt(pageParam, 10));
     }
 
+    // Populate and sync Nigerian Location cascading controls
+    populateStateSelect();
+    if (state.state && state.state !== "all") {
+      updateLgaSelect(state.state, state.lga);
+      if (state.lga && state.lga !== "all") {
+        updateLocalitySelect(state.state, state.lga, state.locality);
+      }
+    }
+
     // Render breadcrumbs immediately on init
     renderBreadcrumbs();
+  }
+
+  // Populate Nigerian States in Filter Sidebar
+  function populateStateSelect() {
+    if (!stateSelect || typeof NigeriaLocations === 'undefined') return;
+    const states = NigeriaLocations.getStates();
+    stateSelect.innerHTML = `<option value="all">All Nigeria (36 States + FCT)</option>` +
+      states.map(s => `<option value="${escapeHtml(s.name)}">${escapeHtml(s.displayName)}</option>`).join('');
+    
+    if (state.state && state.state !== 'all') {
+      stateSelect.value = state.state;
+    }
+  }
+
+  // Update LGA dropdown based on selected Nigerian State
+  function updateLgaSelect(stateName, selectedLga = 'all') {
+    if (!lgaSelect || typeof NigeriaLocations === 'undefined') return;
+    if (!stateName || stateName === 'all') {
+      lgaSelect.innerHTML = `<option value="all">Select State First...</option>`;
+      lgaSelect.disabled = true;
+      if (localityFilterGroup) localityFilterGroup.style.display = 'none';
+      state.lga = 'all';
+      state.locality = 'all';
+      return;
+    }
+
+    const lgas = NigeriaLocations.getLgas(stateName);
+    lgaSelect.disabled = false;
+    lgaSelect.innerHTML = `<option value="all">All LGAs in ${escapeHtml(stateName)}</option>` +
+      lgas.map(l => `<option value="${escapeHtml(l.name)}">${escapeHtml(l.name)}</option>`).join('');
+    
+    if (selectedLga && selectedLga !== 'all') {
+      lgaSelect.value = selectedLga;
+      state.lga = selectedLga;
+      updateLocalitySelect(stateName, selectedLga, state.locality);
+    } else {
+      lgaSelect.value = 'all';
+      state.lga = 'all';
+      if (localityFilterGroup) localityFilterGroup.style.display = 'none';
+    }
+  }
+
+  // Update Locality dropdown based on selected LGA
+  function updateLocalitySelect(stateName, lgaName, selectedLocality = 'all') {
+    if (!localitySelect || !localityFilterGroup || typeof NigeriaLocations === 'undefined') return;
+    if (!lgaName || lgaName === 'all') {
+      localityFilterGroup.style.display = 'none';
+      state.locality = 'all';
+      return;
+    }
+
+    const localities = NigeriaLocations.getLocalities(stateName, lgaName);
+    if (!localities || localities.length === 0) {
+      localityFilterGroup.style.display = 'none';
+      state.locality = 'all';
+      return;
+    }
+
+    localityFilterGroup.style.display = 'block';
+    localitySelect.innerHTML = `<option value="all">All Neighborhoods in ${escapeHtml(lgaName)}</option>` +
+      localities.map(loc => `<option value="${escapeHtml(loc)}">${escapeHtml(loc)}</option>`).join('');
+
+    if (selectedLocality && selectedLocality !== 'all') {
+      localitySelect.value = selectedLocality;
+      state.locality = selectedLocality;
+    } else {
+      localitySelect.value = 'all';
+      state.locality = 'all';
+    }
   }
 
   // Phase 10.9: Render Marketplace Discovery Breadcrumbs
@@ -187,6 +279,8 @@ document.addEventListener("DOMContentLoaded", () => {
       skill: state.category !== 'all' ? state.category : (state.keyword || null),
       specialization: state.specialization !== 'all' ? state.specialization : null,
       state: state.state !== 'all' ? state.state : (state.locationQuery || null),
+      lga: state.lga !== 'all' ? state.lga : null,
+      locality: state.locality !== 'all' ? state.locality : null,
       city: state.city !== 'all' ? state.city : null,
       source: state.source
     });
@@ -305,8 +399,10 @@ document.addEventListener("DOMContentLoaded", () => {
       if (state.keyword) params.set("q", state.keyword);
       if (state.category && state.category !== "all") params.set("service", state.category);
       if (state.locationQuery) params.set("location", state.locationQuery);
-      if (state.city && state.city !== "all") params.set("city", state.city);
       if (state.state && state.state !== "all") params.set("state", state.state);
+      if (state.lga && state.lga !== "all") params.set("lga", state.lga);
+      if (state.locality && state.locality !== "all") params.set("locality", state.locality);
+      if (state.city && state.city !== "all") params.set("city", state.city);
       if (state.verifiedOnly) params.set("verified", "true");
       if (state.availableOnly) params.set("available", "true");
       if (state.minRating > 0) params.set("minRating", String(state.minRating));
@@ -382,6 +478,8 @@ document.addEventListener("DOMContentLoaded", () => {
           category: categorySlug,
           keyword: state.keyword,
           city: loc,
+          state: state.state,
+          lga: state.lga,
           verifiedOnly: state.verifiedOnly
         });
       }
@@ -390,6 +488,8 @@ document.addEventListener("DOMContentLoaded", () => {
         category: categorySlug,
         city: loc,
         state: state.state,
+        lga: state.lga,
+        locality: state.locality,
         query: state.keyword,
         isVerified: state.verifiedOnly,
         isAvailable: state.availableOnly,
@@ -527,13 +627,15 @@ document.addEventListener("DOMContentLoaded", () => {
       providersContainer.innerHTML = providers.map(provider => {
         const safeId = parseInt(provider.id, 10) || 0;
         const initials = getInitials(provider.name);
-        const cleanPhone = (provider.phone || '').replace(/[^0-9]/g, '');
-        const cleanWa = (provider.whatsappNumber || provider.phone || '').replace(/[^0-9]/g, '');
-        // P2 Fix: guard against null/undefined area in customer-facing message
-        const providerArea = provider.area || provider.city || 'your area';
-        const waMsg = encodeURIComponent(
-          `Hello ${provider.name}, I found your verified profile on Lokator and I'd like to inquire about your ${provider.trade} service in ${providerArea}. Are you available?`
-        );
+        const providerArea = provider.area || (provider.lga && provider.state ? `${provider.lga}, ${provider.state}` : provider.city) || 'your area';
+        const serviceCtx = state.keyword || provider.trade;
+        const locationCtx = state.locationQuery || providerArea;
+
+        const PhoneEngine = (typeof NigeriaPhone !== 'undefined' ? NigeriaPhone : null) || (typeof window !== 'undefined' ? window.NigeriaPhone : null);
+        const telUrl = PhoneEngine ? PhoneEngine.buildTelUrl(provider) : (provider.phone ? `tel:${provider.phone}` : '');
+        const waUrl = PhoneEngine 
+          ? PhoneEngine.buildWhatsAppUrl(provider, { service: serviceCtx, location: locationCtx })
+          : '';
 
         // Distance text — safe fallback for missing area
         const distText = (provider.distanceKm != null) 
@@ -546,21 +648,21 @@ document.addEventListener("DOMContentLoaded", () => {
         const safeExpYrs = parseInt(provider.experienceYrs || 3, 10);
         const safeAvatarBg = (provider.avatarBg && typeof provider.avatarBg === 'string' && provider.avatarBg.startsWith('linear-gradient')) ? provider.avatarBg : 'var(--green)';
 
-        // P2 Fix: build contact actions based on available contact info
-        const callBtnHtml = cleanPhone
-          ? `<a href="tel:${cleanPhone}" class="action-btn call-btn" aria-label="Call ${escapeHtml(provider.name)}">
+        // Contact action buttons generated via central NigeriaPhone utility
+        const callBtnHtml = telUrl
+          ? `<a href="${escapeHtml(telUrl)}" class="action-btn call-btn" aria-label="Call ${escapeHtml(provider.name)}">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
               Call Now
             </a>`
           : '';
 
-        const waBtnHtml = cleanWa
-          ? `<a href="https://wa.me/${cleanWa}?text=${waMsg}" target="_blank" rel="noopener" class="action-btn wa-btn" aria-label="WhatsApp ${escapeHtml(provider.name)}">
+        const waBtnHtml = waUrl
+          ? `<a href="${escapeHtml(waUrl)}" target="_blank" rel="noopener" class="action-btn wa-btn" aria-label="WhatsApp ${escapeHtml(provider.name)}">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.625.846 5.059 2.284 7.034L.789 23.492a.5.5 0 0 0 .611.611l4.458-1.495A11.952 11.952 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22a9.94 9.94 0 0 1-5.39-1.585l-.386-.231-2.646.887.887-2.646-.231-.386A9.94 9.94 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
               WhatsApp
             </a>`
-          : (cleanPhone
-              ? `<a href="tel:${cleanPhone}" class="action-btn call-btn" title="WhatsApp not available — tap to call" aria-label="Call ${escapeHtml(provider.name)} (no WhatsApp)">
+          : (telUrl
+              ? `<a href="${escapeHtml(telUrl)}" class="action-btn call-btn" title="WhatsApp not available — tap to call" aria-label="Call ${escapeHtml(provider.name)} (no WhatsApp)">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
                   Call Only
                 </a>`
@@ -643,8 +745,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!activeFilterTags) return;
     const tags = [];
     if (state.category && state.category !== "all") tags.push(`Category: ${state.category}`);
-    if (state.city && state.city !== "all") tags.push(`City: ${state.city}`);
-    if (state.locationQuery) tags.push(`Location: "${state.locationQuery}"`);
+    if (state.state && state.state !== "all") tags.push(`State: ${state.state}`);
+    if (state.lga && state.lga !== "all") tags.push(`LGA: ${state.lga}`);
+    if (state.locality && state.locality !== "all") tags.push(`Neighborhood: ${state.locality}`);
+    if (state.city && state.city !== "all" && state.city !== state.lga && state.city !== state.state) tags.push(`City: ${state.city}`);
+    if (state.locationQuery && state.locationQuery !== state.state && state.locationQuery !== state.lga && state.locationQuery !== state.locality) tags.push(`Location: "${state.locationQuery}"`);
     if (state.keyword) tags.push(`Skill / Service: "${state.keyword}"`);
     if (state.verifiedOnly) tags.push(`Verified only`);
     if (state.availableOnly) tags.push(`Available now`);
@@ -740,6 +845,64 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // 6.1 Live Nigerian Location Suggestions Handling
+  function renderLocationSuggestions(query) {
+    if (!locationSuggestions || typeof NigeriaLocations === 'undefined') return;
+    const matches = NigeriaLocations.searchLocations(query, 6);
+    if (matches.length === 0) {
+      locationSuggestions.style.display = "none";
+      locationSuggestions.innerHTML = "";
+      return;
+    }
+
+    locationSuggestions.innerHTML = matches.map(m => `
+      <div class="suggestion-item location-sugg-item" data-state="${escapeHtml(m.state)}" data-lga="${escapeHtml(m.lga || '')}" data-locality="${escapeHtml(m.locality || '')}" data-formatted="${escapeHtml(m.formatted)}">
+        <span class="sugg-icon">📍</span>
+        <div style="display: flex; flex-direction: column; text-align: left;">
+          <span style="font-weight: 600; font-size: 13px; color: var(--fg);">${escapeHtml(m.title)}</span>
+          <span style="font-size: 11px; color: var(--fg-muted);">${escapeHtml(m.label)}</span>
+        </div>
+      </div>
+    `).join('');
+    locationSuggestions.style.display = "block";
+  }
+
+  function hideLocationSuggestions() {
+    if (locationSuggestions) {
+      setTimeout(() => {
+        locationSuggestions.style.display = "none";
+      }, 250);
+    }
+  }
+
+  if (locationSuggestions) {
+    locationSuggestions.addEventListener("click", (e) => {
+      const item = e.target.closest(".location-sugg-item");
+      if (item && item.dataset.state) {
+        const itemState = item.dataset.state;
+        const itemLga = item.dataset.lga;
+        const itemLocality = item.dataset.locality;
+        const itemFormatted = item.dataset.formatted;
+
+        if (locationSearch) locationSearch.value = itemFormatted;
+        state.locationQuery = itemFormatted;
+        state.state = itemState;
+        state.lga = itemLga || "all";
+        state.locality = itemLocality || "all";
+
+        if (stateSelect) stateSelect.value = itemState;
+        updateLgaSelect(itemState, state.lga);
+        if (state.lga !== "all") {
+          updateLocalitySelect(itemState, state.lga, state.locality);
+        }
+
+        locationSuggestions.style.display = "none";
+        state.page = 1;
+        render();
+      }
+    });
+  }
+
   // Clickable Mini-Tag to Search Specific Skill
   if (providersContainer) {
     providersContainer.addEventListener("click", (e) => {
@@ -780,6 +943,37 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  if (stateSelect) {
+    stateSelect.addEventListener("change", (e) => {
+      const selectedState = e.target.value;
+      state.state = selectedState;
+      state.lga = "all";
+      state.locality = "all";
+      updateLgaSelect(selectedState, "all");
+      state.page = 1;
+      render();
+    });
+  }
+
+  if (lgaSelect) {
+    lgaSelect.addEventListener("change", (e) => {
+      const selectedLga = e.target.value;
+      state.lga = selectedLga;
+      state.locality = "all";
+      updateLocalitySelect(state.state, selectedLga, "all");
+      state.page = 1;
+      render();
+    });
+  }
+
+  if (localitySelect) {
+    localitySelect.addEventListener("change", (e) => {
+      state.locality = e.target.value;
+      state.page = 1;
+      render();
+    });
+  }
+
   if (citySelect) {
     citySelect.addEventListener("change", (e) => {
       state.city = e.target.value;
@@ -816,16 +1010,35 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (locationSearch) {
     locationSearch.addEventListener("input", debounce((e) => {
-      state.locationQuery = e.target.value.trim();
+      const val = e.target.value.trim();
+      state.locationQuery = val;
       state.page = 1;
+      renderLocationSuggestions(val);
       render();
-    }, 300));
+    }, 250));
+
+    locationSearch.addEventListener("focus", (e) => {
+      if (e.target.value.trim()) {
+        renderLocationSuggestions(e.target.value.trim());
+      }
+    });
+
+    locationSearch.addEventListener("blur", hideLocationSuggestions);
+
+    locationSearch.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        hideLocationSuggestions();
+        render();
+      }
+    });
   }
 
   if (applyMainSearchBtn) {
     applyMainSearchBtn.addEventListener("click", (e) => {
       e.preventDefault();
       hideSuggestions();
+      hideLocationSuggestions();
       if (searchInput) state.keyword = searchInput.value.trim();
       if (locationSearch) state.locationQuery = locationSearch.value.trim();
       state.page = 1;
@@ -930,6 +1143,8 @@ document.addEventListener("DOMContentLoaded", () => {
       state.specialization = "all";
       state.city = "all";
       state.state = "all";
+      state.lga = "all";
+      state.locality = "all";
       state.locationQuery = "";
       state.maxDistance = 50;
       state.minRating = 0;
@@ -940,6 +1155,8 @@ document.addEventListener("DOMContentLoaded", () => {
       if (searchInput) searchInput.value = "";
       if (categorySelect) categorySelect.value = "all";
       if (citySelect) citySelect.value = "all";
+      if (stateSelect) stateSelect.value = "all";
+      updateLgaSelect("all");
       if (locationSearch) locationSearch.value = "";
       if (distanceRange) distanceRange.value = 50;
       if (distanceVal) distanceVal.textContent = "50 km";
@@ -1013,7 +1230,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Phase 10.10: Mobile Filter Drawer & Backdrop Management
+  // Phase 10.12F: Mobile Filter Bottom-Sheet & Backdrop Lifecycle
   function openFilterDrawer() {
     if (filterSidebar) {
       filterSidebar.classList.add("open", "mobile-open");
@@ -1021,7 +1238,16 @@ document.addEventListener("DOMContentLoaded", () => {
     if (filterBackdrop) {
       filterBackdrop.classList.add("active");
     }
-    document.body.style.overflow = "hidden";
+    document.body.classList.add("filter-drawer-open");
+    if (mobileFilterBtn) {
+      mobileFilterBtn.setAttribute("aria-expanded", "true");
+    }
+    if (mobileFilterCloseBtn) {
+      try { mobileFilterCloseBtn.focus(); } catch (e) {}
+    }
+    if (typeof LokatorTelemetry !== 'undefined') {
+      LokatorTelemetry.trackEvent('mobile_filter_opened', { source: 'search_toolbar' });
+    }
   }
 
   function closeFilterDrawer() {
@@ -1031,7 +1257,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if (filterBackdrop) {
       filterBackdrop.classList.remove("active");
     }
-    document.body.style.overflow = "";
+    document.body.classList.remove("filter-drawer-open");
+    if (mobileFilterBtn) {
+      mobileFilterBtn.setAttribute("aria-expanded", "false");
+      try { mobileFilterBtn.focus(); } catch (e) {}
+    }
   }
 
   if (mobileFilterBtn) {
@@ -1051,6 +1281,33 @@ document.addEventListener("DOMContentLoaded", () => {
   if (filterBackdrop) {
     filterBackdrop.addEventListener("click", (e) => {
       e.preventDefault();
+      closeFilterDrawer();
+    });
+  }
+
+  if (mobileApplyFiltersBtn) {
+    mobileApplyFiltersBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      closeFilterDrawer();
+      state.page = 1;
+      render();
+      if (typeof LokatorTelemetry !== 'undefined') {
+        LokatorTelemetry.trackEvent('mobile_filter_applied', {
+          category: state.category,
+          state: state.state,
+          lga: state.lga,
+          locality: state.locality
+        });
+      }
+    });
+  }
+
+  if (mobileResetFiltersBtn) {
+    mobileResetFiltersBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      if (resetFiltersBtn) {
+        resetFiltersBtn.click();
+      }
       closeFilterDrawer();
     });
   }

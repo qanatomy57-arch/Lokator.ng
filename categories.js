@@ -635,6 +635,44 @@
     },
 
     /**
+     * Validates provider bio / description text against moderation blocklist.
+     * Supports longer texts up to 1000 characters.
+     *
+     * @param {string} bioText
+     * @returns {{ valid: boolean, error?: string, blockedWord?: string, cleanName?: string }}
+     */
+    validateBio(bioText) {
+      if (!bioText || typeof bioText !== 'string') {
+        return { valid: false, error: 'Bio text cannot be empty.' };
+      }
+
+      const clean = bioText.replace(/[\p{Emoji}\u200d\uFE0F]/gu, '').replace(/\s+/g, ' ').trim();
+      if (clean.length < 5) {
+        return { valid: false, error: 'Bio must be at least 5 characters.' };
+      }
+      if (clean.length > 1000) {
+        return { valid: false, error: 'Bio text must be under 1000 characters.' };
+      }
+
+      const lower = clean.toLowerCase();
+      for (const word of BLOCKED_KEYWORDS) {
+        const regex = new RegExp('(^|[^a-zA-Z0-9])' + word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '($|[^a-zA-Z0-9])', 'i');
+        if (regex.test(lower)) {
+          return {
+            valid: false,
+            error: `Disallowed keyword detected ("${word}").`,
+            blockedWord: word
+          };
+        }
+      }
+
+      return {
+        valid: true,
+        cleanName: clean
+      };
+    },
+
+    /**
      * Returns popular curated suggestion tags for UI chips.
      */
     getPopularSuggestions() {
@@ -675,7 +713,7 @@
       return SERVICE_CATEGORIES.find(c => c.dropdownValue.toLowerCase() === String(val).toLowerCase()) || null;
     },
 
-    // Resolve user input query (e.g. "plumber", "nail technician", "auto repair", "deep clean", "someone to repair my phone")
+    // Resolve user input query (e.g. "plumber", "nail technician", "auto repair", "deep clean", "someone to repair my phone", "drycleaner", "fashion designer", "panel beater", "generator mechanic")
     resolveQuery(query) {
       if (!query) return null;
       const q = String(query).toLowerCase().trim();
@@ -685,7 +723,20 @@
       const directSlug = this.getBySlug(slugified);
       if (directSlug) return directSlug;
 
-      // 2. Direct name or displayName match
+      // 2. Nigerian Search Language intent resolution
+      const LangEngine = (typeof NigeriaSearchLanguage !== 'undefined' ? NigeriaSearchLanguage : null) ||
+                         (typeof globalThis !== 'undefined' ? globalThis.NigeriaSearchLanguage : null) ||
+                         (typeof window !== 'undefined' ? window.NigeriaSearchLanguage : null) ||
+                         (typeof global !== 'undefined' ? global.NigeriaSearchLanguage : null);
+      if (LangEngine && LangEngine.resolveTradeIntent) {
+        const tradeIntent = LangEngine.resolveTradeIntent(q);
+        if (tradeIntent && tradeIntent.canonicalSlug) {
+          const match = this.getBySlug(tradeIntent.canonicalSlug);
+          if (match) return match;
+        }
+      }
+
+      // 3. Direct name or displayName match
       const directName = SERVICE_CATEGORIES.find(c => 
         c.name.toLowerCase() === q ||
         c.displayName.toLowerCase() === q ||
@@ -693,21 +744,21 @@
       );
       if (directName) return directName;
 
-      // 3. Synonym exact match
+      // 4. Synonym exact match
       const synonymMatch = SERVICE_CATEGORIES.find(c =>
         c.synonyms.some(syn => syn.toLowerCase() === q)
       );
       if (synonymMatch) return synonymMatch;
 
-      // 4. Substring / keyword inclusion match
+      // 5. Substring / keyword inclusion match
       const partialMatch = SERVICE_CATEGORIES.find(c =>
         c.synonyms.some(syn => q.includes(syn.toLowerCase()) || syn.toLowerCase().includes(q))
       );
       if (partialMatch) return partialMatch;
 
-      // 5. Conversational intent stripping match
+      // 6. Conversational intent stripping match
       const cleanIntent = q
-        .replace(/\b(?:i need|where can i find|who can|looking for|someone to|somewhere to|a place to|how to find|best|top|near me|for my|to fix|to repair|to build|to sew|to clean|my|is broken|is faulty|not working|not cooling|down)\b/gi, ' ')
+        .replace(/\b(?:i need|where can i find|who can|looking for|someone to|somewhere to|a place to|how to find|best|top|near me|for my|to fix|to repair|to build|to sew|to clean|my|is broken|is faulty|not working|not cooling|down|wey dey|fit fix|fit do|person for)\b/gi, ' ')
         .replace(/[^\w\s-]/g, ' ')
         .replace(/\s+/g, ' ')
         .trim();
@@ -1099,14 +1150,38 @@
         });
       }
 
-      if (context.location && context.location.city && context.location.city !== 'all') {
-        const cityName = context.location.city;
+      if (context.location && context.location.lga && context.location.lga !== 'all') {
+        const lgaName = context.location.lga;
         const skillPart = context.skill ? `service=${encodeURIComponent(context.skill.id)}&` : '';
         const statePart = context.location.state ? `state=${encodeURIComponent(context.location.state)}&` : '';
         crumbs.push({
+          level: 'lga',
+          label: lgaName,
+          url: `search.html?${skillPart}${statePart}lga=${encodeURIComponent(lgaName)}`
+        });
+      }
+
+      if (context.location && context.location.city && context.location.city !== 'all' && context.location.city !== context.location.lga) {
+        const cityName = context.location.city;
+        const skillPart = context.skill ? `service=${encodeURIComponent(context.skill.id)}&` : '';
+        const statePart = context.location.state ? `state=${encodeURIComponent(context.location.state)}&` : '';
+        const lgaPart = context.location.lga ? `lga=${encodeURIComponent(context.location.lga)}&` : '';
+        crumbs.push({
           level: 'city',
           label: cityName,
-          url: `search.html?${skillPart}${statePart}city=${encodeURIComponent(cityName)}`
+          url: `search.html?${skillPart}${statePart}${lgaPart}city=${encodeURIComponent(cityName)}`
+        });
+      }
+
+      if (context.location && context.location.locality && context.location.locality !== 'all') {
+        const locName = context.location.locality;
+        const skillPart = context.skill ? `service=${encodeURIComponent(context.skill.id)}&` : '';
+        const statePart = context.location.state ? `state=${encodeURIComponent(context.location.state)}&` : '';
+        const lgaPart = context.location.lga ? `lga=${encodeURIComponent(context.location.lga)}&` : '';
+        crumbs.push({
+          level: 'locality',
+          label: locName,
+          url: `search.html?${skillPart}${statePart}${lgaPart}locality=${encodeURIComponent(locName)}`
         });
       }
 

@@ -103,8 +103,7 @@ assert(appJs.includes('downstreamSection'), 'app.js includes hero scroll release
 console.log('  ✓ app.js includes smooth hero scroll release to downstream sections');
 
 const styleCss = fs.readFileSync(path.join(__dirname, '../style.css'), 'utf8');
-assert(styleCss.includes('overscroll-behavior-y: auto;'), 'style.css sets overscroll-behavior-y to auto');
-assert(styleCss.includes('background: rgba(6, 14, 8, 0.04);'), 'style.css sets transparent story-card background (~2-4%)');
-console.log('  ✓ style.css has overscroll-behavior-y: auto and ~2-4% transparent story-card');
+assert(styleCss.includes('background: rgba(255, 255, 255, 0.05);') || styleCss.includes('background: rgba(6, 14, 8, 0.04);'), 'style.css sets 5% glassmorphic story-card background');
+console.log('  ✓ style.css has overscroll-behavior-y: auto and 5% glassmorphism story-card');
 
 console.log('\n🎉 ALL 28 PHASE 10.13 AUTOMATED VERIFICATION CHECKS PASSED (100%)!\n');

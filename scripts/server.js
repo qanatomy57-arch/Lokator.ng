@@ -42,11 +42,69 @@ function getLocalIPs() {
   return addresses;
 }
 
-const server = http.createServer((req, res) => {
+const { LokatorAIService } = require('../ai-service.js');
+const { ServiceModerator } = require('../categories.js');
+global.ServiceModerator = ServiceModerator;
+
+// Simple in-memory rate limiting map: ip -> { count, resetTime }
+const rateLimitMap = new Map();
+const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
+const MAX_REQUESTS_PER_WINDOW = 20;
+
+function checkRateLimit(ip) {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+  if (!entry || now > entry.resetTime) {
+    rateLimitMap.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS });
+    return true;
+  }
+  if (entry.count >= MAX_REQUESTS_PER_WINDOW) {
+    return false;
+  }
+  entry.count++;
+  return true;
+}
+
+function parseJsonBody(req, limitBytes = 65536) {
+  return new Promise((resolve, reject) => {
+    let body = '';
+    let bytes = 0;
+    req.on('data', chunk => {
+      bytes += chunk.length;
+      if (bytes > limitBytes) {
+        reject(new Error('Payload too large: Max 64KB'));
+        return;
+      }
+      body += chunk;
+    });
+    req.on('end', () => {
+      if (!body.trim()) {
+        resolve({});
+        return;
+      }
+      try {
+        resolve(JSON.parse(body));
+      } catch (err) {
+        reject(new Error('Invalid JSON payload'));
+      }
+    });
+    req.on('error', reject);
+  });
+}
+
+function sendJsonResponse(res, statusCode, data) {
+  res.writeHead(statusCode, {
+    'Content-Type': 'application/json; charset=utf-8',
+    'Cache-Control': 'no-store'
+  });
+  res.end(JSON.stringify(data));
+}
+
+const server = http.createServer(async (req, res) => {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Range, Content-Type');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, HEAD, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Range, Content-Type, Authorization, x-provider-id');
 
   if (req.method === 'OPTIONS') {
     res.writeHead(204);
@@ -57,6 +115,94 @@ const server = http.createServer((req, res) => {
   // Parse URL & determine file path
   let parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   let pathname = decodeURIComponent(parsedUrl.pathname);
+
+  // ==========================================================================
+  // SERVER-SIDE SECURE AI API ROUTER (/api/ai/...)
+  // ==========================================================================
+  if (pathname.startsWith('/api/ai/')) {
+    const clientIp = req.socket.remoteAddress || '127.0.0.1';
+
+    // 1. Health check (public)
+    if (pathname === '/api/ai/health' && req.method === 'GET') {
+      sendJsonResponse(res, 200, {
+        success: true,
+        status: 'healthy',
+        service: 'Lokator AI Provider Assistance Engine',
+        model: 'lokator-trade-intelligence-v1',
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
+    // 2. Enforce Authentication on AI Generation & Guidance Endpoints
+    const authHeader = req.headers['authorization'] || '';
+    const providerIdHeader = req.headers['x-provider-id'] || '';
+    const isAuthed = (authHeader.startsWith('Bearer ') && authHeader.length > 10) || providerIdHeader.length > 0;
+
+    if (!isAuthed) {
+      sendJsonResponse(res, 401, {
+        success: false,
+        error: 'Unauthorized: Authentication required for AI provider assistance.'
+      });
+      return;
+    }
+
+    // 3. Enforce Rate Limiting
+    if (!checkRateLimit(clientIp)) {
+      sendJsonResponse(res, 429, {
+        success: false,
+        error: 'Rate limit exceeded: Please wait a minute before requesting additional AI assistance.'
+      });
+      return;
+    }
+
+    // 4. Endpoint: /api/ai/generate-bio
+    if (pathname === '/api/ai/generate-bio' && req.method === 'POST') {
+      try {
+        const payload = await parseJsonBody(req);
+        if (!payload || typeof payload !== 'object' || Object.keys(payload).length === 0) {
+          sendJsonResponse(res, 400, {
+            success: false,
+            error: 'Invalid request: Provider facts payload is required.'
+          });
+          return;
+        }
+
+        const bioResult = LokatorAIService.generateBio(payload, { variant: payload.variant });
+        sendJsonResponse(res, 200, {
+          success: true,
+          data: bioResult
+        });
+      } catch (err) {
+        sendJsonResponse(res, 400, {
+          success: false,
+          error: err.message || 'AI Bio generation failed.'
+        });
+      }
+      return;
+    }
+
+    // 5. Endpoint: /api/ai/pricing-guidance
+    if (pathname === '/api/ai/pricing-guidance' && req.method === 'POST') {
+      try {
+        const payload = await parseJsonBody(req);
+        const guidanceResult = LokatorAIService.getPricingGuidance(payload);
+        sendJsonResponse(res, 200, {
+          success: true,
+          data: guidanceResult
+        });
+      } catch (err) {
+        sendJsonResponse(res, 400, {
+          success: false,
+          error: err.message || 'AI Pricing guidance failed.'
+        });
+      }
+      return;
+    }
+
+    sendJsonResponse(res, 404, { success: false, error: 'AI endpoint not found.' });
+    return;
+  }
 
   if (pathname === '/' || pathname === '') {
     pathname = '/index.html';

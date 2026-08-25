@@ -3,7 +3,7 @@
 // Progressive Web App Offline Shell & Resilient Runtime Caching Engine
 // ============================================================================
 
-const CACHE_VERSION = 'lokator-v1.2.1';
+const CACHE_VERSION = 'lokator-v1.2.2';
 const STATIC_CACHE = `lokator-static-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `lokator-runtime-${CACHE_VERSION}`;
 
@@ -27,6 +27,10 @@ const SHELL_ASSETS = [
   '/search.js',
   '/profile.js',
   '/dashboard.js',
+  '/locations.js',
+  '/phone-utils.js',
+  '/search-language.js',
+  '/ai-service.js',
   '/categories.js',
   '/providers-data.js',
   '/supabase-client.js',
@@ -37,7 +41,16 @@ const SHELL_ASSETS = [
   '/icons/icon-192.png',
   '/icons/icon-512.png',
   '/icons/icon-maskable-192.png',
-  '/icons/icon-maskable-512.png'
+  '/icons/icon-maskable-512.png',
+  '/hero/poster_01.jpg',
+  '/hero/poster_02.jpg',
+  '/hero/poster_03.jpg',
+  '/hero/poster_04.jpg',
+  '/hero/poster_05.jpg',
+  '/hero/poster_06.jpg',
+  '/hero/poster_07.jpg',
+  '/hero/poster_08.jpg',
+  '/hero/poster_09.jpg'
 ];
 
 // 2. LIFECYCLE: INSTALL (Pre-cache static application shell)

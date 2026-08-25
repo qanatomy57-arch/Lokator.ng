@@ -371,8 +371,31 @@
             </div>
 
             <div class="form-group dash-form-full">
-              <label for="edit-bio">Short Bio (optional)</label>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <label for="edit-bio" style="margin-bottom: 0;">Short Bio (optional)</label>
+                <button type="button" id="btn-ai-bio-assistant" class="btn btn-outline" style="padding: 4px 10px; font-size: 12px; border-color: var(--dash-gold); color: var(--dash-gold); border-radius: 6px; display: inline-flex; align-items: center; gap: 5px; cursor: pointer;">
+                  <span>✨</span> AI Bio Assistant
+                </button>
+              </div>
               <textarea id="edit-bio" rows="4" placeholder="I provide professional services, recording studio, and craftsmanship..."></textarea>
+              
+              <!-- AI Bio Assistant Draft Container -->
+              <div id="ai-bio-draft-box" style="display: none; margin-top: 10px; padding: 14px; background: rgba(212, 175, 55, 0.08); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <div style="display: flex; align-items: center; gap: 6px;">
+                    <span style="color: var(--dash-gold); font-size: 14px;">✨</span>
+                    <strong style="font-size: 13px; color: var(--dash-gold);">AI-Generated Bio Draft</strong>
+                  </div>
+                  <span style="font-size: 11px; color: var(--dash-muted);">Review and edit before saving</span>
+                </div>
+                <p id="ai-bio-draft-text" style="font-size: 13.5px; line-height: 1.5; color: var(--dash-fg); margin: 0 0 10px 0;"></p>
+                <div id="ai-bio-source-facts" style="font-size: 11.5px; color: var(--dash-muted); margin-bottom: 12px; display: flex; flex-wrap: wrap; gap: 6px;"></div>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                  <button type="button" id="btn-ai-apply-bio" class="btn btn-primary" style="padding: 6px 12px; font-size: 12.5px;">✓ Apply Draft to Bio</button>
+                  <button type="button" id="btn-ai-regen-bio" class="btn btn-outline" style="padding: 6px 12px; font-size: 12.5px;">🔄 Regenerate</button>
+                  <button type="button" id="btn-ai-discard-bio" class="btn btn-outline" style="padding: 6px 12px; font-size: 12.5px; color: var(--dash-muted); border-color: var(--dash-border);">✕ Discard</button>
+                </div>
+              </div>
             </div>
 
             <div class="dash-form-full dash-form-actions">
@@ -424,6 +447,42 @@
             <div>
               <h2>Service Pricing Guide & Rate Cards</h2>
               <p>Transparent rates build high trust with Nigerian customers</p>
+            </div>
+            <button type="button" id="btn-ai-pricing-guide" class="btn btn-outline" style="border-color: var(--dash-gold); color: var(--dash-gold); font-size: 12.5px; padding: 6px 12px; display: inline-flex; align-items: center; gap: 5px; cursor: pointer;">
+              <span>✨</span> AI Pricing Guidance
+            </button>
+          </div>
+
+          <!-- AI Pricing Guidance Box -->
+          <div id="ai-pricing-guidance-box" style="display: none; margin-bottom: 20px; padding: 16px; background: rgba(0, 107, 63, 0.08); border: 1px solid rgba(0, 107, 63, 0.3); border-radius: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+              <div>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <span style="color: var(--dash-gold); font-size: 15px;">✨</span>
+                  <strong style="font-size: 14px; color: var(--fg);">Marketplace Pricing Guidance (<span id="ai-pricing-trade-label">General Services</span>)</strong>
+                </div>
+                <span style="display: inline-block; margin-top: 4px; padding: 2px 8px; border-radius: 4px; background: rgba(212, 175, 55, 0.15); color: var(--dash-gold); font-size: 11px; font-weight: 600;">
+                  AI Estimate / Guidance — Not a platform-set price
+                </span>
+              </div>
+              <button type="button" id="btn-close-ai-pricing" style="background: none; border: none; color: var(--dash-muted); font-size: 18px; cursor: pointer;">✕</button>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0;">
+              <div style="background: var(--dash-card-bg); padding: 10px 12px; border-radius: 6px; border: 1px solid var(--dash-border);">
+                <span style="font-size: 11.5px; color: var(--dash-muted); display: block;">Standard Task Benchmark</span>
+                <strong id="ai-pricing-standard-val" style="font-size: 15px; color: var(--dash-green);">₦10,000 – ₦30,000</strong>
+              </div>
+              <div style="background: var(--dash-card-bg); padding: 10px 12px; border-radius: 6px; border: 1px solid var(--dash-border);">
+                <span style="font-size: 11.5px; color: var(--dash-muted); display: block;">Diagnostic / Site Inspection</span>
+                <strong id="ai-pricing-inspection-val" style="font-size: 15px; color: var(--dash-gold);">₦3,500 – ₦6,000</strong>
+              </div>
+            </div>
+
+            <div style="margin-top: 10px;">
+              <strong style="font-size: 12px; color: var(--dash-muted); text-transform: uppercase; letter-spacing: 0.5px;">Pricing Considerations to Factor In:</strong>
+              <ul id="ai-pricing-factors-list" style="margin: 6px 0 0 0; padding-left: 18px; font-size: 12.5px; color: var(--dash-fg); line-height: 1.6;">
+              </ul>
             </div>
           </div>
 
@@ -636,6 +695,10 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="telemetry.js"></script>
+  <script src="locations.js"></script>
+  <script src="phone-utils.js"></script>
+  <script src="search-language.js"></script>
+  <script src="ai-service.js"></script>
   <script src="categories.js"></script>
   <script src="providers-data.js"></script>
   <script src="supabase-client.js"></script>

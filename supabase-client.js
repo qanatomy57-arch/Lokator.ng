@@ -584,13 +584,18 @@
 
   function getLocalStore(key, defaultValue = []) {
     try {
+      const activeProvidersData = (typeof PROVIDERS_DATA !== 'undefined' ? PROVIDERS_DATA : null) ||
+                                  (typeof globalThis !== 'undefined' ? globalThis.PROVIDERS_DATA : null) ||
+                                  (typeof window !== 'undefined' ? window.PROVIDERS_DATA : null) ||
+                                  (typeof global !== 'undefined' && global ? global.PROVIDERS_DATA : null);
+
       if (typeof localStorage !== 'undefined') {
         const item = localStorage.getItem(key);
         if (item) {
           const parsed = JSON.parse(item);
-          if (key === DB_STORE_KEY && typeof global.PROVIDERS_DATA !== 'undefined' && Array.isArray(global.PROVIDERS_DATA)) {
+          if (key === DB_STORE_KEY && activeProvidersData && Array.isArray(activeProvidersData)) {
             const existingIds = new Set(parsed.map(p => p.id));
-            global.PROVIDERS_DATA.forEach(def => {
+            activeProvidersData.forEach(def => {
               if (!existingIds.has(def.id)) {
                 parsed.push(def);
               }
@@ -601,8 +606,8 @@
       } else if (memoryStore.has(key)) {
         return JSON.parse(JSON.stringify(memoryStore.get(key)));
       }
-      if (key === DB_STORE_KEY && typeof global.PROVIDERS_DATA !== 'undefined') {
-        return [...global.PROVIDERS_DATA];
+      if (key === DB_STORE_KEY && activeProvidersData) {
+        return [...activeProvidersData];
       }
       return defaultValue;
     } catch (e) {
@@ -621,22 +626,63 @@
 
   const STOP_WORDS = new Set(['my', 'a', 'an', 'the', 'to', 'in', 'at', 'and', 'or', 'of', 'for', 'with', 'on', 'me', 'you', 'is', 'it', 'do', 'i', 'we', 'be', 'so', 'can', 'who', 'somewhere', 'someone', 'please', 'help', 'need', 'find']);
 
-  // 3.1 NATURAL QUERY & SEARCH INTENT EXTRACTOR
+  // 3.1 NATURAL QUERY & SEARCH INTENT EXTRACTOR (With Nigerian Location & Search Language Intelligence)
   function parseSearchQuery(rawQuery) {
     if (!rawQuery || typeof rawQuery !== 'string') {
-      return { cleanQuery: '', extractedLocation: null, tokens: [] };
+      return { cleanQuery: '', extractedLocation: null, locationHierarchy: null, isNearMe: false, serviceIntent: null, tokens: [] };
+    }
+
+    const LangEngine = (typeof NigeriaSearchLanguage !== 'undefined' ? NigeriaSearchLanguage : null) ||
+                       (typeof globalThis !== 'undefined' ? globalThis.NigeriaSearchLanguage : null) ||
+                       (typeof window !== 'undefined' ? window.NigeriaSearchLanguage : null) ||
+                       (typeof global !== 'undefined' ? global.NigeriaSearchLanguage : null);
+
+    if (LangEngine && LangEngine.parseNigerianQuery) {
+      return LangEngine.parseNigerianQuery(rawQuery);
     }
 
     let q = rawQuery.trim();
     let extractedLocation = null;
+    let locationHierarchy = null;
 
-    // Check for location pattern: "in <location>", "at <location>", "around <location>"
-    const locMatch = q.match(/\s+(?:in|at|around|near)\s+([a-zA-Z\s]+)$/i);
+    // Check for location pattern: "in <location>", "at <location>", "around <location>", "for <location>", "near <location>"
+    const locMatch = q.match(/\s+(?:in|at|around|for|near)\s+([a-zA-Z0-9\s-]+)$/i);
     if (locMatch && locMatch[1]) {
       const candidateLoc = locMatch[1].trim();
-      if (candidateLoc.length >= 3 && !/^(me|my area|here)$/i.test(candidateLoc)) {
+      if (candidateLoc.length >= 2 && !/^(me|my area|here|now|house|home|flat|compound)$/i.test(candidateLoc)) {
         extractedLocation = candidateLoc;
         q = q.substring(0, locMatch.index).trim();
+      }
+    }
+
+    // If NigeriaLocations is available, check for known Nigerian cities/LGAs/localities inside remaining query
+    const LocEngine = (typeof NigeriaLocations !== 'undefined' ? NigeriaLocations : null) ||
+                      (typeof globalThis !== 'undefined' ? globalThis.NigeriaLocations : null) ||
+                      (typeof window !== 'undefined' ? window.NigeriaLocations : null) ||
+                      (typeof global !== 'undefined' ? global.NigeriaLocations : null);
+
+    if (LocEngine) {
+      if (extractedLocation) {
+        locationHierarchy = LocEngine.resolveLocationHierarchy(extractedLocation);
+      } else {
+        // Check if full query or end of query contains a known Nigerian location
+        const searchMatches = LocEngine.searchLocations(q, 1);
+        if (searchMatches && searchMatches.length > 0) {
+          const topMatch = searchMatches[0];
+          const matchTitleLower = topMatch.title.toLowerCase();
+          const qLower = q.toLowerCase();
+          
+          if (qLower === matchTitleLower || qLower.endsWith(' ' + matchTitleLower) || qLower.startsWith(matchTitleLower + ' ')) {
+            extractedLocation = topMatch.title;
+            locationHierarchy = {
+              state: topMatch.state,
+              lga: topMatch.lga,
+              locality: topMatch.locality,
+              cleanLocation: topMatch.formatted
+            };
+            q = q.replace(new RegExp(`\\b${topMatch.title}\\b`, 'gi'), '').trim();
+          }
+        }
       }
     }
 
@@ -654,6 +700,9 @@
       rawQuery: rawQuery.trim(),
       cleanQuery: cleanQuery.toLowerCase(),
       extractedLocation,
+      locationHierarchy,
+      isNearMe: false,
+      serviceIntent: null,
       tokens
     };
   }
@@ -685,8 +734,8 @@
 
   // 3.3 MULTI-TIER PROVIDER SEARCH RELEVANCE SCORER
   function scoreProviderRelevance(provider, searchIntent, services = []) {
-    const { cleanQuery, tokens } = searchIntent;
-    if (!cleanQuery && tokens.length === 0) return 100; // No keyword constraint
+    const { cleanQuery, tokens, serviceIntent } = searchIntent;
+    if (!cleanQuery && tokens.length === 0 && !serviceIntent) return 100; // No keyword constraint
 
     let score = 0;
     const q = cleanQuery;
@@ -705,6 +754,24 @@
     const fullName = `${provider.first_name || ''} ${provider.last_name || provider.name || ''}`.toLowerCase();
     const bio = (provider.bio || '').toLowerCase();
     const catSlug = (provider.primary_category_slug || provider.slug || '').toLowerCase();
+
+    // 0. TIER 0: Nigerian Trade Intent Canonical Boost (+95 for exact trade match, +85 for related skills)
+    if (serviceIntent) {
+      const canonical = serviceIntent.canonicalSlug ? serviceIntent.canonicalSlug.toLowerCase() : '';
+      if (canonical && (catSlug === canonical || catSlug.includes(canonical) || canonical.includes(catSlug))) {
+        score += 95;
+      }
+      if (Array.isArray(serviceIntent.skills)) {
+        const intentSkills = serviceIntent.skills.map(s => s.toLowerCase());
+        const hasSkillMatch = allSkills.some(ps => intentSkills.some(is => ps.includes(is) || is.includes(ps)));
+        if (hasSkillMatch) {
+          score += 85;
+        }
+      }
+      if (serviceIntent.primaryTrade && (trade.includes(serviceIntent.primaryTrade.toLowerCase()) || serviceIntent.primaryTrade.toLowerCase().includes(trade))) {
+        score += 80;
+      }
+    }
 
     // 1. TIER 1: Exact skill match (+100)
     for (const skill of allSkills) {
@@ -1233,6 +1300,12 @@
           if (p) return p;
         }
 
+        // 1.1 Direct numeric user ID match to provider ID
+        if (user.id && (typeof user.id === 'number' || (!isNaN(Number(user.id)) && Number(user.id) > 0))) {
+          const p = await LokatorDB.getProviderById(Number(user.id));
+          if (p) return p;
+        }
+
         // 2. Query by user_id in Remote Supabase
         if (isRemoteActive()) {
           try {
@@ -1275,6 +1348,8 @@
       const {
         category = 'all',
         state = 'all',
+        lga = 'all',
+        locality = 'all',
         city = 'all',
         query = '',
         isVerified = false,
@@ -1289,7 +1364,22 @@
 
       // Parse free-form natural search intent and location
       const searchIntent = parseSearchQuery(query);
-      const effectiveLocation = (city && city !== 'all') ? city : (searchIntent.extractedLocation || 'all');
+      
+      const effectiveState = (state && state !== 'all') 
+        ? state 
+        : (searchIntent.locationHierarchy && searchIntent.locationHierarchy.state ? searchIntent.locationHierarchy.state : 'all');
+
+      const effectiveLga = (lga && lga !== 'all') 
+        ? lga 
+        : (searchIntent.locationHierarchy && searchIntent.locationHierarchy.lga ? searchIntent.locationHierarchy.lga : 'all');
+
+      const effectiveLocality = (locality && locality !== 'all') 
+        ? locality 
+        : (searchIntent.locationHierarchy && searchIntent.locationHierarchy.locality ? searchIntent.locationHierarchy.locality : 'all');
+
+      const effectiveLocation = (city && city !== 'all') 
+        ? city 
+        : (searchIntent.extractedLocation || (effectiveLga !== 'all' ? effectiveLga : (effectiveState !== 'all' ? effectiveState : 'all')));
 
       // 1. If remote live Supabase client is connected and active:
       if (isRemoteActive()) {
@@ -1336,11 +1426,17 @@
           if (category && category !== 'all') {
             queryBuilder = queryBuilder.eq('primary_category_slug', category);
           }
-          if (state && state !== 'all') {
-            queryBuilder = queryBuilder.ilike('state', `%${state}%`);
+          if (effectiveState && effectiveState !== 'all') {
+            queryBuilder = queryBuilder.ilike('state', `%${effectiveState}%`);
           }
-          if (effectiveLocation && effectiveLocation !== 'all') {
-            queryBuilder = queryBuilder.or(`city.ilike.%${effectiveLocation}%,area.ilike.%${effectiveLocation}%,state.ilike.%${effectiveLocation}%`);
+          if (effectiveLga && effectiveLga !== 'all') {
+            queryBuilder = queryBuilder.or(`lga.ilike.%${effectiveLga}%,city.ilike.%${effectiveLga}%,area.ilike.%${effectiveLga}%`);
+          }
+          if (effectiveLocality && effectiveLocality !== 'all') {
+            queryBuilder = queryBuilder.or(`area.ilike.%${effectiveLocality}%,address.ilike.%${effectiveLocality}%`);
+          }
+          if (effectiveLocation && effectiveLocation !== 'all' && effectiveLocation !== effectiveState && effectiveLocation !== effectiveLga) {
+            queryBuilder = queryBuilder.or(`city.ilike.%${effectiveLocation}%,area.ilike.%${effectiveLocation}%,state.ilike.%${effectiveLocation}%,lga.ilike.%${effectiveLocation}%`);
           }
           if (isVerified) {
             queryBuilder = queryBuilder.eq('is_verified', true);
@@ -1377,31 +1473,62 @@
       let list = providers.filter(p => p.is_active !== false && p.is_public !== false && p.profile_complete !== false);
 
       // Filter: Category
-      if (category && category !== 'all') {
-        const catSlug = String(category).toLowerCase();
+      let resolvedCategorySlug = category && category !== 'all' ? String(category).toLowerCase() : 'all';
+      const CatEngine = (typeof CategoryMap !== 'undefined' ? CategoryMap : null) || 
+                        (typeof globalThis !== 'undefined' ? globalThis.CategoryMap : null) || 
+                        (typeof global !== 'undefined' ? global.CategoryMap : null);
+      if (CatEngine && CatEngine.resolveQuery && category && category !== 'all') {
+        const res = CatEngine.resolveQuery(category);
+        if (res) resolvedCategorySlug = typeof res === 'string' ? res : (res.slug || resolvedCategorySlug);
+      }
+
+      if (resolvedCategorySlug && resolvedCategorySlug !== 'all') {
         list = list.filter(p => {
           const pSlug = (p.primary_category_slug || p.category || p.slug || '').toLowerCase();
-          if (pSlug === catSlug || (pSlug.length >= 4 && catSlug.includes(pSlug)) || (catSlug.length >= 4 && pSlug.includes(catSlug))) return true;
+          if (pSlug === resolvedCategorySlug || (pSlug.length >= 3 && resolvedCategorySlug.includes(pSlug)) || (resolvedCategorySlug.length >= 3 && pSlug.includes(resolvedCategorySlug))) return true;
           // Check provider services
           const pServices = services.filter(s => s.provider_id === p.id);
-          return pServices.some(s => s.category_slug && String(s.category_slug).toLowerCase() === catSlug);
+          return pServices.some(s => s.category_slug && String(s.category_slug).toLowerCase() === resolvedCategorySlug);
         });
       }
 
       // Filter: State
-      if (state && state !== 'all') {
-        const stateNorm = state.toLowerCase();
-        list = list.filter(p => (p.state && p.state.toLowerCase().includes(stateNorm)));
+      if (effectiveState && effectiveState !== 'all') {
+        const stateNorm = effectiveState.toLowerCase();
+        list = list.filter(p => {
+          const pState = (p.state || p.city || p.area || '').toLowerCase();
+          return pState.includes(stateNorm) || stateNorm.includes(pState);
+        });
       }
 
-      // Filter: City/LGA/Location (including extracted natural location e.g. "in Warri", "in Ughelli")
-      if (effectiveLocation && effectiveLocation !== 'all') {
+      // Filter: LGA
+      if (effectiveLga && effectiveLga !== 'all') {
+        const lgaNorm = effectiveLga.toLowerCase();
+        list = list.filter(p => 
+          (p.lga && (p.lga.toLowerCase().includes(lgaNorm) || lgaNorm.includes(p.lga.toLowerCase()))) ||
+          (p.city && p.city.toLowerCase().includes(lgaNorm)) ||
+          (p.area && p.area.toLowerCase().includes(lgaNorm))
+        );
+      }
+
+      // Filter: Locality / Neighborhood
+      if (effectiveLocality && effectiveLocality !== 'all') {
+        const locNorm = effectiveLocality.toLowerCase();
+        list = list.filter(p => 
+          (p.area && p.area.toLowerCase().includes(locNorm)) ||
+          (p.address && p.address.toLowerCase().includes(locNorm))
+        );
+      }
+
+      // Filter: General Location text fallback
+      if (effectiveLocation && effectiveLocation !== 'all' && effectiveLocation !== effectiveState && effectiveLocation !== effectiveLga) {
         const locNorm = effectiveLocation.toLowerCase();
         list = list.filter(p => 
           (p.city && p.city.toLowerCase().includes(locNorm)) ||
           (p.lga && p.lga.toLowerCase().includes(locNorm)) ||
           (p.area && p.area.toLowerCase().includes(locNorm)) ||
-          (p.state && p.state.toLowerCase().includes(locNorm))
+          (p.state && p.state.toLowerCase().includes(locNorm)) ||
+          (p.address && p.address.toLowerCase().includes(locNorm))
         );
       }
 
@@ -1464,6 +1591,101 @@
     },
 
     /**
+     * Calculate Haversine distance in kilometers between two GPS coordinates
+     */
+    calculateDistance(lat1, lon1, lat2, lon2) {
+      if (lat1 == null || lon1 == null || lat2 == null || lon2 == null) return null;
+      const nLat1 = Number(lat1);
+      const nLon1 = Number(lon1);
+      const nLat2 = Number(lat2);
+      const nLon2 = Number(lon2);
+      if (isNaN(nLat1) || isNaN(nLon1) || isNaN(nLat2) || isNaN(nLon2)) return null;
+
+      const R = 6371; // Earth radius in km
+      const dLat = (nLat2 - nLat1) * Math.PI / 180;
+      const dLon = (nLon2 - nLon1) * Math.PI / 180;
+      const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(nLat1 * Math.PI / 180) * Math.cos(nLat2 * Math.PI / 180) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return Number((R * c).toFixed(1));
+    },
+
+    /**
+     * Normalize and sanitize list of provider records with distance and location hierarchy
+     */
+    _sanitizeProvidersList(providers, userLat, userLng) {
+      if (!Array.isArray(providers)) return [];
+      const LocEngine = (typeof NigeriaLocations !== 'undefined' ? NigeriaLocations : null) || 
+                        (typeof globalThis !== 'undefined' ? globalThis.NigeriaLocations : null) || 
+                        (typeof window !== 'undefined' ? window.NigeriaLocations : null) || 
+                        (typeof global !== 'undefined' ? global.NigeriaLocations : null);
+
+      return providers.map(p => {
+        const copy = { ...p };
+        copy.id = Number(p.id);
+        copy.name = p.name || `${p.first_name || ''} ${p.last_name || ''}`.trim() || 'Lokator Provider';
+        copy.trade = p.trade || p.trade_title || p.service || p.category || 'Professional Artisan';
+        copy.rating = Number(p.rating != null ? p.rating : 5.0);
+        copy.reviewsCount = Number(p.reviewsCount != null ? p.reviewsCount : (p.reviews_count || 0));
+        copy.experienceYrs = Number(p.experienceYrs != null ? p.experienceYrs : (p.experience_years || 3));
+        copy.completedJobs = Number(p.completedJobs != null ? p.completedJobs : (p.completed_jobs || 15));
+        copy.isVerified = Boolean(p.isVerified || p.is_verified);
+        copy.isAvailable = p.isAvailable !== false && p.is_available !== false;
+        copy.area = p.area || p.locality || p.city || 'Nigeria';
+
+        let hierarchy = null;
+        if (LocEngine && LocEngine.resolveLocationHierarchy) {
+          hierarchy = LocEngine.resolveLocationHierarchy(p.address || p.area || p.city || p.location);
+        }
+
+        copy.state = p.state || (hierarchy ? hierarchy.state : null) || 'Lagos';
+        copy.lga = p.lga || (hierarchy ? hierarchy.lga : null) || 'Ikeja';
+
+        // Normalize Phone and WhatsApp using NigeriaPhone
+        const PhoneEngine = (typeof NigeriaPhone !== 'undefined' ? NigeriaPhone : null) || 
+                            (typeof globalThis !== 'undefined' ? globalThis.NigeriaPhone : null) || 
+                            (typeof window !== 'undefined' ? window.NigeriaPhone : null) || 
+                            (typeof global !== 'undefined' ? global.NigeriaPhone : null);
+        if (PhoneEngine) {
+          const rawPh = p.phone || p.whatsappNumber || p.whatsapp || p.whatsapp_number;
+          if (rawPh) {
+            const norm = PhoneEngine.normalize(rawPh);
+            if (norm.valid) {
+              copy.phone = norm.international;
+              copy.whatsappNumber = norm.canonical;
+              copy.whatsapp_number = norm.canonical;
+              copy.phoneDisplay = norm.display;
+            } else {
+              copy.phone = String(rawPh);
+              copy.whatsappNumber = String(rawPh).replace(/\D/g, '');
+            }
+          }
+        }
+
+        const pLat = Number(p.lat != null ? p.lat : (p.latitude != null ? p.latitude : (p.coords && p.coords.lat)));
+        const pLng = Number(p.lng != null ? p.lng : (p.longitude != null ? p.longitude : (p.coords && p.coords.lng)));
+
+        if (!isNaN(pLat) && !isNaN(pLng)) {
+          copy.lat = pLat;
+          copy.lng = pLng;
+          copy.latitude = pLat;
+          copy.longitude = pLng;
+        }
+
+        if (userLat != null && userLng != null && !isNaN(pLat) && !isNaN(pLng)) {
+          copy.distanceKm = this.calculateDistance(userLat, userLng, pLat, pLng);
+        } else if (p.distanceKm != null) {
+          copy.distanceKm = Number(p.distanceKm);
+        } else {
+          copy.distanceKm = null;
+        }
+
+        return copy;
+      });
+    },
+
+    /**
      * Get real-time search suggestions dynamically from all available provider skills
      */
     getSkillSuggestions(query, limit = 6) {
@@ -1502,6 +1724,22 @@
           (cat.synonyms || []).forEach(syn => {
             if (syn.toLowerCase().includes(q) && syn.length > 2) {
               const cap = syn.charAt(0).toUpperCase() + syn.slice(1);
+              suggestionSet.add(cap);
+            }
+          });
+        });
+      }
+
+      // 4. Gather from Nigerian trade aliases
+      const LangEngine = (typeof NigeriaSearchLanguage !== 'undefined' ? NigeriaSearchLanguage : null) ||
+                         (typeof globalThis !== 'undefined' ? globalThis.NigeriaSearchLanguage : null) ||
+                         (typeof window !== 'undefined' ? window.NigeriaSearchLanguage : null) ||
+                         (typeof global !== 'undefined' ? global.NigeriaSearchLanguage : null);
+      if (LangEngine && Array.isArray(LangEngine.tradeDictionary)) {
+        LangEngine.tradeDictionary.forEach(entry => {
+          (entry.aliases || []).forEach(alias => {
+            if (alias.toLowerCase().includes(q) && alias.length > 2 && !LangEngine.ambiguousWords.has(alias)) {
+              const cap = alias.charAt(0).toUpperCase() + alias.slice(1);
               suggestionSet.add(cap);
             }
           });
@@ -1625,11 +1863,33 @@
         skillsArray = [catObj ? catObj.name : rawCategory];
       }
 
-      const locationInput = formData.location || 'Lagos, Nigeria';
-      const parts = locationInput.split(',').map(s => s.trim());
-      const area = locationInput;
-      const city = parts[0] || 'Lagos';
-      const state = parts[1] || parts[0] || 'Lagos';
+      let state = formData.state || null;
+      let lga = formData.lga || null;
+      let locality = formData.locality || null;
+      let city = formData.city || null;
+      const locationInput = formData.location || '';
+
+      // If NigeriaLocations is available, resolve location hierarchy if parts missing
+      if ((!state || !lga) && (locationInput || typeof global.NigeriaLocations !== 'undefined')) {
+        const LocEngine = global.NigeriaLocations || (typeof window !== 'undefined' && window.NigeriaLocations);
+        if (LocEngine && locationInput) {
+          const resolved = LocEngine.resolveLocationHierarchy(locationInput);
+          if (resolved) {
+            if (!state && resolved.state) state = resolved.state;
+            if (!lga && resolved.lga) lga = resolved.lga;
+            if (!locality && resolved.locality) locality = resolved.locality;
+          }
+        }
+      }
+
+      // Fallback defaults if still missing
+      const parts = locationInput.split(',').map(s => s.trim()).filter(Boolean);
+      if (!state) state = parts[1] || parts[0] || 'Lagos';
+      if (!lga) lga = parts[0] || 'Ikeja';
+      if (!city) city = lga || parts[0] || 'Lagos';
+
+      const area = formData.area || (locality ? `${locality}, ${lga}` : (locationInput || `${lga}, ${state}`));
+      const address = formData.address || (locality ? `${locality}, ${lga}, ${state}` : (locationInput || `${lga}, ${state}, Nigeria`));
 
       // Parse coordinates if GPS was used
       let lat = null;
@@ -1651,6 +1911,20 @@
         if (u && u.id) currentUserId = u.id;
       }
 
+      let normalizedPhone = formData.phone || '';
+      let canonicalWa = formData.phone || '';
+      const PhoneEngine = (typeof NigeriaPhone !== 'undefined' ? NigeriaPhone : null) || 
+                          (typeof globalThis !== 'undefined' ? globalThis.NigeriaPhone : null) || 
+                          (typeof window !== 'undefined' ? window.NigeriaPhone : null) || 
+                          (typeof global !== 'undefined' ? global.NigeriaPhone : null);
+      if (PhoneEngine && formData.phone) {
+        const norm = PhoneEngine.normalize(formData.phone);
+        if (norm.valid) {
+          normalizedPhone = norm.international;
+          canonicalWa = norm.canonical;
+        }
+      }
+
       const newProvider = {
         id: newId,
         user_id: currentUserId,
@@ -1661,14 +1935,15 @@
         primary_category_slug: categorySlug,
         skills: skillsArray,
         bio: formData.bio || `Certified ${tradeTitle} serving ${area}. Contact directly for instant quotes and prompt service.`,
-        phone: formData.phone.startsWith('+234') ? formData.phone : `+234${formData.phone.replace(/^0+/, '')}`,
-        whatsapp_number: formData.phone.startsWith('+234') ? formData.phone : `+234${formData.phone.replace(/^0+/, '')}`,
+        phone: normalizedPhone,
+        whatsapp_number: canonicalWa,
+        whatsappNumber: canonicalWa,
         email: formData.email || null,
         state: state,
         city: city,
-        lga: formData.lga || city,
+        lga: lga,
         area: area,
-        address: formData.address || area,
+        address: address,
         latitude: lat,
         longitude: lng,
         lat: lat,
@@ -1702,8 +1977,8 @@
             primary_category_slug: categorySlug,
             skills: skillsArray,
             bio: formData.bio || `Certified ${tradeTitle} serving ${area}. Contact directly for instant quotes and prompt service.`,
-            phone: formData.phone.startsWith('+234') ? formData.phone : `+234${formData.phone.replace(/^0+/, '')}`,
-            whatsapp_number: formData.phone.startsWith('+234') ? formData.phone : `+234${formData.phone.replace(/^0+/, '')}`,
+            phone: normalizedPhone,
+            whatsapp_number: canonicalWa,
             email: formData.email || null,
             state: state,
             city: city,
@@ -2394,6 +2669,15 @@
      * Sanitize providers list & calculate distance
      */
     _sanitizeProvidersList(providers, userLat, userLng, allServices = []) {
+      const PhoneEngine = (typeof NigeriaPhone !== 'undefined' ? NigeriaPhone : null) || 
+                          (typeof globalThis !== 'undefined' && globalThis.NigeriaPhone ? globalThis.NigeriaPhone : null) || 
+                          (typeof window !== 'undefined' ? window.NigeriaPhone : null) || 
+                          (global && global.NigeriaPhone ? global.NigeriaPhone : null);
+      const LocEngine = (typeof NigeriaLocations !== 'undefined' ? NigeriaLocations : null) || 
+                        (typeof globalThis !== 'undefined' ? globalThis.NigeriaLocations : null) || 
+                        (typeof window !== 'undefined' ? window.NigeriaLocations : null) || 
+                        (global && global.NigeriaLocations ? global.NigeriaLocations : null);
+
       return providers.map(p => {
         let dist = null;
         if (userLat && userLng && p.latitude && p.longitude) {
@@ -2411,6 +2695,32 @@
           ? p.skills 
           : (pServices.length > 0 ? pServices.map(s => s.service_name) : [trade]);
 
+        let cleanPhone = p.phone;
+        let canonicalWa = p.whatsappNumber || p.whatsapp_number || p.phone;
+        let displayPhone = p.phone;
+        if (PhoneEngine) {
+          const rawPh = p.phone || p.whatsappNumber || p.whatsapp_number || p.whatsapp;
+          if (rawPh) {
+            const norm = PhoneEngine.normalize(rawPh);
+            if (norm.valid) {
+              cleanPhone = norm.international;
+              canonicalWa = norm.canonical;
+              displayPhone = norm.display;
+            } else {
+              cleanPhone = String(rawPh);
+              canonicalWa = String(rawPh).replace(/\D/g, '');
+            }
+          }
+        }
+
+        let hierarchy = null;
+        if (LocEngine && LocEngine.resolveLocationHierarchy) {
+          hierarchy = LocEngine.resolveLocationHierarchy(p.address || p.area || p.city || p.location);
+        }
+
+        const state = p.state || (hierarchy ? hierarchy.state : null) || 'Lagos';
+        const lga = p.lga || (hierarchy ? hierarchy.lga : null) || 'Ikeja';
+
         return {
           id: p.id,
           name: name,
@@ -2419,9 +2729,11 @@
           trade: trade,
           category: category,
           slug: slug,
-          city: p.city,
-          state: p.state,
-          area: p.area || `${p.city}, ${p.state}`,
+          city: p.city || lga,
+          state: state,
+          lga: lga,
+          locality: p.locality || (hierarchy ? hierarchy.locality : null),
+          area: p.area || `${p.city || lga}, ${state}`,
           address: p.address || p.area,
           distanceKm: dist,
           rating: Number(p.rating || 5.0),
@@ -2430,8 +2742,10 @@
           isVerified: Boolean(p.is_verified || p.isVerified),
           isAvailable: p.is_available !== false && p.isAvailable !== false,
           isTop: Boolean((p.rating >= 4.8 && p.is_verified) || p.isTop),
-          phone: p.phone,
-          whatsappNumber: p.whatsappNumber || p.whatsapp_number || p.phone,
+          phone: cleanPhone,
+          phoneDisplay: displayPhone,
+          whatsappNumber: canonicalWa,
+          whatsapp_number: canonicalWa,
           avatarBg: p.avatarBg || p.avatar_bg || 'linear-gradient(135deg, #006B3F, #059669)',
           bio: p.bio,
           skills: skills,
@@ -2460,7 +2774,26 @@
       const lastName = p.last_name || p.lastName || (p.name ? p.name.split(' ').slice(1).join(' ') : '');
       const lat = (p.latitude != null) ? Number(p.latitude) : (p.lat != null ? Number(p.lat) : null);
       const lng = (p.longitude != null) ? Number(p.longitude) : (p.lng != null ? Number(p.lng) : null);
-      
+
+      const PhoneEngine = (typeof NigeriaPhone !== 'undefined' ? NigeriaPhone : null) || 
+                          (typeof globalThis !== 'undefined' && globalThis.NigeriaPhone ? globalThis.NigeriaPhone : null) || 
+                          (typeof window !== 'undefined' && window.NigeriaPhone ? window.NigeriaPhone : null) || 
+                          (global && global.NigeriaPhone ? global.NigeriaPhone : null);
+      let cleanPhone = p.phone;
+      let canonicalWa = p.whatsappNumber || p.whatsapp_number || p.phone;
+      let displayPhone = p.phone;
+      if (PhoneEngine) {
+        const rawPh = p.phone || p.whatsappNumber || p.whatsapp_number || p.whatsapp;
+        if (rawPh) {
+          const norm = PhoneEngine.normalize(rawPh);
+          if (norm.valid) {
+            cleanPhone = norm.international;
+            canonicalWa = norm.canonical;
+            displayPhone = norm.display;
+          }
+        }
+      }
+
       return {
         id: p.id,
         userId: p.user_id || p.userId || null,
@@ -2499,9 +2832,10 @@
         isTop: Boolean((p.rating >= 4.8 && p.is_verified) || p.isTop),
         subscriptionPlan: p.subscription_plan || p.subscriptionPlan || (p.isTop ? 'premium' : (p.is_verified || p.isVerified ? 'verified' : 'basic')),
         subscription_plan: p.subscription_plan || p.subscriptionPlan || (p.isTop ? 'premium' : (p.is_verified || p.isVerified ? 'verified' : 'basic')),
-        phone: p.phone,
-        whatsappNumber: p.whatsappNumber || p.whatsapp_number || p.phone,
-        whatsapp_number: p.whatsappNumber || p.whatsapp_number || p.phone,
+        phone: cleanPhone,
+        phoneDisplay: displayPhone,
+        whatsappNumber: canonicalWa,
+        whatsapp_number: canonicalWa,
         email: p.email || null,
         avatarUrl: p.avatar_url || p.avatarUrl || p.profile_picture || null,
         avatarBg: p.avatarBg || p.avatar_bg || 'linear-gradient(135deg, #006B3F, #059669)',
@@ -5153,7 +5487,152 @@
   LokatorDB.analytics.getGrowthRecommendations = growthRecommendationsManager.getSummary;
   LokatorDB.analytics.reviewGrowthRecommendation = growthRecommendationsManager.review;
   LokatorDB.analytics.acceptGrowthRecommendation = growthRecommendationsManager.accept;
-  LokatorDB.analytics.dismissGrowthRecommendation = growthRecommendationsManager.dismiss;
+  // 4.9 SECURE AI PROVIDER ASSISTANCE MANAGER (Phase 10.12D)
+  const aiProviderAssistanceManager = {
+    /**
+     * Generates a polished, factual bio draft using the secure server-side boundary (or local fallback).
+     * @param {object} providerFacts
+     * @param {object} [options]
+     * @returns {Promise<{ success: boolean, data?: object, error?: string }>}
+     */
+    async generateBio(providerFacts, options = {}) {
+      if (typeof LokatorTelemetry !== 'undefined' && LokatorTelemetry.trackEvent) {
+        LokatorTelemetry.trackEvent('ai_bio_generate_started', {
+          trade: providerFacts ? (providerFacts.trade || providerFacts.category || '') : '',
+          has_experience: Boolean(providerFacts && (providerFacts.experienceYrs || providerFacts.experience_years))
+        });
+      }
+
+      const session = LokatorDB.auth.getSessionSync();
+      const token = session ? session.access_token : (options.token || 'provider-session-active');
+      const providerId = providerFacts ? (providerFacts.id || (session && session.user ? session.user.id : '')) : '';
+
+      // 1. Try server-side endpoint if available
+      try {
+        const baseUrl = (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
+        const fetchFn = (typeof fetch !== 'undefined') ? fetch : null;
+        if (fetchFn) {
+          const resp = await fetchFn(`${baseUrl}/api/ai/generate-bio`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
+              'x-provider-id': String(providerId)
+            },
+            body: JSON.stringify(providerFacts)
+          });
+          const json = await resp.json();
+          if (json.success && json.data) {
+            if (typeof LokatorTelemetry !== 'undefined' && LokatorTelemetry.trackEvent) {
+              LokatorTelemetry.trackEvent('ai_bio_generate_success', {
+                confidence: json.data.confidence || 'high',
+                model: json.data.model || 'lokator-trade-intelligence-v1'
+              });
+            }
+            return json;
+          }
+        }
+      } catch (err) {
+        // Fallback gracefully
+      }
+
+      // 2. Fallback to Local AI Intelligence Engine (Offline / Local test execution)
+      const AIEngine = (typeof LokatorAIService !== 'undefined' ? LokatorAIService : null) ||
+                       (typeof globalThis !== 'undefined' ? globalThis.LokatorAIService : null) ||
+                       (typeof global !== 'undefined' ? global.LokatorAIService : null);
+
+      if (AIEngine && typeof AIEngine.generateBio === 'function') {
+        try {
+          const result = AIEngine.generateBio(providerFacts, options);
+          if (typeof LokatorTelemetry !== 'undefined' && LokatorTelemetry.trackEvent) {
+            LokatorTelemetry.trackEvent('ai_bio_generate_success', {
+              confidence: result.confidence || 'high',
+              model: result.model || 'lokator-trade-intelligence-v1'
+            });
+          }
+          return { success: true, data: result };
+        } catch (genErr) {
+          if (typeof LokatorTelemetry !== 'undefined' && LokatorTelemetry.trackEvent) {
+            LokatorTelemetry.trackEvent('ai_bio_generate_failed', { error: genErr.message });
+          }
+          return { success: false, error: genErr.message };
+        }
+      }
+
+      return { success: false, error: 'AI Assistant service is currently unavailable.' };
+    },
+
+    /**
+     * Retrieves structured pricing guidance based on trade and task parameters.
+     * @param {object} pricingContext
+     * @param {object} [options]
+     * @returns {Promise<{ success: boolean, data?: object, error?: string }>}
+     */
+    async getPricingGuidance(pricingContext, options = {}) {
+      if (typeof LokatorTelemetry !== 'undefined' && LokatorTelemetry.trackEvent) {
+        LokatorTelemetry.trackEvent('ai_pricing_guidance_requested', {
+          trade: pricingContext ? (pricingContext.trade || pricingContext.category || '') : '',
+          is_emergency: Boolean(pricingContext && pricingContext.is_emergency)
+        });
+      }
+
+      const session = LokatorDB.auth.getSessionSync();
+      const token = session ? session.access_token : (options.token || 'provider-session-active');
+      const providerId = pricingContext ? (pricingContext.provider_id || (session && session.user ? session.user.id : '')) : '';
+
+      try {
+        const baseUrl = (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
+        const fetchFn = (typeof fetch !== 'undefined') ? fetch : null;
+        if (fetchFn) {
+          const resp = await fetchFn(`${baseUrl}/api/ai/pricing-guidance`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
+              'x-provider-id': String(providerId)
+            },
+            body: JSON.stringify(pricingContext)
+          });
+          const json = await resp.json();
+          if (json.success && json.data) {
+            return json;
+          }
+        }
+      } catch (err) {
+        // Fallback gracefully
+      }
+
+      const AIEngine = (typeof LokatorAIService !== 'undefined' ? LokatorAIService : null) ||
+                       (typeof globalThis !== 'undefined' ? globalThis.LokatorAIService : null) ||
+                       (typeof global !== 'undefined' ? global.LokatorAIService : null);
+
+      if (AIEngine && typeof AIEngine.getPricingGuidance === 'function') {
+        try {
+          const result = AIEngine.getPricingGuidance(pricingContext);
+          return { success: true, data: result };
+        } catch (genErr) {
+          return { success: false, error: genErr.message };
+        }
+      }
+
+      return { success: false, error: 'Pricing guidance service is currently unavailable.' };
+    }
+  };
+
+  LokatorDB.ai = aiProviderAssistanceManager;
+  LokatorDB.aiService = aiProviderAssistanceManager;
+  LokatorDB.parseSearchQuery = parseSearchQuery;
+  LokatorDB.scoreProviderRelevance = scoreProviderRelevance;
+  LokatorDB.phone = (typeof NigeriaPhone !== 'undefined' ? NigeriaPhone : null) || (typeof globalThis !== 'undefined' ? globalThis.NigeriaPhone : null);
+  LokatorDB.searchLanguage = (typeof NigeriaSearchLanguage !== 'undefined' ? NigeriaSearchLanguage : null) || (typeof globalThis !== 'undefined' ? globalThis.NigeriaSearchLanguage : null);
+  LokatorDB.buildWhatsAppUrl = function (provider, ctx) {
+    const PE = LokatorDB.phone || (typeof NigeriaPhone !== 'undefined' ? NigeriaPhone : null) || (typeof globalThis !== 'undefined' ? globalThis.NigeriaPhone : null);
+    return PE ? PE.buildWhatsAppUrl(provider, ctx) : '';
+  };
+  LokatorDB.buildTelUrl = function (provider) {
+    const PE = LokatorDB.phone || (typeof NigeriaPhone !== 'undefined' ? NigeriaPhone : null) || (typeof globalThis !== 'undefined' ? globalThis.NigeriaPhone : null);
+    return PE ? PE.buildTelUrl(provider) : '';
+  };
 
   // 5. AUTOMATIC GLOBAL NAVBAR AUTH SYNC
   if (typeof document !== 'undefined') {

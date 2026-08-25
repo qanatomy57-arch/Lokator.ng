@@ -124,9 +124,10 @@
           <div class="form-group">
             <label for="phone">Phone Number (WhatsApp) *</label>
             <div class="phone-input">
-              <span class="phone-prefix">+234</span>
-              <input type="tel" id="phone" name="phone" required placeholder="8012345678" pattern="[0-9]{10,11}" />
+              <span class="phone-prefix">🇳🇬 +234</span>
+              <input type="tel" id="phone" name="phone" required placeholder="8012345678 or 08012345678" />
             </div>
+            <div id="phone-feedback" style="display: none; font-size: 0.75rem; margin-top: 4px;"></div>
           </div>
           <div class="form-row">
             <div class="form-group">
@@ -170,17 +171,40 @@
               <span class="popular-skill-pill" data-skill="🏛️ Tiler">🏛️ Tiler</span>
             </div>
             <input type="hidden" id="service" name="service" required />
-          </div>
+          <!-- Nigerian Location Intelligence Selection -->
           <div class="form-group">
-            <label for="location">Your Location / Area *</label>
-            <div class="loc-input-wrap">
-              <input type="text" id="location" name="location" required placeholder="e.g. Surulere, Lagos, Nigeria" />
-              <button type="button" class="gps-btn-form" id="gps-btn-form" aria-label="Use my GPS location">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="8"/></svg>
-                Use GPS
-              </button>
+            <label style="font-weight: 700;">Your Operating Location (State & LGA) *</label>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+              <div>
+                <label for="reg-state" style="font-size: 12.5px; font-weight: 600; color: var(--fg-muted);">State *</label>
+                <select id="reg-state" name="state" required style="width: 100%; padding: 10px 12px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--card-bg); color: var(--fg); font-size: 14px;">
+                  <option value="">Select State...</option>
+                </select>
+              </div>
+              <div>
+                <label for="reg-lga" style="font-size: 12.5px; font-weight: 600; color: var(--fg-muted);">LGA / City *</label>
+                <select id="reg-lga" name="lga" required disabled style="width: 100%; padding: 10px 12px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--card-bg); color: var(--fg); font-size: 14px;">
+                  <option value="">Select State First...</option>
+                </select>
+              </div>
             </div>
-            <div class="loc-map-container">
+
+            <div style="position: relative;">
+              <label for="reg-locality" style="font-size: 12.5px; font-weight: 600; color: var(--fg-muted);">Neighborhood / Specific Area (Optional)</label>
+              <div class="loc-input-wrap">
+                <input type="text" id="reg-locality" name="locality" placeholder="e.g. Lekki Phase 1, Wuse 2, Ikeja GRA, Bodija..." autocomplete="off" />
+                <button type="button" class="gps-btn-form" id="gps-btn-form" aria-label="Use my GPS location">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="8"/></svg>
+                  Use GPS
+                </button>
+              </div>
+              <div class="skills-autocomplete-dropdown" id="reg-locality-dropdown" style="display: none;"></div>
+            </div>
+
+            <input type="hidden" id="location" name="location" required />
+
+            <div class="loc-map-container" style="margin-top: 12px;">
               <div class="loc-map-preview" id="loc-map-preview">
                 <div id="interactive-reg-map" style="width: 100%; height: 100%; min-height: 150px;"></div>
               </div>
@@ -310,6 +334,10 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="telemetry.js"></script>
+  <script src="locations.js"></script>
+  <script src="phone-utils.js"></script>
+  <script src="search-language.js"></script>
+  <script src="ai-service.js"></script>
   <script src="categories.js"></script>
   <script src="supabase-client.js"></script>
   <script src="pwa-manager.js"></script>
@@ -679,6 +707,138 @@
       addSkill(decodeURIComponent(prefillService));
     }
 
+    // 8. Nigerian Location Cascading State, LGA, and Locality Engine
+    const regStateSelect = document.getElementById('reg-state');
+    const regLgaSelect = document.getElementById('reg-lga');
+    const regLocalityInput = document.getElementById('reg-locality');
+    const regLocalityDropdown = document.getElementById('reg-locality-dropdown');
+
+    function initNigerianLocationPickers() {
+      if (!regStateSelect || typeof NigeriaLocations === 'undefined') return;
+      const states = NigeriaLocations.getStates();
+      regStateSelect.innerHTML = `<option value="">Select State...</option>` +
+        states.map(s => `<option value="${escapeHtml(s.name)}">${escapeHtml(s.displayName)}</option>`).join('');
+    }
+
+    function populateRegLgas(stateName, selectedLga = '') {
+      if (!regLgaSelect || typeof NigeriaLocations === 'undefined') return;
+      if (!stateName) {
+        regLgaSelect.innerHTML = `<option value="">Select State First...</option>`;
+        regLgaSelect.disabled = true;
+        updateLocationHidden();
+        return;
+      }
+
+      const lgas = NigeriaLocations.getLgas(stateName);
+      regLgaSelect.disabled = false;
+      regLgaSelect.innerHTML = `<option value="">Select LGA / City...</option>` +
+        lgas.map(l => `<option value="${escapeHtml(l.name)}">${escapeHtml(l.name)}</option>`).join('');
+
+      if (selectedLga) {
+        regLgaSelect.value = selectedLga;
+      }
+      updateLocationHidden();
+    }
+
+    function updateLocationHidden() {
+      const stateVal = regStateSelect ? regStateSelect.value : '';
+      const lgaVal = regLgaSelect ? regLgaSelect.value : '';
+      const locVal = regLocalityInput ? regLocalityInput.value.trim() : '';
+
+      let combined = '';
+      if (locVal && lgaVal && stateVal) {
+        combined = `${locVal}, ${lgaVal}, ${stateVal}, Nigeria`;
+      } else if (lgaVal && stateVal) {
+        combined = `${lgaVal}, ${stateVal}, Nigeria`;
+      } else if (stateVal) {
+        combined = `${stateVal}, Nigeria`;
+      } else {
+        combined = 'Lagos, Nigeria';
+      }
+
+      if (locInput) locInput.value = combined;
+    }
+
+    if (regStateSelect) {
+      regStateSelect.addEventListener('change', () => {
+        populateRegLgas(regStateSelect.value);
+        if (regLocalityInput) regLocalityInput.value = '';
+      });
+    }
+
+    if (regLgaSelect) {
+      regLgaSelect.addEventListener('change', () => {
+        updateLocationHidden();
+      });
+    }
+
+    if (regLocalityInput) {
+      regLocalityInput.addEventListener('input', () => {
+        updateLocationHidden();
+        const val = regLocalityInput.value.trim();
+        if (val.length >= 2 && regLocalityDropdown && typeof NigeriaLocations !== 'undefined') {
+          const stateVal = regStateSelect ? regStateSelect.value : '';
+          const lgaVal = regLgaSelect ? regLgaSelect.value : '';
+          let locMatches = [];
+
+          if (stateVal && lgaVal) {
+            const known = NigeriaLocations.getLocalities(stateVal, lgaVal);
+            locMatches = known.filter(k => k.toLowerCase().includes(val.toLowerCase())).map(k => ({
+              title: k,
+              subtitle: `${lgaVal}, ${stateVal}`,
+              state: stateVal,
+              lga: lgaVal
+            }));
+          }
+
+          if (locMatches.length === 0) {
+            const broad = NigeriaLocations.searchLocations(val, 5);
+            locMatches = broad.map(b => ({
+              title: b.title,
+              subtitle: b.label,
+              state: b.state,
+              lga: b.lga,
+              locality: b.locality
+            }));
+          }
+
+          if (locMatches.length > 0) {
+            regLocalityDropdown.innerHTML = locMatches.map(m => `
+              <div class="skills-autocomplete-item reg-loc-item" data-title="${escapeHtml(m.title)}" data-state="${escapeHtml(m.state || '')}" data-lga="${escapeHtml(m.lga || '')}">
+                <div class="autocomplete-main">
+                  <span class="autocomplete-icon">📍</span>
+                  <span class="autocomplete-text">${escapeHtml(m.title)}</span>
+                </div>
+                <span class="autocomplete-category">${escapeHtml(m.subtitle)}</span>
+              </div>
+            `).join('');
+            regLocalityDropdown.style.display = 'block';
+          } else {
+            regLocalityDropdown.style.display = 'none';
+          }
+        } else if (regLocalityDropdown) {
+          regLocalityDropdown.style.display = 'none';
+        }
+      });
+    }
+
+    if (regLocalityDropdown) {
+      regLocalityDropdown.addEventListener('click', (e) => {
+        const item = e.target.closest('.reg-loc-item');
+        if (item && item.dataset.title) {
+          if (regLocalityInput) regLocalityInput.value = item.dataset.title;
+          if (item.dataset.state && regStateSelect) {
+            regStateSelect.value = item.dataset.state;
+            populateRegLgas(item.dataset.state, item.dataset.lga || '');
+          }
+          regLocalityDropdown.style.display = 'none';
+          updateLocationHidden();
+        }
+      });
+    }
+
+    initNigerianLocationPickers();
+
     // Interactive Real Leaflet Map & GPS Geolocation
     const gpsBtn = document.getElementById('gps-btn-form');
     const locGpsQuickBtn = document.getElementById('loc-gps-quick-btn');
@@ -718,7 +878,7 @@
           const latlng = ev.target.getLatLng();
           userCoords = { lat: Number(latlng.lat.toFixed(5)), lng: Number(latlng.lng.toFixed(5)) };
           const addr = await reverseGeocode(userCoords.lat, userCoords.lng);
-          if (locInput) locInput.value = addr;
+          setMapLocation(userCoords.lat, userCoords.lng, addr);
         });
 
         leafletMap.on('click', async (ev) => {
@@ -726,7 +886,7 @@
           userCoords = { lat: Number(latlng.lat.toFixed(5)), lng: Number(latlng.lng.toFixed(5)) };
           mapMarker.setLatLng(latlng);
           const addr = await reverseGeocode(userCoords.lat, userCoords.lng);
-          if (locInput) locInput.value = addr;
+          setMapLocation(userCoords.lat, userCoords.lng, addr);
         });
       } catch (err) {
         console.warn('Map initialization note:', err);
@@ -752,7 +912,17 @@
 
     function setMapLocation(lat, lng, address) {
       userCoords = { lat: Number(lat.toFixed(5)), lng: Number(lng.toFixed(5)) };
-      if (locInput && address) locInput.value = address;
+      if (address && typeof NigeriaLocations !== 'undefined') {
+        const resolved = NigeriaLocations.resolveLocationHierarchy(address);
+        if (resolved && resolved.state && regStateSelect) {
+          regStateSelect.value = resolved.state;
+          populateRegLgas(resolved.state, resolved.lga || '');
+          if (resolved.locality && regLocalityInput) {
+            regLocalityInput.value = resolved.locality;
+          }
+        }
+      }
+      updateLocationHidden();
       if (leafletMap && mapMarker) {
         mapMarker.setLatLng([lat, lng]);
         leafletMap.setView([lat, lng], 15);
@@ -883,6 +1053,20 @@
           return;
         }
 
+        const rawPhone = document.getElementById('phone') ? document.getElementById('phone').value.trim() : '';
+        const PhoneEngine = (typeof NigeriaPhone !== 'undefined' ? NigeriaPhone : null) || (typeof window !== 'undefined' ? window.NigeriaPhone : null);
+        const normPhone = PhoneEngine ? PhoneEngine.normalize(rawPhone) : { valid: rawPhone.length >= 10, international: rawPhone, canonical: rawPhone };
+
+        if (!normPhone.valid) {
+          if (typeof LokatorTelemetry !== 'undefined') {
+            LokatorTelemetry.trackEvent('provider_registration_validation_failed', { reason: 'invalid_phone' });
+          }
+          alert('Please enter a valid Nigerian mobile phone number (e.g. 08012345678, 0812..., or +2348012345678).');
+          const pInput = document.getElementById('phone');
+          if (pInput) pInput.focus();
+          return;
+        }
+
         const email = document.getElementById('email') ? document.getElementById('email').value.trim() : '';
         const password = document.getElementById('password') ? document.getElementById('password').value : '';
 
@@ -910,11 +1094,15 @@
         const formData = {
           fname: document.getElementById('fname') ? document.getElementById('fname').value : '',
           lname: document.getElementById('lname') ? document.getElementById('lname').value : '',
-          phone: document.getElementById('phone') ? document.getElementById('phone').value : '',
+          phone: normPhone.international || rawPhone,
           email: email,
           service: primarySkill,
           trade: providerSkills.join(' & '),
           skills: providerSkills,
+          state: regStateSelect ? regStateSelect.value : '',
+          lga: regLgaSelect ? regLgaSelect.value : '',
+          locality: regLocalityInput ? regLocalityInput.value.trim() : '',
+          city: regLgaSelect ? regLgaSelect.value : '',
           location: document.getElementById('location') ? document.getElementById('location').value : '',
           experience: document.getElementById('experience') ? document.getElementById('experience').value : '1-3',
           bio: document.getElementById('bio') ? document.getElementById('bio').value : '',

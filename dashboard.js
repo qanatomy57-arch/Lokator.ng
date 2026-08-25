@@ -421,11 +421,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (el) el.value = val || '';
     };
 
+    const PhoneEngine = (typeof NigeriaPhone !== 'undefined' ? NigeriaPhone : null) || (typeof window !== 'undefined' ? window.NigeriaPhone : null);
+    const displayPhone = PhoneEngine ? PhoneEngine.formatInternational(p.phone || p.whatsappNumber) : (p.phone || '');
+
     setVal('edit-fname', p.firstName);
     setVal('edit-lname', p.lastName);
     setVal('edit-bname', p.businessName || p.name);
     setVal('edit-trade', p.trade);
-    setVal('edit-phone', p.phone);
+    setVal('edit-phone', displayPhone);
     setVal('edit-email', p.email || '');
     setVal('edit-state', p.state || 'Lagos');
     setVal('edit-city', p.city || 'Surulere');
@@ -447,13 +450,24 @@ document.addEventListener('DOMContentLoaded', async () => {
       saveBtn.disabled = true;
       saveBtn.textContent = 'Saving...';
 
+      const rawPhone = document.getElementById('edit-phone').value.trim();
+      const PhoneEngine = (typeof NigeriaPhone !== 'undefined' ? NigeriaPhone : null) || (typeof window !== 'undefined' ? window.NigeriaPhone : null);
+      const norm = PhoneEngine ? PhoneEngine.normalize(rawPhone) : { valid: true, international: rawPhone, canonical: rawPhone };
+
+      if (!norm.valid && rawPhone.length > 0) {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save Changes';
+        alert('Please enter a valid Nigerian mobile phone number (e.g. 08012345678 or +2348012345678).');
+        return;
+      }
+
       const updateData = {
         firstName: document.getElementById('edit-fname').value,
         lastName: document.getElementById('edit-lname').value,
         businessName: document.getElementById('edit-bname').value,
         trade: document.getElementById('edit-trade').value,
-        phone: document.getElementById('edit-phone').value,
-        whatsappNumber: document.getElementById('edit-phone').value,
+        phone: norm.valid ? norm.international : rawPhone,
+        whatsappNumber: norm.valid ? norm.canonical : rawPhone,
         email: document.getElementById('edit-email').value,
         state: document.getElementById('edit-state').value,
         city: document.getElementById('edit-city').value,
@@ -481,6 +495,88 @@ document.addEventListener('DOMContentLoaded', async () => {
         saveBtn.disabled = false;
         saveBtn.textContent = 'Save Profile Changes';
       }
+    });
+  }
+
+  // 6.1 AI Bio Assistant Controller
+  const btnAiBio = document.getElementById('btn-ai-bio-assistant');
+  const aiBioBox = document.getElementById('ai-bio-draft-box');
+  const aiBioText = document.getElementById('ai-bio-draft-text');
+  const aiBioFacts = document.getElementById('ai-bio-source-facts');
+  const btnAiApplyBio = document.getElementById('btn-ai-apply-bio');
+  const btnAiRegenBio = document.getElementById('btn-ai-regen-bio');
+  const btnAiDiscardBio = document.getElementById('btn-ai-discard-bio');
+  const editBioInput = document.getElementById('edit-bio');
+
+  let currentAiBioDraft = null;
+  const bioVariants = ['standard', 'concise', 'client_focused'];
+  let bioVariantIdx = 0;
+
+  async function triggerAiBioGeneration() {
+    if (!btnAiBio) return;
+    const trade = document.getElementById('edit-trade') ? document.getElementById('edit-trade').value.trim() : '';
+    if (!trade) {
+      alert('Please enter your Primary Trade Title first so the AI knows what service to describe.');
+      return;
+    }
+
+    btnAiBio.disabled = true;
+    btnAiBio.innerHTML = '<span>⏳</span> Synthesizing facts...';
+
+    const facts = {
+      name: `${document.getElementById('edit-fname')?.value || ''} ${document.getElementById('edit-lname')?.value || ''}`.trim(),
+      businessName: document.getElementById('edit-bname')?.value || '',
+      trade: trade,
+      skills: dashSkills || [],
+      state: document.getElementById('edit-state')?.value || '',
+      city: document.getElementById('edit-city')?.value || '',
+      area: document.getElementById('edit-area')?.value || '',
+      experienceYrs: document.getElementById('edit-exp')?.value || 0,
+      startingPrice: document.getElementById('edit-price')?.value || '',
+      responseTime: document.getElementById('edit-response')?.value || ''
+    };
+
+    const variant = bioVariants[bioVariantIdx % bioVariants.length];
+    bioVariantIdx++;
+
+    try {
+      const res = await LokatorDB.ai.generateBio(facts, { variant });
+      if (res && res.success && res.data) {
+        currentAiBioDraft = res.data.bio;
+        if (aiBioText) aiBioText.textContent = res.data.bio;
+        if (aiBioFacts && Array.isArray(res.data.source_facts)) {
+          aiBioFacts.innerHTML = res.data.source_facts.map(f => `<span style="background: var(--dash-card-bg); border: 1px solid var(--dash-border); padding: 2px 6px; border-radius: 4px;">✓ ${escapeHtml(f)}</span>`).join('');
+        }
+        if (aiBioBox) aiBioBox.style.display = 'block';
+        showToast('AI Bio draft generated based strictly on your facts.');
+      } else {
+        showToast('Could not generate bio: ' + (res.error || 'Please check facts'), 'error');
+      }
+    } catch (err) {
+      showToast('AI Bio generation error: ' + err.message, 'error');
+    } finally {
+      btnAiBio.disabled = false;
+      btnAiBio.innerHTML = '<span>✨</span> AI Bio Assistant';
+    }
+  }
+
+  if (btnAiBio) btnAiBio.addEventListener('click', triggerAiBioGeneration);
+  if (btnAiRegenBio) btnAiRegenBio.addEventListener('click', triggerAiBioGeneration);
+
+  if (btnAiApplyBio) {
+    btnAiApplyBio.addEventListener('click', () => {
+      if (currentAiBioDraft && editBioInput) {
+        editBioInput.value = currentAiBioDraft;
+        if (aiBioBox) aiBioBox.style.display = 'none';
+        showToast('AI draft applied to Bio field! Review and click Save Profile Changes.');
+      }
+    });
+  }
+
+  if (btnAiDiscardBio) {
+    btnAiDiscardBio.addEventListener('click', () => {
+      if (aiBioBox) aiBioBox.style.display = 'none';
+      currentAiBioDraft = null;
     });
   }
 
@@ -653,6 +749,65 @@ document.addEventListener('DOMContentLoaded', async () => {
         btnSavePricing.disabled = false;
         btnSavePricing.textContent = 'Save Rate Card';
       }
+    });
+  }
+
+  // 8.1 AI Pricing Guidance Controller
+  const btnAiPricing = document.getElementById('btn-ai-pricing-guide');
+  const aiPricingBox = document.getElementById('ai-pricing-guidance-box');
+  const btnCloseAiPricing = document.getElementById('btn-close-ai-pricing');
+  const aiPricingTradeLabel = document.getElementById('ai-pricing-trade-label');
+  const aiPricingStandardVal = document.getElementById('ai-pricing-standard-val');
+  const aiPricingInspectionVal = document.getElementById('ai-pricing-inspection-val');
+  const aiPricingFactorsList = document.getElementById('ai-pricing-factors-list');
+
+  async function triggerAiPricingGuidance() {
+    if (!aiPricingBox) return;
+    if (aiPricingBox.style.display === 'block') {
+      aiPricingBox.style.display = 'none';
+      return;
+    }
+
+    if (btnAiPricing) {
+      btnAiPricing.disabled = true;
+      btnAiPricing.innerHTML = '<span>⏳</span> Loading guidance...';
+    }
+
+    const trade = currentProvider.trade || (document.getElementById('edit-trade') ? document.getElementById('edit-trade').value : 'Artisan');
+    const state = currentProvider.state || 'Nigeria';
+    const city = currentProvider.city || '';
+
+    try {
+      const res = await LokatorDB.ai.getPricingGuidance({
+        trade,
+        state,
+        city,
+        startingPrice: currentProvider.startingPrice
+      });
+
+      if (res && res.success && res.data) {
+        if (aiPricingTradeLabel) aiPricingTradeLabel.textContent = res.data.trade || trade;
+        if (aiPricingStandardVal) aiPricingStandardVal.textContent = res.data.suggested_range || '₦10,000 – ₦30,000';
+        if (aiPricingInspectionVal) aiPricingInspectionVal.textContent = res.data.inspection_fee_range || '₦3,500 – ₦6,000';
+        if (aiPricingFactorsList && Array.isArray(res.data.pricing_factors)) {
+          aiPricingFactorsList.innerHTML = res.data.pricing_factors.map(f => `<li>${escapeHtml(f)}</li>`).join('');
+        }
+        aiPricingBox.style.display = 'block';
+      }
+    } catch (err) {
+      showToast('Pricing guidance error: ' + err.message, 'error');
+    } finally {
+      if (btnAiPricing) {
+        btnAiPricing.disabled = false;
+        btnAiPricing.innerHTML = '<span>✨</span> AI Pricing Guidance';
+      }
+    }
+  }
+
+  if (btnAiPricing) btnAiPricing.addEventListener('click', triggerAiPricingGuidance);
+  if (btnCloseAiPricing) {
+    btnCloseAiPricing.addEventListener('click', () => {
+      if (aiPricingBox) aiPricingBox.style.display = 'none';
     });
   }
 

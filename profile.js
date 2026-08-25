@@ -54,8 +54,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // 3. Populate Breadcrumbs & Hero Header with Phase 10.9 Discovery Context
   const skillParam = params.get('skill') || params.get('service');
-  const stateParam = params.get('state');
-  const cityParam = params.get('city');
+  const stateParam = params.get('state') || provider.state;
+  const lgaParam = params.get('lga') || provider.lga;
+  const cityParam = params.get('city') || provider.city;
   const indParam = params.get('industry');
   const sourceParam = params.get('source');
 
@@ -64,7 +65,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const context = MarketplaceTaxonomy.buildDiscoveryContext({
       industry: indParam,
       skill: skillParam || provider.trade,
-      state: stateParam || provider.city || provider.area,
+      state: stateParam,
+      lga: lgaParam,
       city: cityParam,
       source: sourceParam || 'profile'
     });
@@ -73,10 +75,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (context.industry) {
       crumbs.push({ label: context.industry.name, url: `search.html?industry=${encodeURIComponent(context.industry.id)}` });
     }
-    crumbs.push({ label: provider.trade, url: `search.html?service=${encodeURIComponent(provider.trade)}` });
     if (stateParam) {
-      crumbs.push({ label: stateParam, url: `search.html?service=${encodeURIComponent(provider.trade)}&state=${encodeURIComponent(stateParam)}` });
+      crumbs.push({ label: stateParam, url: `search.html?state=${encodeURIComponent(stateParam)}` });
     }
+    if (lgaParam && lgaParam !== stateParam) {
+      crumbs.push({ label: lgaParam, url: `search.html?state=${encodeURIComponent(stateParam || '')}&lga=${encodeURIComponent(lgaParam)}` });
+    }
+    crumbs.push({ label: provider.trade, url: `search.html?service=${encodeURIComponent(provider.trade)}${stateParam ? '&state=' + encodeURIComponent(stateParam) : ''}` });
     crumbs.push({ label: provider.name, url: null });
 
     breadcrumbsEl.innerHTML = crumbs.map((c, i) => {
@@ -120,7 +125,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const heroLocationText = document.getElementById('hero-location-text');
   if (heroLocationText) {
-    heroLocationText.textContent = provider.area;
+    const displayLoc = provider.area || (provider.lga && provider.state ? `${provider.lga}, ${provider.state}` : (provider.city || 'Nigeria'));
+    heroLocationText.textContent = displayLoc;
   }
 
   const heroRatingVal = document.getElementById('hero-rating-val');
@@ -142,19 +148,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   const metricResponse = document.getElementById('metric-response');
   if (metricResponse) metricResponse.textContent = provider.responseTime || '~15 mins';
 
-  // 5. Hero Action Buttons (Direct Call & WhatsApp)
-  const cleanPhone = (provider.phone || '').replace(/[^0-9]/g, '');
-  const cleanWa = (provider.whatsappNumber || provider.phone || '').replace(/[^0-9]/g, '');
-  // P2 Fix: guard against null/undefined area in customer-facing message
-  const providerLocation = provider.area || provider.city || 'your area';
-  const initialWaMsg = encodeURIComponent(
-    `Hello ${provider.name}, I found your verified profile on Lokator and I'd like to inquire about your ${provider.trade} service in ${providerLocation}.`
-  );
+  // 5. Hero Action Buttons (Direct Call & WhatsApp via NigeriaPhone)
+  const PhoneEngine = (typeof NigeriaPhone !== 'undefined' ? NigeriaPhone : null) || (typeof window !== 'undefined' ? window.NigeriaPhone : null);
+  const providerLocation = provider.area || (provider.lga && provider.state ? `${provider.lga}, ${provider.state}` : provider.city) || 'your area';
+  
+  const heroTelUrl = PhoneEngine ? PhoneEngine.buildTelUrl(provider) : (provider.phone ? `tel:${provider.phone}` : '');
+  const heroWaUrl = PhoneEngine ? PhoneEngine.buildWhatsAppUrl(provider, { service: provider.trade, location: providerLocation }) : '';
 
   const btnCallHero = document.getElementById('btn-call-hero');
   if (btnCallHero) {
-    if (cleanPhone) {
-      btnCallHero.href = `tel:${cleanPhone}`;
+    if (heroTelUrl) {
+      btnCallHero.href = heroTelUrl;
       btnCallHero.addEventListener('click', () => {
         if (typeof LokatorTelemetry !== 'undefined') {
           LokatorTelemetry.trackEvent('phone_clicked', { providerId: provider.id, trade: provider.trade, city: provider.city });
@@ -169,16 +173,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       });
     } else {
-      // No phone number available — hide call button
       btnCallHero.style.display = 'none';
     }
   }
 
   const btnWaHero = document.getElementById('btn-wa-hero');
   if (btnWaHero) {
-    // P2 Fix: Only render WhatsApp button if a valid number exists
-    if (cleanWa) {
-      btnWaHero.href = `https://wa.me/${cleanWa}?text=${initialWaMsg}`;
+    if (heroWaUrl) {
+      btnWaHero.href = heroWaUrl;
       btnWaHero.addEventListener('click', () => {
         if (typeof LokatorTelemetry !== 'undefined') {
           LokatorTelemetry.trackEvent('whatsapp_clicked', { providerId: provider.id, trade: provider.trade, city: provider.city });
@@ -192,14 +194,12 @@ document.addEventListener('DOMContentLoaded', async () => {
           }).catch(() => {});
         }
       });
-    } else if (cleanPhone) {
-      // Fallback: redirect WhatsApp button to phone call when no WA number exists
-      btnWaHero.href = `tel:${cleanPhone}`;
+    } else if (heroTelUrl) {
+      btnWaHero.href = heroTelUrl;
       btnWaHero.textContent = 'Call Provider';
       btnWaHero.className = btnWaHero.className.replace('btn-gold', 'btn-outline');
       btnWaHero.setAttribute('title', 'WhatsApp not available — tap to call');
     } else {
-      // No contact info available — hide WhatsApp button
       btnWaHero.style.display = 'none';
     }
   }
@@ -557,15 +557,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function updateWhatsAppPreview() {
     const serviceVal = waServiceSelect ? waServiceSelect.value : provider.trade;
-    const locVal = waUserLocation && waUserLocation.value.trim() ? waUserLocation.value.trim() : provider.area;
+    const locVal = waUserLocation && waUserLocation.value.trim() ? waUserLocation.value.trim() : providerLocation;
     const urgVal = waUrgency ? waUrgency.value : 'Urgent';
     const noteVal = waNote && waNote.value.trim() ? `\n• Details: ${waNote.value.trim()}` : '';
 
-    const formattedMessage = `Hello ${provider.name},\n\nI found you on Locator.NG.\n\nI need your ${serviceVal} service.\n\nLocation:\n${locVal}\n\nPreferred time:\n${urgVal}${noteVal}\n\nAre you available? Thank you.`;
+    const formattedMessage = `Hello ${provider.name},\n\nI found your profile on Lokator.NG.\n\nI need your ${serviceVal} service.\n\nLocation:\n${locVal}\n\nPreferred time:\n${urgVal}${noteVal}\n\nAre you available? Thank you.`;
 
     if (waPreviewText) waPreviewText.textContent = formattedMessage;
     if (waSendBtn) {
-      waSendBtn.href = `https://wa.me/${cleanWa}?text=${encodeURIComponent(formattedMessage)}`;
+      const waLink = PhoneEngine ? PhoneEngine.buildWhatsAppUrl(provider, { customMessage: formattedMessage }) : '';
+      if (waLink) {
+        waSendBtn.href = waLink;
+      } else if (heroTelUrl) {
+        waSendBtn.href = heroTelUrl;
+        waSendBtn.textContent = 'Call Provider Directly';
+      }
     }
   }
 

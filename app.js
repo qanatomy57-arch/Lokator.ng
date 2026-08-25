@@ -132,6 +132,9 @@ class ScrollDiscoveryEngine {
   }
 
   init() {
+    // 0. Network, Save-Data, and Reduced Motion Detection
+    this.detectNetworkAndDeviceCapabilities();
+
     // 1. Configure and prime initial video preloads
     this.primeAllVideos();
 
@@ -143,7 +146,7 @@ class ScrollDiscoveryEngine {
 
     // 5. User interaction listener to ensure mobile media autoplay permission
     const unlockAutoplay = () => {
-      if (this.isHeroInViewport) {
+      if (this.isHeroInViewport && !this.prefersReducedMotion) {
         this.playVideo(this.currentIndex);
         this.bufferAdjacentVideos(this.currentIndex);
         this.bindVideoProgress(this.currentIndex);
@@ -181,7 +184,21 @@ class ScrollDiscoveryEngine {
     // 10. Initial active state on slide 0
     this.updateActiveSlide(0);
     this.bindVideoProgress(0);
-    this.playVideo(0);
+    if (!this.prefersReducedMotion) {
+      this.playVideo(0);
+    }
+  }
+
+  detectNetworkAndDeviceCapabilities() {
+    const nav = typeof navigator !== 'undefined' ? navigator : {};
+    const conn = nav.connection || nav.mozConnection || nav.webkitConnection || {};
+
+    this.effectiveType = conn.effectiveType || '4g';
+    this.saveData = conn.saveData === true;
+    this.isSlowConnection = ['slow-2g', '2g', '3g'].includes(this.effectiveType) || this.saveData;
+
+    this.prefersReducedMotion = typeof window !== 'undefined' &&
+      window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   }
 
   setupContinuousScrollTracking() {
@@ -214,11 +231,16 @@ class ScrollDiscoveryEngine {
       vid.setAttribute('webkit-playsinline', '');
       vid.setAttribute('muted', '');
 
-      // Slide 0 is immediate, Slide 1 is pre-buffered, others on-demand
+      // Error handler for graceful poster image fallback
+      vid.addEventListener('error', () => {
+        vid.style.opacity = '0';
+      }, { once: true });
+
+      // Adaptive initial preloading:
+      // Slide 0: auto on fast connection, metadata on slow connection
+      // Slide 1..8: deferred to preload="none"
       if (i === 0) {
-        vid.preload = 'auto';
-      } else if (i === 1) {
-        vid.preload = 'metadata';
+        vid.preload = this.isSlowConnection ? 'metadata' : 'auto';
       } else {
         vid.preload = 'none';
       }
@@ -260,8 +282,10 @@ class ScrollDiscoveryEngine {
             this.activeProgressVideo.removeEventListener('timeupdate', this.activeProgressHandler);
           }
         } else {
-          // Back in view: resume the active video and progress tracking
-          this.playVideo(this.currentIndex);
+          // Back in view: resume the active video and progress tracking if allowed
+          if (!this.prefersReducedMotion) {
+            this.playVideo(this.currentIndex);
+          }
           this.bindVideoProgress(this.currentIndex);
         }
       });
@@ -281,8 +305,8 @@ class ScrollDiscoveryEngine {
     // 2. Strict invariant: At most ONE hero video plays at a time
     this.pauseAllVideosExcept(newIndex);
 
-    // 3. Play active video if hero is in viewport
-    if (this.isHeroInViewport) {
+    // 3. Play active video if hero is in viewport and motion permitted
+    if (this.isHeroInViewport && !this.prefersReducedMotion) {
       this.playVideo(newIndex);
     }
 
@@ -341,21 +365,42 @@ class ScrollDiscoveryEngine {
   }
 
   bufferAdjacentVideos(centerIdx) {
-    const toBuffer = [centerIdx - 1, centerIdx, centerIdx + 1];
+    if (this.isSlowConnection || this.saveData) {
+      // Slow network / Save-Data mode: do not eagerly preload adjacent videos
+      return;
+    }
+
+    // Preload active + next scene (controlled preloading)
+    const toBuffer = [centerIdx, centerIdx + 1];
     toBuffer.forEach(idx => {
       if (idx >= 0 && idx < this.videos.length) {
         const vid = this.videos[idx];
-        if (vid && vid.preload !== 'auto') {
-          vid.preload = 'auto';
+        if (vid && vid.preload === 'none') {
+          vid.preload = idx === centerIdx ? 'auto' : 'metadata';
+        }
+      }
+    });
+
+    // Release resource pressure from distant scenes (> 2 slides away)
+    this.videos.forEach((vid, idx) => {
+      if (Math.abs(idx - centerIdx) > 2) {
+        vid.pause();
+        if (vid.preload !== 'none') {
+          vid.preload = 'none';
         }
       }
     });
   }
 
   playVideo(idx) {
+    if (this.prefersReducedMotion) return;
     if (idx < 0 || idx >= this.videos.length) return;
     const vid = this.videos[idx];
     if (!vid) return;
+
+    if (vid.preload === 'none') {
+      vid.preload = 'auto';
+    }
 
     vid.muted = true;
     vid.playsInline = true;
@@ -647,12 +692,16 @@ async function loadDynamicTopProviders() {
       tpGrid.innerHTML = featured.map((p, idx) => {
         const safeId = parseInt(p.id, 10) || 0;
         const initials = (p.name || '').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-        const cleanPhone = (p.phone || '').replace(/[^0-9]/g, '');
-        const cleanWa = (p.whatsappNumber || p.phone || '').replace(/[^0-9]/g, '');
-        const waMsg = encodeURIComponent(`Hello ${p.name}, I saw your profile on Lokator`);
+        const PhoneEngine = (typeof NigeriaPhone !== 'undefined' ? NigeriaPhone : null) || (typeof window !== 'undefined' ? window.NigeriaPhone : null);
+        const telUrl = PhoneEngine ? PhoneEngine.buildTelUrl(p) : (p.phone ? `tel:${p.phone}` : '');
+        const waUrl = PhoneEngine ? PhoneEngine.buildWhatsAppUrl(p, { service: p.trade, location: p.area }) : '';
+
         const safeRating = Number(p.rating || 5).toFixed(1);
         const safeReviews = parseInt(p.reviewsCount || 0, 10);
         const safeAvatarBg = (p.avatarBg && typeof p.avatarBg === 'string' && p.avatarBg.startsWith('linear-gradient')) ? p.avatarBg : 'var(--green)';
+
+        const callActionHtml = telUrl ? `<a href="${escapeHtml(telUrl)}" class="action-btn call-btn sm" aria-label="Call ${escapeHtml(p.name)}">📞 Call</a>` : '';
+        const waActionHtml = waUrl ? `<a href="${escapeHtml(waUrl)}" target="_blank" rel="noopener" class="action-btn wa-btn sm" aria-label="WhatsApp ${escapeHtml(p.name)}">💬 WhatsApp</a>` : '';
 
         return `
           <div class="tp-card ${idx === 1 ? 'tp-featured' : ''}" id="tp-${safeId}">
@@ -675,8 +724,8 @@ async function loadDynamicTopProviders() {
             <div class="tp-rating">★★★★★ <span>${safeRating} (${safeReviews})</span></div>
             <span class="tp-loc">📍 ${escapeHtml(p.area)}</span>
             <div class="tp-actions">
-              <a href="tel:${cleanPhone}" class="action-btn call-btn sm">📞 Call</a>
-              <a href="https://wa.me/${cleanWa}?text=${waMsg}" target="_blank" rel="noopener" class="action-btn wa-btn sm">💬 WhatsApp</a>
+              ${callActionHtml}
+              ${waActionHtml}
               <a href="profile.html?id=${safeId}" class="action-btn profile-btn sm">View Profile</a>
             </div>
           </div>

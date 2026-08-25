@@ -159,10 +159,25 @@
   align-items: start;
 }
 
-/* SIDEBAR FILTERS */
 .filter-sidebar {
   position: sticky;
   top: 86px;
+}
+
+.bottom-sheet-grab-handle {
+  display: none;
+}
+
+.mobile-filter-close-btn {
+  display: none;
+}
+
+.mobile-filter-footer {
+  display: none;
+}
+
+.filter-backdrop {
+  display: none;
 }
 
 .filter-card {
@@ -171,6 +186,12 @@
   border: 1px solid var(--border-light);
   padding: 24px;
   box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.filter-card-body {
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -858,27 +879,158 @@
     grid-template-columns: 1fr;
   }
 
-  .filter-sidebar {
-    display: none;
-    position: fixed;
-    inset: 0;
-    z-index: 150;
-    background: rgba(0,0,0,0.5);
-    padding: 20px;
-    overflow-y: auto;
+  body.filter-drawer-open {
+    overflow: hidden !important;
+    touch-action: none;
   }
 
-  .filter-sidebar.mobile-open {
+  .filter-backdrop {
     display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 140;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .filter-backdrop.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .filter-sidebar {
+    display: block;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: auto;
+    z-index: 150;
+    max-height: 85vh;
+    transform: translateY(100%);
+    transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+    background: transparent;
+    padding: 0;
+    margin: 0;
+    overflow: visible;
+    pointer-events: none;
+  }
+
+  .filter-sidebar.open,
+  .filter-sidebar.mobile-open {
+    transform: translateY(0);
+    pointer-events: auto;
   }
 
   .filter-card {
-    max-width: 480px;
-    margin: 40px auto;
+    max-width: 100%;
+    width: 100%;
+    margin: 0;
+    border-radius: 20px 20px 0 0;
+    background: #131A29;
+    border: 1px solid var(--border);
+    border-bottom: none;
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.6);
+    display: flex;
+    flex-direction: column;
+    max-height: 85vh;
+    padding: 0;
+    gap: 0;
+  }
+
+  .bottom-sheet-grab-handle {
+    display: block;
+    width: 38px;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.25);
+    margin: 10px auto 4px auto;
+    flex-shrink: 0;
+  }
+
+  .filter-header {
+    padding: 12px 20px 14px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .mobile-filter-close-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--fg);
+    font-size: 22px;
+    cursor: pointer;
+    line-height: 1;
+    transition: all var(--transition);
+  }
+
+  .mobile-filter-close-btn:hover {
+    background: var(--surface-hover);
+    color: var(--green);
+  }
+
+  .filter-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 18px 20px 24px;
+    flex: 1;
+  }
+
+  .mobile-filter-footer {
+    display: flex;
+    gap: 10px;
+    padding: 12px 20px calc(12px + env(safe-area-inset-bottom, 0px));
+    background: #131A29;
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .mobile-filter-footer .mobile-reset-btn {
+    flex: 1;
+    min-height: 46px;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .mobile-filter-footer .mobile-apply-btn {
+    flex: 2;
+    min-height: 46px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .filter-select,
+  .filter-range,
+  .toggle-control,
+  .pill-btn {
+    min-height: 44px;
   }
 
   .mobile-filter-trigger {
     display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 38px;
+    padding: 6px 14px;
   }
 
   .provider-item-card {

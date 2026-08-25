@@ -859,8 +859,8 @@
       avatarBg: "linear-gradient(135deg, #0D9488, #2DD4BF)",
       badgeTitle: "NIN Verified & Insured Cleaners",
       responseTime: "~15 mins",
-      bio: "Certified commercial and residential deep cleaning specialist. Sparkling post-construction cleanup, routine apartment housekeeping, fumigation & pest eradication, sofa/mattress steam extraction, and sanitization.",
-      skills: ["Post-Construction Cleanup", "Residential Deep Cleaning", "Fumigation & Pest Control", "Upholstery & Mattress Steam Wash", "Office Janitorial"],
+      bio: "Certified commercial and residential deep cleaning and laundry specialist. Sparkling post-construction cleanup, routine apartment housekeeping, dry cleaning, fumigation & pest eradication, sofa/mattress steam extraction, and sanitization.",
+      skills: ["Post-Construction Cleanup", "Residential Deep Cleaning", "Dry Cleaning & Laundry", "Fumigation & Pest Control", "Upholstery & Mattress Steam Wash", "Office Janitorial"],
       startingPrice: "₦8,000 / session",
       workingHours: {
         weekday: "7:00 AM – 7:00 PM",
