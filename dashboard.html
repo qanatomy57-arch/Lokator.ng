@@ -563,38 +563,73 @@
         </div>
       </div>
 
-      <!-- ===== TAB 8: SUBSCRIPTION & TRUST ===== -->
+      <!-- ===== TAB 8: TRUST & VERIFICATION CENTER ===== -->
       <div class="dash-tab-panel" id="tab-subscription">
         <div class="dash-card-section">
           <div class="dash-section-header">
             <div>
-              <h2>Trust Badges & Membership Tier</h2>
-              <p>Preview badge tiers. In production, live plan upgrades are verified through payment webhooks.</p>
+              <h2>Trust & Credential Verification Center</h2>
+              <p>Understand your public verification status and request official platform vetting</p>
+            </div>
+            <div id="dash-ver-status-chip" class="profile-verified-pill unverified" style="display: inline-flex;">
+              <!-- Populated via dashboard.js -->
             </div>
           </div>
 
-          <div class="plan-tier-grid">
-            <div class="dash-plan-card" id="tier-basic">
-              <div class="price-label">Basic</div>
-              <div class="tier-price">₦0<span class="tier-price-period">/mo</span></div>
-              <p class="tier-desc">Standard directory listing and direct WhatsApp contact.</p>
-              <button type="button" class="btn btn-outline btn-block btn-select-tier" data-tier="basic">Active Plan</button>
-            </div>
-
-            <div class="dash-plan-card" id="tier-verified">
-              <div class="price-label price-label-green">Verified Artisan</div>
-              <div class="tier-price-green">₦3,000<span class="tier-price-period">/mo</span></div>
-              <p class="tier-desc">NIN Verified Badge ✓, priority search rank, and customer trust seal.</p>
-              <button type="button" class="btn btn-primary btn-block btn-select-tier" data-tier="verified">Upgrade to Verified</button>
-            </div>
-
-            <div class="dash-plan-card" id="tier-premium">
-              <div class="price-label price-label-gold">Premium Partner</div>
-              <div class="tier-price-gold">₦8,000<span class="tier-price-period">/mo</span></div>
-              <p class="tier-desc">Top Spotlight banner, photo showcase, analytics dashboard.</p>
-              <button type="button" class="btn btn-primary btn-block btn-select-tier" data-tier="premium">Upgrade to Premium</button>
+          <!-- Status Breakdown Card -->
+          <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--dash-border); border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+            <h3 style="font-size: 16px; margin-bottom: 12px; color: #fff;">Platform Trust Model</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;">
+              <div style="background: #111827; padding: 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06);">
+                <div style="font-size: 12px; font-weight: 700; color: var(--dash-muted); text-transform: uppercase; margin-bottom: 4px;">Provider-Supplied Info</div>
+                <div style="font-size: 13.5px; color: #fff; font-weight: 600;">Self-Reported by You</div>
+                <p style="font-size: 12px; color: var(--dash-muted); margin-top: 4px;">Your name, trade skills, experience, portfolio, and pricing estimates.</p>
+              </div>
+              <div style="background: #111827; padding: 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06);">
+                <div style="font-size: 12px; font-weight: 700; color: var(--dash-muted); text-transform: uppercase; margin-bottom: 4px;">Platform-Verified Status</div>
+                <div style="font-size: 13.5px; color: var(--dash-green); font-weight: 600;" id="dash-ver-status-text">Unverified</div>
+                <p style="font-size: 12px; color: var(--dash-muted); margin-top: 4px;">Official document/NIN review by Lokator moderation team.</p>
+              </div>
+              <div style="background: #111827; padding: 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06);">
+                <div style="font-size: 12px; font-weight: 700; color: var(--dash-muted); text-transform: uppercase; margin-bottom: 4px;">Customer Feedback</div>
+                <div style="font-size: 13.5px; color: var(--gold); font-weight: 600;" id="dash-feedback-summary">0 Customer Reviews</div>
+                <p style="font-size: 12px; color: var(--dash-muted); margin-top: 4px;">Ratings submitted directly by clients you have served.</p>
+              </div>
             </div>
           </div>
+
+          <!-- Request Verification Card -->
+          <div style="background: rgba(0, 107, 63, 0.06); border: 1px solid rgba(0, 107, 63, 0.25); border-radius: 12px; padding: 22px;">
+            <h3 style="font-size: 16px; margin-bottom: 8px; color: #fff; display: flex; align-items: center; gap: 8px;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#006B3F" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              Request Credential Verification
+            </h3>
+            <p style="font-size: 13px; color: var(--dash-muted); margin-bottom: 16px;">
+              Get an official verified trust badge on your public profile. Submit your identification details for review by Lokator compliance officers.
+            </p>
+            <form id="form-request-verification">
+              <div class="dash-form-grid" style="grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div class="form-group">
+                  <label for="ver-doc-type">Identification Type *</label>
+                  <select id="ver-doc-type" class="filter-select" required style="width: 100%; background: #111827; border: 1px solid var(--dash-border); color: #fff; padding: 10px; border-radius: 8px;">
+                    <option value="nin">National Identity Number (NIN)</option>
+                    <option value="voters_card">INEC Voter's Card</option>
+                    <option value="drivers_license">FRSC Driver's License</option>
+                    <option value="cac_cert">CAC Business Registration</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="ver-doc-ref">Document Number / ID Ref *</label>
+                  <input type="text" id="ver-doc-ref" required placeholder="e.g. 11-digit NIN or Reg Number" style="width: 100%; background: #111827; border: 1px solid var(--dash-border); color: #fff; padding: 10px; border-radius: 8px;" />
+                </div>
+              </div>
+              <div style="margin-top: 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+                <span style="font-size: 12px; color: var(--dash-muted);">🔒 Encrypted & processed in accordance with NDPR privacy guidelines.</span>
+                <button type="submit" class="btn btn-primary" id="btn-submit-verification">Submit for Review</button>
+              </div>
+            </form>
+          </div>
+
         </div>
       </div>
 

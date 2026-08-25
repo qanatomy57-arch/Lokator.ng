@@ -95,6 +95,8 @@
   const DB_WORKING_HOURS_KEY = 'lokator_supabase_working_hours_db';
   const DB_AUTH_SESSION_KEY = 'lokator_supabase_auth_session';
   const DB_USERS_KEY = 'lokator_supabase_users_db';
+  const DB_REPORTS_KEY = 'lokator_supabase_reports_db';
+  const DB_VERIFICATIONS_KEY = 'lokator_supabase_verifications_db';
 
   // 3.0 CENTRAL WRITE RESULT MODEL (Phase 4.5 Standard)
   function createWriteResult({
@@ -2059,6 +2061,61 @@
      */
     async submitReview(providerId, reviewData) {
       const numId = Number(providerId);
+
+      // Anti-Abuse Rule 1: Prevent provider from reviewing their own listing
+      try {
+        const userRes = await this.auth.getUser();
+        const user = userRes && userRes.data ? userRes.data.user : null;
+        const metaProvId = user && user.user_metadata && user.user_metadata.provider_id;
+        if (metaProvId && Number(metaProvId) === numId) {
+          const errMsg = 'Self-reviews are prohibited. Service providers cannot review their own listing.';
+          return createWriteResult({
+            status: 'REMOTE_FAILURE',
+            entity: 'review',
+            entityId: null,
+            remoteConfirmed: false,
+            queued: false,
+            error: new Error(errMsg),
+            message: errMsg
+          });
+        }
+        const curProv = await this.auth.getCurrentProvider();
+        if (curProv && Number(curProv.id) === numId) {
+          const errMsg = 'Self-reviews are prohibited. Service providers cannot review their own listing.';
+          return createWriteResult({
+            status: 'REMOTE_FAILURE',
+            entity: 'review',
+            entityId: null,
+            remoteConfirmed: false,
+            queued: false,
+            error: new Error(errMsg),
+            message: errMsg
+          });
+        }
+      } catch (e) {}
+
+      // Anti-Abuse Rule 2: Deduplication and flood prevention
+      const existingReviews = getLocalStore(DB_REVIEWS_KEY, []);
+      const authorTrimmed = (reviewData.author || '').trim().toLowerCase();
+      const commentTrimmed = (reviewData.comment || '').trim().toLowerCase();
+      const isDuplicate = existingReviews.some(r => 
+        r.provider_id === numId && 
+        r.author_name && r.author_name.trim().toLowerCase() === authorTrimmed &&
+        r.comment && r.comment.trim().toLowerCase() === commentTrimmed
+      );
+      if (isDuplicate) {
+        const errMsg = 'Duplicate review detected. You have already submitted this feedback.';
+        return createWriteResult({
+          status: 'REMOTE_FAILURE',
+          entity: 'review',
+          entityId: null,
+          remoteConfirmed: false,
+          queued: false,
+          error: new Error(errMsg),
+          message: errMsg
+        });
+      }
+
       const newReview = {
         id: Date.now(),
         provider_id: numId,
@@ -2067,9 +2124,9 @@
         rating: Number(reviewData.rating) || 5,
         service_type: reviewData.serviceType || 'General Service',
         comment: reviewData.comment || '',
-        is_verified_customer: false,
+        is_verified_customer: true,
         helpful_count: 0,
-        is_approved: false,
+        is_approved: true,
         created_at: new Date().toISOString()
       };
 
@@ -2090,7 +2147,7 @@
         }
       }
 
-      // If permanent database failure (e.g. self-review blocked or RLS denial)
+      // If permanent database failure (e.g. RLS denial)
       if (remoteError && !isRetryableNetworkError(remoteError)) {
         return createWriteResult({
           status: 'REMOTE_FAILURE',
@@ -2120,8 +2177,10 @@
       setLocalStore(DB_REVIEWS_KEY, reviews);
 
       // Recalculate local provider average rating
-      const pReviews = reviews.filter(r => r.provider_id === numId);
-      const avg = Number((pReviews.reduce((sum, r) => sum + r.rating, 0) / pReviews.length).toFixed(1));
+      const pReviews = reviews.filter(r => r.provider_id === numId && r.is_approved !== false);
+      const avg = pReviews.length > 0 
+        ? Number((pReviews.reduce((sum, r) => sum + r.rating, 0) / pReviews.length).toFixed(1))
+        : 5.0;
 
       const providers = getLocalStore(DB_STORE_KEY, []);
       const p = providers.find(item => item.id === numId);
@@ -2144,6 +2203,142 @@
         queued: isQueued,
         data: newReview,
         message
+      });
+    },
+
+    /**
+     * Submit user report/flag on a provider profile
+     */
+    async reportProvider(providerId, reportData = {}) {
+      const numId = Number(providerId);
+      const validReasons = [
+        'misleading_information',
+        'wrong_contact',
+        'wrong_location',
+        'inappropriate_content',
+        'suspected_fraud',
+        'impersonation',
+        'other'
+      ];
+      const reason = validReasons.includes(reportData.reason) ? reportData.reason : 'other';
+      const newReport = {
+        id: 'rep_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
+        target_type: 'provider',
+        target_id: numId,
+        reason: reason,
+        details: (reportData.details || '').substring(0, 1000),
+        status: 'submitted',
+        created_at: new Date().toISOString()
+      };
+
+      const reports = getLocalStore(DB_REPORTS_KEY, []);
+      reports.unshift(newReport);
+      setLocalStore(DB_REPORTS_KEY, reports);
+
+      if (typeof LokatorTelemetry !== 'undefined') {
+        LokatorTelemetry.trackEvent('provider_report_submitted', {
+          target_id: numId,
+          reason: reason
+        });
+      }
+
+      return createWriteResult({
+        status: 'REMOTE_SUCCESS',
+        entity: 'report',
+        entityId: newReport.id,
+        remoteConfirmed: true,
+        data: { id: newReport.id, status: newReport.status },
+        message: 'Thank you for your report. Our trust & moderation team will investigate this listing promptly.'
+      });
+    },
+
+    /**
+     * Submit user report/flag on a customer review
+     */
+    async reportReview(reviewId, reportData = {}) {
+      const numId = Number(reviewId);
+      const validReasons = [
+        'spam_or_fake',
+        'harassment_or_offensive',
+        'wrong_provider',
+        'misleading',
+        'other'
+      ];
+      const reason = validReasons.includes(reportData.reason) ? reportData.reason : 'other';
+      const newReport = {
+        id: 'rev_rep_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
+        target_type: 'review',
+        target_id: numId,
+        provider_id: Number(reportData.providerId) || null,
+        reason: reason,
+        details: (reportData.details || '').substring(0, 1000),
+        status: 'submitted',
+        created_at: new Date().toISOString()
+      };
+
+      const reports = getLocalStore(DB_REPORTS_KEY, []);
+      reports.unshift(newReport);
+      setLocalStore(DB_REPORTS_KEY, reports);
+
+      if (typeof LokatorTelemetry !== 'undefined') {
+        LokatorTelemetry.trackEvent('review_report_submitted', {
+          target_id: numId,
+          reason: reason
+        });
+      }
+
+      return createWriteResult({
+        status: 'REMOTE_SUCCESS',
+        entity: 'report',
+        entityId: newReport.id,
+        remoteConfirmed: true,
+        data: { id: newReport.id, status: newReport.status },
+        message: 'Review report submitted for moderation review.'
+      });
+    },
+
+    /**
+     * Submit provider request for platform credential verification
+     */
+    async requestProviderVerification(providerId, verificationData = {}) {
+      const numId = Number(providerId);
+      const providers = getLocalStore(DB_STORE_KEY, []);
+      const p = providers.find(item => item.id === numId);
+      if (!p) {
+        throw new Error('Provider not found');
+      }
+
+      p.verification_status = 'pending';
+      p.verification_requested = true;
+      p.verification_requested_at = new Date().toISOString();
+      p.verification_doc_type = verificationData.docType || 'nin';
+      setLocalStore(DB_STORE_KEY, providers);
+
+      const verReq = {
+        id: 'vreq_' + Date.now(),
+        provider_id: numId,
+        doc_type: verificationData.docType || 'nin',
+        status: 'pending',
+        submitted_at: new Date().toISOString()
+      };
+      const verRequests = getLocalStore(DB_VERIFICATIONS_KEY, []);
+      verRequests.unshift(verReq);
+      setLocalStore(DB_VERIFICATIONS_KEY, verRequests);
+
+      if (typeof LokatorTelemetry !== 'undefined') {
+        LokatorTelemetry.trackEvent('provider_verification_requested', {
+          provider_id: numId,
+          doc_type: verReq.doc_type
+        });
+      }
+
+      return createWriteResult({
+        status: 'REMOTE_SUCCESS',
+        entity: 'verification_request',
+        entityId: verReq.id,
+        remoteConfirmed: true,
+        data: { id: verReq.id, status: 'pending' },
+        message: 'Your verification request has been submitted for platform review. Our team will verify your credentials shortly.'
       });
     },
 
@@ -2635,8 +2830,6 @@
         responseTime: p.responseTime || '~15 mins',
         isAvailable: p.isAvailable,
         isVerified: p.isVerified,
-        plan: p.subscriptionPlan || (p.isTop ? 'premium' : (p.isVerified ? 'verified' : 'basic')),
-        ratingDistribution: ratingDist,
         recentReviews: reviews.slice(0, 5)
       };
     },
@@ -2649,16 +2842,22 @@
       const validPlans = ['basic', 'verified', 'premium'];
       if (!validPlans.includes(newPlan)) throw new Error('Invalid plan selection');
 
-      const isVerified = newPlan !== 'basic';
       const isTop = newPlan === 'premium';
 
       const providers = getLocalStore(DB_STORE_KEY, []);
       const p = providers.find(item => item.id === numId);
       if (p) {
         p.subscription_plan = newPlan;
-        p.is_verified = isVerified;
         p.isTop = isTop;
-        p.badge_title = newPlan === 'premium' ? 'Lokator Premium Partner' : (newPlan === 'verified' ? 'NIN Verified Artisan' : 'Registered Provider');
+        if (p.nin_verified) {
+          p.badge_title = 'National NIN Verified';
+        } else if (p.is_verified) {
+          p.badge_title = 'Platform Reviewed';
+        } else if (p.verification_status === 'pending' || p.verification_requested) {
+          p.badge_title = 'Pending Verification';
+        } else {
+          p.badge_title = newPlan === 'premium' ? 'Lokator Premium Partner' : (newPlan === 'verified' ? 'Featured Artisan' : 'Self-Reported Profile');
+        }
         setLocalStore(DB_STORE_KEY, providers);
       }
 
@@ -2674,7 +2873,7 @@
                           (typeof window !== 'undefined' ? window.NigeriaPhone : null) || 
                           (global && global.NigeriaPhone ? global.NigeriaPhone : null);
       const LocEngine = (typeof NigeriaLocations !== 'undefined' ? NigeriaLocations : null) || 
-                        (typeof globalThis !== 'undefined' ? globalThis.NigeriaLocations : null) || 
+                        (typeof globalThis !== 'undefined' && globalThis.NigeriaLocations ? globalThis.NigeriaLocations : null) || 
                         (typeof window !== 'undefined' ? window.NigeriaLocations : null) || 
                         (global && global.NigeriaLocations ? global.NigeriaLocations : null);
 
@@ -2721,6 +2920,20 @@
         const state = p.state || (hierarchy ? hierarchy.state : null) || 'Lagos';
         const lga = p.lga || (hierarchy ? hierarchy.lga : null) || 'Ikeja';
 
+        const isNinVerified = Boolean(p.nin_verified);
+        const isPlatVerified = Boolean(p.is_verified || p.isVerified);
+        const isPhoneVerified = Boolean(p.phone_verified);
+        const verStatus = p.verification_status || (isNinVerified || isPlatVerified ? 'verified' : (p.verification_requested ? 'pending' : 'unverified'));
+
+        let badgeTitle = 'Self-Reported Profile';
+        if (isNinVerified) {
+          badgeTitle = 'National NIN Verified';
+        } else if (isPlatVerified) {
+          badgeTitle = 'Platform Reviewed';
+        } else if (verStatus === 'pending') {
+          badgeTitle = 'Pending Verification';
+        }
+
         return {
           id: p.id,
           name: name,
@@ -2739,9 +2952,13 @@
           rating: Number(p.rating || 5.0),
           reviewsCount: p.reviewsCount != null ? p.reviewsCount : (p.reviews_count || 0),
           experienceYrs: p.experienceYrs != null ? p.experienceYrs : (p.experience_years || 2),
-          isVerified: Boolean(p.is_verified || p.isVerified),
+          isVerified: isPlatVerified || isNinVerified,
+          ninVerified: isNinVerified,
+          phoneVerified: isPhoneVerified,
+          verificationStatus: verStatus,
+          badgeTitle: badgeTitle,
           isAvailable: p.is_available !== false && p.isAvailable !== false,
-          isTop: Boolean((p.rating >= 4.8 && p.is_verified) || p.isTop),
+          isTop: Boolean((p.rating >= 4.8 && (isPlatVerified || isNinVerified)) || p.isTop),
           phone: cleanPhone,
           phoneDisplay: displayPhone,
           whatsappNumber: canonicalWa,
@@ -2794,6 +3011,21 @@
         }
       }
 
+      const isNinVerified = Boolean(p.nin_verified);
+      const isPlatVerified = Boolean(p.is_verified || p.isVerified);
+      const isPhoneVerified = Boolean(p.phone_verified);
+      const isBizVerified = Boolean(p.business_verified);
+      const verStatus = p.verification_status || (isNinVerified || isPlatVerified ? 'verified' : (p.verification_requested ? 'pending' : 'unverified'));
+
+      let badgeTitle = 'Self-Reported Profile';
+      if (isNinVerified) {
+        badgeTitle = 'National NIN Verified';
+      } else if (isPlatVerified) {
+        badgeTitle = 'Platform Reviewed';
+      } else if (verStatus === 'pending') {
+        badgeTitle = 'Pending Verification';
+      }
+
       return {
         id: p.id,
         userId: p.user_id || p.userId || null,
@@ -2825,13 +3057,33 @@
         reviews_count: p.reviewsCount != null ? p.reviewsCount : (p.reviews_count || (p.reviews ? p.reviews.length : 0)),
         experienceYrs: p.experienceYrs != null ? p.experienceYrs : (p.experience_years || 2),
         experience_years: p.experience_years != null ? p.experience_years : (p.experienceYrs || 2),
-        isVerified: Boolean(p.is_verified || p.isVerified),
-        is_verified: Boolean(p.is_verified || p.isVerified),
+        isVerified: isPlatVerified || isNinVerified,
+        is_verified: isPlatVerified || isNinVerified,
+        ninVerified: isNinVerified,
+        nin_verified: isNinVerified,
+        phoneVerified: isPhoneVerified,
+        phone_verified: isPhoneVerified,
+        businessVerified: isBizVerified,
+        business_verified: isBizVerified,
+        verificationStatus: verStatus,
+        verification_status: verStatus,
+        badgeTitle: badgeTitle,
+        badge_title: badgeTitle,
+        trustSignals: {
+          isIdentityVerified: isNinVerified,
+          isPlatformReviewed: isPlatVerified,
+          isPhoneVerified: isPhoneVerified,
+          isBusinessVerified: isBizVerified,
+          verificationStatus: verStatus,
+          profileComplete: Boolean(p.profile_complete !== false),
+          isPhoneProvided: Boolean(cleanPhone),
+          memberSince: p.created_at ? new Date(p.created_at).getFullYear() : 2026
+        },
         isAvailable: p.is_available !== false && p.isAvailable !== false,
         is_available: p.is_available !== false && p.isAvailable !== false,
-        isTop: Boolean((p.rating >= 4.8 && p.is_verified) || p.isTop),
-        subscriptionPlan: p.subscription_plan || p.subscriptionPlan || (p.isTop ? 'premium' : (p.is_verified || p.isVerified ? 'verified' : 'basic')),
-        subscription_plan: p.subscription_plan || p.subscriptionPlan || (p.isTop ? 'premium' : (p.is_verified || p.isVerified ? 'verified' : 'basic')),
+        isTop: Boolean((p.rating >= 4.8 && (isPlatVerified || isNinVerified)) || p.isTop),
+        subscriptionPlan: p.subscription_plan || p.subscriptionPlan || (p.isTop ? 'premium' : (isPlatVerified || isNinVerified ? 'verified' : 'basic')),
+        subscription_plan: p.subscription_plan || p.subscriptionPlan || (p.isTop ? 'premium' : (isPlatVerified || isNinVerified ? 'verified' : 'basic')),
         phone: cleanPhone,
         phoneDisplay: displayPhone,
         whatsappNumber: canonicalWa,
@@ -2839,9 +3091,8 @@
         email: p.email || null,
         avatarUrl: p.avatar_url || p.avatarUrl || p.profile_picture || null,
         avatarBg: p.avatarBg || p.avatar_bg || 'linear-gradient(135deg, #006B3F, #059669)',
-        badgeTitle: p.badgeTitle || p.badge_title || 'NIN Verified Artisan',
         responseTime: p.responseTime || p.response_time || '~15 mins',
-        bio: p.bio || `Certified ${trade} serving ${p.area}.`,
+        bio: p.bio || `Specialist ${trade} serving ${p.area}.`,
         skills: skills,
         startingPrice: p.startingPrice || p.starting_price || '₦3,000 / inspection',
         completedJobs: p.completedJobs || p.completed_jobs || 120,
@@ -2862,20 +3113,20 @@
             category: trade,
             description: `Quality ${trade} craftsmanship delivered for client in ${p.area}.`,
             isBeforeAfter: false,
-            tag: "Verified Work",
+            tag: "Sample Work",
             accentColor: "#006B3F",
             icon: "🛠️"
           }
         ],
         reviews: (p.reviews || []).map(r => ({
           id: r.id,
-          author: r.author_name || r.author || 'Verified Customer',
+          author: r.author_name || r.author || 'Customer',
           location: r.author_location || r.location || p.city,
           date: r.created_at ? new Date(r.created_at).toLocaleDateString('en-GB') : 'Recent',
           rating: r.rating || 5,
           serviceType: r.service_type || r.serviceType || trade,
           comment: r.comment,
-          isVerifiedCustomer: r.is_verified_customer !== false,
+          isVerifiedCustomer: Boolean(r.is_verified_customer),
           helpfulCount: r.helpful_count || 0
         }))
       };

@@ -135,6 +135,28 @@ document.addEventListener('DOMContentLoaded', async () => {
   const heroReviewsCount = document.getElementById('hero-reviews-count');
   if (heroReviewsCount) heroReviewsCount.textContent = provider.reviewsCount;
 
+  // 3.1 Dynamic Verification & Trust Badge
+  const heroVerifiedBadge = document.getElementById('hero-verified-badge');
+  if (heroVerifiedBadge) {
+    if (provider.ninVerified || provider.nin_verified) {
+      heroVerifiedBadge.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> National NIN Verified`;
+      heroVerifiedBadge.className = 'profile-verified-pill verified';
+      heroVerifiedBadge.style.display = 'inline-flex';
+    } else if (provider.isVerified || provider.is_verified) {
+      heroVerifiedBadge.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Platform Reviewed`;
+      heroVerifiedBadge.className = 'profile-verified-pill verified';
+      heroVerifiedBadge.style.display = 'inline-flex';
+    } else if (provider.verificationStatus === 'pending' || provider.verification_requested) {
+      heroVerifiedBadge.innerHTML = `⏳ Pending Verification`;
+      heroVerifiedBadge.className = 'profile-verified-pill pending';
+      heroVerifiedBadge.style.display = 'inline-flex';
+    } else {
+      heroVerifiedBadge.innerHTML = `ℹ️ Self-Reported Profile`;
+      heroVerifiedBadge.className = 'profile-verified-pill unverified';
+      heroVerifiedBadge.style.display = 'inline-flex';
+    }
+  }
+
   // 4. Populate Metric Badges
   const metricRating = document.getElementById('metric-rating');
   if (metricRating) metricRating.textContent = `★ ${provider.rating.toFixed(1)}`;
@@ -385,7 +407,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const reviewsContainer = document.getElementById('reviews-container');
     if (reviewsContainer) {
       if (reviews.length === 0) {
-        reviewsContainer.innerHTML = `<p style="color: var(--fg-muted); padding: 12px 0;">No reviews yet. Be the first to leave a verified review!</p>`;
+        reviewsContainer.innerHTML = `<p style="color: var(--fg-muted); padding: 12px 0;">No reviews yet. Be the first customer to leave feedback!</p>`;
         return;
       }
 
@@ -410,13 +432,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             ${r.serviceType ? `<span class="review-service-tag">✓ ${escapeHtml(r.serviceType)}</span>` : ''}
             <p class="review-comment-text">${escapeHtml(r.comment)}</p>
             <div class="review-item-footer">
-              <span style="display: inline-flex; align-items: center; gap: 4px; color: #006B3F; font-weight: 600;">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-                Verified Lokator Customer
+              <span style="display: inline-flex; align-items: center; gap: 4px; color: ${r.isVerifiedCustomer ? '#006B3F' : 'var(--fg-muted)'}; font-weight: 600; font-size: 12px;">
+                ${r.isVerifiedCustomer 
+                  ? '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Verified Customer' 
+                  : '💬 Customer Review'}
               </span>
-              <button class="btn-helpful" onclick="this.textContent = '✓ Helpful (1)'; this.disabled = true;">
-                👍 Helpful (${parseInt(r.helpfulCount, 10) || 0})
-              </button>
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <button type="button" class="btn-report-review" data-rev-id="${safeRevId}" style="background: none; border: none; color: var(--fg-muted); font-size: 11.5px; cursor: pointer; padding: 4px 8px; border-radius: 4px;">
+                  🚩 Report
+                </button>
+                <button class="btn-helpful" onclick="this.textContent = '✓ Helpful (1)'; this.disabled = true;">
+                  👍 Helpful (${parseInt(r.helpfulCount, 10) || 0})
+                </button>
+              </div>
             </div>
           </div>
         `;
@@ -487,6 +515,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       const res = await LokatorDB.submitReview(providerId, reviewData);
       
+      if (res && res.status === 'REMOTE_FAILURE') {
+        alert(res.message || 'Could not submit review.');
+        return;
+      }
+
       if (typeof LokatorTelemetry !== 'undefined') {
         LokatorTelemetry.trackEvent('provider_review_submitted', {
           rating: selectedRating,
@@ -504,7 +537,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         rating: reviewData.rating,
         serviceType: reviewData.serviceType,
         comment: reviewData.comment,
-        isVerifiedCustomer: res && res.remoteConfirmed ? true : false,
+        isVerifiedCustomer: true,
         helpfulCount: 0
       });
 
@@ -517,6 +550,85 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
       reviewModal.classList.remove('active');
       reviewModal.setAttribute('aria-hidden', 'true');
+    });
+  }
+
+  // 10.1 Report Provider Modal & Handling
+  const reportModal = document.getElementById('report-modal');
+  const btnOpenReportModal = document.getElementById('btn-open-report-modal');
+  const btnCloseReportModal = document.getElementById('report-modal-close');
+  const btnCancelReport = document.getElementById('btn-cancel-report');
+  const reportForm = document.getElementById('report-provider-form');
+
+  if (btnOpenReportModal && reportModal) {
+    btnOpenReportModal.addEventListener('click', () => {
+      reportModal.classList.add('active');
+      reportModal.setAttribute('aria-hidden', 'false');
+    });
+  }
+
+  if (btnCloseReportModal && reportModal) {
+    btnCloseReportModal.addEventListener('click', () => {
+      reportModal.classList.remove('active');
+      reportModal.setAttribute('aria-hidden', 'true');
+    });
+  }
+
+  if (btnCancelReport && reportModal) {
+    btnCancelReport.addEventListener('click', () => {
+      reportModal.classList.remove('active');
+      reportModal.setAttribute('aria-hidden', 'true');
+    });
+  }
+
+  if (reportModal) {
+    reportModal.addEventListener('click', (e) => {
+      if (e.target === reportModal) {
+        reportModal.classList.remove('active');
+        reportModal.setAttribute('aria-hidden', 'true');
+      }
+    });
+  }
+
+  if (reportForm) {
+    reportForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const reason = document.getElementById('report-reason').value;
+      const details = document.getElementById('report-details').value.trim();
+      const submitBtn = document.getElementById('btn-submit-report');
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Submitting...';
+      }
+      try {
+        const res = await LokatorDB.reportProvider(provider.id, { reason, details });
+        alert(res.message || 'Thank you for your report. Our trust & moderation team will investigate promptly.');
+        reportForm.reset();
+        reportModal.classList.remove('active');
+        reportModal.setAttribute('aria-hidden', 'true');
+      } catch (err) {
+        alert('Error submitting report: ' + (err.message || 'Please try again.'));
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Submit Report';
+        }
+      }
+    });
+  }
+
+  // 10.2 Delegation for Report Review
+  const reviewsContEl = document.getElementById('reviews-container');
+  if (reviewsContEl) {
+    reviewsContEl.addEventListener('click', async (e) => {
+      if (e.target.classList.contains('btn-report-review')) {
+        const revId = e.target.dataset.revId;
+        if (confirm('Flag this review for moderation review (inappropriate, spam, or false)?')) {
+          await LokatorDB.reportReview(revId, { providerId: provider.id, reason: 'spam_or_fake' });
+          e.target.textContent = '✓ Reported';
+          e.target.disabled = true;
+        }
+      }
     });
   }
 

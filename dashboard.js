@@ -969,45 +969,91 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // 11. Trust & Subscription Tab
-  function renderSubscriptionTiers() {
-    const currentPlan = currentProvider.subscriptionPlan || (currentProvider.isTop ? 'premium' : (currentProvider.isVerified ? 'verified' : 'basic'));
-    document.querySelectorAll('.dash-plan-card').forEach(card => {
-      card.className = 'dash-plan-card';
-      const oldBadge = card.querySelector('.current-badge-tag');
-      if (oldBadge) oldBadge.remove();
-    });
+  // 11. Trust & Verification Center Controller
+  function renderTrustCenter() {
+    const chip = document.getElementById('dash-ver-status-chip');
+    const text = document.getElementById('dash-ver-status-text');
+    const feedback = document.getElementById('dash-feedback-summary');
 
-    const activeCard = document.getElementById(`tier-${currentPlan}`);
-    if (activeCard) {
-      activeCard.className = `dash-plan-card current`;
-      const badge = document.createElement('span');
-      badge.className = 'current-badge-tag';
-      badge.textContent = 'CURRENT PLAN';
-      activeCard.appendChild(badge);
+    const isNin = Boolean(currentProvider.ninVerified || currentProvider.nin_verified);
+    const isPlat = Boolean(currentProvider.isVerified || currentProvider.is_verified);
+    const verStatus = currentProvider.verificationStatus || currentProvider.verification_status || (isNin || isPlat ? 'verified' : (currentProvider.verification_requested ? 'pending' : 'unverified'));
 
-      const btn = activeCard.querySelector('.btn-select-tier');
-      if (btn) {
-        btn.textContent = 'Active Plan';
-        btn.disabled = true;
+    if (chip) {
+      if (isNin) {
+        chip.className = 'profile-verified-pill verified';
+        chip.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> National NIN Verified`;
+      } else if (isPlat) {
+        chip.className = 'profile-verified-pill verified';
+        chip.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Platform Reviewed`;
+      } else if (verStatus === 'pending' || currentProvider.verification_requested) {
+        chip.className = 'profile-verified-pill pending';
+        chip.innerHTML = `⏳ Verification Pending Review`;
+      } else {
+        chip.className = 'profile-verified-pill unverified';
+        chip.innerHTML = `ℹ️ Self-Reported (Unverified)`;
       }
+    }
+
+    if (text) {
+      if (isNin) {
+        text.textContent = 'National Identity Verified (NIN)';
+        text.style.color = 'var(--dash-green)';
+      } else if (isPlat) {
+        text.textContent = 'Platform Reviewed & Approved';
+        text.style.color = 'var(--dash-green)';
+      } else if (verStatus === 'pending' || currentProvider.verification_requested) {
+        text.textContent = 'Pending Platform Review (In Progress)';
+        text.style.color = 'var(--gold)';
+      } else {
+        text.textContent = 'Unverified (Self-Reported)';
+        text.style.color = 'var(--dash-muted)';
+      }
+    }
+
+    if (feedback) {
+      const cnt = currentProvider.reviewsCount || (currentProvider.reviews ? currentProvider.reviews.length : 0);
+      const rating = Number(currentProvider.rating || 5.0).toFixed(1);
+      feedback.textContent = `${cnt} Customer Reviews (★ ${rating})`;
     }
   }
 
-  document.querySelectorAll('.btn-select-tier').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      const plan = btn.dataset.tier;
+  const formReqVer = document.getElementById('form-request-verification');
+  if (formReqVer) {
+    formReqVer.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const docType = document.getElementById('ver-doc-type').value;
+      const docRef = document.getElementById('ver-doc-ref').value.trim();
+      const btn = document.getElementById('btn-submit-verification');
+
+      if (!docRef) {
+        alert('Please enter your document or identification reference number.');
+        return;
+      }
+
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Submitting...';
+      }
+
       try {
-        const updated = await LokatorDB.upgradeSubscriptionPlan(currentProvider.id, plan);
-        currentProvider = updated;
-        renderSubscriptionTiers();
-        renderTopbar();
-        showToast(`Successfully switched to ${plan.toUpperCase()} Plan! Badges updated.`);
+        const res = await LokatorDB.requestProviderVerification(currentProvider.id, { docType, docRef });
+        currentProvider.verificationStatus = 'pending';
+        currentProvider.verification_status = 'pending';
+        currentProvider.verification_requested = true;
+        renderTrustCenter();
+        showToast(res.message || 'Verification request submitted for compliance review.');
+        formReqVer.reset();
       } catch (err) {
-        showToast('Plan change notice: ' + err.message, 'error');
+        showToast('Error requesting verification: ' + err.message, 'error');
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = 'Submit for Review';
+        }
       }
     });
-  });
+  }
 
   // 12. Run Initial Render Pipeline
   await loadMetrics();
@@ -1015,5 +1061,5 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderSkillsChips();
   renderPricingRows();
   renderPortfolio();
-  renderSubscriptionTiers();
+  renderTrustCenter();
 });
