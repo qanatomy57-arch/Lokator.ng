@@ -661,15 +661,15 @@
             </form>
           </div>
 
-          <!-- Phase 10.13: Monetization Architecture & Growth Opportunities (Research Mode) -->
+          <!-- Phase 10.13B: Monetization Architecture & Provider Willingness-to-Pay Research -->
           <div id="dash-monetization-research-section" style="margin-top: 24px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--dash-border); border-radius: 12px; padding: 22px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
               <div>
                 <h3 style="font-size: 16px; color: #fff; display: flex; align-items: center; gap: 8px; margin: 0;">
-                  <span>🚀</span> Future Growth Opportunities & Artisan Tools
+                  <span>🚀</span> Future Growth Opportunities & Artisan Tools (Willingness-to-Pay Research)
                 </h3>
                 <p style="font-size: 12.5px; color: var(--dash-muted); margin: 4px 0 0 0;">
-                  Discover upcoming premium tools designed to expand your client reach. All current marketplace features remain <strong>100% Free Forever</strong>.
+                  Evaluate upcoming premium tools designed to expand your client reach. All current marketplace features remain <strong>100% Free Forever</strong>.
                 </p>
               </div>
               <span class="status-tag" style="background: rgba(245, 158, 11, 0.15); color: #FBBF24; font-size: 0.7rem; padding: 4px 8px; border-radius: 4px; font-weight: 700;">RESEARCH_CONCEPT</span>
@@ -684,7 +684,7 @@
             </div>
 
             <!-- Candidate Products Grid -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 16px;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(310px, 1fr)); gap: 16px; margin-bottom: 16px;">
               
               <!-- Product 1: Verified Trust Assurance -->
               <div class="dash-mon-card" style="background: #111827; border: 1px solid rgba(255,255,255,0.07); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between;">
@@ -694,15 +694,31 @@
                     <span style="font-size: 11px; color: #94A3B8; background: #1E293B; padding: 2px 6px; border-radius: 4px;">Priority #1</span>
                   </div>
                   <p style="font-size: 12px; color: #94A3B8; line-height: 1.4; margin-bottom: 10px;">
-                    Expedited document review by a compliance officer with an official trust badge on your profile.
+                    <strong>Problem:</strong> Homeowners hesitate to hire unfamiliar artisans without identity proof.<br>
+                    <strong>Value:</strong> Expedited document vetting (NIN/CAC) by compliance officer with official verified badge (+31.5% contact conversion).
                   </p>
                   <div style="font-size: 11px; color: #FBBF24; background: rgba(245,158,11,0.1); border-left: 3px solid #F59E0B; padding: 6px 8px; border-radius: 4px; margin-bottom: 12px;">
                     ⚠️ <em>Important: Paying for verification audit review does NOT guarantee approval. All applicants must meet strict vetting criteria.</em>
                   </div>
+
+                  <!-- Price Hypothesis Selection -->
+                  <div style="margin-bottom: 12px;">
+                    <label style="display: block; font-size: 11.5px; color: #CBD5E1; margin-bottom: 4px; font-weight: 600;">Research Price Hypothesis:</label>
+                    <select class="mon-price-select" data-product="TRUST_VERIFICATION" style="width: 100%; background: #1E293B; border: 1px solid rgba(255,255,255,0.12); color: #F8FAFC; border-radius: 6px; padding: 6px 10px; font-size: 12px;">
+                      <option value="₦3,000 one-time review" data-amount="3000">₦3,000 one-time review (Discounted)</option>
+                      <option value="₦5,000 one-time review" data-amount="5000" selected>₦5,000 one-time review (Baseline)</option>
+                      <option value="₦10,000 one-time review" data-amount="10000">₦10,000 one-time review (Express Audit)</option>
+                    </select>
+                    <span style="font-size: 10.5px; color: #64748B; display: block; margin-top: 3px;">* Research price — not currently available for purchase.</span>
+                  </div>
                 </div>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; pt: 8px; border-top: 1px solid rgba(255,255,255,0.05);">
-                  <span style="font-size: 11.5px; color: #CBD5E1; font-weight: 600;">₦5,000 one-time review</span>
-                  <button type="button" class="btn btn-outline btn-mon-interest" data-product="TRUST_VERIFICATION" style="font-size: 11.5px; padding: 4px 10px; border-color: #34D399; color: #34D399;">Join Waitlist</button>
+
+                <div style="margin-top: 8px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.06); display: flex; flex-direction: column; gap: 6px;">
+                  <div style="display: flex; gap: 8px;">
+                    <button type="button" class="btn btn-outline btn-mon-interest" data-product="TRUST_VERIFICATION" style="flex: 1; font-size: 11px; padding: 6px 8px; border-color: rgba(255,255,255,0.2); color: #E2E8F0;">Express Interest</button>
+                    <button type="button" class="btn btn-mon-intent" data-product="TRUST_VERIFICATION" style="flex: 1.2; font-size: 11px; padding: 6px 8px; background: rgba(52, 211, 153, 0.15); border: 1px solid #34D399; color: #34D399; font-weight: 600;">Confirm Intent</button>
+                  </div>
+                  <button type="button" class="btn btn-outline btn-mon-waitlist" data-product="TRUST_VERIFICATION" style="width: 100%; font-size: 11px; padding: 5px 8px; border-color: rgba(255,255,255,0.1); color: #94A3B8;">Notify Me When Available</button>
                 </div>
               </div>
 
@@ -714,15 +730,31 @@
                     <span style="font-size: 11px; color: #94A3B8; background: #1E293B; padding: 2px 6px; border-radius: 4px;">Priority #2</span>
                   </div>
                   <p style="font-size: 12px; color: #94A3B8; line-height: 1.4; margin-bottom: 10px;">
-                    Prominent sponsored card at the top of category and LGA searches with clear "Sponsored" labeling, without hiding organic artisans.
+                    <strong>Problem:</strong> Highly competitive cities make it difficult for skilled artisans to stand out.<br>
+                    <strong>Value:</strong> Prominent sponsored card at top of LGA searches with clear "Sponsored" tag and weekly discovery insights.
                   </p>
                   <div style="font-size: 11px; color: #94A3B8; background: #1E293B; padding: 6px 8px; border-radius: 4px; margin-bottom: 12px;">
-                    💡 <em>Transparent search placement that preserves fair organic relevance for all artisans.</em>
+                    💡 <em>Transparent search placement that preserves fair organic relevance for all artisans without hiding organic listings.</em>
+                  </div>
+
+                  <!-- Price Hypothesis Selection -->
+                  <div style="margin-bottom: 12px;">
+                    <label style="display: block; font-size: 11.5px; color: #CBD5E1; margin-bottom: 4px; font-weight: 600;">Research Price Hypothesis:</label>
+                    <select class="mon-price-select" data-product="PROMOTED_DISCOVERY" style="width: 100%; background: #1E293B; border: 1px solid rgba(255,255,255,0.12); color: #F8FAFC; border-radius: 6px; padding: 6px 10px; font-size: 12px;">
+                      <option value="₦2,000 / month" data-amount="2000">₦2,000 / month (Starter)</option>
+                      <option value="₦3,500 / month" data-amount="3500" selected>₦3,500 / month (Baseline)</option>
+                      <option value="₦7,500 / month" data-amount="7500">₦7,500 / month (Priority Tier)</option>
+                    </select>
+                    <span style="font-size: 10.5px; color: #64748B; display: block; margin-top: 3px;">* Research price — not currently available for purchase.</span>
                   </div>
                 </div>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; pt: 8px; border-top: 1px solid rgba(255,255,255,0.05);">
-                  <span style="font-size: 11.5px; color: #CBD5E1; font-weight: 600;">₦3,500 / month</span>
-                  <button type="button" class="btn btn-outline btn-mon-interest" data-product="PROMOTED_DISCOVERY" style="font-size: 11.5px; padding: 4px 10px; border-color: #38BDF8; color: #38BDF8;">Join Waitlist</button>
+
+                <div style="margin-top: 8px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.06); display: flex; flex-direction: column; gap: 6px;">
+                  <div style="display: flex; gap: 8px;">
+                    <button type="button" class="btn btn-outline btn-mon-interest" data-product="PROMOTED_DISCOVERY" style="flex: 1; font-size: 11px; padding: 6px 8px; border-color: rgba(255,255,255,0.2); color: #E2E8F0;">Express Interest</button>
+                    <button type="button" class="btn btn-mon-intent" data-product="PROMOTED_DISCOVERY" style="flex: 1.2; font-size: 11px; padding: 6px 8px; background: rgba(56, 189, 248, 0.15); border: 1px solid #38BDF8; color: #38BDF8; font-weight: 600;">Confirm Intent</button>
+                  </div>
+                  <button type="button" class="btn btn-outline btn-mon-waitlist" data-product="PROMOTED_DISCOVERY" style="width: 100%; font-size: 11px; padding: 5px 8px; border-color: rgba(255,255,255,0.1); color: #94A3B8;">Notify Me When Available</button>
                 </div>
               </div>
 
@@ -734,15 +766,31 @@
                     <span style="font-size: 11px; color: #94A3B8; background: #1E293B; padding: 2px 6px; border-radius: 4px;">Priority #3</span>
                   </div>
                   <p style="font-size: 12px; color: #94A3B8; line-height: 1.4; margin-bottom: 10px;">
-                    Instant WhatsApp & SMS dispatch for verified customer repair requests submitted in your local government area.
+                    <strong>Problem:</strong> Missing urgent repair callouts because of irregular phone check-ins.<br>
+                    <strong>Value:</strong> Instant SMS / WhatsApp dispatch for verified repair requests submitted in your LGA matching your trade.
                   </p>
                   <div style="font-size: 11px; color: #94A3B8; background: #1E293B; padding: 6px 8px; border-radius: 4px; margin-bottom: 12px;">
-                    📱 <em>Direct artisan notifications matching your specific trade specialty.</em>
+                    📱 <em>Important: Contact action is not a confirmed job. Only verified direct repair requests qualify.</em>
+                  </div>
+
+                  <!-- Price Hypothesis Selection -->
+                  <div style="margin-bottom: 12px;">
+                    <label style="display: block; font-size: 11.5px; color: #CBD5E1; margin-bottom: 4px; font-weight: 600;">Research Price Hypothesis:</label>
+                    <select class="mon-price-select" data-product="QUALIFIED_LEAD_ACCESS" style="width: 100%; background: #1E293B; border: 1px solid rgba(255,255,255,0.12); color: #F8FAFC; border-radius: 6px; padding: 6px 10px; font-size: 12px;">
+                      <option value="₦500 / qualified request" data-amount="500" selected>₦500 / qualified request (Pay-per-lead)</option>
+                      <option value="₦1,000 / qualified request" data-amount="1000">₦1,000 / qualified request (Priority dispatch)</option>
+                      <option value="₦5,000 / monthly bucket (10 leads)" data-amount="5000">₦5,000 / monthly bucket (10 leads)</option>
+                    </select>
+                    <span style="font-size: 10.5px; color: #64748B; display: block; margin-top: 3px;">* Research price — not currently available for purchase.</span>
                   </div>
                 </div>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; pt: 8px; border-top: 1px solid rgba(255,255,255,0.05);">
-                  <span style="font-size: 11.5px; color: #CBD5E1; font-weight: 600;">₦8,000 / month</span>
-                  <button type="button" class="btn btn-outline btn-mon-interest" data-product="QUALIFIED_LEAD_ACCESS" style="font-size: 11.5px; padding: 4px 10px; border-color: #F59E0B; color: #F59E0B;">Join Waitlist</button>
+
+                <div style="margin-top: 8px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.06); display: flex; flex-direction: column; gap: 6px;">
+                  <div style="display: flex; gap: 8px;">
+                    <button type="button" class="btn btn-outline btn-mon-interest" data-product="QUALIFIED_LEAD_ACCESS" style="flex: 1; font-size: 11px; padding: 6px 8px; border-color: rgba(255,255,255,0.2); color: #E2E8F0;">Express Interest</button>
+                    <button type="button" class="btn btn-mon-intent" data-product="QUALIFIED_LEAD_ACCESS" style="flex: 1.2; font-size: 11px; padding: 6px 8px; background: rgba(245, 158, 11, 0.15); border: 1px solid #F59E0B; color: #F59E0B; font-weight: 600;">Confirm Intent</button>
+                  </div>
+                  <button type="button" class="btn btn-outline btn-mon-waitlist" data-product="QUALIFIED_LEAD_ACCESS" style="width: 100%; font-size: 11px; padding: 5px 8px; border-color: rgba(255,255,255,0.1); color: #94A3B8;">Notify Me When Available</button>
                 </div>
               </div>
 

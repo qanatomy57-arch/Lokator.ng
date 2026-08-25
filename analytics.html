@@ -697,82 +697,137 @@
 
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; font-size: 0.75rem;">
             <div style="background: #0E1522; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.04);">
-              <div style="color: #64748B;">Core Marketplace</div>
-              <div style="font-weight: 700; color: #34D399; margin-top: 2px;">100% Free Forever</div>
+      <!-- 8.5 Phase 10.13B: Monetization Architecture & Provider Willingness-to-Pay Validation -->
+      <section id="section-monetization-architecture" style="margin-bottom: 32px;">
+        <div class="section-title">
+          <span style="display: flex; align-items: center; gap: 8px;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            Monetization Architecture & Provider Willingness-to-Pay Validation
+          </span>
+          <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+            <span class="status-tag status-notice" id="mon-commercial-status" style="font-size: 0.7rem; font-weight: 700;">EARLY_MONETIZATION_SIGNAL</span>
+            <span class="status-tag status-good" style="font-size: 0.7rem; font-weight: 700;">0%_COMMISSION_LOCKED</span>
+            <span class="status-tag status-notice" style="font-size: 0.7rem; font-weight: 700;" id="mon-gate-status">ARCHITECTURALLY_READY_BUT_NOT_VALIDATED</span>
+          </div>
+        </div>
+
+        <!-- 1. Key Willingness-to-Pay Cohort KPIs -->
+        <div class="panel-card" style="margin-bottom: 20px;">
+          <div style="font-size: 0.95rem; font-weight: 700; color: #F1F5F9; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center;">
+            <span>📊 Provider Willingness-to-Pay Cohort Metrics (Phase 10.13B)</span>
+            <span style="font-size: 0.75rem; color: #94A3B8;">Deduplicated Provider-Level vs Event-Level Metrics</span>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
+            <div style="background: #0E1522; padding: 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">
+              <div style="color: #64748B; font-size: 0.75rem;">Exposed Providers (L0)</div>
+              <div style="font-size: 1.3rem; font-weight: 700; color: #F8FAFC; margin-top: 2px;" id="kpi-mon-exposed">--</div>
+              <div style="font-size: 0.7rem; color: #94A3B8; margin-top: 2px;">Awareness baseline denominator</div>
             </div>
-            <div style="background: #0E1522; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.04);">
-              <div style="color: #64748B;">Verification Separation</div>
-              <div style="font-weight: 700; color: #38BDF8; margin-top: 2px;">Payment ≠ Approval</div>
+            <div style="background: #0E1522; padding: 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">
+              <div style="color: #64748B; font-size: 0.75rem;">Interested Providers (L1)</div>
+              <div style="font-size: 1.3rem; font-weight: 700; color: #38BDF8; margin-top: 2px;" id="kpi-mon-interest">--</div>
+              <div style="font-size: 0.7rem; color: #38BDF8; margin-top: 2px;" id="kpi-mon-interest-rate">--% interest rate</div>
             </div>
-            <div style="background: #0E1522; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.04);">
-              <div style="color: #64748B;">Search Ranking</div>
-              <div style="font-weight: 700; color: #F59E0B; margin-top: 2px;">Transparent "Sponsored"</div>
+            <div style="background: #0E1522; padding: 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">
+              <div style="color: #64748B; font-size: 0.75rem;">Purchase Intent (L2)</div>
+              <div style="font-size: 1.3rem; font-weight: 700; color: #34D399; margin-top: 2px;" id="kpi-mon-intent">--</div>
+              <div style="font-size: 0.7rem; color: #34D399; margin-top: 2px;" id="kpi-mon-intent-rate">--% intent rate</div>
             </div>
-            <div style="background: #0E1522; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.04);">
-              <div style="color: #64748B;">Payment Adapter</div>
-              <div style="font-weight: 700; color: #A855F7; margin-top: 2px;">Provider Agnostic</div>
+            <div style="background: #0E1522; padding: 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">
+              <div style="color: #64748B; font-size: 0.75rem;">Waitlist Signups (L3)</div>
+              <div style="font-size: 1.3rem; font-weight: 700; color: #FBBF24; margin-top: 2px;" id="kpi-mon-waitlist">--</div>
+              <div style="font-size: 0.7rem; color: #FBBF24; margin-top: 2px;" id="kpi-mon-waitlist-rate">--% waitlist rate</div>
             </div>
           </div>
         </div>
 
-        <!-- 2. Candidate Monetization Products Prioritization Matrix -->
+        <!-- 2. Candidate Monetization Products Comparison Matrix -->
         <div class="panel-card" style="margin-bottom: 20px;">
           <div style="font-size: 0.95rem; font-weight: 700; color: #F1F5F9; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
-            <span>💼 Candidate Monetization Product Prioritization Matrix</span>
-            <span style="font-size: 0.75rem; color: #94A3B8;">Ranked by: Value × Feasibility × Evidence vs Fraud Risk</span>
+            <span>💼 Candidate Monetization Product Comparison & Intent Matrix</span>
+            <span style="font-size: 0.75rem; color: #94A3B8;">Exposed Providers vs Interest vs Purchase Intent vs Waitlist</span>
           </div>
           <div style="overflow-x: auto;">
             <table style="width: 100%; border-collapse: collapse; font-size: 0.8rem; text-align: left;">
               <thead>
                 <tr style="border-bottom: 1px solid rgba(255,255,255,0.08); color: #94A3B8;">
                   <th style="padding: 8px;">Rank</th>
-                  <th style="padding: 8px;">Product</th>
-                  <th style="padding: 8px;">Customer Value</th>
-                  <th style="padding: 8px;">Provider Value</th>
-                  <th style="padding: 8px;">Complexity</th>
-                  <th style="padding: 8px;">Risk & Safeguards</th>
-                  <th style="padding: 8px;">Research Price</th>
-                  <th style="padding: 8px;">Strategic Priority</th>
+                  <th style="padding: 8px;">Candidate Product</th>
+                  <th style="padding: 8px;">Exposed</th>
+                  <th style="padding: 8px;">Interest (L1)</th>
+                  <th style="padding: 8px;">Interest Rate</th>
+                  <th style="padding: 8px;">Purchase Intent (L2)</th>
+                  <th style="padding: 8px;">Intent Rate</th>
+                  <th style="padding: 8px;">Waitlist (L3)</th>
+                  <th style="padding: 8px;">Preferred Research Price</th>
+                  <th style="padding: 8px;">Confidence</th>
+                  <th style="padding: 8px;">Classification</th>
                 </tr>
               </thead>
               <tbody id="mon-product-matrix-tbody">
-                <tr><td colspan="8" style="padding: 16px; text-align: center; color: #64748B;">Loading product matrix...</td></tr>
+                <tr><td colspan="11" style="padding: 16px; text-align: center; color: #64748B;">Loading candidate product comparison...</td></tr>
               </tbody>
             </table>
           </div>
         </div>
 
-        <!-- 3. Monetization Research & Waitlist Conversion Table -->
+        <!-- 3. Price Sensitivity & Price Hypothesis Matrix -->
         <div class="panel-card" style="margin-bottom: 20px;">
           <div style="font-size: 0.95rem; font-weight: 700; color: #F1F5F9; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
-            <span>🔬 Provider Research & Early Access Waitlist Conversion</span>
-            <span style="font-size: 0.75rem; color: #94A3B8;">Willingness-to-Pay Behavioral Telemetry</span>
+            <span>🔬 Price Sensitivity & Research Hypothesis Matrix</span>
+            <span style="font-size: 0.75rem; color: #94A3B8;">Tested Price Bands & Selection Volume</span>
           </div>
           <div style="overflow-x: auto;">
             <table style="width: 100%; border-collapse: collapse; font-size: 0.8rem; text-align: left;">
               <thead>
                 <tr style="border-bottom: 1px solid rgba(255,255,255,0.08); color: #94A3B8;">
-                  <th style="padding: 8px;">Candidate Plan</th>
-                  <th style="padding: 8px;">Target Product</th>
-                  <th style="padding: 8px;">Price Placeholder</th>
-                  <th style="padding: 8px;">Entitlement Scope</th>
-                  <th style="padding: 8px;">Provider Interests</th>
-                  <th style="padding: 8px;">Waitlist Signups</th>
-                  <th style="padding: 8px;">Status</th>
+                  <th style="padding: 8px;">Product</th>
+                  <th style="padding: 8px;">Price Hypothesis (Band)</th>
+                  <th style="padding: 8px;">Hypothesis Type</th>
+                  <th style="padding: 8px;">Price Selections</th>
+                  <th style="padding: 8px;">Purchase Intent Actions</th>
+                  <th style="padding: 8px;">Share of Intent</th>
                 </tr>
               </thead>
-              <tbody id="mon-research-tbody">
-                <tr><td colspan="7" style="padding: 16px; text-align: center; color: #64748B;">Loading research waitlist data...</td></tr>
+              <tbody id="mon-price-sensitivity-tbody">
+                <tr><td colspan="6" style="padding: 16px; text-align: center; color: #64748B;">Loading price sensitivity matrix...</td></tr>
               </tbody>
             </table>
           </div>
         </div>
 
-        <!-- 4. Regional Willingness-to-Pay & Demand Analysis -->
+        <!-- 4. Provider Engagement Segmentation -->
+        <div class="panel-card" style="margin-bottom: 20px;">
+          <div style="font-size: 0.95rem; font-weight: 700; color: #F1F5F9; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+            <span>👥 Provider Engagement Segmentation & Intent Correlation</span>
+            <span style="font-size: 0.75rem; color: #94A3B8;">Observational association (Non-Causal)</span>
+          </div>
+          <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.8rem; text-align: left;">
+              <thead>
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.08); color: #94A3B8;">
+                  <th style="padding: 8px;">Provider Segment</th>
+                  <th style="padding: 8px;">Total Providers</th>
+                  <th style="padding: 8px;">Interested (L1)</th>
+                  <th style="padding: 8px;">Interest Rate</th>
+                  <th style="padding: 8px;">Intent (L2)</th>
+                  <th style="padding: 8px;">Intent Rate</th>
+                  <th style="padding: 8px;">Observational Note</th>
+                </tr>
+              </thead>
+              <tbody id="mon-segmentation-tbody">
+                <tr><td colspan="7" style="padding: 16px; text-align: center; color: #64748B;">Loading provider segmentation data...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 5. Regional Willingness-to-Pay & Strategic Market Fit -->
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px;">
           <div class="panel-card" style="border-left: 4px solid #10B981;">
-            <div style="font-size: 0.85rem; font-weight: 700; color: #F1F5F9; margin-bottom: 8px;">
-              🇳🇬 Delta State (Priority Market Fit)
+            <div style="font-size: 0.85rem; font-weight: 700; color: #F1F5F9; margin-bottom: 8px; display: flex; justify-content: space-between;">
+              <span>🇳🇬 Delta State (Priority Market Fit)</span>
+              <span class="status-tag status-good" style="font-size: 0.65rem;" id="mon-delta-badge">VALIDATING</span>
             </div>
             <div style="font-size: 0.8rem; color: #94A3B8; line-height: 1.5;" id="mon-delta-fit">
               Top Monetization Candidate: <strong style="color: #34D399;">TRUST_VERIFICATION & PROMOTED_DISCOVERY</strong>. High zero-result volume in Warri & Ughelli indicates strong artisan value in prominent localized discovery.
@@ -780,8 +835,9 @@
           </div>
 
           <div class="panel-card" style="border-left: 4px solid #6366F1;">
-            <div style="font-size: 0.85rem; font-weight: 700; color: #F1F5F9; margin-bottom: 8px;">
-              🇳🇬 Edo State (Strategic Adjacent Fit)
+            <div style="font-size: 0.85rem; font-weight: 700; color: #F1F5F9; margin-bottom: 8px; display: flex; justify-content: space-between;">
+              <span>🇳🇬 Edo State (Strategic Adjacent Fit)</span>
+              <span class="status-tag status-good" style="font-size: 0.65rem;" id="mon-edo-badge">VALIDATING</span>
             </div>
             <div style="font-size: 0.8rem; color: #94A3B8; line-height: 1.5;" id="mon-edo-fit">
               Top Monetization Candidate: <strong style="color: #818CF8;">PROMOTED_DISCOVERY</strong>. Benin City (Oredo/Ugbowo) commercial trade density favors category visibility for electrical and generator artisans.

@@ -2306,59 +2306,117 @@ document.addEventListener('DOMContentLoaded', async () => {
                 gateStatusEl.textContent = monSummary.payment_readiness_gate.classification;
               }
 
-              // 1. Candidate Products Table
-              const prodTbody = document.getElementById('mon-product-matrix-tbody');
-              if (prodTbody && monSummary.candidate_products && monSummary.candidate_products.length > 0) {
-                prodTbody.innerHTML = monSummary.candidate_products.map(prod => `
-                  <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                    <td style="padding: 8px; font-weight: 700; color: #C084FC;">#${prod.priority_rank}</td>
-                    <td style="padding: 8px; font-weight: 600; color: #F1F5F9;">${prod.name}</td>
-                    <td style="padding: 8px; color: #CBD5E1; font-size: 0.75rem;">${prod.customer_value}</td>
-                    <td style="padding: 8px; color: #CBD5E1; font-size: 0.75rem;">${prod.provider_value}</td>
-                    <td style="padding: 8px; color: #94A3B8;">${prod.complexity}</td>
-                    <td style="padding: 8px; color: #FBBF24; font-size: 0.72rem;">${prod.risk}</td>
-                    <td style="padding: 8px; color: #34D399; font-weight: 600; font-size: 0.75rem;">${prod.pricing_placeholder}</td>
-                    <td style="padding: 8px;"><span class="status-tag ${prod.priority_rank <= 2 ? 'status-good' : (prod.priority_rank === 3 ? 'status-notice' : 'status-bad')}" style="font-size: 0.65rem;">${prod.priority_rank === 1 ? 'PRIORITY_1' : (prod.priority_rank === 2 ? 'PRIORITY_2' : (prod.priority_rank === 3 ? 'PRIORITY_3' : 'DEFERRED'))}</span></td>
-                  </tr>
-                `).join('');
+              const commStatusEl = document.getElementById('mon-commercial-status');
+              if (commStatusEl && monSummary.commercial_readiness_classification) {
+                commStatusEl.textContent = monSummary.commercial_readiness_classification;
               }
 
-              // 2. Candidate Plans & Research Waitlist Table
-              const resTbody = document.getElementById('mon-research-tbody');
-              if (resTbody && monSummary.candidate_plans && monSummary.candidate_plans.length > 0) {
-                resTbody.innerHTML = monSummary.candidate_plans.map(plan => {
-                  const matchProd = monSummary.candidate_products.find(p => p.id.toLowerCase().includes(plan.plan_id.replace('plan_', '')) || plan.plan_id.includes(p.category));
-                  const interests = matchProd ? matchProd.interest_count : 0;
-                  const waitlist = matchProd ? matchProd.waitlist_count : 0;
+              // 1. Cohort KPIs
+              if (monSummary.cohort_metrics) {
+                const elExp = document.getElementById('kpi-mon-exposed');
+                const elInt = document.getElementById('kpi-mon-interest');
+                const elIntRate = document.getElementById('kpi-mon-interest-rate');
+                const elPnt = document.getElementById('kpi-mon-intent');
+                const elPntRate = document.getElementById('kpi-mon-intent-rate');
+                const elWtl = document.getElementById('kpi-mon-waitlist');
+                const elWtlRate = document.getElementById('kpi-mon-waitlist-rate');
+
+                if (elExp) elExp.textContent = monSummary.cohort_metrics.total_exposed_providers;
+                if (elInt) elInt.textContent = monSummary.cohort_metrics.distinct_interested_providers;
+                if (elIntRate) elIntRate.textContent = `${monSummary.cohort_metrics.interest_rate}% interest rate`;
+                if (elPnt) elPnt.textContent = monSummary.cohort_metrics.distinct_purchase_intent_providers;
+                if (elPntRate) elPntRate.textContent = `${monSummary.cohort_metrics.intent_rate}% intent rate`;
+                if (elWtl) elWtl.textContent = monSummary.cohort_metrics.distinct_waitlist_providers;
+                if (elWtlRate) elWtlRate.textContent = `${monSummary.cohort_metrics.waitlist_rate}% waitlist rate`;
+              }
+
+              // 2. Candidate Products Comparison Table
+              const prodTbody = document.getElementById('mon-product-matrix-tbody');
+              if (prodTbody && monSummary.candidate_products && monSummary.candidate_products.length > 0) {
+                prodTbody.innerHTML = monSummary.candidate_products.map(prod => {
+                  const confClass = prod.confidence === 'HIGHER' ? 'status-good' : (prod.confidence === 'MODERATE' ? 'status-notice' : 'status-bad');
+                  const classTagClass = prod.product_classification === 'STRONG_PURCHASE_INTENT' ? 'status-good' : (prod.product_classification === 'PROMISING_INTEREST' ? 'status-good' : (prod.product_classification === 'INSUFFICIENT_DATA' ? 'status-notice' : 'status-bad'));
                   return `
                     <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                      <td style="padding: 8px; font-weight: 700; color: #38BDF8;">${plan.name}</td>
-                      <td style="padding: 8px; color: #CBD5E1;">${matchProd ? matchProd.name : 'Core Marketplace'}</td>
-                      <td style="padding: 8px; color: #34D399; font-weight: 600;">${plan.price_display}</td>
-                      <td style="padding: 8px; color: #94A3B8; font-size: 0.72rem;">${plan.entitlements.join(', ')}</td>
-                      <td style="padding: 8px; color: #CBD5E1;">${interests}</td>
-                      <td style="padding: 8px; color: #10B981; font-weight: 700;">${waitlist}</td>
-                      <td style="padding: 8px;"><span class="status-tag ${plan.status === 'ACTIVE' ? 'status-good' : 'status-notice'}" style="font-size: 0.65rem;">${plan.status}</span></td>
+                      <td style="padding: 8px; font-weight: 700; color: #C084FC;">#${prod.priority_rank}</td>
+                      <td style="padding: 8px; font-weight: 600; color: #F1F5F9;">${prod.name}</td>
+                      <td style="padding: 8px; color: #94A3B8;">${prod.exposed_providers || prod.sample_size}</td>
+                      <td style="padding: 8px; color: #38BDF8; font-weight: 600;">${prod.interest_count || 0}</td>
+                      <td style="padding: 8px; color: #38BDF8;">${prod.interest_rate || 0}%</td>
+                      <td style="padding: 8px; color: #34D399; font-weight: 700;">${prod.purchase_intent_count || 0}</td>
+                      <td style="padding: 8px; color: #34D399;">${prod.intent_rate || 0}%</td>
+                      <td style="padding: 8px; color: #FBBF24;">${prod.waitlist_count || 0}</td>
+                      <td style="padding: 8px; color: #34D399; font-size: 0.75rem; font-weight: 600;">${prod.preferred_research_price || prod.pricing_placeholder}</td>
+                      <td style="padding: 8px;"><span class="status-tag ${confClass}" style="font-size: 0.65rem;">${prod.confidence}</span></td>
+                      <td style="padding: 8px;"><span class="status-tag ${classTagClass}" style="font-size: 0.65rem;">${prod.product_classification}</span></td>
                     </tr>
                   `;
                 }).join('');
               }
 
-              // 3. Regional Insights
+              // 3. Price Sensitivity Matrix Table
+              const sensTbody = document.getElementById('mon-price-sensitivity-tbody');
+              if (sensTbody && monSummary.candidate_products) {
+                const sensitivityRows = [];
+                monSummary.candidate_products.forEach(prod => {
+                  if (prod.price_sensitivity && prod.price_sensitivity.length > 0) {
+                    prod.price_sensitivity.forEach((h, hIdx) => {
+                      const totalIntentsForProd = Math.max(1, prod.purchase_intent_count || 1);
+                      const shareOfIntent = Number(((h.intent_count / totalIntentsForProd) * 100).toFixed(0));
+                      sensitivityRows.push(`
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                          <td style="padding: 8px; font-weight: 600; color: #F1F5F9;">${hIdx === 0 ? prod.name : '↳'}</td>
+                          <td style="padding: 8px; color: #34D399; font-weight: 600;">${h.label}</td>
+                          <td style="padding: 8px; color: #94A3B8; font-size: 0.75rem;">${hIdx === 1 ? 'Baseline Hypothesis' : (hIdx === 0 ? 'Entry / Low Band' : 'Premium / High Band')}</td>
+                          <td style="padding: 8px; color: #CBD5E1;">${h.selections_count}</td>
+                          <td style="padding: 8px; color: #38BDF8; font-weight: 700;">${h.intent_count}</td>
+                          <td style="padding: 8px; color: #FBBF24;">${shareOfIntent}%</td>
+                        </tr>
+                      `);
+                    });
+                  }
+                });
+                sensTbody.innerHTML = sensitivityRows.length > 0 ? sensitivityRows.join('') : '<tr><td colspan="6" style="padding: 12px; text-align: center; color: #64748B;">No price hypothesis data recorded yet.</td></tr>';
+              }
+
+              // 4. Provider Segmentation Table
+              const segTbody = document.getElementById('mon-segmentation-tbody');
+              if (segTbody && monSummary.provider_segmentation && monSummary.provider_segmentation.length > 0) {
+                segTbody.innerHTML = monSummary.provider_segmentation.map(seg => `
+                  <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <td style="padding: 8px; font-weight: 700; color: #38BDF8;">${seg.name}</td>
+                    <td style="padding: 8px; color: #94A3B8;">${seg.total_providers}</td>
+                    <td style="padding: 8px; color: #CBD5E1;">${seg.interested_providers}</td>
+                    <td style="padding: 8px; color: #38BDF8;">${seg.interest_rate}%</td>
+                    <td style="padding: 8px; color: #34D399; font-weight: 700;">${seg.intent_providers}</td>
+                    <td style="padding: 8px; color: #34D399;">${seg.intent_rate}%</td>
+                    <td style="padding: 8px; color: #94A3B8; font-size: 0.72rem;">${seg.observation_note}</td>
+                  </tr>
+                `).join('');
+              }
+
+              // 5. Regional Insights
               if (monSummary.regional_insights) {
                 const deltaEl = document.getElementById('mon-delta-fit');
                 const edoEl = document.getElementById('mon-edo-fit');
+                const deltaBadge = document.getElementById('mon-delta-badge');
+                const edoBadge = document.getElementById('mon-edo-badge');
+
                 if (deltaEl && monSummary.regional_insights.delta_priority_market) {
-                  deltaEl.innerHTML = `Top Monetization Candidate: <strong style="color: #34D399;">${monSummary.regional_insights.delta_priority_market.top_monetization_fit}</strong> (${monSummary.regional_insights.delta_priority_market.total_providers} providers). ${monSummary.regional_insights.delta_priority_market.demand_profile}.`;
+                  const d = monSummary.regional_insights.delta_priority_market;
+                  deltaEl.innerHTML = `Top Monetization Candidate: <strong style="color: #34D399;">${d.top_monetization_fit}</strong> (${d.total_providers} providers, ${d.interest_count} interested, ${d.purchase_intent_count} intent). ${d.demand_profile}. [Confidence: ${d.confidence}]`;
+                  if (deltaBadge) deltaBadge.textContent = d.status;
                 }
                 if (edoEl && monSummary.regional_insights.edo_strategic_adjacent) {
-                  edoEl.innerHTML = `Top Monetization Candidate: <strong style="color: #818CF8;">${monSummary.regional_insights.edo_strategic_adjacent.top_monetization_fit}</strong> (${monSummary.regional_insights.edo_strategic_adjacent.total_providers} providers). ${monSummary.regional_insights.edo_strategic_adjacent.demand_profile}.`;
+                  const e = monSummary.regional_insights.edo_strategic_adjacent;
+                  edoEl.innerHTML = `Top Monetization Candidate: <strong style="color: #818CF8;">${e.top_monetization_fit}</strong> (${e.total_providers} providers, ${e.interest_count} interested, ${e.purchase_intent_count} intent). ${e.demand_profile}. [Confidence: ${e.confidence}]`;
+                  if (edoBadge) edoBadge.textContent = e.status;
                 }
               }
             }
           }
         } catch (err) {
-          console.warn('Phase 10.12K/10.12L/10.13 analytics render warning:', err.message);
+          console.warn('Phase 10.12K/10.12L/10.13/10.13B analytics render warning:', err.message);
         }
       }
 

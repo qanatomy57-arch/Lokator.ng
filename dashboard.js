@@ -1108,37 +1108,137 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // 11c. Phase 10.13: Monetization Research & Waitlist Capture
+  // 11c. Phase 10.13B: Monetization Research & Willingness-to-Pay Measurement
   function renderMonetizationResearch() {
+    const researchSection = document.getElementById('dash-monetization-research-section');
     const interestButtons = document.querySelectorAll('.btn-mon-interest');
+    const intentButtons = document.querySelectorAll('.btn-mon-intent');
+    const waitlistButtons = document.querySelectorAll('.btn-mon-waitlist');
+    const priceSelects = document.querySelectorAll('.mon-price-select');
     const toast = document.getElementById('dash-mon-interest-toast');
 
-    if (!interestButtons || interestButtons.length === 0) return;
+    if (!researchSection) return;
 
+    const providerId = currentProvider ? currentProvider.id : 0;
+    const providerMeta = {
+      category: currentProvider ? (currentProvider.category || currentProvider.primary_category_slug || '') : '',
+      state: currentProvider ? (currentProvider.state || '') : ''
+    };
+
+    // 1. Record Product Research Exposure (Level 0 — Awareness)
+    try {
+      if (LokatorDB.monetization && LokatorDB.monetization.research) {
+        ['TRUST_VERIFICATION', 'PROMOTED_DISCOVERY', 'QUALIFIED_LEAD_ACCESS'].forEach(prodId => {
+          LokatorDB.monetization.research.recordProductExposure(providerId, prodId, providerMeta);
+        });
+      }
+    } catch (e) {
+      console.warn('Monetization exposure recording notice:', e);
+    }
+
+    // 2. Price Hypothesis Selection Listeners
+    priceSelects.forEach(select => {
+      select.addEventListener('change', async (e) => {
+        const prodId = e.target.getAttribute('data-product');
+        const selectedOpt = e.target.options[e.target.selectedIndex];
+        const priceLabel = selectedOpt.value;
+        const priceAmount = Number(selectedOpt.getAttribute('data-amount')) || 0;
+
+        try {
+          if (LokatorDB.monetization && LokatorDB.monetization.research) {
+            await LokatorDB.monetization.research.recordPriceSelection(
+              providerId, prodId, { label: priceLabel, amount: priceAmount }, providerMeta
+            );
+          }
+          showToast(`Research price hypothesis updated: ${priceLabel}`);
+        } catch (err) {
+          console.warn('Price selection logging notice:', err);
+        }
+      });
+    });
+
+    // 3. Level 1: Express Interest Handlers
     interestButtons.forEach(btn => {
       btn.addEventListener('click', async (e) => {
         const prodId = e.target.getAttribute('data-product');
         btn.disabled = true;
-        btn.textContent = 'Joined Waitlist ✓';
+        btn.textContent = 'Interest Recorded ✓';
+        btn.style.borderColor = '#10B981';
+        btn.style.color = '#10B981';
+
+        try {
+          if (LokatorDB.monetization && LokatorDB.monetization.research) {
+            await LokatorDB.monetization.research.recordProductInterest(
+              providerId, prodId, 'Expressed general product interest in dashboard', providerMeta
+            );
+          }
+          if (toast) {
+            toast.innerHTML = '✅ <strong>Interest Recorded:</strong> Thank you for your feedback! This helps shape upcoming artisan features. <em>No payment required.</em>';
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 5000);
+          }
+          showToast('Product interest recorded! No payment required.');
+        } catch (err) {
+          console.warn('Interest logging warning:', err.message);
+        }
+      });
+    });
+
+    // 4. Level 2: Purchase Intent Handlers
+    intentButtons.forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const prodId = e.target.getAttribute('data-product');
+        const selectEl = document.querySelector(`.mon-price-select[data-product="${prodId}"]`);
+        const priceLabel = selectEl ? selectEl.value : 'Baseline price';
+        const priceAmount = selectEl ? (Number(selectEl.options[selectEl.selectedIndex].getAttribute('data-amount')) || 0) : 0;
+
+        btn.disabled = true;
+        btn.textContent = 'Intent Captured ✓';
+        btn.style.borderColor = '#10B981';
+        btn.style.background = 'rgba(16, 185, 129, 0.15)';
+        btn.style.color = '#10B981';
+
+        try {
+          if (LokatorDB.monetization && LokatorDB.monetization.research) {
+            await LokatorDB.monetization.research.recordPurchaseIntent(
+              providerId, prodId, { label: priceLabel, amount: priceAmount }, { ...providerMeta, notes: `Purchase intent at ${priceLabel}` }
+            );
+          }
+          if (toast) {
+            toast.innerHTML = `🎯 <strong>Purchase Intent Confirmed:</strong> You selected <strong>${priceLabel}</strong>. Recorded for commercial readiness modeling. <em>No payment is charged.</em>`;
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 6000);
+          }
+          showToast(`Purchase intent at ${priceLabel} recorded! No payment required.`);
+        } catch (err) {
+          console.warn('Purchase intent logging warning:', err.message);
+        }
+      });
+    });
+
+    // 5. Level 3: Waitlist / Notification Handlers
+    waitlistButtons.forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const prodId = e.target.getAttribute('data-product');
+        btn.disabled = true;
+        btn.textContent = 'Notification Set ✓';
         btn.style.borderColor = '#10B981';
         btn.style.color = '#10B981';
 
         try {
           if (LokatorDB.monetization && LokatorDB.monetization.research) {
             await LokatorDB.monetization.research.joinProductWaitlist(
-              currentProvider ? currentProvider.id : 0,
-              prodId,
-              currentProvider ? currentProvider.phone : '',
-              'Joined via dashboard monetization research card'
+              providerId, prodId, '', 'Joined notification waitlist via dashboard', providerMeta
             );
           }
           if (toast) {
+            toast.innerHTML = '🔔 <strong>Notification Set:</strong> We will alert your dashboard when this tool enters beta testing. <em>No payment required.</em>';
             toast.style.display = 'block';
             setTimeout(() => { toast.style.display = 'none'; }, 5000);
           }
-          showToast('Added to early access waitlist! No payment required.');
+          showToast('Added to early notification waitlist! No payment required.');
         } catch (err) {
-          console.warn('Monetization interest logging warning:', err.message);
+          console.warn('Waitlist logging warning:', err.message);
         }
       });
     });
