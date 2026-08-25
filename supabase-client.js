@@ -4949,12 +4949,28 @@
       };
     },
 
-    async verifyPayment(reference, providerId = null) {
+    async verifyPayment(reference, providerId = null, validationPayload = {}) {
       if (!reference) throw new Error('Transaction reference is required for verification.');
+
+      // Validate payment gateway response payloads if provided
+      if (validationPayload.amount !== undefined && Number(validationPayload.amount) !== PILOT_PRODUCT_STARTER.price_kobo) {
+        throw new Error(`Transaction amount mismatch: received ${validationPayload.amount}, expected ${PILOT_PRODUCT_STARTER.price_kobo} kobo`);
+      }
+      if (validationPayload.currency !== undefined && String(validationPayload.currency).toUpperCase() !== PILOT_PRODUCT_STARTER.currency) {
+        throw new Error(`Transaction currency mismatch: received ${validationPayload.currency}, expected '${PILOT_PRODUCT_STARTER.currency}'`);
+      }
+      if (validationPayload.status !== undefined && validationPayload.status !== 'success') {
+        throw new Error(`Transaction status is '${validationPayload.status}', expected 'success'`);
+      }
 
       const ordersStore = getLocalStore(PILOT_ORDERS_STORAGE_KEY, []);
       const orderIdx = ordersStore.findIndex(o => o.reference === reference);
       let order = orderIdx >= 0 ? ordersStore[orderIdx] : null;
+
+      // IDOR Protection: If order exists and caller passed providerId, enforce match
+      if (order && providerId && Number(order.provider_id) !== Number(providerId)) {
+        throw new Error('Unauthorized order access: Order belongs to a different provider.');
+      }
 
       if (!order && providerId) {
         order = {
@@ -4962,9 +4978,9 @@
           provider_id: Number(providerId),
           product_id: PILOT_PRODUCT_STARTER.id,
           product_name: PILOT_PRODUCT_STARTER.name,
-          amount: 200000,
-          currency: 'NGN',
-          duration_days: 14,
+          amount: PILOT_PRODUCT_STARTER.price_kobo,
+          currency: PILOT_PRODUCT_STARTER.currency,
+          duration_days: PILOT_PRODUCT_STARTER.duration_days,
           reference: reference,
           category: 'artisan',
           state: 'Delta',
@@ -4994,8 +5010,21 @@
         };
       }
 
+      // Concurrency inventory cap protection before activation
+      const invCheck = this.checkInventoryAvailability(order.category, order.state, order.lga);
+      if (!invCheck.available) {
+        order.status = 'inventory_overflow_pending_refund';
+        setLocalStore(PILOT_ORDERS_STORAGE_KEY, ordersStore);
+        return {
+          status: 'error',
+          code: 'INVENTORY_LIMIT_EXCEEDED',
+          message: 'Inventory limit reached concurrently. Payment held for automated refund.',
+          order: order
+        };
+      }
+
       const now = Date.now();
-      const durationMs = (order.duration_days || 14) * 24 * 60 * 60 * 1000;
+      const durationMs = (order.duration_days || PILOT_PRODUCT_STARTER.duration_days) * 24 * 60 * 60 * 1000;
       const effectiveUntil = new Date(now + durationMs).toISOString();
 
       const newPromo = {
@@ -5067,17 +5096,45 @@
           const bodyStr = typeof rawPayload === 'object' ? JSON.stringify(rawPayload) : String(rawPayload);
           const expectedSig = crypto.createHmac('sha512', secretKey).update(bodyStr).digest('hex');
           if (signatureHeader !== expectedSig) {
-            return { error: 'Invalid webhook signature', verified: false };
+            return { error: 'Invalid webhook signature', verified: false, processed: false };
           }
-        } catch (e) {}
+        } catch (e) {
+          return { error: 'Signature verification exception', verified: false, processed: false };
+        }
       }
 
       const event = typeof rawPayload === 'string' ? JSON.parse(rawPayload) : rawPayload;
-      if (event && event.event === 'charge.success' && event.data) {
-        const ref = event.data.reference;
-        const res = await this.verifyPayment(ref, event.data.metadata && event.data.metadata.provider_id);
-        return { processed: true, idempotent: !!res.idempotent, result: res };
+      if (!event || typeof event !== 'object') {
+        return { error: 'Malformed webhook payload', processed: false };
       }
+
+      if (event.event === 'charge.success' && event.data) {
+        const data = event.data;
+        if (data.amount !== PILOT_PRODUCT_STARTER.price_kobo) {
+          return { error: `Amount mismatch: received ${data.amount}, expected ${PILOT_PRODUCT_STARTER.price_kobo}`, processed: false };
+        }
+        if (data.currency !== PILOT_PRODUCT_STARTER.currency) {
+          return { error: `Currency mismatch: received ${data.currency}, expected ${PILOT_PRODUCT_STARTER.currency}`, processed: false };
+        }
+
+        const ref = data.reference;
+        const res = await this.verifyPayment(ref, data.metadata && data.metadata.provider_id, {
+          amount: data.amount,
+          currency: data.currency,
+          status: data.status
+        });
+        return { processed: true, idempotent: !!res.idempotent, result: res };
+      } else if (event.event === 'charge.failed' && event.data) {
+        const ref = event.data.reference;
+        const ordersStore = getLocalStore(PILOT_ORDERS_STORAGE_KEY, []);
+        const order = ordersStore.find(o => o.reference === ref);
+        if (order) {
+          order.status = 'payment_failed';
+          setLocalStore(PILOT_ORDERS_STORAGE_KEY, ordersStore);
+        }
+        return { processed: true, event: 'charge.failed', status: 'payment_failed' };
+      }
+
       return { processed: true, acknowledged: true };
     },
 
@@ -5103,6 +5160,53 @@
       const promos = getLocalStore(PILOT_PROMOTIONS_STORAGE_KEY, []);
       const nowMs = Date.now();
       return promos.find(p => p.provider_id === Number(providerId) && p.status === 'active' && new Date(p.effective_until).getTime() > nowMs) || null;
+    },
+
+    reconcileExpiredPromotions() {
+      const promos = getLocalStore(PILOT_PROMOTIONS_STORAGE_KEY, []);
+      const nowMs = Date.now();
+      let modified = false;
+
+      promos.forEach(p => {
+        if (p.status === 'active' && new Date(p.effective_until).getTime() <= nowMs) {
+          p.status = 'expired';
+          modified = true;
+        }
+      });
+
+      if (modified) {
+        setLocalStore(PILOT_PROMOTIONS_STORAGE_KEY, promos);
+      }
+      return promos;
+    },
+
+    async processRefundOrReversal(orderId, providerId, type = 'refund') {
+      const orders = getLocalStore(PILOT_ORDERS_STORAGE_KEY, []);
+      const order = orders.find(o => o.order_id === orderId && o.provider_id === Number(providerId));
+      if (!order) throw new Error('Order not found for refund/reversal.');
+
+      const newStatus = type === 'reversal' ? 'reversed' : 'refunded';
+      order.status = newStatus;
+      setLocalStore(PILOT_ORDERS_STORAGE_KEY, orders);
+
+      // Deactivate any matching active promotion
+      const promos = getLocalStore(PILOT_PROMOTIONS_STORAGE_KEY, []);
+      const promo = promos.find(p => p.order_id === orderId);
+      if (promo) {
+        promo.status = newStatus;
+        setLocalStore(PILOT_PROMOTIONS_STORAGE_KEY, promos);
+      }
+
+      // Reset provider sponsored tag
+      const providers = getLocalStore(DB_STORE_KEY, []);
+      const prov = providers.find(p => p.id === Number(providerId));
+      if (prov) {
+        prov.is_sponsored = false;
+        prov.isTop = false;
+        setLocalStore(DB_STORE_KEY, providers);
+      }
+
+      return { order_id: orderId, status: newStatus, promotion_deactivated: true };
     },
 
     async requestRefund(orderId, providerId, reason = '') {
