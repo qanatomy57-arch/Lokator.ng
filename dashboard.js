@@ -1108,6 +1108,42 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
+  // 11c. Phase 10.13: Monetization Research & Waitlist Capture
+  function renderMonetizationResearch() {
+    const interestButtons = document.querySelectorAll('.btn-mon-interest');
+    const toast = document.getElementById('dash-mon-interest-toast');
+
+    if (!interestButtons || interestButtons.length === 0) return;
+
+    interestButtons.forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const prodId = e.target.getAttribute('data-product');
+        btn.disabled = true;
+        btn.textContent = 'Joined Waitlist ✓';
+        btn.style.borderColor = '#10B981';
+        btn.style.color = '#10B981';
+
+        try {
+          if (LokatorDB.monetization && LokatorDB.monetization.research) {
+            await LokatorDB.monetization.research.joinProductWaitlist(
+              currentProvider ? currentProvider.id : 0,
+              prodId,
+              currentProvider ? currentProvider.phone : '',
+              'Joined via dashboard monetization research card'
+            );
+          }
+          if (toast) {
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 5000);
+          }
+          showToast('Added to early access waitlist! No payment required.');
+        } catch (err) {
+          console.warn('Monetization interest logging warning:', err.message);
+        }
+      });
+    });
+  }
+
   // 12. Run Initial Render Pipeline
   await loadMetrics();
   populateProfileForm();
@@ -1116,4 +1152,5 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderPortfolio();
   renderTrustCenter();
   renderReferralTool();
+  renderMonetizationResearch();
 });

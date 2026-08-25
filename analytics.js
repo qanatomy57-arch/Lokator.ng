@@ -2298,8 +2298,67 @@ document.addEventListener('DOMContentLoaded', async () => {
               }
             }
           }
+          if (LokatorDB.monetization && LokatorDB.monetization.getMonetizationSummary) {
+            const monSummary = LokatorDB.monetization.getMonetizationSummary(days);
+            if (monSummary) {
+              const gateStatusEl = document.getElementById('mon-gate-status');
+              if (gateStatusEl && monSummary.payment_readiness_gate) {
+                gateStatusEl.textContent = monSummary.payment_readiness_gate.classification;
+              }
+
+              // 1. Candidate Products Table
+              const prodTbody = document.getElementById('mon-product-matrix-tbody');
+              if (prodTbody && monSummary.candidate_products && monSummary.candidate_products.length > 0) {
+                prodTbody.innerHTML = monSummary.candidate_products.map(prod => `
+                  <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <td style="padding: 8px; font-weight: 700; color: #C084FC;">#${prod.priority_rank}</td>
+                    <td style="padding: 8px; font-weight: 600; color: #F1F5F9;">${prod.name}</td>
+                    <td style="padding: 8px; color: #CBD5E1; font-size: 0.75rem;">${prod.customer_value}</td>
+                    <td style="padding: 8px; color: #CBD5E1; font-size: 0.75rem;">${prod.provider_value}</td>
+                    <td style="padding: 8px; color: #94A3B8;">${prod.complexity}</td>
+                    <td style="padding: 8px; color: #FBBF24; font-size: 0.72rem;">${prod.risk}</td>
+                    <td style="padding: 8px; color: #34D399; font-weight: 600; font-size: 0.75rem;">${prod.pricing_placeholder}</td>
+                    <td style="padding: 8px;"><span class="status-tag ${prod.priority_rank <= 2 ? 'status-good' : (prod.priority_rank === 3 ? 'status-notice' : 'status-bad')}" style="font-size: 0.65rem;">${prod.priority_rank === 1 ? 'PRIORITY_1' : (prod.priority_rank === 2 ? 'PRIORITY_2' : (prod.priority_rank === 3 ? 'PRIORITY_3' : 'DEFERRED'))}</span></td>
+                  </tr>
+                `).join('');
+              }
+
+              // 2. Candidate Plans & Research Waitlist Table
+              const resTbody = document.getElementById('mon-research-tbody');
+              if (resTbody && monSummary.candidate_plans && monSummary.candidate_plans.length > 0) {
+                resTbody.innerHTML = monSummary.candidate_plans.map(plan => {
+                  const matchProd = monSummary.candidate_products.find(p => p.id.toLowerCase().includes(plan.plan_id.replace('plan_', '')) || plan.plan_id.includes(p.category));
+                  const interests = matchProd ? matchProd.interest_count : 0;
+                  const waitlist = matchProd ? matchProd.waitlist_count : 0;
+                  return `
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                      <td style="padding: 8px; font-weight: 700; color: #38BDF8;">${plan.name}</td>
+                      <td style="padding: 8px; color: #CBD5E1;">${matchProd ? matchProd.name : 'Core Marketplace'}</td>
+                      <td style="padding: 8px; color: #34D399; font-weight: 600;">${plan.price_display}</td>
+                      <td style="padding: 8px; color: #94A3B8; font-size: 0.72rem;">${plan.entitlements.join(', ')}</td>
+                      <td style="padding: 8px; color: #CBD5E1;">${interests}</td>
+                      <td style="padding: 8px; color: #10B981; font-weight: 700;">${waitlist}</td>
+                      <td style="padding: 8px;"><span class="status-tag ${plan.status === 'ACTIVE' ? 'status-good' : 'status-notice'}" style="font-size: 0.65rem;">${plan.status}</span></td>
+                    </tr>
+                  `;
+                }).join('');
+              }
+
+              // 3. Regional Insights
+              if (monSummary.regional_insights) {
+                const deltaEl = document.getElementById('mon-delta-fit');
+                const edoEl = document.getElementById('mon-edo-fit');
+                if (deltaEl && monSummary.regional_insights.delta_priority_market) {
+                  deltaEl.innerHTML = `Top Monetization Candidate: <strong style="color: #34D399;">${monSummary.regional_insights.delta_priority_market.top_monetization_fit}</strong> (${monSummary.regional_insights.delta_priority_market.total_providers} providers). ${monSummary.regional_insights.delta_priority_market.demand_profile}.`;
+                }
+                if (edoEl && monSummary.regional_insights.edo_strategic_adjacent) {
+                  edoEl.innerHTML = `Top Monetization Candidate: <strong style="color: #818CF8;">${monSummary.regional_insights.edo_strategic_adjacent.top_monetization_fit}</strong> (${monSummary.regional_insights.edo_strategic_adjacent.total_providers} providers). ${monSummary.regional_insights.edo_strategic_adjacent.demand_profile}.`;
+                }
+              }
+            }
+          }
         } catch (err) {
-          console.warn('Phase 10.12K/10.12L analytics render warning:', err.message);
+          console.warn('Phase 10.12K/10.12L/10.13 analytics render warning:', err.message);
         }
       }
 
