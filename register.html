@@ -106,149 +106,340 @@
         </div>
       </div>
 
-      <!-- REGISTRATION FORM -->
+      <!-- ONBOARDING REGISTRATION CARD -->
       <div class="reg-form-card" id="reg-form-card">
-        <h2>Register as Provider</h2>
-        <p class="form-subtitle">Takes less than 3 minutes. Start getting customers today.</p>
-        <form id="reg-form" class="reg-form">
-          <div class="form-row">
-            <div class="form-group">
-              <label for="fname">First Name *</label>
-              <input type="text" id="fname" name="fname" required placeholder="e.g. Adebayo" />
+        
+        <!-- STEP PROGRESS INDICATOR -->
+        <div class="onboarding-stepper" id="onboarding-stepper" role="navigation" aria-label="Registration Steps">
+          <button type="button" class="step-indicator is-active" id="step-btn-1" data-step="1">
+            <span class="step-badge">1</span>
+            <span class="step-label">Identity</span>
+          </button>
+          <div class="step-separator" id="sep-1"></div>
+          <button type="button" class="step-indicator" id="step-btn-2" data-step="2">
+            <span class="step-badge">2</span>
+            <span class="step-label">Services</span>
+          </button>
+          <div class="step-separator" id="sep-2"></div>
+          <button type="button" class="step-indicator" id="step-btn-3" data-step="3">
+            <span class="step-badge">3</span>
+            <span class="step-label">Location</span>
+          </button>
+          <div class="step-separator" id="sep-3"></div>
+          <button type="button" class="step-indicator" id="step-btn-4" data-step="4">
+            <span class="step-badge">4</span>
+            <span class="step-label">Enhance</span>
+          </button>
+          <div class="step-separator" id="sep-4"></div>
+          <button type="button" class="step-indicator" id="step-btn-5" data-step="5">
+            <span class="step-badge">5</span>
+            <span class="step-label">Publish</span>
+          </button>
+        </div>
+
+        <form id="reg-form" class="reg-form" novalidate>
+
+          <!-- ===== STEP 1: IDENTITY & CONTACT ===== -->
+          <div class="onboarding-step-pane is-active" id="step-pane-1" data-step="1">
+            <div class="step-header-wrap">
+              <h2 class="step-header-title">Identity & Contact</h2>
+              <p class="step-header-desc">Enter your name and WhatsApp number so customers can reach you directly.</p>
             </div>
-            <div class="form-group">
-              <label for="lname">Last Name *</label>
-              <input type="text" id="lname" name="lname" required placeholder="e.g. Okafor" />
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="phone">Phone Number (WhatsApp) *</label>
-            <div class="phone-input">
-              <span class="phone-prefix">🇳🇬 +234</span>
-              <input type="tel" id="phone" name="phone" required placeholder="8012345678 or 08012345678" />
-            </div>
-            <div id="phone-feedback" style="display: none; font-size: 0.75rem; margin-top: 4px;"></div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="email">Email Address *</label>
-              <input type="email" id="email" name="email" required placeholder="your@email.com (for dashboard login)" autocomplete="email" />
-            </div>
-            <div class="form-group">
-              <label for="password">Create Password *</label>
-              <div class="reg-pwd-wrap">
-                <input type="password" id="password" name="password" required placeholder="Min 6 characters" minlength="6" autocomplete="new-password" class="reg-pwd-input" />
-                <button type="button" id="toggle-reg-pwd" class="btn-toggle-reg-pwd" aria-label="Toggle password visibility">👁️</button>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="fname">First Name *</label>
+                <input type="text" id="fname" name="fname" required placeholder="e.g. Adebayo" autocomplete="given-name" />
+                <div class="field-error-msg" id="err-fname">Please enter your first name.</div>
               </div>
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="skill-input">Skills & Services Provided *</label>
-            <div class="skills-chips-wrapper" id="skills-chips-wrap">
-              <div class="skills-chips-list" id="skills-chips-list">
-                <!-- Dynamic Chips -->
-              </div>
-              <div class="skills-input-row">
-                <input type="text" id="skill-input" placeholder="Type any skill/service (e.g. Electrician, Solar, Plumber)..." autocomplete="off" />
-                <button type="button" class="btn-add-skill" id="btn-add-skill">+ Add</button>
-              </div>
-              <div class="skills-autocomplete-dropdown" id="skills-autocomplete-dropdown" style="display: none;" role="listbox"></div>
-            </div>
-            <div class="moderation-error-alert" id="moderation-alert" role="alert" style="display: none;">
-              <span>⚠️</span>
-              <span id="moderation-alert-text">Disallowed service keyword detected. Lokator only lists verified trade services.</span>
-            </div>
-            <div class="popular-skills-hints" id="popular-hints">
-              <span class="hints-label">Popular suggestions:</span>
-              <span class="popular-skill-pill" data-skill="🔧 Plumber">🔧 Plumber</span>
-              <span class="popular-skill-pill" data-skill="⚡ Electrician">⚡ Electrician</span>
-              <span class="popular-skill-pill" data-skill="🪚 Carpenter">🪚 Carpenter</span>
-              <span class="popular-skill-pill" data-skill="🎨 Painter">🎨 Painter</span>
-              <span class="popular-skill-pill" data-skill="🔩 Mechanic">🔩 Mechanic</span>
-              <span class="popular-skill-pill" data-skill="❄️ AC Technician">❄️ AC Technician</span>
-              <span class="popular-skill-pill" data-skill="☀️ Solar Installer">☀️ Solar Installer</span>
-              <span class="popular-skill-pill" data-skill="🧱 Mason">🧱 Mason</span>
-              <span class="popular-skill-pill" data-skill="🏛️ Tiler">🏛️ Tiler</span>
-            </div>
-            <input type="hidden" id="service" name="service" required />
-          <!-- Nigerian Location Intelligence Selection -->
-          <div class="form-group">
-            <label style="font-weight: 700;">Your Operating Location (State & LGA) *</label>
-            
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
-              <div>
-                <label for="reg-state" style="font-size: 12.5px; font-weight: 600; color: var(--fg-muted);">State *</label>
-                <select id="reg-state" name="state" required style="width: 100%; padding: 10px 12px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--card-bg); color: var(--fg); font-size: 14px;">
-                  <option value="">Select State...</option>
-                </select>
-              </div>
-              <div>
-                <label for="reg-lga" style="font-size: 12.5px; font-weight: 600; color: var(--fg-muted);">LGA / City *</label>
-                <select id="reg-lga" name="lga" required disabled style="width: 100%; padding: 10px 12px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--card-bg); color: var(--fg); font-size: 14px;">
-                  <option value="">Select State First...</option>
-                </select>
+              <div class="form-group">
+                <label for="lname">Last Name *</label>
+                <input type="text" id="lname" name="lname" required placeholder="e.g. Okafor" autocomplete="family-name" />
+                <div class="field-error-msg" id="err-lname">Please enter your last name.</div>
               </div>
             </div>
 
-            <div style="position: relative;">
-              <label for="reg-locality" style="font-size: 12.5px; font-weight: 600; color: var(--fg-muted);">Neighborhood / Specific Area (Optional)</label>
-              <div class="loc-input-wrap">
-                <input type="text" id="reg-locality" name="locality" placeholder="e.g. Lekki Phase 1, Wuse 2, Ikeja GRA, Bodija..." autocomplete="off" />
-                <button type="button" class="gps-btn-form" id="gps-btn-form" aria-label="Use my GPS location">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="8"/></svg>
-                  Use GPS
+            <div class="form-group">
+              <label for="bizname">Business / Trade Name (Optional)</label>
+              <input type="text" id="bizname" name="bizname" placeholder="e.g. Bayo Tech Electrical Works" />
+            </div>
+
+            <div class="form-group">
+              <label for="phone">Phone Number (WhatsApp) *</label>
+              <div class="phone-input">
+                <span class="phone-prefix">🇳🇬 +234</span>
+                <input type="tel" id="phone" name="phone" required placeholder="8012345678 or 08012345678" autocomplete="tel" />
+              </div>
+              <div id="phone-feedback" style="display: none; font-size: 0.78rem; margin-top: 4px; font-weight: 600;"></div>
+              <div class="field-error-msg" id="err-phone">Please enter a valid Nigerian mobile phone number.</div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="email">Email Address *</label>
+                <input type="email" id="email" name="email" required placeholder="your@email.com (for login)" autocomplete="email" />
+                <div class="field-error-msg" id="err-email">Please enter a valid email address.</div>
+              </div>
+              <div class="form-group">
+                <label for="password">Create Password *</label>
+                <div class="reg-pwd-wrap">
+                  <input type="password" id="password" name="password" required placeholder="Min 6 characters" minlength="6" autocomplete="new-password" class="reg-pwd-input" />
+                  <button type="button" id="toggle-reg-pwd" class="btn-toggle-reg-pwd" aria-label="Toggle password visibility">👁️</button>
+                </div>
+                <div class="field-error-msg" id="err-password">Password must be at least 6 characters.</div>
+              </div>
+            </div>
+
+            <div class="step-nav-actions">
+              <span style="font-size: 13px; color: var(--fg-muted);">Step 1 of 5</span>
+              <button type="button" class="btn btn-primary" id="btn-step-1-next">Continue to Services →</button>
+            </div>
+          </div>
+
+          <!-- ===== STEP 2: TRADE & SERVICES ===== -->
+          <div class="onboarding-step-pane" id="step-pane-2" data-step="2">
+            <div class="step-header-wrap">
+              <h2 class="step-header-title">Trade & Services</h2>
+              <p class="step-header-desc">Select your craft and specific skills. You must add at least one approved trade skill.</p>
+            </div>
+
+            <div class="form-group">
+              <label for="skill-input">Skills & Services Provided *</label>
+              <div class="skills-chips-wrapper" id="skills-chips-wrap">
+                <div class="skills-chips-list" id="skills-chips-list">
+                  <!-- Dynamic Chips -->
+                </div>
+                <div class="skills-input-row">
+                  <input type="text" id="skill-input" placeholder="Type any skill/service (e.g. Electrician, Solar, Plumber)..." autocomplete="off" />
+                  <button type="button" class="btn-add-skill" id="btn-add-skill">+ Add</button>
+                </div>
+                <div class="skills-autocomplete-dropdown" id="skills-autocomplete-dropdown" style="display: none;" role="listbox"></div>
+              </div>
+              <div class="field-error-msg" id="err-skills">Please add at least one approved skill or trade service.</div>
+              
+              <div class="moderation-error-alert" id="moderation-alert" role="alert" style="display: none;">
+                <span>⚠️</span>
+                <span id="moderation-alert-text">Disallowed service keyword detected. Lokator only lists verified trade services.</span>
+              </div>
+
+              <div class="popular-skills-hints" id="popular-hints">
+                <span class="hints-label">Popular suggestions:</span>
+                <span class="popular-skill-pill" data-skill="🔧 Plumber">🔧 Plumber</span>
+                <span class="popular-skill-pill" data-skill="⚡ Electrician">⚡ Electrician</span>
+                <span class="popular-skill-pill" data-skill="🪚 Carpenter">🪚 Carpenter</span>
+                <span class="popular-skill-pill" data-skill="🎨 Painter">🎨 Painter</span>
+                <span class="popular-skill-pill" data-skill="🔩 Mechanic">🔩 Mechanic</span>
+                <span class="popular-skill-pill" data-skill="❄️ AC Technician">❄️ AC Technician</span>
+                <span class="popular-skill-pill" data-skill="☀️ Solar Installer">☀️ Solar Installer</span>
+                <span class="popular-skill-pill" data-skill="🧱 Mason">🧱 Mason</span>
+                <span class="popular-skill-pill" data-skill="🏛️ Tiler">🏛️ Tiler</span>
+              </div>
+              <input type="hidden" id="service" name="service" required />
+            </div>
+
+            <div class="step-nav-actions">
+              <button type="button" class="btn btn-outline" id="btn-step-2-back">← Back</button>
+              <button type="button" class="btn btn-primary" id="btn-step-2-next">Continue to Location →</button>
+            </div>
+          </div>
+
+          <!-- ===== STEP 3: LOCATION HIERARCHY ===== -->
+          <div class="onboarding-step-pane" id="step-pane-3" data-step="3">
+            <div class="step-header-wrap">
+              <h2 class="step-header-title">Operating Location</h2>
+              <p class="step-header-desc">Customers nearby will find your listing based on your Nigerian State and LGA.</p>
+            </div>
+
+            <div class="form-group">
+              <label style="font-weight: 700;">State & Local Government Area (LGA) *</label>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                <div>
+                  <label for="reg-state" style="font-size: 12.5px; font-weight: 600; color: var(--fg-muted);">State *</label>
+                  <select id="reg-state" name="state" required style="width: 100%; padding: 10px 12px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--card-bg); color: var(--fg); font-size: 14px;">
+                    <option value="">Select State...</option>
+                  </select>
+                  <div class="field-error-msg" id="err-state">Please select a State.</div>
+                </div>
+                <div>
+                  <label for="reg-lga" style="font-size: 12.5px; font-weight: 600; color: var(--fg-muted);">LGA / City *</label>
+                  <select id="reg-lga" name="lga" required disabled style="width: 100%; padding: 10px 12px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--card-bg); color: var(--fg); font-size: 14px;">
+                    <option value="">Select State First...</option>
+                  </select>
+                  <div class="field-error-msg" id="err-lga">Please select an LGA.</div>
+                </div>
+              </div>
+
+              <div style="position: relative; margin-top: 10px;">
+                <label for="reg-locality" style="font-size: 12.5px; font-weight: 600; color: var(--fg-muted);">Neighborhood / Specific Area (Optional)</label>
+                <div class="loc-input-wrap">
+                  <input type="text" id="reg-locality" name="locality" placeholder="e.g. Surulere, Lekki Phase 1, Wuse 2, Ikeja GRA..." autocomplete="off" />
+                  <button type="button" class="gps-btn-form" id="gps-btn-form" aria-label="Use my GPS location">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="8"/></svg>
+                    Use GPS
+                  </button>
+                </div>
+                <div class="skills-autocomplete-dropdown" id="reg-locality-dropdown" style="display: none;"></div>
+              </div>
+
+              <input type="hidden" id="location" name="location" required />
+
+              <div class="loc-map-container" style="margin-top: 14px;">
+                <div class="loc-map-preview" id="loc-map-preview">
+                  <div id="interactive-reg-map" style="width: 100%; height: 100%; min-height: 150px;"></div>
+                </div>
+                <button type="button" class="loc-gps-quick-btn" id="loc-gps-quick-btn">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="8"/></svg>
+                  Use my current location
                 </button>
               </div>
-              <div class="skills-autocomplete-dropdown" id="reg-locality-dropdown" style="display: none;"></div>
             </div>
 
-            <input type="hidden" id="location" name="location" required />
+            <div class="step-nav-actions">
+              <button type="button" class="btn btn-outline" id="btn-step-3-back">← Back</button>
+              <button type="button" class="btn btn-primary" id="btn-step-3-next">Continue to Enhancements →</button>
+            </div>
+          </div>
 
-            <div class="loc-map-container" style="margin-top: 12px;">
-              <div class="loc-map-preview" id="loc-map-preview">
-                <div id="interactive-reg-map" style="width: 100%; height: 100%; min-height: 150px;"></div>
+          <!-- ===== STEP 4: PROFILE ENHANCEMENT (RECOMMENDED / NON-BLOCKING) ===== -->
+          <div class="onboarding-step-pane" id="step-pane-4" data-step="4">
+            <div class="step-header-wrap">
+              <h2 class="step-header-title">Enhance Profile <span style="font-size: 13px; font-weight: 600; color: #52E58C; background: rgba(0, 107, 63, 0.3); padding: 3px 8px; border-radius: 10px;">Optional</span></h2>
+              <p class="step-header-desc">These optional details help you stand out. You can skip any field or use our AI assistant.</p>
+            </div>
+
+            <!-- Profile Picture Upload -->
+            <div class="form-group">
+              <label for="photo-input">Profile Picture (Recommended)</label>
+              <div class="photo-upload-zone" id="photo-upload-zone">
+                <div class="photo-preview-avatar" id="photo-preview-avatar">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                </div>
+                <div class="photo-upload-info">
+                  <span class="photo-upload-title" id="photo-title-text">Upload Profile Picture</span>
+                  <span class="photo-upload-hint">JPG, PNG (Max 5MB) · Compressed on device</span>
+                </div>
+                <input type="file" id="photo-input" name="photo-input" class="photo-file-hidden" accept="image/png, image/jpeg, image/webp" title="Upload profile picture" aria-label="Upload profile picture" />
               </div>
-              <button type="button" class="loc-gps-quick-btn" id="loc-gps-quick-btn">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="8"/></svg>
-                Use my current location
+            </div>
+
+            <!-- Years of Experience -->
+            <div class="form-group">
+              <label for="experience">Years of Experience (Optional)</label>
+              <select id="experience" name="experience">
+                <option value="1-3" selected>1–3 years</option>
+                <option value="0-1">Less than 1 year</option>
+                <option value="3-5">3–5 years</option>
+                <option value="5-10">5–10 years</option>
+                <option value="10+">10+ years</option>
+              </select>
+            </div>
+
+            <!-- Short Bio with AI Assistant -->
+            <div class="form-group">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                <label for="bio" style="margin-bottom: 0;">Short Bio (Optional)</label>
+                <button type="button" class="btn-ai-pill" id="btn-ai-bio" title="Generate factual bio with AI">
+                  <span>✨</span> Suggest Bio with AI
+                </button>
+              </div>
+              <textarea id="bio" name="bio" rows="3" placeholder="Tell customers about your craftsmanship, tools, and experience..."></textarea>
+              <div id="ai-bio-status" style="font-size: 11.5px; color: #52E58C; margin-top: 4px; display: none;">✓ AI bio generated based on your trade facts. You can edit or replace it anytime.</div>
+            </div>
+
+            <!-- Starting Price with AI Pricing Guidance -->
+            <div class="form-group">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                <label for="starting_price" style="margin-bottom: 0;">Starting Price / Quote Guide (Optional)</label>
+                <button type="button" class="btn-ai-pill" id="btn-ai-pricing" title="View benchmark Nigerian pricing for your trade">
+                  <span>💡</span> View Pricing Guide
+                </button>
+              </div>
+              <input type="text" id="starting_price" name="starting_price" placeholder="e.g. ₦3,500 / job or Inspection: ₦4,000" />
+              <div id="ai-pricing-box" class="ai-pricing-result-card" style="display: none;">
+                <span class="ai-pricing-badge">Market Guidance (Nigeria)</span>
+                <div id="ai-pricing-content"></div>
+              </div>
+            </div>
+
+            <div class="step-nav-actions">
+              <button type="button" class="btn btn-outline" id="btn-step-4-back">← Back</button>
+              <button type="button" class="btn btn-primary" id="btn-step-4-next">Preview My Listing →</button>
+            </div>
+          </div>
+
+          <!-- ===== STEP 5: REVIEW, PREVIEW & PUBLISH ===== -->
+          <div class="onboarding-step-pane" id="step-pane-5" data-step="5">
+            <div class="step-header-wrap">
+              <h2 class="step-header-title">Review & Publish</h2>
+              <p class="step-header-desc">Here is how your verified profile will appear to customers in search results.</p>
+            </div>
+
+            <!-- Profile Completeness Indicator -->
+            <div class="completeness-meter-wrap" id="completeness-meter">
+              <div class="completeness-top-row">
+                <span class="completeness-title">Profile Completeness</span>
+                <span class="completeness-score-badge" id="completeness-score">75% Complete</span>
+              </div>
+              <div class="completeness-bar-track">
+                <div class="completeness-bar-fill" id="completeness-fill" style="width: 75%;"></div>
+              </div>
+              <div class="completeness-items-list" id="completeness-chips">
+                <span class="completeness-chip is-done">✓ Identity & Contact</span>
+                <span class="completeness-chip is-done">✓ Trade & Services</span>
+                <span class="completeness-chip is-done">✓ Location Area</span>
+                <span class="completeness-chip is-pending" id="chip-photo">+ Profile Photo</span>
+                <span class="completeness-chip is-pending" id="chip-bio">+ Custom Bio</span>
+              </div>
+            </div>
+
+            <!-- Live Profile Card Preview -->
+            <div class="preview-profile-card" id="preview-profile-card">
+              <div class="preview-card-header">
+                <div class="preview-avatar-circle" id="prev-avatar">AO</div>
+                <div class="preview-meta-wrap">
+                  <div class="preview-provider-name">
+                    <span id="prev-name">Adebayo Okafor</span>
+                    <span class="profile-verified-pill" style="font-size: 10px; padding: 2px 6px;">✓ Verified Pro</span>
+                  </div>
+                  <div class="preview-trade-title" id="prev-trade">Electrician & Solar Installer</div>
+                  <div class="preview-loc-pill">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    <span id="prev-location">Surulere, Lagos</span>
+                    <span>•</span>
+                    <span style="color: #D4AF37; font-weight: 700;">★ 5.0 (New Listing)</span>
+                  </div>
+                </div>
+              </div>
+              <div class="preview-bio-snippet" id="prev-bio">
+                Certified Electrician serving Surulere, Lagos. Contact directly for instant quotes and prompt service.
+              </div>
+              <div class="preview-cta-row">
+                <div class="preview-cta-btn preview-cta-wa" id="prev-wa-btn">
+                  <span>💬 WhatsApp Connect</span>
+                </div>
+                <div class="preview-cta-btn preview-cta-call" id="prev-call-btn">
+                  <span>📞 Call Provider</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Terms and Submit -->
+            <div class="form-check">
+              <input type="checkbox" id="terms" name="terms" required checked />
+              <label for="terms">I agree to Lokator's <a href="#">Terms of Use</a> and <a href="#">Privacy Policy</a></label>
+            </div>
+            <div class="field-error-msg" id="err-terms">You must agree to the Terms of Use.</div>
+
+            <div class="field-error-msg" id="reg-error-banner" style="margin-top: 10px; padding: 10px; background: rgba(239, 68, 68, 0.15); border: 1px solid #EF4444; border-radius: 8px;"></div>
+
+            <div class="step-nav-actions">
+              <button type="button" class="btn btn-outline" id="btn-step-5-back">← Edit Details</button>
+              <button type="submit" class="btn btn-primary btn-lg" id="submit-btn" style="flex: 1;">
+                Publish Profile & Go Live 🎉
               </button>
             </div>
           </div>
-          <div class="form-group">
-            <label for="experience">Years of Experience *</label>
-            <select id="experience" name="experience" required>
-              <option value="">Select...</option>
-              <option value="0-1">Less than 1 year</option>
-              <option value="1-3">1–3 years</option>
-              <option value="3-5">3–5 years</option>
-              <option value="5-10">5–10 years</option>
-              <option value="10+">10+ years</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="bio">Short Bio (optional)</label>
-            <textarea id="bio" name="bio" rows="3" placeholder="Tell customers about your skills and experience..."></textarea>
-          </div>
-          <div class="form-group">
-            <label for="photo-input">Profile Picture</label>
-            <div class="photo-upload-zone" id="photo-upload-zone">
-              <div class="photo-preview-avatar" id="photo-preview-avatar">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-              </div>
-              <div class="photo-upload-info">
-                <span class="photo-upload-title" id="photo-title-text">Upload Profile Picture</span>
-                <span class="photo-upload-hint">JPG, PNG (Max 5MB) · Compressed on device</span>
-              </div>
-              <input type="file" id="photo-input" name="photo-input" class="photo-file-hidden" accept="image/png, image/jpeg, image/webp" title="Upload profile picture" aria-label="Upload profile picture" />
-            </div>
-          </div>
-          <div class="form-check">
-            <input type="checkbox" id="terms" name="terms" required />
-            <label for="terms">I agree to Lokator's <a href="#">Terms of Use</a> and <a href="#">Privacy Policy</a></label>
-          </div>
-          <button type="submit" class="btn btn-primary btn-lg btn-block" id="submit-btn">
-            Register & Create Dashboard
-          </button>
+
           <div class="reg-login-prompt">
             Already have an account? <a href="login.html" class="reg-login-link">Sign In Here →</a>
           </div>
@@ -348,8 +539,9 @@
       });
     }
   </script>
+
   <script>
-    // Safe HTML Escaping fallback
+    // Safe HTML Escaping Helper
     const escapeHtml = (typeof window !== 'undefined' && window.escapeHtml) ||
       (str => String(str || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m])));
 
@@ -379,8 +571,324 @@
         }
       });
     }
-    
-    // Skills & Services Chips Manager with Content Moderation & Live Autocomplete
+
+    // ========================================================================
+    // PHASE 10.12G: PROGRESSIVE DISCLOSURE STEP CONTROLLER
+    // ========================================================================
+    let currentStep = 1;
+    const totalSteps = 5;
+
+    function getPhoneEngine() {
+      return (typeof NigeriaPhone !== 'undefined' ? NigeriaPhone : null) || 
+             (typeof window !== 'undefined' ? window.NigeriaPhone : null) ||
+             (typeof globalThis !== 'undefined' ? globalThis.NigeriaPhone : null);
+    }
+
+    function clearErrors() {
+      document.querySelectorAll('.field-error-msg').forEach(el => {
+        el.classList.remove('is-visible');
+        el.style.display = 'none';
+      });
+      const errBanner = document.getElementById('reg-error-banner');
+      if (errBanner) {
+        errBanner.style.display = 'none';
+        errBanner.textContent = '';
+      }
+    }
+
+    function showError(elementId, customMsg = null) {
+      const errEl = document.getElementById(elementId);
+      if (errEl) {
+        if (customMsg) errEl.textContent = customMsg;
+        errEl.classList.add('is-visible');
+        errEl.style.display = 'block';
+      }
+    }
+
+    function validateStep(step) {
+      clearErrors();
+      let isValid = true;
+
+      if (step === 1) {
+        const fname = document.getElementById('fname') ? document.getElementById('fname').value.trim() : '';
+        const lname = document.getElementById('lname') ? document.getElementById('lname').value.trim() : '';
+        const rawPhone = document.getElementById('phone') ? document.getElementById('phone').value.trim() : '';
+        const email = document.getElementById('email') ? document.getElementById('email').value.trim() : '';
+        const password = document.getElementById('password') ? document.getElementById('password').value : '';
+
+        if (!fname) {
+          showError('err-fname');
+          isValid = false;
+        }
+        if (!lname) {
+          showError('err-lname');
+          isValid = false;
+        }
+
+        const PhoneEngine = getPhoneEngine();
+        const normPhone = PhoneEngine ? PhoneEngine.normalize(rawPhone) : { valid: rawPhone.length >= 10 };
+        if (!rawPhone || !normPhone.valid) {
+          showError('err-phone', 'Please enter a valid Nigerian mobile phone number (e.g. 08012345678, 0812..., or +2348012345678).');
+          isValid = false;
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!email || !emailRegex.test(email)) {
+          showError('err-email');
+          isValid = false;
+        }
+
+        if (!password || password.length < 6) {
+          showError('err-password');
+          isValid = false;
+        }
+
+        if (!isValid && typeof LokatorTelemetry !== 'undefined') {
+          LokatorTelemetry.trackEvent('provider_onboarding_validation_failed', { step: 1, reason: 'invalid_identity_fields' });
+        }
+      } else if (step === 2) {
+        if (providerSkills.length === 0 && skillInput && skillInput.value.trim()) {
+          addSkill(skillInput.value.trim());
+        }
+
+        if (providerSkills.length === 0) {
+          showError('err-skills', 'Please add at least one approved skill or trade service.');
+          isValid = false;
+          if (typeof LokatorTelemetry !== 'undefined') {
+            LokatorTelemetry.trackEvent('provider_onboarding_validation_failed', { step: 2, reason: 'missing_skills' });
+          }
+        }
+      } else if (step === 3) {
+        const stateVal = regStateSelect ? regStateSelect.value : '';
+        const lgaVal = regLgaSelect ? regLgaSelect.value : '';
+
+        if (!stateVal) {
+          showError('err-state');
+          isValid = false;
+        }
+        if (!lgaVal) {
+          showError('err-lga');
+          isValid = false;
+        }
+
+        if (!isValid && typeof LokatorTelemetry !== 'undefined') {
+          LokatorTelemetry.trackEvent('provider_onboarding_validation_failed', { step: 3, reason: 'missing_location' });
+        }
+      }
+
+      return isValid;
+    }
+
+    function calculateCompleteness() {
+      let score = 0;
+      const chips = [];
+
+      const fname = document.getElementById('fname') ? document.getElementById('fname').value.trim() : '';
+      const phone = document.getElementById('phone') ? document.getElementById('phone').value.trim() : '';
+      if (fname && phone) {
+        score += 25;
+        chips.push({ label: 'Identity & Contact', done: true });
+      } else {
+        chips.push({ label: 'Identity & Contact', done: false });
+      }
+
+      if (providerSkills.length > 0) {
+        score += 25;
+        chips.push({ label: 'Trade & Skills', done: true });
+      } else {
+        chips.push({ label: 'Trade & Skills', done: false });
+      }
+
+      const stateVal = regStateSelect ? regStateSelect.value : '';
+      const lgaVal = regLgaSelect ? regLgaSelect.value : '';
+      if (stateVal && lgaVal) {
+        score += 25;
+        chips.push({ label: 'Location & Area', done: true });
+      } else {
+        chips.push({ label: 'Location & Area', done: false });
+      }
+
+      if (uploadedAvatarData) {
+        score += 10;
+        chips.push({ label: 'Profile Photo', done: true });
+      } else {
+        chips.push({ label: '+ Profile Photo (Optional)', done: false });
+      }
+
+      const bioVal = document.getElementById('bio') ? document.getElementById('bio').value.trim() : '';
+      if (bioVal && bioVal.length >= 10) {
+        score += 10;
+        chips.push({ label: 'Custom Bio', done: true });
+      } else {
+        chips.push({ label: '+ Custom Bio (Optional)', done: false });
+      }
+
+      const priceVal = document.getElementById('starting_price') ? document.getElementById('starting_price').value.trim() : '';
+      if (priceVal) {
+        score += 5;
+        chips.push({ label: 'Price Guide', done: true });
+      } else {
+        chips.push({ label: '+ Pricing Guide (Optional)', done: false });
+      }
+
+      return { score: Math.min(100, score), chips };
+    }
+
+    function updatePreviewCard() {
+      const fname = document.getElementById('fname') ? document.getElementById('fname').value.trim() : '';
+      const lname = document.getElementById('lname') ? document.getElementById('lname').value.trim() : '';
+      const bizname = document.getElementById('bizname') ? document.getElementById('bizname').value.trim() : '';
+      const rawPhone = document.getElementById('phone') ? document.getElementById('phone').value.trim() : '';
+      const PhoneEngine = getPhoneEngine();
+      const normPhone = PhoneEngine ? PhoneEngine.normalize(rawPhone) : { international: rawPhone, canonical: rawPhone };
+
+      const displayName = bizname || (fname ? `${fname} ${lname}`.trim() : 'Artisan Partner');
+      const primaryTrade = providerSkills.length > 0 ? providerSkills.join(' & ') : 'Skilled Artisan';
+      const stateVal = regStateSelect ? regStateSelect.value : 'Lagos';
+      const lgaVal = regLgaSelect ? regLgaSelect.value : 'Surulere';
+      const locVal = regLocalityInput ? regLocalityInput.value.trim() : '';
+      const locationText = locVal ? `${locVal}, ${lgaVal}` : `${lgaVal}, ${stateVal}`;
+
+      const bioVal = document.getElementById('bio') ? document.getElementById('bio').value.trim() : '';
+      const defaultBio = `Certified ${primaryTrade} serving ${locationText}. Contact directly for instant quotes and prompt service.`;
+
+      const prevName = document.getElementById('prev-name');
+      const prevTrade = document.getElementById('prev-trade');
+      const prevLocation = document.getElementById('prev-location');
+      const prevBio = document.getElementById('prev-bio');
+      const prevAvatar = document.getElementById('prev-avatar');
+
+      if (prevName) prevName.textContent = displayName;
+      if (prevTrade) prevTrade.textContent = primaryTrade;
+      if (prevLocation) prevLocation.textContent = locationText;
+      if (prevBio) prevBio.textContent = bioVal || defaultBio;
+
+      if (prevAvatar) {
+        if (uploadedAvatarData) {
+          prevAvatar.innerHTML = `<img src="${uploadedAvatarData}" alt="${escapeHtml(displayName)}" />`;
+        } else {
+          const initials = ((fname ? fname[0] : 'A') + (lname ? lname[0] : 'O')).toUpperCase();
+          prevAvatar.textContent = initials;
+        }
+      }
+
+      const { score, chips } = calculateCompleteness();
+      const scoreBadge = document.getElementById('completeness-score');
+      const fillBar = document.getElementById('completeness-fill');
+      const chipsContainer = document.getElementById('completeness-chips');
+
+      if (scoreBadge) scoreBadge.textContent = `${score}% Complete ${score >= 75 ? '— Publishable! 🎉' : ''}`;
+      if (fillBar) fillBar.style.width = `${score}%`;
+      if (chipsContainer) {
+        chipsContainer.innerHTML = chips.map(c => `
+          <span class="completeness-chip ${c.done ? 'is-done' : 'is-pending'}">${c.done ? '✓ ' : ''}${escapeHtml(c.label)}</span>
+        `).join('');
+      }
+    }
+
+    function goToStep(targetStep) {
+      if (targetStep < 1 || targetStep > totalSteps) return;
+
+      if (targetStep > currentStep) {
+        for (let s = currentStep; s < targetStep; s++) {
+          if (!validateStep(s)) {
+            return;
+          }
+        }
+      }
+
+      document.querySelectorAll('.onboarding-step-pane').forEach(p => p.classList.remove('is-active'));
+      
+      const targetPane = document.getElementById(`step-pane-${targetStep}`);
+      if (targetPane) {
+        targetPane.classList.add('is-active');
+      }
+
+      for (let i = 1; i <= totalSteps; i++) {
+        const btn = document.getElementById(`step-btn-${i}`);
+        const sep = document.getElementById(`sep-${i}`);
+        if (btn) {
+          btn.classList.toggle('is-active', i === targetStep);
+          btn.classList.toggle('is-completed', i < targetStep);
+          const badge = btn.querySelector('.step-badge');
+          if (badge) {
+            badge.textContent = (i < targetStep) ? '✓' : String(i);
+          }
+        }
+        if (sep) {
+          sep.classList.toggle('is-completed', i < targetStep);
+        }
+      }
+
+      currentStep = targetStep;
+
+      if (currentStep === 5) {
+        updatePreviewCard();
+      }
+
+      if (typeof LokatorTelemetry !== 'undefined') {
+        LokatorTelemetry.trackEvent('provider_onboarding_step_completed', { step: currentStep });
+      }
+
+      const card = document.getElementById('reg-form-card');
+      if (card && window.innerWidth <= 768) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    document.getElementById('btn-step-1-next')?.addEventListener('click', () => goToStep(2));
+    document.getElementById('btn-step-2-back')?.addEventListener('click', () => goToStep(1));
+    document.getElementById('btn-step-2-next')?.addEventListener('click', () => goToStep(3));
+    document.getElementById('btn-step-3-back')?.addEventListener('click', () => goToStep(2));
+    document.getElementById('btn-step-3-next')?.addEventListener('click', () => goToStep(4));
+    document.getElementById('btn-step-4-back')?.addEventListener('click', () => goToStep(3));
+    document.getElementById('btn-step-4-next')?.addEventListener('click', () => goToStep(5));
+    document.getElementById('btn-step-5-back')?.addEventListener('click', () => goToStep(4));
+
+    document.querySelectorAll('.step-indicator').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const target = parseInt(btn.dataset.step, 10);
+        if (target <= currentStep || validateStep(currentStep)) {
+          goToStep(target);
+        }
+      });
+    });
+
+    // ========================================================================
+    // PHONE VALIDATION WITH NIGERIAPHONE
+    // ========================================================================
+    const phoneInput = document.getElementById('phone');
+    const phoneFeedback = document.getElementById('phone-feedback');
+
+    if (phoneInput && phoneFeedback) {
+      phoneInput.addEventListener('input', () => {
+        const val = phoneInput.value.trim();
+        if (val.length >= 3) {
+          const PhoneEngine = getPhoneEngine();
+          if (PhoneEngine && PhoneEngine.normalize) {
+            const norm = PhoneEngine.normalize(val);
+            if (norm.valid) {
+              phoneFeedback.style.display = 'block';
+              phoneFeedback.style.color = '#10B981';
+              phoneFeedback.textContent = `✓ Valid line (${norm.network || 'Nigeria'}): ${norm.international}`;
+              document.getElementById('err-phone')?.classList.remove('is-visible');
+            } else if (val.length >= 10) {
+              phoneFeedback.style.display = 'block';
+              phoneFeedback.style.color = '#F59E0B';
+              phoneFeedback.textContent = 'Checking Nigerian phone format...';
+            } else {
+              phoneFeedback.style.display = 'none';
+            }
+          }
+        } else {
+          phoneFeedback.style.display = 'none';
+        }
+      });
+    }
+
+    // ========================================================================
+    // SKILLS & SERVICES MANAGER WITH CONTENT MODERATION & AUTOCOMPLETE
+    // ========================================================================
     const skillInput = document.getElementById('skill-input');
     const btnAddSkill = document.getElementById('btn-add-skill');
     const chipsList = document.getElementById('skills-chips-list');
@@ -395,7 +903,6 @@
     let currentSuggestions = [];
     let selectedSuggestionIndex = -1;
 
-    // Comprehensive Nigerian Artisan & Trade Skills Catalog
     const TRADE_PRESETS = [
       { name: 'Electrician', category: 'Electrical Services', icon: '⚡', synonyms: ['electrician', 'house wiring', 'conduit', 'breaker', 'fault', 'cctv'] },
       { name: 'Electrical Wiring & Conduit Installation', category: 'Electrical Services', icon: '⚡', synonyms: ['wiring', 'rewiring', 'conduit', 'cables', 'installation'] },
@@ -452,7 +959,6 @@
         }
       });
 
-      // Also dynamically pull from CategoryMap if loaded
       if (typeof CategoryMap !== 'undefined' && CategoryMap.getAll) {
         CategoryMap.getAll().forEach(cat => {
           if (!seen.has(cat.name.toLowerCase())) {
@@ -524,7 +1030,7 @@
       if (moderationAlertText) moderationAlertText.textContent = msg;
       moderationAlert.style.display = 'flex';
       moderationAlert.style.animation = 'none';
-      void moderationAlert.offsetWidth; // trigger reflow
+      void moderationAlert.offsetWidth;
       moderationAlert.style.animation = 'shakeAlert 0.3s ease';
     }
 
@@ -533,9 +1039,6 @@
         moderationAlert.style.display = 'none';
       }
     }
-
-    // Ensure hidden on startup
-    hideModerationError();
 
     function renderChips() {
       if (!chipsList) return;
@@ -549,6 +1052,7 @@
       if (serviceHidden) {
         serviceHidden.value = providerSkills.join(', ');
       }
+      document.getElementById('err-skills')?.classList.remove('is-visible');
     }
 
     function addSkill(name) {
@@ -556,7 +1060,6 @@
       const clean = cleanSkillName(name);
       if (!clean) return;
 
-      // 1. Content Moderation Validation
       if (typeof ServiceModerator !== 'undefined' && ServiceModerator.validateSkill) {
         const validation = ServiceModerator.validateSkill(clean);
         if (!validation.valid) {
@@ -592,24 +1095,9 @@
       renderChips();
     }
 
-    // Funnel: Track registration form started (once per session)
-    let registrationStartedTracked = false;
-    function trackRegStarted() {
-      if (!registrationStartedTracked && typeof LokatorTelemetry !== 'undefined') {
-        registrationStartedTracked = true;
-        LokatorTelemetry.trackEvent('provider_registration_started', { form: 'artisan_register' });
-      }
-    }
-
-    const regFormEl = document.getElementById('reg-form');
-    if (regFormEl) {
-      regFormEl.addEventListener('focusin', trackRegStarted, { once: true });
-    }
-
     if (btnAddSkill && skillInput) {
       btnAddSkill.addEventListener('click', (e) => {
         e.preventDefault();
-        trackRegStarted();
         addSkill(skillInput.value.trim());
       });
 
@@ -631,7 +1119,6 @@
           } else if (e.key === 'Enter') {
             if (selectedSuggestionIndex >= 0 && currentSuggestions[selectedSuggestionIndex]) {
               e.preventDefault();
-              trackRegStarted();
               addSkill(currentSuggestions[selectedSuggestionIndex].name);
               return;
             }
@@ -643,7 +1130,6 @@
 
         if (e.key === 'Enter' || e.key === ',') {
           e.preventDefault();
-          trackRegStarted();
           addSkill(skillInput.value.trim());
         }
       });
@@ -662,18 +1148,15 @@
         }
       });
 
-      // Dropdown item selection click
       if (autocompleteDropdown) {
         autocompleteDropdown.addEventListener('click', (e) => {
           const item = e.target.closest('.skills-autocomplete-item');
           if (item && item.dataset.skill) {
-            trackRegStarted();
             addSkill(item.dataset.skill);
           }
         });
       }
 
-      // Close dropdown on outside click
       document.addEventListener('click', (e) => {
         if (!skillInput.contains(e.target) && !autocompleteDropdown.contains(e.target) && !btnAddSkill.contains(e.target)) {
           closeAutocomplete();
@@ -694,20 +1177,20 @@
       popularHints.addEventListener('click', (e) => {
         const pill = e.target.closest('.popular-skill-pill');
         if (pill && pill.dataset.skill) {
-          trackRegStarted();
           addSkill(pill.dataset.skill);
         }
       });
     }
 
-    // Prefill from URL query params (e.g. ?service=Recording%20Studio)
     const urlParams = new URLSearchParams(window.location.search);
     const prefillService = urlParams.get('service') || urlParams.get('q');
     if (prefillService) {
       addSkill(decodeURIComponent(prefillService));
     }
 
-    // 8. Nigerian Location Cascading State, LGA, and Locality Engine
+    // ========================================================================
+    // NIGERIAN LOCATION CASCADING SELECTION & MAP
+    // ========================================================================
     const regStateSelect = document.getElementById('reg-state');
     const regLgaSelect = document.getElementById('reg-lga');
     const regLocalityInput = document.getElementById('reg-locality');
@@ -757,6 +1240,8 @@
       }
 
       if (locInput) locInput.value = combined;
+      document.getElementById('err-state')?.classList.remove('is-visible');
+      document.getElementById('err-lga')?.classList.remove('is-visible');
     }
 
     if (regStateSelect) {
@@ -839,11 +1324,11 @@
 
     initNigerianLocationPickers();
 
-    // Interactive Real Leaflet Map & GPS Geolocation
+    // Map & Geolocation
     const gpsBtn = document.getElementById('gps-btn-form');
     const locGpsQuickBtn = document.getElementById('loc-gps-quick-btn');
     const locInput = document.getElementById('location');
-    let userCoords = { lat: 6.5244, lng: 3.3792 }; // Default: Lagos, Nigeria
+    let userCoords = { lat: 6.5244, lng: 3.3792 };
     let leafletMap = null;
     let mapMarker = null;
 
@@ -889,7 +1374,7 @@
           setMapLocation(userCoords.lat, userCoords.lng, addr);
         });
       } catch (err) {
-        console.warn('Map initialization note:', err);
+        console.warn('Map note:', err);
       }
     }
 
@@ -938,54 +1423,35 @@
       if (gpsBtn) gpsBtn.textContent = 'Detecting GPS...';
       if (locGpsQuickBtn) locGpsQuickBtn.textContent = 'Acquiring GPS location...';
 
-      const handleSuccess = async (pos) => {
-        const lat = pos.coords.latitude;
-        const lng = pos.coords.longitude;
-        const address = await reverseGeocode(lat, lng);
-        setMapLocation(lat, lng, address);
-        if (gpsBtn) gpsBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Located';
-        if (locGpsQuickBtn) locGpsQuickBtn.innerHTML = '✓ Current location detected';
-      };
-
-      const handleFail = (err) => {
-        console.warn('Geolocation notice:', err);
-        if (err && err.code === 3) {
-          // Timeout occurred on high-accuracy mode; retry once with relaxed network accuracy
-          navigator.geolocation.getCurrentPosition(
-            handleSuccess,
-            (finalErr) => {
-              if (gpsBtn) gpsBtn.textContent = 'Use GPS';
-              if (locGpsQuickBtn) locGpsQuickBtn.textContent = (finalErr.code === 1) ? 'GPS permission needed (enter manually)' : 'Location unavailable (enter manually)';
-            },
-            { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 }
-          );
-          return;
-        }
-
-        if (gpsBtn) gpsBtn.textContent = 'Use GPS';
-        if (locGpsQuickBtn) {
-          locGpsQuickBtn.textContent = (err && err.code === 1) 
-            ? 'GPS permission needed (enter manually)' 
-            : 'Could not detect location (enter manually)';
-        }
-      };
-
       navigator.geolocation.getCurrentPosition(
-        handleSuccess,
-        handleFail,
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
+        async (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          const address = await reverseGeocode(lat, lng);
+          setMapLocation(lat, lng, address);
+          if (gpsBtn) gpsBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Located';
+          if (locGpsQuickBtn) locGpsQuickBtn.innerHTML = '✓ Current location detected';
+        },
+        (err) => {
+          if (gpsBtn) gpsBtn.textContent = 'Use GPS';
+          if (locGpsQuickBtn) {
+            locGpsQuickBtn.textContent = (err && err.code === 1) ? 'GPS permission needed (enter manually)' : 'Location unavailable (enter manually)';
+          }
+        },
+        { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 }
       );
     }
 
     if (gpsBtn) gpsBtn.addEventListener('click', triggerGeolocation);
     if (locGpsQuickBtn) locGpsQuickBtn.addEventListener('click', triggerGeolocation);
 
-    // Initialize Map after DOM
     window.addEventListener('DOMContentLoaded', () => {
       setTimeout(initInteractiveMap, 100);
     });
 
-    // Profile Picture Upload with Client-Side Compression
+    // ========================================================================
+    // PROFILE PICTURE UPLOAD WITH CLIENT-SIDE COMPRESSION
+    // ========================================================================
     const photoZone = document.getElementById('photo-upload-zone');
     const photoInput = document.getElementById('photo-input');
     const photoPreview = document.getElementById('photo-preview-avatar');
@@ -1033,67 +1499,132 @@
       });
     }
 
-    // Form submit to Supabase
+    // ========================================================================
+    // AI ASSISTANT: BIO GENERATION & PRICING GUIDANCE
+    // ========================================================================
+    const btnAiBio = document.getElementById('btn-ai-bio');
+    const bioTextarea = document.getElementById('bio');
+    const aiBioStatus = document.getElementById('ai-bio-status');
+
+    if (btnAiBio && bioTextarea) {
+      btnAiBio.addEventListener('click', () => {
+        const fname = document.getElementById('fname') ? document.getElementById('fname').value.trim() : '';
+        const bizname = document.getElementById('bizname') ? document.getElementById('bizname').value.trim() : '';
+        const trade = providerSkills.length > 0 ? providerSkills.join(' & ') : 'Artisan';
+        const state = regStateSelect ? regStateSelect.value : 'Lagos';
+        const lga = regLgaSelect ? regLgaSelect.value : 'Surulere';
+        const exp = document.getElementById('experience') ? document.getElementById('experience').value : '1-3';
+
+        const AIService = (typeof LokatorAIService !== 'undefined' ? LokatorAIService : null) || (typeof window !== 'undefined' ? window.LokatorAIService : null);
+        if (AIService && AIService.generateBio) {
+          const result = AIService.generateBio({
+            provider_name: bizname || fname || 'Provider',
+            trade: trade,
+            skills: providerSkills,
+            state: state,
+            lga: lga,
+            experience_years: exp
+          });
+
+          if (result && result.bio) {
+            bioTextarea.value = result.bio;
+            if (aiBioStatus) {
+              aiBioStatus.style.display = 'block';
+              aiBioStatus.textContent = '✓ AI Bio generated based on your trade and location facts.';
+            }
+            if (typeof LokatorTelemetry !== 'undefined') {
+              LokatorTelemetry.trackEvent('provider_onboarding_ai_assisted', { action: 'bio_generated', trade });
+            }
+          }
+        } else {
+          bioTextarea.value = `Professional ${trade} based in ${lga}, ${state} with ${exp} years of dedicated experience. Delivering prompt, reliable, and verified trade craftsmanship for homes and commercial clients.`;
+        }
+      });
+    }
+
+    const btnAiPricing = document.getElementById('btn-ai-pricing');
+    const aiPricingBox = document.getElementById('ai-pricing-box');
+    const aiPricingContent = document.getElementById('ai-pricing-content');
+
+    if (btnAiPricing && aiPricingBox && aiPricingContent) {
+      btnAiPricing.addEventListener('click', () => {
+        const trade = providerSkills.length > 0 ? providerSkills[0] : 'General Trade';
+        const state = regStateSelect ? regStateSelect.value : 'Lagos';
+        const lga = regLgaSelect ? regLgaSelect.value : 'Surulere';
+
+        const AIService = (typeof LokatorAIService !== 'undefined' ? LokatorAIService : null) || (typeof window !== 'undefined' ? window.LokatorAIService : null);
+        if (AIService && AIService.getPricingGuidance) {
+          const guidance = AIService.getPricingGuidance({
+            trade: trade,
+            state: state,
+            lga: lga
+          });
+
+          aiPricingContent.innerHTML = `
+            <div style="font-weight: 700; margin-bottom: 4px;">Standard Task Range: <span style="color:#52E58C;">${escapeHtml(guidance.suggested_range)}</span></div>
+            <div style="font-size: 12px; color: var(--fg-muted);">Inspection / Diagnostic Callout: ${escapeHtml(guidance.inspection_fee_range)}</div>
+            <div style="font-size: 11.5px; color: #CBD5E1; margin-top: 4px;">Factors: ${escapeHtml(guidance.pricing_factors.slice(0, 2).join(' · '))}</div>
+          `;
+          aiPricingBox.style.display = 'block';
+
+          if (typeof LokatorTelemetry !== 'undefined') {
+            LokatorTelemetry.trackEvent('provider_onboarding_ai_assisted', { action: 'pricing_guidance_viewed', trade });
+          }
+        }
+      });
+    }
+
+    // ========================================================================
+    // FORM SUBMISSION & SUPABASE PERSISTENCE
+    // ========================================================================
     const form = document.getElementById('reg-form');
     if (form) {
-      form.addEventListener('submit', async e => {
+      form.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        // Ensure at least one skill is specified
-        if (providerSkills.length === 0 && skillInput && skillInput.value.trim()) {
-          addSkill(skillInput.value.trim());
+        // Validate all steps before submitting
+        for (let s = 1; s <= 3; s++) {
+          if (!validateStep(s)) {
+            goToStep(s);
+            return;
+          }
         }
 
-        if (providerSkills.length === 0) {
-          showModerationError('Please add at least one approved skill or service you provide.');
-          if (typeof LokatorTelemetry !== 'undefined') {
-            LokatorTelemetry.trackEvent('provider_registration_validation_failed', { reason: 'missing_skills' });
-          }
-          if (skillInput) skillInput.focus();
+        const termsCheckbox = document.getElementById('terms');
+        if (termsCheckbox && !termsCheckbox.checked) {
+          showError('err-terms');
           return;
         }
 
         const rawPhone = document.getElementById('phone') ? document.getElementById('phone').value.trim() : '';
-        const PhoneEngine = (typeof NigeriaPhone !== 'undefined' ? NigeriaPhone : null) || (typeof window !== 'undefined' ? window.NigeriaPhone : null);
+        const PhoneEngine = getPhoneEngine();
         const normPhone = PhoneEngine ? PhoneEngine.normalize(rawPhone) : { valid: rawPhone.length >= 10, international: rawPhone, canonical: rawPhone };
-
-        if (!normPhone.valid) {
-          if (typeof LokatorTelemetry !== 'undefined') {
-            LokatorTelemetry.trackEvent('provider_registration_validation_failed', { reason: 'invalid_phone' });
-          }
-          alert('Please enter a valid Nigerian mobile phone number (e.g. 08012345678, 0812..., or +2348012345678).');
-          const pInput = document.getElementById('phone');
-          if (pInput) pInput.focus();
-          return;
-        }
 
         const email = document.getElementById('email') ? document.getElementById('email').value.trim() : '';
         const password = document.getElementById('password') ? document.getElementById('password').value : '';
+        const fname = document.getElementById('fname') ? document.getElementById('fname').value.trim() : '';
+        const lname = document.getElementById('lname') ? document.getElementById('lname').value.trim() : '';
+        const bizname = document.getElementById('bizname') ? document.getElementById('bizname').value.trim() : '';
+        const primarySkill = providerSkills[0] || 'Artisan';
+        const startPrice = document.getElementById('starting_price') ? document.getElementById('starting_price').value.trim() : '₦3,500 / job';
+        const bio = document.getElementById('bio') ? document.getElementById('bio').value.trim() : '';
 
-        if (!email || !password || password.length < 6) {
-          if (typeof LokatorTelemetry !== 'undefined') {
-            LokatorTelemetry.trackEvent('provider_registration_validation_failed', { reason: 'short_password' });
-          }
-          alert('Please provide a valid email and a password of at least 6 characters.');
-          return;
-        }
+        const btn = document.getElementById('submit-btn');
+        btn.textContent = 'Publishing Listing to Lokator...';
+        btn.disabled = true;
 
         if (typeof LokatorTelemetry !== 'undefined') {
-          LokatorTelemetry.trackEvent('provider_registration_submitted', {
+          LokatorTelemetry.trackEvent('provider_onboarding_submitted', {
             trade_count: providerSkills.length,
-            has_avatar: Boolean(uploadedAvatarData)
+            has_avatar: Boolean(uploadedAvatarData),
+            has_bio: Boolean(bio)
           });
         }
 
-        const btn = document.getElementById('submit-btn');
-        btn.textContent = 'Creating Account & Profile...';
-        btn.disabled = true;
-
-        const primarySkill = providerSkills[0];
-
         const formData = {
-          fname: document.getElementById('fname') ? document.getElementById('fname').value : '',
-          lname: document.getElementById('lname') ? document.getElementById('lname').value : '',
+          fname: fname,
+          lname: lname,
+          business_name: bizname || `${fname} ${lname}`.trim(),
           phone: normPhone.international || rawPhone,
           email: email,
           service: primarySkill,
@@ -1105,7 +1636,8 @@
           city: regLgaSelect ? regLgaSelect.value : '',
           location: document.getElementById('location') ? document.getElementById('location').value : '',
           experience: document.getElementById('experience') ? document.getElementById('experience').value : '1-3',
-          bio: document.getElementById('bio') ? document.getElementById('bio').value : '',
+          starting_price: startPrice || '₦3,500 / job',
+          bio: bio,
           lat: userCoords ? userCoords.lat : null,
           lng: userCoords ? userCoords.lng : null,
           avatarUrl: uploadedAvatarData || null
@@ -1127,37 +1659,43 @@
           }, formData);
 
           if (authRes.error) {
-            console.warn('Auth note:', authRes.error);
+            console.warn('Auth notice:', authRes.error);
           }
 
           const registered = (authRes.data && authRes.data.provider) || await LokatorDB.registerProvider(formData);
           const serviceSlug = registered.primary_category_slug || encodeURIComponent(primarySkill);
-          
+
           if (typeof LokatorTelemetry !== 'undefined') {
-            LokatorTelemetry.trackEvent('provider_registration_succeeded', {
+            LokatorTelemetry.trackEvent('provider_onboarding_succeeded', {
               trade_slug: serviceSlug,
               has_location: Boolean(userCoords)
             });
           }
 
-          form.innerHTML = `
-            <div class="success-msg" style="text-align: center; padding: 24px;">
-              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#006B3F" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="16 8 10 16 7 13"/></svg>
-              <h3 style="font-size: 22px; font-weight: 800; color: var(--fg); margin: 12px 0 6px;">Welcome to Lokator, ${escapeHtml(registered.first_name || 'Partner')}! 🎉</h3>
-              <p style="color: var(--fg-muted); margin-bottom: 20px; font-size: 14.5px;">Your provider profile and secured authentication account are now active in the database.</p>
-              
-              <div style="display: flex; flex-direction: column; gap: 10px; max-width: 320px; margin: 0 auto;">
-                <a href="dashboard.html" class="btn btn-primary btn-block">Go to Provider Dashboard →</a>
-                <a href="profile.html?id=${encodeURIComponent(registered.id)}" class="btn btn-outline btn-block">View Your Live Profile</a>
-                <a href="search.html?service=${serviceSlug}&location=${encodeURIComponent(registered.city || '')}" class="btn btn-outline btn-block">Find Yourself in Directory</a>
+          // Render Success Completion View
+          const formCard = document.getElementById('reg-form-card');
+          if (formCard) {
+            formCard.innerHTML = `
+              <div class="success-msg" style="text-align: center; padding: 28px 16px;">
+                <svg width="68" height="68" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="16 8 10 16 7 13"/></svg>
+                <h3 style="font-size: 23px; font-weight: 800; color: var(--fg); margin: 16px 0 8px;">Welcome to Lokator, ${escapeHtml(registered.first_name || 'Partner')}! 🎉</h3>
+                <p style="color: var(--fg-muted); margin-bottom: 24px; font-size: 14.5px; line-height: 1.5;">
+                  Your provider profile is now published and active on the marketplace directory. Customers can now discover and contact you directly via phone or WhatsApp.
+                </p>
+                
+                <div style="display: flex; flex-direction: column; gap: 12px; max-width: 340px; margin: 0 auto;">
+                  <a href="dashboard.html" class="btn btn-primary btn-block">Go to Provider Dashboard →</a>
+                  <a href="profile.html?id=${encodeURIComponent(registered.id)}" class="btn btn-outline btn-block">View Your Live Profile</a>
+                  <a href="search.html?service=${serviceSlug}&location=${encodeURIComponent(registered.city || registered.state || '')}" class="btn btn-white-outline btn-block">Find Yourself in Directory</a>
+                </div>
               </div>
-            </div>
-          `;
+            `;
+          }
         } catch (err) {
           console.error('Registration failed:', err);
           btn.disabled = false;
-          btn.textContent = 'Register & Create Dashboard';
-          alert('Could not complete registration: ' + (err.message || 'Please check your inputs and try again.'));
+          btn.textContent = 'Publish Profile & Go Live 🎉';
+          showError('reg-error-banner', 'Could not complete registration: ' + (err.message || 'Please check your inputs and try again.'));
         }
       });
     }

@@ -3714,3 +3714,440 @@ body {
   align-items: center;
   gap: 4px;
 }
+
+/* ============================================================================
+   PHASE 10.12G: PROVIDER ONBOARDING CONVERSION OPTIMIZATION STYLES
+   ============================================================================ */
+
+/* Onboarding Progress Stepper */
+.onboarding-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  gap: 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.step-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  color: var(--fg-muted, #94A3B8);
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 8px;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.step-indicator:hover:not(:disabled) {
+  color: var(--fg, #FFFFFF);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.step-indicator:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.step-indicator.is-active {
+  color: #52E58C;
+  font-weight: 700;
+}
+
+.step-indicator.is-completed {
+  color: #10B981;
+}
+
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  color: #CBD5E1;
+  font-size: 12px;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+.step-indicator.is-active .step-badge {
+  background: #006B3F;
+  color: #FFFFFF;
+  box-shadow: 0 0 10px rgba(0, 107, 63, 0.5);
+  border: 1.5px solid #52E58C;
+}
+
+.step-indicator.is-completed .step-badge {
+  background: #10B981;
+  color: #06180E;
+}
+
+.step-separator {
+  flex: 1;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.1);
+  min-width: 12px;
+}
+
+.step-separator.is-completed {
+  background: #10B981;
+}
+
+/* Step Panels */
+.onboarding-step-pane {
+  display: none;
+  animation: fadeInStep 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.onboarding-step-pane.is-active {
+  display: block;
+}
+
+@keyframes fadeInStep {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.step-header-wrap {
+  margin-bottom: 20px;
+}
+
+.step-header-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--fg, #FFFFFF);
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.step-header-desc {
+  font-size: 13.5px;
+  color: var(--fg-muted, #94A3B8);
+  line-height: 1.45;
+}
+
+/* Step Navigation Footer */
+.step-nav-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.step-nav-actions .btn {
+  min-height: 46px;
+  font-size: 14.5px;
+  font-weight: 700;
+}
+
+/* AI Assistant & Enhancement Helpers */
+.ai-assistant-card {
+  background: rgba(0, 107, 63, 0.07);
+  border: 1px solid rgba(82, 229, 140, 0.25);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ai-assistant-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #52E58C;
+}
+
+.btn-ai-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0, 107, 63, 0.4);
+  border: 1px solid #52E58C;
+  color: #FFFFFF;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-ai-pill:hover {
+  background: #006B3F;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 107, 63, 0.35);
+}
+
+.ai-pricing-result-card {
+  background: rgba(212, 175, 55, 0.08);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 13px;
+  color: #F3F4F6;
+  margin-top: 8px;
+}
+
+.ai-pricing-badge {
+  font-size: 11px;
+  font-weight: 700;
+  background: #D4AF37;
+  color: #06180E;
+  padding: 2px 6px;
+  border-radius: 4px;
+  display: inline-block;
+  margin-bottom: 4px;
+}
+
+/* Profile Completeness Meter */
+.completeness-meter-wrap {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.completeness-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.completeness-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--fg, #FFFFFF);
+}
+
+.completeness-score-badge {
+  font-size: 13px;
+  font-weight: 800;
+  color: #52E58C;
+  background: rgba(0, 107, 63, 0.25);
+  padding: 3px 8px;
+  border-radius: 12px;
+  border: 1px solid rgba(82, 229, 140, 0.4);
+}
+
+.completeness-bar-track {
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.completeness-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #D4AF37 0%, #10B981 100%);
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+
+.completeness-items-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.completeness-chip {
+  font-size: 11.5px;
+  padding: 3px 8px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.completeness-chip.is-done {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #10B981;
+}
+
+.completeness-chip.is-pending {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--fg-muted, #94A3B8);
+}
+
+/* Live Profile Card Preview */
+.preview-profile-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-top: 2px solid #52E58C;
+  border-radius: 18px;
+  padding: 20px;
+  margin-bottom: 20px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.preview-card-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.preview-avatar-circle {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #006B3F, #059669);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 800;
+  border: 2px solid #FFFFFF;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.preview-avatar-circle img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.preview-meta-wrap {
+  flex: 1;
+}
+
+.preview-provider-name {
+  font-size: 17px;
+  font-weight: 800;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.preview-trade-title {
+  font-size: 13.5px;
+  color: #52E58C;
+  font-weight: 600;
+}
+
+.preview-loc-pill {
+  font-size: 12px;
+  color: var(--fg-muted, #94A3B8);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.preview-bio-snippet {
+  font-size: 13px;
+  color: #CBD5E1;
+  line-height: 1.45;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 10px 12px;
+  border-radius: 8px;
+  margin-bottom: 14px;
+}
+
+.preview-cta-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.preview-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: default;
+}
+
+.preview-cta-wa {
+  background: #006B3F;
+  color: #FFFFFF;
+  border: 1px solid #52E58C;
+}
+
+.preview-cta-call {
+  background: rgba(255, 255, 255, 0.08);
+  color: #FFFFFF;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.field-error-msg {
+  color: #EF4444;
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 4px;
+  display: none;
+}
+
+.field-error-msg.is-visible {
+  display: block;
+}
+
+@media (max-width: 640px) {
+  .onboarding-stepper {
+    padding: 8px 10px;
+    gap: 4px;
+  }
+  .step-indicator {
+    font-size: 11px;
+    padding: 3px 5px;
+    gap: 4px;
+  }
+  .step-label {
+    display: none;
+  }
+  .step-indicator.is-active .step-label {
+    display: inline;
+  }
+  .step-badge {
+    width: 20px;
+    height: 20px;
+    font-size: 10.5px;
+  }
+  .preview-cta-row {
+    grid-template-columns: 1fr;
+  }
+}
