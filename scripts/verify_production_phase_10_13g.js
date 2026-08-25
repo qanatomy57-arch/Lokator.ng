@@ -9,26 +9,33 @@ const assert = require('assert');
 let passCount = 0;
 let failCount = 0;
 
-function get(urlStr) {
-  return new Promise((resolve, reject) => {
-    const url = new URL(urlStr);
-    const options = {
-      hostname: url.hostname,
-      port: 443,
-      path: url.pathname + url.search,
-      method: 'GET',
-      headers: { 'User-Agent': 'LokatorNG-Audit/10.13G' },
-      timeout: 15000
-    };
-    const req = https.request(options, (res) => {
-      let body = '';
-      res.on('data', (d) => body += d);
-      res.on('end', () => resolve({ status: res.statusCode, body, headers: res.headers }));
-    });
-    req.on('error', reject);
-    req.on('timeout', () => { req.destroy(); reject(new Error('Timeout')); });
-    req.end();
-  });
+async function get(urlStr, retries = 2) {
+  for (let i = 0; i <= retries; i++) {
+    try {
+      return await new Promise((resolve, reject) => {
+        const url = new URL(urlStr);
+        const options = {
+          hostname: url.hostname,
+          port: 443,
+          path: url.pathname + url.search,
+          method: 'GET',
+          headers: { 'User-Agent': 'LokatorNG-Audit/10.13G' },
+          timeout: 25000
+        };
+        const req = https.request(options, (res) => {
+          let body = '';
+          res.on('data', (d) => body += d);
+          res.on('end', () => resolve({ status: res.statusCode, body, headers: res.headers }));
+        });
+        req.on('error', reject);
+        req.on('timeout', () => { req.destroy(); reject(new Error('Timeout')); });
+        req.end();
+      });
+    } catch (err) {
+      if (i === retries) throw err;
+      await new Promise(r => setTimeout(r, 1500));
+    }
+  }
 }
 
 async function test(name, fn) {
