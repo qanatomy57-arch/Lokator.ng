@@ -510,6 +510,163 @@
         </div>
       </section>
 
+      <!-- Phase 10.12L: Marketplace Liquidity Growth & Conversion Validation (MLGCV) -->
+      <section id="section-liquidity-growth-validation" style="margin-bottom: 32px;">
+        <div class="section-title">
+          <span style="display: flex; align-items: center; gap: 8px;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+            Phase 10.12L: Marketplace Liquidity Growth & Conversion Validation
+          </span>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <span class="status-tag status-good" style="font-size: 0.75rem;">COHORT_MEASUREMENT</span>
+            <span class="status-tag" style="background: rgba(245,158,11,0.2); color: #FBBF24; font-size: 0.7rem;">DELTA_EDO_VALIDATED</span>
+          </div>
+        </div>
+
+        <!-- 1. Executive Growth KPI Cards -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 20px;">
+          <div class="panel-card" style="text-align: center; border-top: 3px solid #10B981;">
+            <div style="font-size: 0.75rem; color: #94A3B8; margin-bottom: 4px;">Published Supply Growth</div>
+            <div id="mlg-kpi-supply" style="font-size: 1.4rem; font-weight: 800; color: #10B981;">0</div>
+            <div id="mlg-kpi-supply-delta" style="font-size: 0.7rem; color: #64748B;">Δ Providers: +0</div>
+          </div>
+          <div class="panel-card" style="text-align: center; border-top: 3px solid #38BDF8;">
+            <div style="font-size: 0.75rem; color: #94A3B8; margin-bottom: 4px;">Zero-Result Search Rate</div>
+            <div id="mlg-kpi-zero" style="font-size: 1.4rem; font-weight: 800; color: #38BDF8;">0%</div>
+            <div id="mlg-kpi-zero-delta" style="font-size: 0.7rem; color: #64748B;">Pre vs Post: Baseline</div>
+          </div>
+          <div class="panel-card" style="text-align: center; border-top: 3px solid #F59E0B;">
+            <div style="font-size: 0.75rem; color: #94A3B8; margin-bottom: 4px;">Customer Contacts (Call+WA)</div>
+            <div id="mlg-kpi-contacts" style="font-size: 1.4rem; font-weight: 800; color: #F59E0B;">0</div>
+            <div id="mlg-kpi-contacts-rate" style="font-size: 0.7rem; color: #64748B;">Conversion Rate: 0%</div>
+          </div>
+          <div class="panel-card" style="text-align: center; border-top: 3px solid #A855F7;">
+            <div style="font-size: 0.75rem; color: #94A3B8; margin-bottom: 4px;">Monetization Gate Status</div>
+            <div id="mlg-kpi-gate" style="font-size: 1.1rem; font-weight: 800; color: #FBBF24;">EARLY_MARKETPLACE</div>
+            <div style="font-size: 0.7rem; color: #94A3B8;">0% Commission Active</div>
+          </div>
+        </div>
+
+        <!-- 2. Provider Acquisition Cohort Quality Table -->
+        <div class="panel-card" style="margin-bottom: 20px;">
+          <div style="font-size: 0.95rem; font-weight: 700; color: #F1F5F9; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+            <span>👥 Provider Acquisition Cohort Quality & Conversion Matrix</span>
+            <span style="font-size: 0.75rem; color: #94A3B8;">Distinguishes Volume from Engagement Quality</span>
+          </div>
+          <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.8rem; text-align: left;">
+              <thead>
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.08); color: #94A3B8;">
+                  <th style="padding: 8px;">Acquisition Source</th>
+                  <th style="padding: 8px;">Registrations</th>
+                  <th style="padding: 8px;">Published</th>
+                  <th style="padding: 8px;">Publish Rate</th>
+                  <th style="padding: 8px;">Avg Completeness</th>
+                  <th style="padding: 8px;">Verif. Requests</th>
+                  <th style="padding: 8px;">Profile Views</th>
+                  <th style="padding: 8px;">Contacts</th>
+                  <th style="padding: 8px;">Contacts/Provider</th>
+                  <th style="padding: 8px;">Source Quality</th>
+                </tr>
+              </thead>
+              <tbody id="mlg-cohort-tbody">
+                <tr><td colspan="10" style="padding: 16px; text-align: center; color: #64748B;">No cohort data available.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 3. Pre vs Post Demand Cluster Liquidity Response (Δ Metrics) -->
+        <div class="panel-card" style="margin-bottom: 20px;">
+          <div style="font-size: 0.95rem; font-weight: 700; color: #F1F5F9; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+            <span>📈 Pre vs Post Demand Cluster Liquidity Response (Δ Metrics)</span>
+            <span style="font-size: 0.75rem; color: #94A3B8;">Observational Elasticity & Saturation Signals</span>
+          </div>
+          <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.8rem; text-align: left;">
+              <thead>
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.08); color: #94A3B8;">
+                  <th style="padding: 8px;">State</th>
+                  <th style="padding: 8px;">LGA / City</th>
+                  <th style="padding: 8px;">Trade</th>
+                  <th style="padding: 8px;">Δ Providers</th>
+                  <th style="padding: 8px;">Post Searches</th>
+                  <th style="padding: 8px;">Pre Zero %</th>
+                  <th style="padding: 8px;">Post Zero %</th>
+                  <th style="padding: 8px;">Δ Zero Rate</th>
+                  <th style="padding: 8px;">Δ Contacts</th>
+                  <th style="padding: 8px;">Contact Elasticity</th>
+                  <th style="padding: 8px;">Saturation Signal</th>
+                </tr>
+              </thead>
+              <tbody id="mlg-cluster-response-tbody">
+                <tr><td colspan="11" style="padding: 16px; text-align: center; color: #64748B;">No cluster response data available.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 4. Strategic Regional Decision Matrix (Delta & Edo) -->
+        <div class="panel-card" style="margin-bottom: 20px;">
+          <div style="font-size: 0.95rem; font-weight: 700; color: #F1F5F9; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+            <span>🇳🇬 Delta & Edo Strategic Market Decision Matrix</span>
+            <span style="font-size: 0.75rem; color: #94A3B8;">Evidence-Based Regional Allocation</span>
+          </div>
+          <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.8rem; text-align: left;">
+              <thead>
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.08); color: #94A3B8;">
+                  <th style="padding: 8px;">Market</th>
+                  <th style="padding: 8px;">LGA / Locality</th>
+                  <th style="padding: 8px;">Trade</th>
+                  <th style="padding: 8px;">Supply (Pre → Post)</th>
+                  <th style="padding: 8px;">Searches</th>
+                  <th style="padding: 8px;">Zero-Result (Pre → Post)</th>
+                  <th style="padding: 8px;">Contacts</th>
+                  <th style="padding: 8px;">Contact Rate</th>
+                  <th style="padding: 8px;">Confidence</th>
+                  <th style="padding: 8px;">Recommendation</th>
+                </tr>
+              </thead>
+              <tbody id="mlg-decision-matrix-tbody">
+                <tr><td colspan="10" style="padding: 16px; text-align: center; color: #64748B;">No strategic decision data available.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 5. Observational Controls & Non-Causal Guard Notice -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px;">
+          <div class="panel-card" style="border-left: 4px solid #38BDF8;">
+            <div style="font-size: 0.85rem; font-weight: 700; color: #F1F5F9; margin-bottom: 8px;">
+              ⚖️ Observational Control Group Comparison
+            </div>
+            <div style="font-size: 0.8rem; color: #94A3B8; line-height: 1.5; margin-bottom: 10px;">
+              <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                <span>Expansion Clusters (Delta/Edo/Targeted):</span>
+                <strong id="mlg-ctrl-exp" style="color: #34D399;">0 clusters</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                <span>Comparison Clusters (Baseline/Other):</span>
+                <strong id="mlg-ctrl-comp" style="color: #94A3B8;">0 clusters</strong>
+              </div>
+            </div>
+            <div style="font-size: 0.75rem; color: #64748B; font-style: italic;">
+              "Observed association; causality cannot be established from current observational data."
+            </div>
+          </div>
+
+          <div class="panel-card" style="border-left: 4px solid #F59E0B;">
+            <div style="font-size: 0.85rem; font-weight: 700; color: #F1F5F9; margin-bottom: 8px;">
+              🚦 Monetization Readiness Gate Reassessment
+            </div>
+            <div style="font-size: 0.8rem; color: #E2E8F0; line-height: 1.5;" id="mlg-monetization-summary">
+              Classification: <strong style="color: #FBBF24;">EARLY_MARKETPLACE</strong>. Marketplace liquidity response is promising. Continue expansion and observation to reach scale thresholds before monetization.
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- 9.0 Strategic Intelligence Command Center (SIMCC) -->
       <section id="section-simcc-command-center" style="margin-bottom: 32px;">
         <div class="section-title">
@@ -1841,6 +1998,7 @@
     </main>
   </div>
 
+  <script src="telemetry.js"></script>
   <script src="supabase-client.js"></script>
   <script src="analytics.js"></script>
 </body>

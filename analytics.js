@@ -2145,7 +2145,162 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.warn('SPGDCE initialization failed:', e.message);
           }
         };
-        renderSPGDCE();
+        // =========================================================================
+        // Phase 10.12K & Phase 10.12L: Liquidity Expansion & Growth Validation Renderers
+        // =========================================================================
+        try {
+          if (LokatorDB.analytics && LokatorDB.analytics.getLiquidityExpansion) {
+            const expansionData = await LokatorDB.analytics.getLiquidityExpansion(days);
+            if (expansionData) {
+              const deltaState = expansionData.strategic_focus_markets && expansionData.strategic_focus_markets.delta_state;
+              if (deltaState) {
+                const elP = document.getElementById('mle-delta-provs');
+                const elS = document.getElementById('mle-delta-searches');
+                const elZ = document.getElementById('mle-delta-zero');
+                const elC = document.getElementById('mle-delta-contacts');
+                if (elP) elP.textContent = deltaState.total_providers || 0;
+                if (elS) elS.textContent = deltaState.searches_count || 0;
+                if (elZ) elZ.textContent = (deltaState.zero_result_rate || 0) + '%';
+                if (elC) elC.textContent = deltaState.contacts_count || 0;
+              }
+
+              const edoState = expansionData.strategic_focus_markets && expansionData.strategic_focus_markets.edo_state;
+              if (edoState) {
+                const elP = document.getElementById('mle-edo-provs');
+                const elS = document.getElementById('mle-edo-searches');
+                const elZ = document.getElementById('mle-edo-zero');
+                const elC = document.getElementById('mle-edo-contacts');
+                if (elP) elP.textContent = edoState.total_providers || 0;
+                if (elS) elS.textContent = edoState.searches_count || 0;
+                if (elZ) elZ.textContent = (edoState.zero_result_rate || 0) + '%';
+                if (elC) elC.textContent = edoState.contacts_count || 0;
+              }
+
+              const oppTbody = document.getElementById('mle-opportunity-tbody');
+              if (oppTbody && expansionData.opportunity_prioritization_matrix && expansionData.opportunity_prioritization_matrix.length > 0) {
+                oppTbody.innerHTML = expansionData.opportunity_prioritization_matrix.map(row => `
+                  <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <td style="padding: 8px; font-weight: 700; color: #E2E8F0;">#${row.rank}</td>
+                    <td style="padding: 8px; color: #38BDF8; font-weight: 600;">${row.state}</td>
+                    <td style="padding: 8px; color: #CBD5E1;">${row.lga}</td>
+                    <td style="padding: 8px; color: #E2E8F0; text-transform: capitalize;">${row.category}</td>
+                    <td style="padding: 8px; color: ${row.current_providers > 0 ? '#34D399' : '#F87171'};">${row.current_providers}</td>
+                    <td style="padding: 8px; color: #CBD5E1;">${row.searches_count}</td>
+                    <td style="padding: 8px; color: #F87171;">${row.zero_result_rate}%</td>
+                    <td style="padding: 8px; font-weight: 700; color: #FBBF24;">${row.opportunity_score}</td>
+                    <td style="padding: 8px;"><span class="status-tag ${row.confidence === 'HIGH' ? 'status-good' : 'status-notice'}" style="font-size: 0.65rem;">${row.confidence}</span></td>
+                    <td style="padding: 8px;"><span class="status-tag ${row.acquisition_priority.startsWith('P1') ? 'status-bad' : 'status-good'}" style="font-size: 0.65rem;">${row.acquisition_priority}</span></td>
+                  </tr>
+                `).join('');
+              }
+            }
+          }
+
+          if (LokatorDB.analytics && LokatorDB.analytics.getLiquidityGrowth) {
+            const growthData = await LokatorDB.analytics.getLiquidityGrowth(days);
+            if (growthData) {
+              const health = growthData.marketplace_health_summary;
+              const pre = growthData.pre_expansion_baseline;
+              const post = growthData.post_expansion_data;
+
+              const elSup = document.getElementById('mlg-kpi-supply');
+              const elSupD = document.getElementById('mlg-kpi-supply-delta');
+              const elZero = document.getElementById('mlg-kpi-zero');
+              const elZeroD = document.getElementById('mlg-kpi-zero-delta');
+              const elCont = document.getElementById('mlg-kpi-contacts');
+              const elContR = document.getElementById('mlg-kpi-contacts-rate');
+              const elGate = document.getElementById('mlg-kpi-gate');
+
+              if (elSup) elSup.textContent = health ? health.supply.published_providers : post.provider_count;
+              if (elSupD) elSupD.textContent = `Δ Providers: +${health ? health.supply.delta_supply : 0}`;
+              if (elZero) elZero.textContent = `${post.zero_result_rate}%`;
+              if (elZeroD) elZeroD.textContent = `Pre: ${pre.zero_result_rate}% → Post: ${post.zero_result_rate}%`;
+              if (elCont) elCont.textContent = post.total_contacts;
+              if (elContR) elContR.textContent = `Conversion Rate: ${post.contact_conversion_rate}%`;
+              if (elGate && growthData.monetization_readiness_recheck) {
+                elGate.textContent = growthData.monetization_readiness_recheck.classification;
+              }
+
+              // 1. Cohort Quality Table
+              const cohortTbody = document.getElementById('mlg-cohort-tbody');
+              if (cohortTbody && growthData.cohort_quality_matrix && growthData.cohort_quality_matrix.length > 0) {
+                cohortTbody.innerHTML = growthData.cohort_quality_matrix.map(c => `
+                  <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <td style="padding: 8px; font-weight: 700; color: #38BDF8; text-transform: uppercase;">${c.source}</td>
+                    <td style="padding: 8px; color: #CBD5E1;">${c.registrations}</td>
+                    <td style="padding: 8px; color: #34D399; font-weight: 600;">${c.published_providers}</td>
+                    <td style="padding: 8px; color: #E2E8F0;">${c.publish_conversion_rate}%</td>
+                    <td style="padding: 8px; color: #CBD5E1;">${c.average_completeness}%</td>
+                    <td style="padding: 8px; color: #F59E0B;">${c.verification_requests}</td>
+                    <td style="padding: 8px; color: #CBD5E1;">${c.profile_views}</td>
+                    <td style="padding: 8px; color: #10B981; font-weight: 700;">${c.customer_contacts}</td>
+                    <td style="padding: 8px; color: #CBD5E1;">${c.contacts_per_published_provider}</td>
+                    <td style="padding: 8px;"><span class="status-tag ${c.quality_classification === 'HIGH_QUALITY_SOURCE' ? 'status-good' : (c.quality_classification === 'VOLUME_SOURCE' ? 'status-notice' : 'status-bad')}" style="font-size: 0.65rem;">${c.quality_classification}</span></td>
+                  </tr>
+                `).join('');
+              }
+
+              // 2. Cluster Liquidity Response Table
+              const clusterTbody = document.getElementById('mlg-cluster-response-tbody');
+              if (clusterTbody && growthData.cluster_liquidity_responses && growthData.cluster_liquidity_responses.length > 0) {
+                clusterTbody.innerHTML = growthData.cluster_liquidity_responses.map(cl => `
+                  <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <td style="padding: 8px; font-weight: 600; color: #38BDF8;">${cl.state}</td>
+                    <td style="padding: 8px; color: #CBD5E1;">${cl.lga}</td>
+                    <td style="padding: 8px; color: #E2E8F0; text-transform: capitalize;">${cl.category}</td>
+                    <td style="padding: 8px; color: ${cl.delta_providers >= 0 ? '#34D399' : '#F87171'}; font-weight: 600;">+${cl.delta_providers}</td>
+                    <td style="padding: 8px; color: #CBD5E1;">${cl.searches_post}</td>
+                    <td style="padding: 8px; color: #94A3B8;">${cl.zero_result_rate_pre}</td>
+                    <td style="padding: 8px; color: #F87171;">${cl.zero_result_rate_post}</td>
+                    <td style="padding: 8px; color: ${typeof cl.delta_zero_result_rate === 'number' && cl.delta_zero_result_rate <= 0 ? '#34D399' : '#94A3B8'};">${typeof cl.delta_zero_result_rate === 'number' ? `${cl.delta_zero_result_rate}%` : cl.delta_zero_result_rate}</td>
+                    <td style="padding: 8px; color: #10B981; font-weight: 600;">+${cl.delta_contacts}</td>
+                    <td style="padding: 8px; font-weight: 700; color: #FBBF24;">${cl.contact_elasticity}</td>
+                    <td style="padding: 8px;"><span class="status-tag ${cl.saturation_signal === 'HEALTHY_GROWTH' ? 'status-good' : (cl.saturation_signal === 'SATURATED' ? 'status-bad' : 'status-notice')}" style="font-size: 0.65rem;">${cl.saturation_signal}</span></td>
+                  </tr>
+                `).join('');
+              }
+
+              // 3. Strategic Decision Matrix Table
+              const matrixTbody = document.getElementById('mlg-decision-matrix-tbody');
+              if (matrixTbody && growthData.strategic_market_validation) {
+                const deltaRows = growthData.strategic_market_validation.delta_state_matrix || [];
+                const edoRows = growthData.strategic_market_validation.edo_state_matrix || [];
+                const allMatrixRows = [...deltaRows, ...edoRows];
+                if (allMatrixRows.length > 0) {
+                  matrixTbody.innerHTML = allMatrixRows.map(row => `
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                      <td style="padding: 8px; font-weight: 700; color: ${row.market === 'Delta' ? '#10B981' : '#818CF8'};">${row.market}</td>
+                      <td style="padding: 8px; color: #CBD5E1;">${row.location}</td>
+                      <td style="padding: 8px; color: #E2E8F0; text-transform: capitalize;">${row.category}</td>
+                      <td style="padding: 8px; color: #CBD5E1;">${row.providers_before} → <strong style="color: #34D399;">${row.providers_after}</strong></td>
+                      <td style="padding: 8px; color: #CBD5E1;">${row.searches}</td>
+                      <td style="padding: 8px; color: #F87171;">${row.zero_result_before} → ${row.zero_result_after}</td>
+                      <td style="padding: 8px; color: #10B981; font-weight: 600;">${row.contacts}</td>
+                      <td style="padding: 8px; color: #E2E8F0;">${row.contact_rate}</td>
+                      <td style="padding: 8px;"><span class="status-tag ${row.confidence === 'HIGH' ? 'status-good' : 'status-notice'}" style="font-size: 0.65rem;">${row.confidence}</span></td>
+                      <td style="padding: 8px;"><span class="status-tag ${row.recommendation === 'EXPAND' ? 'status-good' : (row.recommendation === 'PAUSE_ACQUISITION' ? 'status-bad' : 'status-notice')}" style="font-size: 0.65rem;">${row.recommendation}</span></td>
+                    </tr>
+                  `).join('');
+                }
+              }
+
+              // 4. Observational Controls & Monetization Summary
+              if (growthData.control_comparison) {
+                const elExp = document.getElementById('mlg-ctrl-exp');
+                const elComp = document.getElementById('mlg-ctrl-comp');
+                if (elExp) elExp.textContent = `${growthData.control_comparison.expansion_group.clusters_count} clusters (${growthData.control_comparison.expansion_group.total_searches} searches, ${growthData.control_comparison.expansion_group.contact_rate}% contact rate)`;
+                if (elComp) elComp.textContent = `${growthData.control_comparison.comparison_group.clusters_count} clusters (${growthData.control_comparison.comparison_group.total_searches} searches, ${growthData.control_comparison.comparison_group.contact_rate}% contact rate)`;
+              }
+
+              const monSummary = document.getElementById('mlg-monetization-summary');
+              if (monSummary && growthData.monetization_readiness_recheck) {
+                monSummary.innerHTML = `Classification: <strong style="color: #FBBF24;">${growthData.monetization_readiness_recheck.classification}</strong>. ${growthData.monetization_readiness_recheck.recommendation}`;
+              }
+            }
+          }
+        } catch (err) {
+          console.warn('Phase 10.12K/10.12L analytics render warning:', err.message);
+        }
       }
 
     } catch (err) {

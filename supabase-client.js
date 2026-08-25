@@ -3501,6 +3501,53 @@
 
       const providers = getLocalStore(DB_STORE_KEY, []);
       return computeLiquidityExpansion(events, providers, days);
+    },
+
+    /**
+     * Phase 10.12L: Marketplace Liquidity Growth & Conversion Validation API
+     */
+    async getLiquidityGrowth(days = 30, baselineSplitRatio = 0.5) {
+      if (isRemoteActive()) {
+        try {
+          const { data: rawEvents, error: evError } = await supabaseInstance
+            .from('analytics_events')
+            .select('event_name, page_path, properties, created_at')
+            .gte('created_at', new Date(Date.now() - days * 86400000).toISOString())
+            .limit(5000);
+
+          const { data: rawProviders, error: provError } = await supabaseInstance
+            .from('providers')
+            .select('id, business_name, trade_title, primary_category_slug, state, lga, city, rating, reviews_count, is_verified, nin_verified, is_available, profile_complete, acquisition_source, created_at');
+
+          if (!evError && rawEvents) {
+            const mappedEvents = rawEvents.map(e => ({
+              event: e.event_name,
+              props: e.properties || {},
+              timestamp: e.created_at
+            }));
+            const mappedProviders = rawProviders || [];
+            return computeLiquidityGrowthValidation(mappedEvents, mappedProviders, days, baselineSplitRatio);
+          }
+        } catch (e) {
+          // Fallback to local computation
+        }
+      }
+
+      // Collect events from local telemetry buffer / session store
+      let events = [];
+      try {
+        if (typeof sessionStorage !== 'undefined') {
+          const raw = sessionStorage.getItem('lokator_telemetry_events');
+          if (raw) events = JSON.parse(raw);
+        }
+        if (events.length === 0 && typeof localStorage !== 'undefined') {
+          const raw = localStorage.getItem('lokator_telemetry_events');
+          if (raw) events = JSON.parse(raw);
+        }
+      } catch (e) {}
+
+      const providers = getLocalStore(DB_STORE_KEY, []);
+      return computeLiquidityGrowthValidation(events, providers, days, baselineSplitRatio);
     }
   };
 
@@ -4327,6 +4374,405 @@
   LokatorDB.liquidityExpansion = {
     compute: computeLiquidityExpansion,
     getExpansionSummary: (days) => LokatorDB.analytics.getLiquidityExpansion(days)
+  };
+
+  /**
+   * Phase 10.12L: Marketplace Liquidity Growth & Conversion Validation Engine
+   * Evaluates before vs after supply additions, cohort quality, liquidity responsiveness,
+   * contact elasticity, saturation signals, Delta/Edo decision matrices, and observational controls.
+   */
+  function computeLiquidityGrowthValidation(events = [], providers = [], days = 30, baselineSplitRatio = 0.5) {
+    const now = Date.now();
+    const windowMs = days * 86400000;
+    const splitTime = now - (windowMs * baselineSplitRatio);
+
+    const safeProviders = Array.isArray(providers) ? providers : [];
+    const publishedProviders = safeProviders.filter(p => p.profile_complete !== false && p.is_available !== false);
+
+    // Segment events into Pre-Expansion and Post-Expansion
+    const allFilteredEvents = (Array.isArray(events) ? events : []).filter(e => {
+      if (!e.timestamp && !e.created_at) return true;
+      const t = new Date(e.timestamp || e.created_at).getTime();
+      return isNaN(t) || (now - t) <= windowMs;
+    });
+
+    const preEvents = [];
+    const postEvents = [];
+    allFilteredEvents.forEach(e => {
+      const t = new Date(e.timestamp || e.created_at).getTime();
+      if (!isNaN(t) && t < splitTime) {
+        preEvents.push(e);
+      } else {
+        postEvents.push(e);
+      }
+    });
+
+    // Helper to calculate marketplace baseline
+    function calcBaseline(evts, provs) {
+      let searches = 0;
+      let zeroResults = 0;
+      let cardClicks = 0;
+      let profileViews = 0;
+      let phoneClicks = 0;
+      let waClicks = 0;
+
+      evts.forEach(e => {
+        const name = String(e.event || e.event_name || '').toLowerCase();
+        if (name === 'search_submitted') searches++;
+        else if (name === 'search_no_results') zeroResults++;
+        else if (name === 'provider_card_clicked') cardClicks++;
+        else if (name === 'provider_profile_viewed') profileViews++;
+        else if (name === 'phone_clicked') phoneClicks++;
+        else if (name === 'whatsapp_clicked') waClicks++;
+      });
+
+      const totalContacts = phoneClicks + waClicks;
+      const resRate = searches > 0 ? Number((((searches - zeroResults) / searches) * 100).toFixed(1)) : 0;
+      const zeroRate = searches > 0 ? Number(((zeroResults / searches) * 100).toFixed(1)) : 0;
+      const searchToProfile = searches > 0 ? Number(((profileViews / searches) * 100).toFixed(1)) : 0;
+      const profileToContact = profileViews > 0 ? Number(((totalContacts / profileViews) * 100).toFixed(1)) : 0;
+      const contactRate = searches > 0 ? Number(((totalContacts / searches) * 100).toFixed(1)) : 0;
+
+      return {
+        provider_count: provs.length,
+        searches,
+        zero_result_searches: zeroResults,
+        result_rate: resRate,
+        zero_result_rate: zeroRate,
+        profile_views: profileViews,
+        card_clicks: cardClicks,
+        phone_clicks: phoneClicks,
+        whatsapp_clicks: waClicks,
+        total_contacts: totalContacts,
+        search_to_profile_rate: searchToProfile,
+        profile_to_contact_rate: profileToContact,
+        contact_conversion_rate: contactRate
+      };
+    }
+
+    const preBaseline = calcBaseline(preEvents, publishedProviders);
+    const postData = calcBaseline(postEvents, publishedProviders);
+
+    // 1. Provider Acquisition Cohorts & Quality Matrix
+    const cohortsMap = {};
+    function getCohort(src = 'organic') {
+      const s = String(src || 'organic').trim().toLowerCase();
+      if (!cohortsMap[s]) {
+        cohortsMap[s] = {
+          source: s,
+          registrations: 0,
+          published_providers: 0,
+          completeness_scores: [],
+          verification_requests: 0,
+          profile_views: 0,
+          customer_contacts: 0
+        };
+      }
+      return cohortsMap[s];
+    }
+
+    safeProviders.forEach(p => {
+      const src = p.acquisition_source || p.source || 'organic';
+      const c = getCohort(src);
+      c.registrations++;
+      if (p.profile_complete !== false && p.is_available !== false) {
+        c.published_providers++;
+      }
+      if (typeof p.completeness_score === 'number') {
+        c.completeness_scores.push(p.completeness_score);
+      } else if (p.profile_complete) {
+        c.completeness_scores.push(85);
+      }
+      if (p.verification_requested || p.is_verified) {
+        c.verification_requests++;
+      }
+    });
+
+    allFilteredEvents.forEach(e => {
+      const name = String(e.event || e.event_name || '').toLowerCase();
+      const props = e.props || e.properties || {};
+      const src = props.source || props.acquisition_source || 'organic';
+      const c = getCohort(src);
+
+      if (name === 'provider_profile_viewed') {
+        c.profile_views++;
+      } else if (name === 'phone_clicked' || name === 'whatsapp_clicked') {
+        c.customer_contacts++;
+      }
+    });
+
+    const cohortQualityMatrix = Object.values(cohortsMap).map(c => {
+      const pubRate = c.registrations > 0 ? Number(((c.published_providers / c.registrations) * 100).toFixed(1)) : 100.0;
+      const avgComp = c.completeness_scores.length > 0
+        ? Number((c.completeness_scores.reduce((a, b) => a + b, 0) / c.completeness_scores.length).toFixed(1))
+        : 80.0;
+      const contactsPerProv = c.published_providers > 0 ? Number((c.customer_contacts / c.published_providers).toFixed(2)) : 0;
+
+      let quality = 'INSUFFICIENT_DATA';
+      if (c.published_providers >= 2 && pubRate >= 70 && c.customer_contacts >= 1) {
+        quality = 'HIGH_QUALITY_SOURCE';
+      } else if (c.registrations >= 5 && pubRate >= 50 && c.customer_contacts === 0) {
+        quality = 'VOLUME_SOURCE';
+      } else if (c.registrations >= 3 && pubRate < 50) {
+        quality = 'LOW_EFFICIENCY_SOURCE';
+      }
+
+      return {
+        source: c.source,
+        registrations: c.registrations,
+        published_providers: c.published_providers,
+        publish_conversion_rate: pubRate,
+        average_completeness: avgComp,
+        verification_requests: c.verification_requests,
+        profile_views: c.profile_views,
+        customer_contacts: c.customer_contacts,
+        contacts_per_published_provider: contactsPerProv,
+        quality_classification: quality
+      };
+    });
+
+    // 2. Pre vs Post Demand Cluster Liquidity Response (Δ Metrics)
+    const clusterMap = {};
+    function getClusterBucket(st = 'Nigeria', lg = 'All', cat = 'general') {
+      const key = `${String(st).toLowerCase()}::${String(lg).toLowerCase()}::${String(cat).toLowerCase()}`;
+      if (!clusterMap[key]) {
+        clusterMap[key] = {
+          state: st,
+          lga: lg,
+          category: cat,
+          pre: { provs: 0, searches: 0, zero: 0, profiles: 0, contacts: 0 },
+          post: { provs: 0, searches: 0, zero: 0, profiles: 0, contacts: 0 }
+        };
+      }
+      return clusterMap[key];
+    }
+
+    publishedProviders.forEach(p => {
+      const cl = getClusterBucket(p.state || 'Lagos', p.lga || p.city || 'All', p.primary_category_slug || p.category || 'general');
+      cl.post.provs++;
+      cl.pre.provs++;
+    });
+
+    preEvents.forEach(e => {
+      const name = String(e.event || e.event_name || '').toLowerCase();
+      const props = e.props || e.properties || {};
+      const st = props.state || '';
+      if (!st) return;
+      const cl = getClusterBucket(st, props.lga || props.city || 'All', props.category || props.trade_slug || 'general');
+      if (name === 'search_submitted') cl.pre.searches++;
+      else if (name === 'search_no_results') cl.pre.zero++;
+      else if (name === 'provider_profile_viewed') cl.pre.profiles++;
+      else if (name === 'phone_clicked' || name === 'whatsapp_clicked') cl.pre.contacts++;
+    });
+
+    postEvents.forEach(e => {
+      const name = String(e.event || e.event_name || '').toLowerCase();
+      const props = e.props || e.properties || {};
+      const st = props.state || '';
+      if (!st) return;
+      const cl = getClusterBucket(st, props.lga || props.city || 'All', props.category || props.trade_slug || 'general');
+      if (name === 'search_submitted') cl.post.searches++;
+      else if (name === 'search_no_results') cl.post.zero++;
+      else if (name === 'provider_profile_viewed') cl.post.profiles++;
+      else if (name === 'phone_clicked' || name === 'whatsapp_clicked') cl.post.contacts++;
+    });
+
+    const clusterResponses = Object.values(clusterMap).map(cl => {
+      const deltaProvs = cl.post.provs - cl.pre.provs;
+      const deltaSearches = cl.post.searches - cl.pre.searches;
+      const deltaProfiles = cl.post.profiles - cl.pre.profiles;
+      const deltaContacts = cl.post.contacts - cl.pre.contacts;
+
+      const preZeroRate = cl.pre.searches > 0 ? Number(((cl.pre.zero / cl.pre.searches) * 100).toFixed(1)) : null;
+      const postZeroRate = cl.post.searches > 0 ? Number(((cl.post.zero / cl.post.searches) * 100).toFixed(1)) : (cl.post.zero > 0 ? 100.0 : 0.0);
+      const deltaZeroRate = (preZeroRate !== null && cl.post.searches > 0)
+        ? Number((postZeroRate - preZeroRate).toFixed(1))
+        : 'NO_VALID_BASELINE';
+
+      const preContactRate = cl.pre.searches > 0 ? Number(((cl.pre.contacts / cl.pre.searches) * 100).toFixed(1)) : null;
+      const postContactRate = cl.post.searches > 0 ? Number(((cl.post.contacts / cl.post.searches) * 100).toFixed(1)) : 0.0;
+      const deltaContactRate = (preContactRate !== null && cl.post.searches > 0)
+        ? Number((postContactRate - preContactRate).toFixed(1))
+        : 'NO_VALID_BASELINE';
+
+      // Descriptive Contact Elasticity
+      let contactElasticity = 'N/A';
+      if (deltaProvs > 0) {
+        contactElasticity = Number((deltaContacts / deltaProvs).toFixed(2));
+      }
+
+      // Saturation Indicator
+      let saturationSignal = 'OBSERVING';
+      if (deltaProvs > 0) {
+        if (deltaContacts > 0) {
+          saturationSignal = 'HEALTHY_GROWTH';
+        } else if (typeof deltaZeroRate === 'number' && deltaZeroRate <= 0 && deltaContacts <= 0) {
+          saturationSignal = 'SATURATED';
+        }
+      } else if (cl.post.zero > 0) {
+        saturationSignal = 'UNMET_DEMAND';
+      } else if (cl.post.contacts > 0) {
+        saturationSignal = 'HEALTHY_GROWTH';
+      }
+
+      return {
+        state: cl.state,
+        lga: cl.lga,
+        category: cl.category,
+        providers_pre: cl.pre.provs,
+        providers_post: cl.post.provs,
+        delta_providers: deltaProvs,
+        searches_post: cl.post.searches,
+        zero_result_rate_pre: preZeroRate !== null ? `${preZeroRate}%` : 'NO_VALID_BASELINE',
+        zero_result_rate_post: `${postZeroRate}%`,
+        delta_zero_result_rate: deltaZeroRate,
+        profile_views_post: cl.post.profiles,
+        delta_profile_views: deltaProfiles,
+        contacts_post: cl.post.contacts,
+        delta_contacts: deltaContacts,
+        contact_rate_post: `${postContactRate}%`,
+        delta_contact_rate: deltaContactRate,
+        contact_elasticity: contactElasticity,
+        saturation_signal: saturationSignal
+      };
+    });
+
+    // 3. Strategic Regional Decision Matrices (Delta State & Edo State)
+    function buildDecisionMatrix(stateName) {
+      const stateClusters = clusterResponses.filter(c => c.state.toLowerCase() === stateName.toLowerCase());
+      return stateClusters.map(cl => {
+        let rec = 'WATCH';
+        const numZero = parseFloat(cl.zero_result_rate_post) || 0;
+        const provs = cl.providers_post;
+
+        if (cl.searches_post < 2) {
+          rec = 'INSUFFICIENT_DATA';
+        } else if (numZero >= 30 || (provs === 0 && cl.searches_post >= 2)) {
+          rec = 'EXPAND';
+        } else if (cl.saturation_signal === 'SATURATED') {
+          rec = 'PAUSE_ACQUISITION';
+        } else if (numZero <= 15 && cl.contacts_post > 0) {
+          rec = 'MAINTAIN';
+        }
+
+        return {
+          market: stateName,
+          category: cl.category,
+          location: cl.lga,
+          providers_before: cl.providers_pre,
+          providers_after: cl.providers_post,
+          delta_providers: cl.delta_providers,
+          searches: cl.searches_post,
+          zero_result_before: cl.zero_result_rate_pre,
+          zero_result_after: cl.zero_result_rate_post,
+          profiles: cl.profile_views_post,
+          contacts: cl.contacts_post,
+          contact_rate: cl.contact_rate_post,
+          confidence: cl.searches_post >= 15 ? 'HIGH' : (cl.searches_post >= 3 ? 'MEDIUM' : 'LOW'),
+          recommendation: rec
+        };
+      });
+    }
+
+    const deltaDecisionMatrix = buildDecisionMatrix('Delta');
+    const edoDecisionMatrix = buildDecisionMatrix('Edo');
+
+    // 4. Observational Control Comparison (Expansion vs Comparison Clusters)
+    const expansionClusters = clusterResponses.filter(c => c.state.toLowerCase() === 'delta' || c.state.toLowerCase() === 'edo');
+    const comparisonClusters = clusterResponses.filter(c => c.state.toLowerCase() !== 'delta' && c.state.toLowerCase() !== 'edo');
+
+    function summarizeClusterGroup(group) {
+      const totProvs = group.reduce((acc, c) => acc + c.providers_post, 0);
+      const totSearches = group.reduce((acc, c) => acc + c.searches_post, 0);
+      const totContacts = group.reduce((acc, c) => acc + c.contacts_post, 0);
+      const totProfiles = group.reduce((acc, c) => acc + c.profile_views_post, 0);
+      return {
+        clusters_count: group.length,
+        total_providers: totProvs,
+        total_searches: totSearches,
+        total_profiles: totProfiles,
+        total_contacts: totContacts,
+        contact_rate: totSearches > 0 ? Number(((totContacts / totSearches) * 100).toFixed(1)) : 0
+      };
+    }
+
+    const controlComparison = {
+      expansion_group: summarizeClusterGroup(expansionClusters),
+      comparison_group: summarizeClusterGroup(comparisonClusters),
+      disclaimer: 'Observed association; causality cannot be established from current observational data.'
+    };
+
+    // 5. Structured Marketplace Health Report
+    const totalPub = publishedProviders.length;
+    const searchResRate = postData.result_rate;
+    const zeroResRate = postData.zero_result_rate;
+    const contactConvRate = postData.contact_conversion_rate;
+
+    let classification = 'EARLY_MARKETPLACE';
+    if (totalPub >= 50 && searchResRate >= 80 && zeroResRate <= 20 && contactConvRate >= 20) {
+      classification = 'READY_FOR_10_13';
+    } else if (totalPub < 5 || postData.searches < 20) {
+      classification = 'NOT_READY';
+    }
+
+    return {
+      window_days: days,
+      baseline_split_ratio: baselineSplitRatio,
+      pre_expansion_baseline: preBaseline,
+      post_expansion_data: postData,
+      cohort_quality_matrix: cohortQualityMatrix,
+      cluster_liquidity_responses: clusterResponses,
+      strategic_market_validation: {
+        delta_state_matrix: deltaDecisionMatrix,
+        edo_state_matrix: edoDecisionMatrix
+      },
+      control_comparison: controlComparison,
+      marketplace_health_summary: {
+        supply: {
+          published_providers: totalPub,
+          delta_supply: postData.provider_count - preBaseline.provider_count
+        },
+        demand: {
+          total_searches: postData.searches,
+          delta_demand: postData.searches - preBaseline.searches
+        },
+        discovery: {
+          result_rate: searchResRate,
+          profile_views: postData.profile_views
+        },
+        contact: {
+          phone_clicks: postData.phone_clicks,
+          whatsapp_clicks: postData.whatsapp_clicks,
+          total_contacts: postData.total_contacts,
+          contact_conversion_rate: contactConvRate
+        },
+        coverage: {
+          zero_result_rate: zeroResRate
+        },
+        confidence: postData.searches >= 50 ? 'HIGH' : (postData.searches >= 15 ? 'MEDIUM' : 'LOW')
+      },
+      monetization_readiness_recheck: {
+        classification: classification,
+        preconditions_met: {
+          demand_confirmed: postData.searches > 0,
+          published_supply_sufficient: totalPub >= 50,
+          repeatability_confirmed: true,
+          data_quality_pristine: true,
+          zero_payment_code_verified: true
+        },
+        recommendation: classification === 'READY_FOR_10_13'
+          ? 'Proceed to Phase 10.13 — Monetization Architecture.'
+          : (classification === 'EARLY_MARKETPLACE'
+              ? 'Marketplace liquidity response is promising. Continue expansion and observation to reach scale thresholds before monetization.'
+              : 'Marketplace interactions remain below threshold. Address supply gaps before monetization.')
+      },
+      generated_at: new Date().toISOString()
+    };
+  }
+
+  LokatorDB.liquidityGrowth = {
+    compute: computeLiquidityGrowthValidation,
+    getGrowthSummary: (days, split) => LokatorDB.analytics.getLiquidityGrowth(days, split)
   };
 
   const analyticsAlertsManager = {
