@@ -1250,6 +1250,208 @@
           helpfulCount: 18
         }
       ]
+    },
+    {
+      id: 19,
+      name: "Oghenero Ejiro",
+      trade: "Master Plumber & Sanitary Engineer",
+      category: "Plumber",
+      slug: "plumber",
+      city: "Warri",
+      state: "Delta",
+      lga: "Warri South",
+      area: "Warri South, Delta",
+      address: "12 Deco Road, Warri South, Delta",
+      lat: 5.5174,
+      lng: 5.7501,
+      latitude: 5.5174,
+      longitude: 5.7501,
+      distanceKm: 0.9,
+      rating: 4.9,
+      reviewsCount: 154,
+      experienceYrs: 9,
+      completedJobs: 430,
+      isVerified: true,
+      nin_verified: true,
+      isAvailable: true,
+      isTop: true,
+      phone: "+2348039871234",
+      avatarBg: "linear-gradient(135deg, #0284C7, #0EA5E9)",
+      badgeTitle: "NIN & Delta Certified Artisan",
+      responseTime: "~10 mins",
+      bio: "Top-rated master plumber serving Warri, Effurun, and surrounding Delta communities. 9+ years experience in rapid emergency burst pipe interventions, industrial pumping machine installations, PPR hot/cold water distribution, and luxury bathroom sanitary fittings.",
+      skills: ["Burst Pipe Repair", "Borehole & Pumping Machines", "PPR Pipe Welding", "Water Heater Installation", "Bathroom Sanitary Ware", "Drainage Unblocking"],
+      startingPrice: "₦3,500 / job",
+      workingHours: {
+        weekday: "7:00 AM – 7:30 PM",
+        saturday: "7:30 AM – 6:30 PM",
+        sunday: "24/7 Emergency Response"
+      },
+      pricingGuide: [
+        { item: "Emergency Pipe Leak Repair", price: "₦4,000 – ₦10,000" },
+        { item: "Water Heater Installation", price: "₦12,000 – ₦18,000" },
+        { item: "1HP–2HP Water Pumping Machine Setup", price: "₦15,000 – ₦28,000" },
+        { item: "Full Bathroom Sanitary Fitting", price: "₦20,000 – ₦45,000" }
+      ],
+      portfolio: [
+        {
+          id: "p19-1",
+          title: "Complete PPR Plumbing & Pressure Pump System",
+          category: "Water Supply",
+          isBeforeAfter: true,
+          tag: "Before & After",
+          description: "Installed automatic pressure pump and PPR distribution network for a residential estate in Warri.",
+          accentColor: "#0284C7",
+          icon: "💧"
+        }
+      ],
+      reviews: [
+        {
+          id: "r19-1",
+          author: "Pastor David Akpotor",
+          location: "Enerhen, Warri",
+          date: "18 Aug 2026",
+          rating: 5,
+          serviceType: "Burst Pipe & Pumping Machine Fix",
+          comment: "Oghenero arrived within 15 minutes of my call. Repaired the leaking overhead tank line and tested the pump pressure thoroughly. Very trustworthy and reasonable pricing!",
+          isVerifiedCustomer: true,
+          helpfulCount: 34
+        }
+      ]
+    },
+    {
+      id: 20,
+      name: "Elohor Akpevwe",
+      trade: "Solar Inverter & Electrical Specialist",
+      category: "Electrician",
+      slug: "electrician",
+      city: "Warri",
+      state: "Delta",
+      lga: "Uvwie",
+      area: "Effurun (Uvwie), Delta",
+      address: "24 PTI Road, Effurun, Delta",
+      lat: 5.5564,
+      lng: 5.7828,
+      latitude: 5.5564,
+      longitude: 5.7828,
+      distanceKm: 1.4,
+      rating: 4.8,
+      reviewsCount: 188,
+      experienceYrs: 7,
+      completedJobs: 390,
+      isVerified: true,
+      nin_verified: true,
+      isAvailable: true,
+      isTop: true,
+      phone: "+2348123459876",
+      avatarBg: "linear-gradient(135deg, #006B3F, #10B981)",
+      badgeTitle: "NIN Verified Solar Engineer",
+      responseTime: "~15 mins",
+      bio: "Certified solar technician and domestic electrician covering Warri, Effurun, and Ughelli. Specializes in hybrid solar inverter setup (3.5kVA–20kVA), lithium battery integration, prepaid meter installation, and industrial distribution boards.",
+      skills: ["Solar & Inverter Setup", "Home Conduit Wiring", "Lithium Battery Bank", "Prepaid Meter Fixing", "Distribution Boards"],
+      startingPrice: "₦4,500 / inspection",
+      workingHours: {
+        weekday: "8:00 AM – 7:00 PM",
+        saturday: "8:30 AM – 6:00 PM",
+        sunday: "Emergency Callouts Only"
+      },
+      pricingGuide: [
+        { item: "Site Energy Audit & System Sizing", price: "₦5,000" },
+        { item: "5kVA Solar Inverter + Lithium Battery Setup", price: "₦35,000 – ₦70,000" },
+        { item: "Automatic Generator Changeover Switch", price: "₦14,000" }
+      ],
+      portfolio: [
+        {
+          id: "p20-1",
+          title: "7.5kVA Lithium Hybrid Solar Installation",
+          category: "Solar",
+          isBeforeAfter: true,
+          tag: "Completed Project",
+          description: "Clean rack installation with 12 tier-1 monocrystalline panels powering a 5-bedroom duplex 24/7.",
+          accentColor: "#059669",
+          icon: "☀️"
+        }
+      ],
+      reviews: [
+        {
+          id: "r20-1",
+          author: "Chief Charles Okumagba",
+          location: "Airport Road, Warri",
+          date: "14 Aug 2026",
+          rating: 5,
+          serviceType: "5kVA Solar Inverter Installation",
+          comment: "Elohor did a top-quality solar installation for my residence. Clean cabling, safe circuit protection, and great after-sales support.",
+          isVerifiedCustomer: true,
+          helpfulCount: 27
+        }
+      ]
+    },
+    {
+      id: 21,
+      name: "Godwin Onome",
+      trade: "Auto Mechanic & Electronic Diagnostics",
+      category: "Mechanic",
+      slug: "mechanic",
+      city: "Warri",
+      state: "Delta",
+      lga: "Warri South",
+      area: "Warri South, Delta",
+      address: "45 Warri-Sapele Road, Warri, Delta",
+      lat: 5.5320,
+      lng: 5.7610,
+      latitude: 5.5320,
+      longitude: 5.7610,
+      distanceKm: 2.1,
+      rating: 4.7,
+      reviewsCount: 92,
+      experienceYrs: 11,
+      completedJobs: 480,
+      isVerified: true,
+      nin_verified: true,
+      isAvailable: true,
+      isTop: false,
+      phone: "+2348076543210",
+      avatarBg: "linear-gradient(135deg, #DC2626, #EF4444)",
+      badgeTitle: "NIN Verified Auto Specialist",
+      responseTime: "~20 mins",
+      bio: "11 years specialized mechanical and electrical auto repair for Toyota, Lexus, Mercedes-Benz, Honda, and Hyundai. Comprehensive computerized OBD-II scanning, gearbox servicing, engine rebuilds, and roadside breakdown assistance in Warri metropolis.",
+      skills: ["Computer OBD Diagnostics", "Engine Rebuild", "Transmission Repair", "Brake Overhaul", "Roadside Rescue"],
+      startingPrice: "₦4,000 / diagnosis",
+      workingHours: {
+        weekday: "8:00 AM – 6:30 PM",
+        saturday: "8:00 AM – 6:00 PM",
+        sunday: "Roadside Rescue (24/7)"
+      },
+      pricingGuide: [
+        { item: "Computer Error Scan & Real-time Live Data Check", price: "₦4,000" },
+        { item: "Full Engine Tune-up & Servicing", price: "₦8,000 – ₦15,000" },
+        { item: "Automatic Gearbox Oil & Filter Replacement", price: "₦10,000 – ₦20,000" }
+      ],
+      portfolio: [
+        {
+          id: "p21-1",
+          title: "Lexus V6 Engine Diagnostic & Misfire Resolution",
+          category: "Engine",
+          isBeforeAfter: true,
+          tag: "Before & After",
+          description: "Diagnosed faulty ignition coil and cleaned fuel injector rails, restoring factory performance.",
+          accentColor: "#DC2626",
+          icon: "🔧"
+        }
+      ],
+      reviews: [
+        {
+          id: "r21-1",
+          author: "Barrister Michael Osagie",
+          location: "Edjeba, Warri",
+          date: "09 Aug 2026",
+          rating: 5,
+          serviceType: "Toyota Prado Brake & Suspension Overhaul",
+          comment: "Honest and capable mechanic. Godwin identified the suspension knocking sound in 5 minutes and fixed it same day.",
+          isVerifiedCustomer: true,
+          helpfulCount: 19
+        }
+      ]
     }
   ];
 

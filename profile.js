@@ -653,8 +653,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
   }
-    });
-  }
 
   // 10.1 Report Provider Modal & Handling
   const reportModal = document.getElementById('report-modal');
