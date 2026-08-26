@@ -1716,7 +1716,7 @@
     },
 
     /**
-     * Get real-time search suggestions dynamically from all available provider skills
+     * Get real-time search suggestions dynamically from all available provider skills, taxonomy & slang
      */
     getSkillSuggestions(query, limit = 6) {
       if (!query || typeof query !== 'string' || query.trim().length < 1) return [];
@@ -1726,57 +1726,104 @@
       
       const suggestionSet = new Set();
 
-      // 1. Gather all unique skills from providers
-      providers.forEach(p => {
+      // Helper to capitalize words
+      const formatTitle = (txt) => {
+        if (!txt) return '';
+        return String(txt).replace(/\w\S*/g, w => w.charAt(0).toUpperCase() + w.substr(1).toLowerCase()).trim();
+      };
+
+      // 1. Gather all unique skills from active and seed providers
+      const allActiveProviders = [
+        ...providers,
+        ...((typeof PROVIDERS_DATA !== 'undefined' && Array.isArray(PROVIDERS_DATA)) ? PROVIDERS_DATA : [])
+      ];
+
+      allActiveProviders.forEach(p => {
         const skills = Array.isArray(p.skills) ? p.skills : [];
         skills.forEach(s => {
           if (s && s.toLowerCase().includes(q)) {
-            suggestionSet.add(s.trim());
+            suggestionSet.add(formatTitle(s));
           }
         });
         if (p.trade_title && p.trade_title.toLowerCase().includes(q)) {
-          suggestionSet.add(p.trade_title.trim());
+          suggestionSet.add(formatTitle(p.trade_title));
+        }
+        if (p.trade && p.trade.toLowerCase().includes(q)) {
+          suggestionSet.add(formatTitle(p.trade));
         }
       });
 
       // 2. Gather from provider_services
       services.forEach(s => {
         if (s.service_name && s.service_name.toLowerCase().includes(q)) {
-          suggestionSet.add(s.service_name.trim());
+          suggestionSet.add(formatTitle(s.service_name));
         }
       });
 
-      // 3. Gather from category synonyms
+      // 3. Gather from Nigerian Trade Taxonomy (Creative, Tech, Engineering, Fashion, Artisans)
+      const TaxonomyList = (typeof NIGERIAN_TRADE_TAXONOMY !== 'undefined' ? NIGERIAN_TRADE_TAXONOMY : null) ||
+                           (typeof globalThis !== 'undefined' ? globalThis.NIGERIAN_TRADE_TAXONOMY : null) ||
+                           (typeof window !== 'undefined' ? window.NIGERIAN_TRADE_TAXONOMY : null);
+      if (Array.isArray(TaxonomyList)) {
+        TaxonomyList.forEach(tax => {
+          if (tax.name && tax.name.toLowerCase().includes(q)) suggestionSet.add(formatTitle(tax.name));
+          if (tax.title && tax.title.toLowerCase().includes(q)) suggestionSet.add(formatTitle(tax.title));
+          (tax.skills || []).forEach(sk => {
+            if (sk.toLowerCase().includes(q)) suggestionSet.add(formatTitle(sk));
+          });
+          (tax.aliases || []).forEach(al => {
+            if (al.toLowerCase().includes(q) && al.length > 2) suggestionSet.add(formatTitle(al));
+          });
+        });
+      }
+
+      // 4. Gather from category synonyms
       if (typeof CategoryMap !== 'undefined' && CategoryMap.getAll) {
         CategoryMap.getAll().forEach(cat => {
-          if (cat.name && cat.name.toLowerCase().includes(q)) suggestionSet.add(cat.name);
-          if (cat.displayName && cat.displayName.toLowerCase().includes(q)) suggestionSet.add(cat.displayName);
+          if (cat.name && cat.name.toLowerCase().includes(q)) suggestionSet.add(formatTitle(cat.name));
+          if (cat.displayName && cat.displayName.toLowerCase().includes(q)) suggestionSet.add(formatTitle(cat.displayName));
           (cat.synonyms || []).forEach(syn => {
             if (syn.toLowerCase().includes(q) && syn.length > 2) {
-              const cap = syn.charAt(0).toUpperCase() + syn.slice(1);
-              suggestionSet.add(cap);
+              suggestionSet.add(formatTitle(syn));
             }
           });
         });
       }
 
-      // 4. Gather from Nigerian trade aliases
+      // 5. Gather from Nigerian trade slang & Pidgin aliases
       const LangEngine = (typeof NigeriaSearchLanguage !== 'undefined' ? NigeriaSearchLanguage : null) ||
                          (typeof globalThis !== 'undefined' ? globalThis.NigeriaSearchLanguage : null) ||
                          (typeof window !== 'undefined' ? window.NigeriaSearchLanguage : null) ||
                          (typeof global !== 'undefined' ? global.NigeriaSearchLanguage : null);
       if (LangEngine && Array.isArray(LangEngine.tradeDictionary)) {
         LangEngine.tradeDictionary.forEach(entry => {
+          if (entry.primaryTrade && entry.primaryTrade.toLowerCase().includes(q)) {
+            suggestionSet.add(formatTitle(entry.primaryTrade));
+          }
+          (entry.skills || []).forEach(sk => {
+            if (sk.toLowerCase().includes(q)) suggestionSet.add(formatTitle(sk));
+          });
           (entry.aliases || []).forEach(alias => {
-            if (alias.toLowerCase().includes(q) && alias.length > 2 && !LangEngine.ambiguousWords.has(alias)) {
-              const cap = alias.charAt(0).toUpperCase() + alias.slice(1);
-              suggestionSet.add(cap);
+            if (alias.toLowerCase().includes(q) && alias.length > 2 && (!LangEngine.ambiguousWords || !LangEngine.ambiguousWords.has(alias))) {
+              suggestionSet.add(formatTitle(alias));
             }
           });
         });
       }
 
-      return Array.from(suggestionSet).slice(0, limit);
+      // 6. Prefix & Relevance Priority Ranking
+      const scored = Array.from(suggestionSet).map(item => {
+        const lower = item.toLowerCase();
+        let rank = 0;
+        if (lower === q) rank = 100;
+        else if (lower.startsWith(q)) rank = 80;
+        else if (lower.split(' ').some(w => w.startsWith(q))) rank = 60;
+        else rank = 20;
+        return { item, rank };
+      });
+      scored.sort((a, b) => b.rank - a.rank);
+
+      return scored.map(s => s.item).slice(0, limit);
     },
 
     /**

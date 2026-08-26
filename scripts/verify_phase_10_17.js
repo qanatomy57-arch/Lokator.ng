@@ -32,8 +32,12 @@ global.LokatorTelemetry = {
 // Load dependencies
 const locCode = fs.readFileSync(path.join(__dirname, '../locations.js'), 'utf8');
 eval(locCode);
+const catCode = fs.readFileSync(path.join(__dirname, '../categories.js'), 'utf8');
+eval(catCode);
 const searchLangCode = fs.readFileSync(path.join(__dirname, '../search-language.js'), 'utf8');
 eval(searchLangCode);
+const provCode = fs.readFileSync(path.join(__dirname, '../providers-data.js'), 'utf8');
+eval(provCode);
 const clientCode = fs.readFileSync(path.join(__dirname, '../supabase-client.js'), 'utf8');
 eval(clientCode);
 
@@ -123,6 +127,19 @@ async function runPhase10_17Suite() {
       assert.ok(parsed);
       assert.strictEqual(parsed.canonicalSlug, 'plumber');
     }
+  });
+
+  await test('2.3 LokatorDB.getSkillSuggestions("gra") returns Graphic Designer among top matches', async () => {
+    const suggestions = LokatorDB.getSkillSuggestions('gra', 5);
+    assert.ok(suggestions.length > 0);
+    assert.ok(suggestions.includes('Graphic Designer'), 'Must include Graphic Designer');
+  });
+
+  await test('2.4 NigeriaLocations.searchLocations("warr") resolves Warri LGAs & localities', async () => {
+    const matches = NigeriaLocations.searchLocations('warr', 5);
+    assert.ok(matches.length > 0);
+    const warriSouth = matches.find(m => m.lga === 'Warri South' && m.state === 'Delta');
+    assert.ok(warriSouth, 'Must find Warri South, Delta');
   });
 
   console.log('\n--- 3. TELEMETRY & SAFE MONETIZATION INVARIANTS ---');

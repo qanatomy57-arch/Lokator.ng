@@ -850,7 +850,9 @@ document.addEventListener("DOMContentLoaded", () => {
     suggestionsDropdown.innerHTML = suggestions.map(s => `
       <div class="suggestion-item" data-val="${escapeHtml(s)}">
         <span class="sugg-icon">⚡</span>
-        <span>${escapeHtml(s)}</span>
+        <div class="sugg-meta">
+          <span class="sugg-title">${escapeHtml(s)}</span>
+        </div>
       </div>
     `).join('');
     suggestionsDropdown.style.display = "block";
@@ -860,7 +862,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (suggestionsDropdown) {
       setTimeout(() => {
         suggestionsDropdown.style.display = "none";
-      }, 200);
+      }, 250);
     }
   }
 
@@ -893,9 +895,9 @@ document.addEventListener("DOMContentLoaded", () => {
     locationSuggestions.innerHTML = matches.map(m => `
       <div class="suggestion-item location-sugg-item" data-state="${escapeHtml(m.state)}" data-lga="${escapeHtml(m.lga || '')}" data-locality="${escapeHtml(m.locality || '')}" data-formatted="${escapeHtml(m.formatted)}">
         <span class="sugg-icon">📍</span>
-        <div style="display: flex; flex-direction: column; text-align: left;">
-          <span style="font-weight: 600; font-size: 13px; color: var(--fg);">${escapeHtml(m.title)}</span>
-          <span style="font-size: 11px; color: var(--fg-muted);">${escapeHtml(m.label)}</span>
+        <div class="sugg-meta">
+          <span class="sugg-title">${escapeHtml(m.title)}</span>
+          <span class="sugg-sub">${escapeHtml(m.label)}</span>
         </div>
       </div>
     `).join('');
@@ -1217,6 +1219,8 @@ document.addEventListener("DOMContentLoaded", () => {
       state.state = selectedState;
       state.lga = "all";
       state.locality = "all";
+      state.locationQuery = selectedState !== "all" ? selectedState : "";
+      if (locationSearch) locationSearch.value = state.locationQuery;
       updateLgaSelect(selectedState, "all");
       state.page = 1;
       render();
@@ -1228,6 +1232,10 @@ document.addEventListener("DOMContentLoaded", () => {
       const selectedLga = e.target.value;
       state.lga = selectedLga;
       state.locality = "all";
+      state.locationQuery = (selectedLga !== "all" && state.state !== "all") 
+        ? `${selectedLga}, ${state.state}` 
+        : (state.state !== "all" ? state.state : "");
+      if (locationSearch) locationSearch.value = state.locationQuery;
       updateLocalitySelect(state.state, selectedLga, "all");
       state.page = 1;
       render();
@@ -1250,6 +1258,24 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  function resolveAndSyncLocation(locText) {
+    if (!locText || typeof NigeriaLocations === 'undefined') return;
+    const matches = NigeriaLocations.searchLocations(locText, 1);
+    if (matches && matches.length > 0) {
+      const top = matches[0];
+      if (top.state) {
+        state.state = top.state;
+        if (stateSelect) stateSelect.value = top.state;
+        state.lga = top.lga || "all";
+        updateLgaSelect(top.state, state.lga);
+        if (top.locality) {
+          state.locality = top.locality;
+          updateLocalitySelect(top.state, state.lga, top.locality);
+        }
+      }
+    }
+  }
+
   if (searchInput) {
     searchInput.addEventListener("input", debounce((e) => {
       const val = e.target.value.trim();
@@ -1257,7 +1283,7 @@ document.addEventListener("DOMContentLoaded", () => {
       state.page = 1;
       renderSuggestions(val);
       render();
-    }, 250));
+    }, 200));
 
     searchInput.addEventListener("focus", (e) => {
       if (e.target.value.trim()) {
@@ -1271,6 +1297,8 @@ document.addEventListener("DOMContentLoaded", () => {
       if (e.key === "Enter") {
         e.preventDefault();
         hideSuggestions();
+        if (searchInput) state.keyword = searchInput.value.trim();
+        state.page = 1;
         render();
       }
     });
@@ -1283,7 +1311,7 @@ document.addEventListener("DOMContentLoaded", () => {
       state.page = 1;
       renderLocationSuggestions(val);
       render();
-    }, 250));
+    }, 200));
 
     locationSearch.addEventListener("focus", (e) => {
       if (e.target.value.trim()) {
@@ -1297,6 +1325,10 @@ document.addEventListener("DOMContentLoaded", () => {
       if (e.key === "Enter") {
         e.preventDefault();
         hideLocationSuggestions();
+        const locVal = locationSearch.value.trim();
+        state.locationQuery = locVal;
+        resolveAndSyncLocation(locVal);
+        state.page = 1;
         render();
       }
     });
@@ -1308,7 +1340,11 @@ document.addEventListener("DOMContentLoaded", () => {
       hideSuggestions();
       hideLocationSuggestions();
       if (searchInput) state.keyword = searchInput.value.trim();
-      if (locationSearch) state.locationQuery = locationSearch.value.trim();
+      if (locationSearch) {
+        const locVal = locationSearch.value.trim();
+        state.locationQuery = locVal;
+        resolveAndSyncLocation(locVal);
+      }
       state.page = 1;
       render();
     });

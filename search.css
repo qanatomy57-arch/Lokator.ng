@@ -52,54 +52,53 @@
   padding: 8px 12px;
 }
 
+/* Autocomplete Suggestion Dropdowns (Phase 10.17 Unified) */
 .search-suggest-wrap {
-  position: relative;
+  position: relative !important;
 }
 
 .search-suggestions-dropdown {
+  position: absolute !important;
+  top: calc(100% + 8px) !important;
+  left: 0 !important;
+  right: 0 !important;
+  min-width: 320px !important;
+  background: #0B1120 !important;
+  border: 1px solid rgba(82, 229, 140, 0.4) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.08) !important;
+  z-index: 99999 !important;
+  max-height: 320px !important;
+  overflow-y: auto !important;
+  padding: 6px 0 !important;
   display: none;
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 0;
-  right: 0;
-  min-width: 280px;
-  background: #FFFFFF;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.16);
-  z-index: 1000;
-  overflow: hidden;
-  padding: 6px 0;
-  max-height: 280px;
-  overflow-y: auto;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
 }
 
 .suggestion-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 14px;
-  font-size: 13.5px;
-  font-weight: 500;
-  color: var(--fg);
-  cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 10px !important;
+  padding: 10px 14px !important;
+  font-size: 13.5px !important;
+  color: #F8FAFC !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
 }
 
-.suggestion-item:hover,
-.suggestion-item.highlighted {
-  background: var(--green-pale);
-  color: var(--green);
-  font-weight: 700;
+.suggestion-item:last-child {
+  border-bottom: none !important;
+}
+
+.suggestion-item:hover, .suggestion-item.is-focused {
+  background: rgba(0, 107, 63, 0.35) !important;
+  color: #52E58C !important;
 }
 
 .suggestion-item .sugg-icon {
-  color: var(--gold);
-  font-size: 14px;
-  flex-shrink: 0;
-}
-
-.suggestion-item .sugg-match {
   color: var(--green);
   font-weight: 800;
 }
