@@ -9108,6 +9108,99 @@
     }
   };
 
+  // ============================================================================
+  // PHASE 10.15: OFFLINE-FIRST PWA & LOW-BANDWIDTH ENGINE
+  // ============================================================================
+  const SAVED_PROVIDERS_STORE_KEY = 'lokator_saved_providers';
+  const DATA_SAVER_PREF_KEY = 'lokator_data_saver_pref';
+
+  const offlineManager = {
+    getSavedProviders() {
+      return getLocalStore(SAVED_PROVIDERS_STORE_KEY, []);
+    },
+
+    isProviderSaved(providerId) {
+      if (!providerId) return false;
+      const saved = this.getSavedProviders();
+      return saved.some(p => String(p.id) === String(providerId));
+    },
+
+    saveProviderBookmark(provider) {
+      if (!provider || !provider.id) return { success: false, reason: 'Invalid provider object' };
+      const saved = this.getSavedProviders();
+      const existingIdx = saved.findIndex(p => String(p.id) === String(provider.id));
+      if (existingIdx >= 0) {
+        return { success: true, alreadySaved: true, savedProviders: saved };
+      }
+
+      // Compact offline representation
+      const compact = {
+        id: provider.id,
+        name: provider.name || `${provider.first_name || ''} ${provider.last_name || ''}`.trim() || provider.business_name || 'Artisan',
+        trade_title: provider.trade_title || provider.category || 'Skilled Artisan',
+        category: provider.category || provider.slug || 'artisan',
+        state: provider.state || 'Lagos',
+        lga: provider.lga || provider.city || '',
+        phone: provider.phone || provider.whatsapp_number || '',
+        whatsapp_number: provider.whatsapp_number || provider.phone || '',
+        rating: provider.rating || 5.0,
+        is_verified: Boolean(provider.is_verified),
+        saved_at: new Date().toISOString()
+      };
+
+      saved.unshift(compact);
+      setLocalStore(SAVED_PROVIDERS_STORE_KEY, saved);
+
+      if (typeof LokatorTelemetry !== 'undefined' && LokatorTelemetry.trackEvent) {
+        LokatorTelemetry.trackEvent('provider_saved_offline', {
+          provider_id: String(provider.id),
+          category: compact.category,
+          lga: compact.lga
+        });
+      }
+
+      return { success: true, alreadySaved: false, savedProviders: saved };
+    },
+
+    removeProviderBookmark(providerId) {
+      if (!providerId) return { success: false };
+      const saved = this.getSavedProviders();
+      const filtered = saved.filter(p => String(p.id) !== String(providerId));
+      setLocalStore(SAVED_PROVIDERS_STORE_KEY, filtered);
+
+      if (typeof LokatorTelemetry !== 'undefined' && LokatorTelemetry.trackEvent) {
+        LokatorTelemetry.trackEvent('provider_unsaved_offline', {
+          provider_id: String(providerId)
+        });
+      }
+
+      return { success: true, savedProviders: filtered };
+    },
+
+    isDataSaverActive() {
+      const manualPref = getLocalStore(DATA_SAVER_PREF_KEY, null);
+      if (manualPref !== null) return Boolean(manualPref);
+
+      if (typeof navigator !== 'undefined' && navigator.connection && navigator.connection.saveData) {
+        return true;
+      }
+      return false;
+    },
+
+    setDataSaver(enabled) {
+      setLocalStore(DATA_SAVER_PREF_KEY, Boolean(enabled));
+      if (typeof document !== 'undefined' && document.body) {
+        if (enabled) {
+          document.body.classList.add('data-saver-mode');
+        } else {
+          document.body.classList.remove('data-saver-mode');
+        }
+      }
+      return { success: true, dataSaver: Boolean(enabled) };
+    }
+  };
+
+  LokatorDB.offline = offlineManager;
   LokatorDB.liquidityEngine = liquidityEngine;
   LokatorDB.referrals = referralsManager;
   LokatorDB.ai = aiProviderAssistanceManager;

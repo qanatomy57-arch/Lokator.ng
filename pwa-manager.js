@@ -250,6 +250,25 @@
           <button id="pwa-ios-done-btn" class="pwa-ios-done-btn" type="button">Got It</button>
         </div>
 
+        <!-- Offline Status Banner -->
+        <div id="offline-status-banner">⚠️ You are currently offline. Displaying cached directory data with direct phone calling enabled.</div>
+
+        <!-- Saved Artisans Offline Modal -->
+        <div id="saved-artisans-modal" class="modal-overlay" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 999999; align-items: center; justify-content: center; padding: 16px;">
+          <div style="background: #0F172A; border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; width: 100%; max-width: 480px; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.6);">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 1.3rem;">❤️</span>
+                <h3 style="margin: 0; font-size: 1.1rem; color: #F1F5F9;">My Saved Artisans (Offline Ready)</h3>
+              </div>
+              <button type="button" id="btn-close-saved-modal" style="background: none; border: none; color: #94A3B8; font-size: 1.2rem; cursor: pointer;">✕</button>
+            </div>
+            <div id="saved-artisans-list" style="padding: 16px 20px; overflow-y: auto; flex: 1;">
+              <!-- Hydrated dynamically -->
+            </div>
+          </div>
+        </div>
+
         <!-- Service Worker Floating Update Toast -->
         <div id="sw-update-toast" class="sw-update-toast" role="alert" aria-live="assertive" aria-hidden="true">
           <div class="sw-update-icon">⚡</div>
@@ -341,12 +360,100 @@
         }
       });
 
-      // 4. Escape Key accessibility
+      // 4. Offline / Online network event listeners (Phase 10.15)
+      const updateOnlineStatus = () => {
+        if (typeof navigator !== 'undefined' && typeof navigator.onLine === 'boolean') {
+          if (navigator.onLine) {
+            document.body.classList.remove('is-offline');
+          } else {
+            document.body.classList.add('is-offline');
+          }
+        }
+      };
+      window.addEventListener('online', updateOnlineStatus);
+      window.addEventListener('offline', updateOnlineStatus);
+      updateOnlineStatus();
+
+      // Data Saver sync
+      if (typeof LokatorDB !== 'undefined' && LokatorDB.offline && LokatorDB.offline.isDataSaverActive()) {
+        document.body.classList.add('data-saver-mode');
+      }
+
+      // 5. Saved Artisans Modal buttons
+      document.addEventListener('click', (e) => {
+        if (e.target.closest('#btn-close-saved-modal') || e.target.closest('#btn-dismiss-saved-modal')) {
+          this.closeSavedArtisansModal();
+        }
+        if (e.target.closest('.btn-open-saved-artisans') || e.target.closest('#nav-saved-artisans-btn')) {
+          this.openSavedArtisansModal();
+        }
+      });
+
+      // 6. Escape Key accessibility
       document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
           this.hideSheets();
+          this.closeSavedArtisansModal();
         }
       });
+    },
+
+    /**
+     * Open and hydrate Saved Artisans Offline Modal (Phase 10.15)
+     */
+    openSavedArtisansModal() {
+      const modal = document.getElementById('saved-artisans-modal');
+      const listContainer = document.getElementById('saved-artisans-list');
+      if (!modal || !listContainer) return;
+
+      modal.style.display = 'flex';
+      this.renderSavedArtisansList();
+
+      if (typeof LokatorTelemetry !== 'undefined') {
+        LokatorTelemetry.trackEvent('saved_artisans_modal_opened', {});
+      }
+    },
+
+    closeSavedArtisansModal() {
+      const modal = document.getElementById('saved-artisans-modal');
+      if (modal) modal.style.display = 'none';
+    },
+
+    renderSavedArtisansList() {
+      const listContainer = document.getElementById('saved-artisans-list');
+      if (!listContainer) return;
+
+      const saved = (typeof LokatorDB !== 'undefined' && LokatorDB.offline) ? LokatorDB.offline.getSavedProviders() : [];
+      if (saved.length === 0) {
+        listContainer.innerHTML = `
+          <div style="text-align: center; padding: 32px 16px; color: #94A3B8;">
+            <div style="font-size: 2rem; margin-bottom: 8px;">📑</div>
+            <div style="font-size: 0.95rem; font-weight: 700; color: #F1F5F9; margin-bottom: 4px;">No saved artisans yet</div>
+            <p style="font-size: 0.8rem; margin: 0;">Tap the ❤️ icon on any artisan profile or search result to save their direct contact for offline access.</p>
+          </div>
+        `;
+        return;
+      }
+
+      listContainer.innerHTML = saved.map(p => `
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+          <div style="flex: 1; min-width: 0;">
+            <div style="font-weight: 700; font-size: 0.95rem; color: #F1F5F9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+              ${p.name}
+            </div>
+            <div style="font-size: 0.78rem; color: #38BDF8; margin-bottom: 2px;">${p.trade_title || p.category}</div>
+            <div style="font-size: 0.75rem; color: #94A3B8;">📍 ${p.lga ? p.lga + ', ' : ''}${p.state}</div>
+          </div>
+          <div style="display: flex; gap: 6px; align-items: center;">
+            <a href="tel:${p.phone}" class="btn btn-primary" style="padding: 6px 12px; font-size: 0.8rem; text-decoration: none; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+              📞 Call
+            </a>
+            <button type="button" class="btn btn-outline" onclick="LokatorDB.offline.removeProviderBookmark('${p.id}'); LokatorPWA.renderSavedArtisansList();" style="padding: 6px 8px; font-size: 0.8rem; border-color: rgba(255,255,255,0.2); color: #EF4444;" title="Remove bookmark">
+              🗑️
+            </button>
+          </div>
+        </div>
+      `).join('');
     },
 
     /**

@@ -677,9 +677,7 @@ document.addEventListener("DOMContentLoaded", () => {
           : (telUrl
               ? `<a href="${escapeHtml(telUrl)}" class="action-btn call-btn" title="WhatsApp not available — tap to call" aria-label="Call ${escapeHtml(provider.name)} (no WhatsApp)">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                  Call Only
-                </a>`
-              : '');
+        const isSaved = (typeof LokatorDB !== 'undefined' && LokatorDB.offline) ? LokatorDB.offline.isProviderSaved(provider.id) : false;
 
         return `
           <article class="provider-item-card ${provider.isVerified ? 'is-verified' : ''}" id="card-prov-${safeId}">
@@ -734,6 +732,10 @@ document.addEventListener("DOMContentLoaded", () => {
               <a href="profile.html?id=${safeId}" class="btn-view-profile" style="text-decoration: none; text-align: center;">
                 View Full Profile →
               </a>
+              <button type="button" class="btn-save-bookmark-card bookmark-icon-btn ${isSaved ? 'is-saved' : ''}" data-provider-id="${safeId}" style="margin-top: 4px; font-size: 0.78rem; color: #94A3B8; display: inline-flex; align-items: center; justify-content: center; gap: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 5px 8px; width: 100%; cursor: pointer;">
+                <span>${isSaved ? '❤️' : '🤍'}</span>
+                <span>${isSaved ? 'Saved Offline' : 'Save Contact'}</span>
+              </button>
             </div>
           </article>
         `;
@@ -1520,6 +1522,54 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
     });
+  }
+
+  // Phase 10.15: Bookmark toggle and Data Saver listener
+  document.addEventListener('click', async (e) => {
+    const btnBookmark = e.target.closest('.btn-save-bookmark-card');
+    if (btnBookmark) {
+      e.preventDefault();
+      const provId = btnBookmark.getAttribute('data-provider-id');
+      if (!provId || typeof LokatorDB === 'undefined' || !LokatorDB.offline) return;
+
+      const isSaved = LokatorDB.offline.isProviderSaved(provId);
+      if (isSaved) {
+        LokatorDB.offline.removeProviderBookmark(provId);
+        btnBookmark.classList.remove('is-saved');
+        btnBookmark.innerHTML = `<span>🤍</span><span>Save Contact</span>`;
+      } else {
+        const prov = state.allProviders.find(p => String(p.id) === String(provId));
+        if (prov) {
+          LokatorDB.offline.saveProviderBookmark(prov);
+          btnBookmark.classList.add('is-saved');
+          btnBookmark.innerHTML = `<span>❤️</span><span>Saved Offline</span>`;
+        }
+      }
+    }
+
+    const btnDataSaver = e.target.closest('#btn-toggle-data-saver');
+    if (btnDataSaver && typeof LokatorDB !== 'undefined' && LokatorDB.offline) {
+      e.preventDefault();
+      const isCurrentlyActive = LokatorDB.offline.isDataSaverActive();
+      const newActive = !isCurrentlyActive;
+      LokatorDB.offline.setDataSaver(newActive);
+      const label = document.getElementById('data-saver-label');
+      if (label) label.textContent = newActive ? 'Data Saver (ON)' : 'Data Saver';
+      btnDataSaver.style.borderColor = newActive ? '#10B981' : 'rgba(255,255,255,0.12)';
+      btnDataSaver.style.color = newActive ? '#34D399' : '#F1F5F9';
+    }
+  });
+
+  // Sync initial data saver button state
+  if (typeof LokatorDB !== 'undefined' && LokatorDB.offline) {
+    const isCurrentlyActive = LokatorDB.offline.isDataSaverActive();
+    const btnDataSaver = document.getElementById('btn-toggle-data-saver');
+    const label = document.getElementById('data-saver-label');
+    if (isCurrentlyActive && btnDataSaver) {
+      if (label) label.textContent = 'Data Saver (ON)';
+      btnDataSaver.style.borderColor = '#10B981';
+      btnDataSaver.style.color = '#34D399';
+    }
   }
 
   // Handle browser back/forward navigation

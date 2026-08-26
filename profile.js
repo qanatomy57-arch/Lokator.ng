@@ -280,6 +280,30 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  // 5b. Bookmark Save Handler (Phase 10.15)
+  const btnBookmarkHero = document.getElementById('btn-profile-bookmark');
+  const iconBookmarkHero = document.getElementById('profile-bookmark-icon');
+  if (btnBookmarkHero && typeof LokatorDB !== 'undefined' && LokatorDB.offline) {
+    const isSaved = LokatorDB.offline.isProviderSaved(provider.id);
+    if (iconBookmarkHero) iconBookmarkHero.textContent = isSaved ? '❤️' : '🤍';
+    if (isSaved) btnBookmarkHero.classList.add('is-saved');
+
+    btnBookmarkHero.addEventListener('click', () => {
+      const nowSaved = LokatorDB.offline.isProviderSaved(provider.id);
+      if (nowSaved) {
+        LokatorDB.offline.removeProviderBookmark(provider.id);
+        if (iconBookmarkHero) iconBookmarkHero.textContent = '🤍';
+        btnBookmarkHero.classList.remove('is-saved');
+        alert('Removed from your saved offline contacts.');
+      } else {
+        LokatorDB.offline.saveProviderBookmark(provider);
+        if (iconBookmarkHero) iconBookmarkHero.textContent = '❤️';
+        btnBookmarkHero.classList.add('is-saved');
+        alert('Saved! You can access this artisan contact anytime, even when offline.');
+      }
+    });
+  }
+
   // 6. Bio and Skills
   const bioFullText = document.getElementById('bio-full-text');
   if (bioFullText) bioFullText.textContent = provider.bio;
