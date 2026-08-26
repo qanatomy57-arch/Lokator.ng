@@ -2550,6 +2550,49 @@ document.addEventListener('DOMContentLoaded', async () => {
                   if (edoBadge) edoBadge.textContent = e.status;
                 }
               }
+
+              // 10. Phase 10.14: Cluster Liquidity & Dispatch Observability
+              if (typeof LokatorDB !== 'undefined') {
+                const totalDispatchesEl = document.getElementById('kpi-qm-total-dispatches');
+                const totalRefCompletedEl = document.getElementById('kpi-ref-total-completed');
+                const commBuildersEl = document.getElementById('kpi-ref-community-builders');
+                const qmDispatchesTbody = document.getElementById('qm-dispatches-tbody');
+
+                const allRequests = LokatorDB.liquidityEngine ? LokatorDB.liquidityEngine.getAllOpportunities() : [];
+                const allReferrals = LokatorDB.referrals ? LokatorDB.referrals.getAllReferrals() : [];
+                const allProviders = (typeof LokatorDB.getProvidersSync === 'function' ? LokatorDB.getProvidersSync() : []) || [];
+                const communityBuildersCount = allProviders.filter(p => p.is_community_builder).length;
+
+                if (totalDispatchesEl) totalDispatchesEl.textContent = allRequests.length;
+                if (totalRefCompletedEl) totalRefCompletedEl.textContent = allReferrals.length;
+                if (commBuildersEl) commBuildersEl.textContent = communityBuildersCount;
+
+                if (qmDispatchesTbody) {
+                  if (allRequests.length === 0) {
+                    qmDispatchesTbody.innerHTML = `<tr><td colspan="7" style="padding: 16px; text-align: center; color: #64748B;">No recent Quick Match requests recorded.</td></tr>`;
+                  } else {
+                    qmDispatchesTbody.innerHTML = allRequests.slice(0, 10).map(req => {
+                      const urgencyMap = {
+                        'emergency_today': '🚨 Emergency',
+                        'within_24h': '⏰ Within 24h',
+                        'this_week': '📅 This Week',
+                        'flexible': '💬 Flexible'
+                      };
+                      return `
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                          <td style="padding: 8px; font-family: monospace; color: #CBD5E1;">${req.request_id}</td>
+                          <td style="padding: 8px; font-weight: 700; color: #38BDF8;">${req.category.toUpperCase()}</td>
+                          <td style="padding: 8px; color: #CBD5E1;">${req.state}</td>
+                          <td style="padding: 8px; color: #CBD5E1;">${req.neighborhood ? req.neighborhood + ', ' : ''}${req.lga}</td>
+                          <td style="padding: 8px; color: #F59E0B;">${urgencyMap[req.urgency] || req.urgency}</td>
+                          <td style="padding: 8px; color: #34D399;">${req.matched_provider_ids ? req.matched_provider_ids.length + ' Artisans' : 'Broadcasted'}</td>
+                          <td style="padding: 8px;"><span class="status-tag status-good" style="font-size: 0.65rem;">DISPATCHED</span></td>
+                        </tr>
+                      `;
+                    }).join('');
+                  }
+                }
+              }
             }
           }
         } catch (err) {

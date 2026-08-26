@@ -1029,6 +1029,69 @@
         </div>
       </section>
 
+      <!-- 10.0 Cluster Liquidity & Dispatch Observability (Phase 10.14) -->
+      <section id="section-liquidity-dispatch" style="margin-bottom: 32px;">
+        <div class="section-title">
+          <span style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 1.3rem;">⚡</span>
+            Cluster Liquidity & Quick Match Dispatch Observability (Phase 10.14)
+          </span>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <span id="liquidity-health-badge" class="status-tag status-good" style="font-size: 0.75rem;">ORGANIC_ACCELERATING</span>
+            <span class="status-tag status-notice" style="font-size: 0.7rem;">ZERO_PAYMENT_DEPENDENCY</span>
+          </div>
+        </div>
+
+        <div class="grid-kpis" style="margin-bottom: 20px;">
+          <div class="kpi-card" style="border-left: 4px solid #38BDF8;">
+            <div class="kpi-label">Quick Match Dispatches</div>
+            <div class="kpi-value" id="kpi-qm-total-dispatches" style="color: #38BDF8;">--</div>
+            <div class="kpi-sub">Customer urgent jobs matched</div>
+          </div>
+          <div class="kpi-card" style="border-left: 4px solid #10B981;">
+            <div class="kpi-label">Peer Referrals Completed</div>
+            <div class="kpi-value" id="kpi-ref-total-completed" style="color: #34D399;">--</div>
+            <div class="kpi-sub">Artisan peer onboarding loop</div>
+          </div>
+          <div class="kpi-card" style="border-left: 4px solid #F59E0B;">
+            <div class="kpi-label">Community Builders</div>
+            <div class="kpi-value" id="kpi-ref-community-builders" style="color: #FBBF24;">--</div>
+            <div class="kpi-sub">Artisans with 3+ referrals</div>
+          </div>
+          <div class="kpi-card" style="border-left: 4px solid #C084FC;">
+            <div class="kpi-label">Priority Clusters Active</div>
+            <div class="kpi-value" id="kpi-clusters-active" style="color: #C084FC;">4 Hubs</div>
+            <div class="kpi-sub">Delta, Edo, Lagos, Rivers</div>
+          </div>
+        </div>
+
+        <!-- Recent Dispatched Quick Matches Table -->
+        <div class="panel-card" style="margin-bottom: 20px;">
+          <div style="font-size: 0.95rem; font-weight: 700; color: #F1F5F9; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+            <span>📋 Recent Quick Match Dispatches & Demand Routing</span>
+            <span style="font-size: 0.75rem; color: #94A3B8;">PII-Minimization Mode</span>
+          </div>
+          <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.8rem; text-align: left;">
+              <thead>
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.08); color: #94A3B8;">
+                  <th style="padding: 8px;">Request ID</th>
+                  <th style="padding: 8px;">Trade</th>
+                  <th style="padding: 8px;">State</th>
+                  <th style="padding: 8px;">LGA / Neighborhood</th>
+                  <th style="padding: 8px;">Urgency</th>
+                  <th style="padding: 8px;">Matched Artisans</th>
+                  <th style="padding: 8px;">Status</th>
+                </tr>
+              </thead>
+              <tbody id="qm-dispatches-tbody">
+                <tr><td colspan="7" style="padding: 16px; text-align: center; color: #64748B;">No recent Quick Match requests recorded.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
       <!-- 9.0 Strategic Intelligence Command Center (SIMCC) -->
       <section id="section-simcc-command-center" style="margin-bottom: 32px;">
         <div class="section-title">

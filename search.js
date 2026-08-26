@@ -707,6 +707,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
                 ${provider.isTop ? `<span class="badge-tag-top">⭐ Top Pick</span>` : ''}
                 ${(provider.is_sponsored || provider.isSponsored) ? `<span class="badge-tag-sponsored" style="background: rgba(56, 189, 248, 0.15); color: #38BDF8; border: 1px solid rgba(56, 189, 248, 0.4); font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; display: inline-flex; align-items: center; gap: 3px;">⚡ Sponsored</span>` : ''}
+                ${(provider.is_community_builder || provider.isCommunityBuilder) ? `<span class="badge-tag-community" style="background: rgba(251, 191, 36, 0.15); color: #FBBF24; border: 1px solid rgba(251, 191, 36, 0.4); font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; display: inline-flex; align-items: center; gap: 3px;">🌟 Community Builder</span>` : ''}
               </div>
 
               <div class="provider-specialty">${escapeHtml(provider.trade)}</div>
@@ -1431,6 +1432,95 @@ document.addEventListener("DOMContentLoaded", () => {
       closeFilterDrawer();
     }
   });
+
+  // ============================================================================
+  // PHASE 10.14: QUICK MATCH MODAL HANDLERS
+  // ============================================================================
+  const quickMatchModal = document.getElementById('quick-match-modal');
+  const quickMatchCloseBtn = document.getElementById('quick-match-close-btn');
+  const emptyQuickMatchBtn = document.getElementById('btn-empty-quick-match');
+  const quickMatchForm = document.getElementById('quick-match-form');
+  const qmCategoryInput = document.getElementById('qm-category');
+  const qmStateSelect = document.getElementById('qm-state');
+  const qmLgaInput = document.getElementById('qm-lga');
+  const qmNeighborhoodInput = document.getElementById('qm-neighborhood');
+  const qmUrgencySelect = document.getElementById('qm-urgency');
+  const qmDescriptionInput = document.getElementById('qm-description');
+  const qmResultBox = document.getElementById('qm-result-box');
+  const qmResultText = document.getElementById('qm-result-text');
+  const qmWhatsAppBtn = document.getElementById('qm-whatsapp-btn');
+
+  function openQuickMatch(cat = '', st = '', lga = '') {
+    if (!quickMatchModal) return;
+    if (qmCategoryInput) qmCategoryInput.value = cat || (state.category !== 'all' ? state.category : (state.keyword || ''));
+    if (qmStateSelect && st) qmStateSelect.value = st;
+    if (qmLgaInput) qmLgaInput.value = lga || (state.lga !== 'all' ? state.lga : (state.city !== 'all' ? state.city : ''));
+    if (qmResultBox) qmResultBox.style.display = 'none';
+    quickMatchModal.style.display = 'flex';
+    quickMatchModal.setAttribute('aria-hidden', 'false');
+  }
+
+  function closeQuickMatch() {
+    if (!quickMatchModal) return;
+    quickMatchModal.style.display = 'none';
+    quickMatchModal.setAttribute('aria-hidden', 'true');
+  }
+
+  if (emptyQuickMatchBtn) {
+    emptyQuickMatchBtn.addEventListener('click', () => {
+      openQuickMatch(state.keyword || (state.category !== 'all' ? state.category : ''), state.state !== 'all' ? state.state : 'Delta', state.city !== 'all' ? state.city : '');
+    });
+  }
+
+  if (quickMatchCloseBtn) {
+    quickMatchCloseBtn.addEventListener('click', closeQuickMatch);
+  }
+
+  if (quickMatchModal) {
+    quickMatchModal.addEventListener('click', (e) => {
+      if (e.target === quickMatchModal) closeQuickMatch();
+    });
+  }
+
+  if (quickMatchForm) {
+    quickMatchForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const cat = qmCategoryInput ? qmCategoryInput.value.trim() : 'artisan';
+      const st = qmStateSelect ? qmStateSelect.value.trim() : 'Delta';
+      const lga = qmLgaInput ? qmLgaInput.value.trim() : 'Warri South';
+      const neigh = qmNeighborhoodInput ? qmNeighborhoodInput.value.trim() : '';
+      const urg = qmUrgencySelect ? qmUrgencySelect.value : 'within_24h';
+      const desc = qmDescriptionInput ? qmDescriptionInput.value.trim() : '';
+
+      if (typeof LokatorDB !== 'undefined' && LokatorDB.liquidityEngine) {
+        const res = await LokatorDB.liquidityEngine.generateJobRequest({
+          category: cat,
+          state: st,
+          lga: lga,
+          neighborhood: neigh,
+          urgency: urg,
+          description: desc
+        });
+
+        if (res.success && res.primary_whatsapp_url) {
+          if (qmResultBox && qmResultText && qmWhatsAppBtn) {
+            const artisanName = res.primary_artisan ? (res.primary_artisan.first_name || res.primary_artisan.name) : 'Verified Artisan';
+            qmResultText.textContent = `Connected with ${artisanName} in ${res.location}. Tap below to send your pre-filled job brief on WhatsApp!`;
+            qmWhatsAppBtn.href = res.primary_whatsapp_url;
+            qmWhatsAppBtn.style.display = 'flex';
+            qmResultBox.style.display = 'block';
+          }
+          window.open(res.primary_whatsapp_url, '_blank');
+        } else {
+          if (qmResultBox && qmResultText && qmWhatsAppBtn) {
+            qmResultText.textContent = `Job request broadcasted to the ${lga} artisan community feed! We will notify nearby artisans as they come online.`;
+            qmWhatsAppBtn.style.display = 'none';
+            qmResultBox.style.display = 'block';
+          }
+        }
+      }
+    });
+  }
 
   // Handle browser back/forward navigation
   window.addEventListener("popstate", () => {

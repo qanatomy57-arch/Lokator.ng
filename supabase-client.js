@@ -8886,6 +8886,230 @@
     }
   };
 
+  // ============================================================================
+  // PHASE 10.14: CLUSTER LIQUIDITY ACCELERATION & NEIGHBORHOOD JOB MATCHING
+  // ============================================================================
+  const JOB_REQUESTS_STORE_KEY = 'lokator_job_requests';
+  const REFERRAL_CODES_STORE_KEY = 'lokator_artisan_referral_codes';
+  const REFERRALS_STORE_KEY = 'lokator_artisan_referrals';
+
+  const liquidityEngine = {
+    async generateJobRequest(requestData = {}) {
+      const category = String(requestData.category || 'artisan').trim().toLowerCase();
+      const state = String(requestData.state || 'Delta').trim();
+      const lga = String(requestData.lga || 'Warri South').trim();
+      const neighborhood = String(requestData.neighborhood || '').trim();
+      const urgency = String(requestData.urgency || 'within_24h').trim();
+      const description = String(requestData.description || 'General artisan service needed').trim();
+      const customerName = String(requestData.customerName || 'Customer').trim();
+
+      // Find providers matching category & location
+      const providers = getLocalStore(DB_STORE_KEY, []);
+      const matchingProviders = providers.filter(p => {
+        const pCat = String(p.category || p.trade || '').toLowerCase();
+        const pState = String(p.state || '').toLowerCase();
+        const pLga = String(p.lga || '').toLowerCase();
+        const catMatch = pCat.includes(category) || category.includes(pCat) || category === 'artisan';
+        const stateMatch = pState.toLowerCase().includes(state.toLowerCase()) || state.toLowerCase().includes(pState);
+        const lgaMatch = pLga.toLowerCase().includes(lga.toLowerCase()) || lga.toLowerCase().includes(pLga);
+        return catMatch && stateMatch && (lgaMatch || stateMatch);
+      });
+
+      // Sort matching providers by trust/relevance: verified first, then completeness/rating
+      matchingProviders.sort((a, b) => {
+        if (a.is_verified && !b.is_verified) return -1;
+        if (!a.is_verified && b.is_verified) return 1;
+        return (b.rating || 0) - (a.rating || 0);
+      });
+
+      const topArtisans = matchingProviders.slice(0, 3);
+      const primaryArtisan = topArtisans[0] || null;
+
+      let whatsappUrl = null;
+      if (primaryArtisan) {
+        const rawPhone = primaryArtisan.whatsapp_number || primaryArtisan.phone || '';
+        let cleanPhone = String(rawPhone).replace(/[^0-9]/g, '');
+        if (cleanPhone.startsWith('0') && cleanPhone.length === 11) {
+          cleanPhone = '234' + cleanPhone.substring(1);
+        } else if (!cleanPhone.startsWith('234') && cleanPhone.length === 10) {
+          cleanPhone = '234' + cleanPhone;
+        }
+
+        const urgencyMap = {
+          'emergency_today': '🚨 Emergency (Today)',
+          'within_24h': '⏰ Within 24 Hours',
+          'this_week': '📅 Sometime This Week',
+          'flexible': '💬 Flexible Discussion'
+        };
+        const urgencyText = urgencyMap[urgency] || '⏰ Within 24 Hours';
+
+        const artisanName = primaryArtisan.first_name || primaryArtisan.name || 'Artisan';
+        const tradeTitle = primaryArtisan.trade_title || primaryArtisan.category || category.toUpperCase();
+        const locDetail = neighborhood ? `${neighborhood}, ${lga}, ${state}` : `${lga}, ${state}`;
+
+        const msg = `Hello ${artisanName}! 🛠️\nI found your verified profile on Lokator.NG.\n\n📋 Job Request: ${tradeTitle}\n📍 Location: ${locDetail}\n⏰ Urgency: ${urgencyText}\n📝 Task: ${description}\n\nAre you available for a quick inspection or estimate?`;
+        whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`;
+      }
+
+      const timestamp = Date.now();
+      const requestId = `req_${timestamp}_${Math.random().toString(36).substring(2, 7)}`;
+
+      // Save anonymized job signal (PII-Minimization: zero raw customer phone stored centrally)
+      const requests = getLocalStore(JOB_REQUESTS_STORE_KEY, []);
+      const newRequest = {
+        request_id: requestId,
+        category: category,
+        state: state,
+        lga: lga,
+        neighborhood: neighborhood,
+        urgency: urgency,
+        description: description,
+        matched_provider_ids: topArtisans.map(a => a.id),
+        status: 'dispatched',
+        created_at: new Date(timestamp).toISOString()
+      };
+      requests.unshift(newRequest);
+      if (requests.length > 100) requests.length = 100;
+      setLocalStore(JOB_REQUESTS_STORE_KEY, requests);
+
+      if (typeof LokatorTelemetry !== 'undefined' && LokatorTelemetry.trackEvent) {
+        LokatorTelemetry.trackEvent('liquidity_job_request_created', {
+          request_id: requestId,
+          category: category,
+          state: state,
+          lga: lga,
+          matched_count: topArtisans.length,
+          has_whatsapp_link: !!whatsappUrl
+        });
+      }
+
+      return {
+        success: true,
+        request_id: requestId,
+        matched_providers: topArtisans,
+        primary_artisan: primaryArtisan,
+        primary_whatsapp_url: whatsappUrl,
+        location: `${neighborhood ? neighborhood + ', ' : ''}${lga}, ${state}`
+      };
+    },
+
+    getNeighborhoodOpportunities(providerId) {
+      const providers = getLocalStore(DB_STORE_KEY, []);
+      const provider = providers.find(p => p.id === Number(providerId));
+      if (!provider) return [];
+
+      const pCat = String(provider.category || provider.trade || '').toLowerCase();
+      const pState = String(provider.state || '').toLowerCase();
+      const pLga = String(provider.lga || '').toLowerCase();
+
+      const requests = getLocalStore(JOB_REQUESTS_STORE_KEY, []);
+      return requests.filter(req => {
+        const reqCat = String(req.category || '').toLowerCase();
+        const reqState = String(req.state || '').toLowerCase();
+        const reqLga = String(req.lga || '').toLowerCase();
+        const catMatch = reqCat.includes(pCat) || pCat.includes(reqCat) || reqCat === 'artisan';
+        const locMatch = (reqState.includes(pState) || pState.includes(reqState)) && (reqLga.includes(pLga) || pLga.includes(reqLga) || !pLga);
+        return catMatch && locMatch;
+      }).slice(0, 10);
+    },
+
+    getAllOpportunities() {
+      return getLocalStore(JOB_REQUESTS_STORE_KEY, []);
+    }
+  };
+
+  const referralsManager = {
+    getProviderReferralCode(providerId) {
+      const numId = Number(providerId);
+      if (!numId) return null;
+      const providers = getLocalStore(DB_STORE_KEY, []);
+      const provider = providers.find(p => p.id === numId);
+      if (!provider) return `REF-${numId}`;
+
+      const fName = String(provider.first_name || provider.name || 'ART').replace(/[^a-zA-Z]/g, '').toUpperCase().substring(0, 6);
+      const lga = String(provider.lga || 'NIG').replace(/[^a-zA-Z]/g, '').toUpperCase().substring(0, 5);
+      return `LOK-${fName}-${lga}-${numId}`;
+    },
+
+    processReferralRegistration(referralCode, newProviderId) {
+      if (!referralCode || !newProviderId) return { success: false, reason: 'Missing code or new provider ID' };
+      const cleanCode = String(referralCode).trim().toUpperCase();
+      const parts = cleanCode.split('-');
+      const referrerId = Number(parts[parts.length - 1]);
+      const newId = Number(newProviderId);
+
+      if (!referrerId || isNaN(referrerId)) return { success: false, reason: 'Invalid referral code format' };
+      if (referrerId === newId) return { success: false, reason: 'Self-referral blocked' };
+
+      const referrals = getLocalStore(REFERRALS_STORE_KEY, []);
+      const existing = referrals.find(r => r.referred_id === newId);
+      if (existing) return { success: false, reason: 'Provider already attributed' };
+
+      const newRefRecord = {
+        referral_id: `ref_${Date.now()}_${newId}`,
+        referrer_id: referrerId,
+        referred_id: newId,
+        referral_code: cleanCode,
+        status: 'registered',
+        created_at: new Date().toISOString()
+      };
+      referrals.push(newRefRecord);
+      setLocalStore(REFERRALS_STORE_KEY, referrals);
+
+      // Check if referrer qualifies for Community Builder badge (3+ referrals)
+      const referrerReferrals = referrals.filter(r => r.referrer_id === referrerId);
+      if (referrerReferrals.length >= 3) {
+        const providers = getLocalStore(DB_STORE_KEY, []);
+        const refProv = providers.find(p => p.id === referrerId);
+        if (refProv) {
+          refProv.is_community_builder = true;
+          setLocalStore(DB_STORE_KEY, providers);
+        }
+      }
+
+      if (typeof LokatorTelemetry !== 'undefined' && LokatorTelemetry.trackEvent) {
+        LokatorTelemetry.trackEvent('artisan_peer_referral_completed', {
+          referrer_id: String(referrerId),
+          referred_id: String(newId),
+          referral_code: cleanCode
+        });
+      }
+
+      return { success: true, record: newRefRecord, is_community_builder: referrerReferrals.length >= 3 };
+    },
+
+    getProviderReferralSummary(providerId) {
+      const numId = Number(providerId);
+      const refCode = this.getProviderReferralCode(numId);
+      const referrals = getLocalStore(REFERRALS_STORE_KEY, []);
+      const myReferrals = referrals.filter(r => r.referrer_id === numId);
+      const totalRefs = myReferrals.length;
+      const isCommunityBuilder = totalRefs >= 3;
+      const toNextTier = Math.max(0, 3 - totalRefs);
+
+      const baseUrl = (typeof window !== 'undefined' && window.location && window.location.origin ? window.location.origin : 'https://lokator-ng.vercel.app');
+      const inviteUrl = `${baseUrl}/register.html?ref=${refCode}`;
+      const inviteMessage = `Join me on Lokator.NG! List your artisan services for free and get direct customer calls and WhatsApp bookings in our neighborhood.\n\nRegister free here: ${inviteUrl}`;
+
+      return {
+        referral_code: refCode,
+        invite_url: inviteUrl,
+        invite_message: inviteMessage,
+        whatsapp_share_url: `https://wa.me/?text=${encodeURIComponent(inviteMessage)}`,
+        total_referrals: totalRefs,
+        is_community_builder: isCommunityBuilder,
+        referrals_to_community_builder: toNextTier,
+        referrals_list: myReferrals
+      };
+    },
+
+    getAllReferrals() {
+      return getLocalStore(REFERRALS_STORE_KEY, []);
+    }
+  };
+
+  LokatorDB.liquidityEngine = liquidityEngine;
+  LokatorDB.referrals = referralsManager;
   LokatorDB.ai = aiProviderAssistanceManager;
   LokatorDB.aiService = aiProviderAssistanceManager;
   LokatorDB.parseSearchQuery = parseSearchQuery;

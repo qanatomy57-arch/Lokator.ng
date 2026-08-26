@@ -1055,56 +1055,93 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // 11b. Phase 10.12K: Provider Referral Link Generator
+  // 11b. Phase 10.14: Artisan Peer Referral & Neighborhood Opportunities Engine
   function renderReferralTool() {
-    const linkInput = document.getElementById('dash-referral-link');
-    const copyBtn = document.getElementById('btn-copy-ref-link');
-    const waShareBtn = document.getElementById('btn-share-ref-wa');
-    const copyNotice = document.getElementById('dash-ref-copy-notice');
+    if (!currentProvider) return;
 
-    if (!linkInput || !currentProvider) return;
+    // 1. Peer Referral Summary
+    if (typeof LokatorDB !== 'undefined' && LokatorDB.referrals) {
+      const refSummary = LokatorDB.referrals.getProviderReferralSummary(currentProvider.id);
+      if (refSummary) {
+        const refCodeInput = document.getElementById('dash-referral-code-input');
+        const copyRefBtn = document.getElementById('btn-copy-referral-link');
+        const shareWaBtn = document.getElementById('btn-share-referral-whatsapp');
+        const badgeStatus = document.getElementById('community-builder-badge-status');
+        const progressBar = document.getElementById('community-progress-bar');
+        const progressText = document.getElementById('community-progress-text');
 
-    const baseOrigin = (typeof window !== 'undefined' && window.location.origin) ? window.location.origin : 'https://lokator-ng.vercel.app';
-    const params = new URLSearchParams();
-    params.set('source', 'provider_referral');
-    params.set('ref', `prov_${currentProvider.id}`);
-    if (currentProvider.state) params.set('state', currentProvider.state);
-    if (currentProvider.primary_category_slug || currentProvider.category) {
-      params.set('category', currentProvider.primary_category_slug || currentProvider.category);
-    }
+        if (refCodeInput) refCodeInput.value = refSummary.referral_code;
+        if (shareWaBtn) shareWaBtn.href = refSummary.whatsapp_share_url;
 
-    const shareUrl = `${baseOrigin}/join.html?${params.toString()}`;
-    linkInput.value = shareUrl;
-
-    if (copyBtn) {
-      copyBtn.addEventListener('click', async () => {
-        try {
-          if (navigator.clipboard && navigator.clipboard.writeText) {
-            await navigator.clipboard.writeText(shareUrl);
+        if (badgeStatus) {
+          if (refSummary.is_community_builder) {
+            badgeStatus.textContent = '🌟 COMMUNITY BUILDER ACTIVE (+5% Boost)';
+            badgeStatus.className = 'status-tag status-good';
           } else {
-            linkInput.select();
-            document.execCommand('copy');
+            badgeStatus.textContent = `${refSummary.total_referrals} / 3 Referrals`;
+            badgeStatus.className = 'status-tag status-notice';
           }
-          if (copyNotice) {
-            copyNotice.style.display = 'block';
-            setTimeout(() => { copyNotice.style.display = 'none'; }, 3500);
-          }
-          showToast('Referral link copied to clipboard!');
-          if (typeof LokatorTelemetry !== 'undefined') {
-            LokatorTelemetry.trackEvent('provider_referral_link_generated', {
-              source: 'provider_dashboard',
-              provider_id: currentProvider.id
-            });
-          }
-        } catch (err) {
-          showToast('Failed to copy link', 'error');
         }
-      });
+
+        if (progressBar) {
+          const pct = Math.min(100, Math.round((refSummary.total_referrals / 3) * 100));
+          progressBar.style.width = `${pct}%`;
+        }
+
+        if (progressText) {
+          if (refSummary.is_community_builder) {
+            progressText.textContent = '🎉 Badge unlocked! You are an official Community Builder.';
+            progressText.style.color = '#34D399';
+          } else {
+            progressText.textContent = `${refSummary.referrals_to_community_builder} more referral${refSummary.referrals_to_community_builder === 1 ? '' : 's'} needed to unlock Community Builder badge.`;
+          }
+        }
+
+        if (copyRefBtn) {
+          copyRefBtn.onclick = async () => {
+            try {
+              if (navigator.clipboard && navigator.clipboard.writeText) {
+                await navigator.clipboard.writeText(refSummary.invite_url);
+              }
+              showToast('Artisan referral link copied to clipboard!');
+            } catch (e) {
+              showToast('Referral link: ' + refSummary.invite_url);
+            }
+          };
+        }
+      }
     }
 
-    if (waShareBtn) {
-      const shareText = encodeURIComponent(`Hello! Join me on Lokator.NG to get discovered by clients searching for skilled artisans across Nigeria with direct WhatsApp & phone contact:\n${shareUrl}`);
-      waShareBtn.setAttribute('href', `https://wa.me/?text=${shareText}`);
+    // 2. Neighborhood Opportunities Feed
+    if (typeof LokatorDB !== 'undefined' && LokatorDB.liquidityEngine) {
+      const oppsTbody = document.getElementById('dash-neighborhood-opportunities-tbody');
+      if (oppsTbody) {
+        const opps = LokatorDB.liquidityEngine.getNeighborhoodOpportunities(currentProvider.id);
+        if (!opps || opps.length === 0) {
+          oppsTbody.innerHTML = `<tr><td colspan="5" style="padding: 20px; text-align: center; color: #64748B;">No open job requests in your neighborhood at the moment.</td></tr>`;
+        } else {
+          const urgencyMap = {
+            'emergency_today': '🚨 Emergency Today',
+            'within_24h': '⏰ Within 24h',
+            'this_week': '📅 This Week',
+            'flexible': '💬 Flexible'
+          };
+
+          oppsTbody.innerHTML = opps.map(op => {
+            const urg = urgencyMap[op.urgency] || op.urgency;
+            const timeAgo = op.created_at ? new Date(op.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recently';
+            return `
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                <td style="padding: 10px; font-weight: 700; color: #38BDF8;">${op.category.toUpperCase()}</td>
+                <td style="padding: 10px; color: #CBD5E1;">${op.neighborhood ? op.neighborhood + ', ' : ''}${op.lga}</td>
+                <td style="padding: 10px; color: #F59E0B; font-weight: 600;">${urg}</td>
+                <td style="padding: 10px; color: #F1F5F9; max-width: 250px;">${op.description}</td>
+                <td style="padding: 10px; color: #94A3B8; font-size: 11px;">${timeAgo}</td>
+              </tr>
+            `;
+          }).join('');
+        }
+      }
     }
   }
 

@@ -151,7 +151,7 @@ const LokatorDB = sandbox.window.LokatorDB;
 assert.ok(LokatorDB.monetization, 'LokatorDB.monetization must be defined');
 assert.strictEqual(LokatorDB.monetization.featureFlags.MONETIZATION_ARCHITECTURE_ENABLED, true, 'MONETIZATION_ARCHITECTURE_ENABLED must be true');
 assert.strictEqual(LokatorDB.monetization.featureFlags.MONETIZATION_RESEARCH_ENABLED, true, 'MONETIZATION_RESEARCH_ENABLED must be true');
-assert.strictEqual(LokatorDB.monetization.featureFlags.PAYMENT_PROCESSING_ENABLED, false, 'PAYMENT_PROCESSING_ENABLED must be strictly false');
+assert.strictEqual(LokatorDB.monetization.featureFlags.PAYMENT_LIVE_MODE, false, 'PAYMENT_LIVE_MODE must be strictly false');
 assert.strictEqual(LokatorDB.monetization.featureFlags.LIVE_BILLING_ENABLED, false, 'LIVE_BILLING_ENABLED must be strictly false');
 console.log('  ✓ Monetization feature flags configured with locked live billing');
 

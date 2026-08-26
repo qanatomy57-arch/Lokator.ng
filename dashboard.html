@@ -149,6 +149,10 @@
         <span class="nav-icon">🛡️</span>
         <span>Trust & Subscription</span>
       </button>
+      <button type="button" class="dash-nav-item" data-tab="community">
+        <span class="nav-icon">🌟</span>
+        <span>Community & Growth</span>
+      </button>
     </aside>
 
     <!-- Main Content Area -->
@@ -831,6 +835,87 @@
             </div>
           </div>
 
+        </div>
+      </div>
+
+      <!-- ===== TAB 9: COMMUNITY & GROWTH CENTER (PHASE 10.14) ===== -->
+      <div class="dash-tab-panel" id="tab-community">
+        <!-- Peer Referral Card -->
+        <div class="dash-card-section" style="margin-bottom: 24px; border-left: 4px solid #F59E0B; background: linear-gradient(180deg, rgba(245, 158, 11, 0.04) 0%, rgba(15, 23, 42, 0.6) 100%);">
+          <div class="dash-section-header">
+            <div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 1.5rem;">🌟</span>
+                <h2 style="margin: 0;">Artisan Peer Referral Center</h2>
+              </div>
+              <p>Invite fellow trusted artisans to Lokator.NG. Unlock the <strong>Community Builder</strong> badge (+5% organic visibility boost).</p>
+            </div>
+            <span class="status-tag status-notice" id="community-builder-badge-status" style="font-size: 11px; font-weight: 700;">
+              0 / 3 Referrals
+            </span>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 16px;">
+            <!-- Invite Link Box -->
+            <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 16px;">
+              <label style="font-size: 12px; color: #94A3B8; display: block; margin-bottom: 6px;">Your Unique Artisan Referral Code</label>
+              <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                <input type="text" id="dash-referral-code-input" readonly value="LOK-ARTISAN-401" style="flex: 1; font-family: monospace; font-weight: 700; background: #1E293B; border: 1px solid rgba(255,255,255,0.15); color: #F59E0B; border-radius: 6px; padding: 8px 12px; font-size: 14px;" />
+                <button type="button" class="btn btn-outline" id="btn-copy-referral-link" style="padding: 8px 14px; font-size: 12px; border-color: rgba(255,255,255,0.2);">
+                  📋 Copy Link
+                </button>
+              </div>
+              <a id="btn-share-referral-whatsapp" href="#" target="_blank" class="btn btn-primary" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; font-weight: 700; text-decoration: none; padding: 10px;">
+                💬 Share on WhatsApp with Fellow Artisans
+              </a>
+            </div>
+
+            <!-- Community Builder Status Box -->
+            <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 16px;">
+              <div style="font-size: 13px; font-weight: 700; color: #F1F5F9; margin-bottom: 8px;">
+                🌟 Community Builder Milestone
+              </div>
+              <p style="font-size: 12px; color: #94A3B8; margin-bottom: 12px; line-height: 1.4;">
+                Artisans who invite 3+ registered peers earn the official <strong>🌟 Community Builder</strong> badge on their public profile and a +5% organic search completeness boost.
+              </p>
+              <div style="background: #1E293B; border-radius: 6px; height: 10px; overflow: hidden; margin-bottom: 8px;">
+                <div id="community-progress-bar" style="background: #F59E0B; height: 100%; width: 0%; transition: width 0.3s ease;"></div>
+              </div>
+              <div id="community-progress-text" style="font-size: 11px; color: #CBD5E1; text-align: right;">
+                3 referrals needed to unlock badge
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Neighborhood Opportunities Feed -->
+        <div class="dash-card-section">
+          <div class="dash-section-header">
+            <div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 1.5rem;">📍</span>
+                <h2 style="margin: 0;">Neighborhood Job Opportunities Feed</h2>
+              </div>
+              <p>Recent customer Quick Match requests in your trade and LGA. Instant, direct, 100% commission-free.</p>
+            </div>
+          </div>
+
+          <div style="overflow-x: auto; margin-top: 12px;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: left;">
+              <thead>
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.08); color: #94A3B8;">
+                  <th style="padding: 10px;">Trade</th>
+                  <th style="padding: 10px;">Location</th>
+                  <th style="padding: 10px;">Urgency</th>
+                  <th style="padding: 10px;">Task Description</th>
+                  <th style="padding: 10px;">Posted</th>
+                </tr>
+              </thead>
+              <tbody id="dash-neighborhood-opportunities-tbody">
+                <tr><td colspan="5" style="padding: 20px; text-align: center; color: #64748B;">No open job requests in your neighborhood at the moment.</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 

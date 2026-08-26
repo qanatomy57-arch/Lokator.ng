@@ -294,6 +294,11 @@
           <div class="empty-icon">🔍</div>
           <h3 id="empty-title">No providers match your search</h3>
           <p id="empty-subtitle">Try widening your distance radius, changing your city, or selecting a different service.</p>
+          <div style="margin-top: 14px; margin-bottom: 12px;">
+            <button class="btn btn-gold" id="btn-empty-quick-match" style="display: inline-flex; align-items: center; gap: 8px; font-weight: 700; padding: 10px 20px;">
+              ⚡ Can't find an artisan? Request Quick Match
+            </button>
+          </div>
           <div id="zero-result-suggestions" class="zero-result-suggestions-wrap"></div>
           <button class="btn btn-primary" id="clear-all-empty-btn">Reset All Filters</button>
         </div>
@@ -310,6 +315,69 @@
       <div class="modal-body" id="modal-body">
         <!-- Injected via JavaScript -->
       </div>
+    </div>
+  </div>
+
+  <!-- ===== QUICK MATCH / EMERGENCY JOB REQUEST MODAL ===== -->
+  <div class="modal-overlay" id="quick-match-modal" aria-hidden="true" style="display: none;">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="quick-match-title" style="max-width: 520px; border-radius: 12px; background: #0F172A; border: 1px solid rgba(255,255,255,0.1); color: #F1F5F9; padding: 24px;">
+      <button class="modal-close" id="quick-match-close-btn" aria-label="Close modal">&times;</button>
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+        <span style="font-size: 1.6rem;">⚡</span>
+        <div>
+          <h3 id="quick-match-title" style="margin: 0; font-size: 1.15rem; color: #F8FAFC;">Instant Artisan Quick Match</h3>
+          <p style="margin: 2px 0 0 0; font-size: 0.8rem; color: #94A3B8;">Connect immediately via WhatsApp with the closest verified artisan.</p>
+        </div>
+      </div>
+      <form id="quick-match-form" style="display: flex; flex-direction: column; gap: 14px;">
+        <div>
+          <label style="font-size: 0.8rem; color: #94A3B8; display: block; margin-bottom: 4px;">Service Needed *</label>
+          <input type="text" id="qm-category" required placeholder="e.g. Electrician, Plumber, AC Repair" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15); background: #1E293B; color: #FFF; font-size: 0.9rem;" />
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div>
+            <label style="font-size: 0.8rem; color: #94A3B8; display: block; margin-bottom: 4px;">State *</label>
+            <select id="qm-state" required style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15); background: #1E293B; color: #FFF; font-size: 0.9rem;">
+              <option value="Delta">Delta State</option>
+              <option value="Edo">Edo State</option>
+              <option value="Lagos">Lagos State</option>
+              <option value="Rivers">Rivers State</option>
+              <option value="Abuja">Abuja (FCT)</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size: 0.8rem; color: #94A3B8; display: block; margin-bottom: 4px;">LGA / City *</label>
+            <input type="text" id="qm-lga" required placeholder="e.g. Warri South, Oredo, Ikeja" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15); background: #1E293B; color: #FFF; font-size: 0.9rem;" />
+          </div>
+        </div>
+        <div>
+          <label style="font-size: 0.8rem; color: #94A3B8; display: block; margin-bottom: 4px;">Neighborhood / Landmark (Optional)</label>
+          <input type="text" id="qm-neighborhood" placeholder="e.g. Effurun, GRA, Ugbowo, Allen Ave" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15); background: #1E293B; color: #FFF; font-size: 0.9rem;" />
+        </div>
+        <div>
+          <label style="font-size: 0.8rem; color: #94A3B8; display: block; margin-bottom: 4px;">Urgency *</label>
+          <select id="qm-urgency" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15); background: #1E293B; color: #FFF; font-size: 0.9rem;">
+            <option value="emergency_today">🚨 Emergency (Needed Today)</option>
+            <option value="within_24h" selected>⏰ Within 24 Hours</option>
+            <option value="this_week">📅 Sometime This Week</option>
+            <option value="flexible">💬 Flexible Discussion</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size: 0.8rem; color: #94A3B8; display: block; margin-bottom: 4px;">Job Description *</label>
+          <textarea id="qm-description" required rows="3" placeholder="Briefly describe what needs fixing..." style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15); background: #1E293B; color: #FFF; font-size: 0.85rem; resize: vertical;"></textarea>
+        </div>
+        <div id="qm-result-box" style="display: none; padding: 12px; border-radius: 6px; background: rgba(16, 185, 129, 0.1); border: 1px solid #10B981; font-size: 0.85rem;">
+          <div style="font-weight: 700; color: #34D399; margin-bottom: 4px;">Matched Nearby Artisan Found!</div>
+          <div id="qm-result-text" style="color: #CBD5E1; margin-bottom: 8px;"></div>
+          <a id="qm-whatsapp-btn" href="#" target="_blank" class="btn btn-primary" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; font-weight: 700; text-decoration: none;">
+            💬 Open Pre-filled WhatsApp Chat
+          </a>
+        </div>
+        <button type="submit" id="btn-submit-quick-match" class="btn btn-gold" style="width: 100%; padding: 12px; font-weight: 700;">
+          ⚡ Find Matched Artisan & Open WhatsApp
+        </button>
+      </form>
     </div>
   </div>
 

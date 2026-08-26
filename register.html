@@ -1768,10 +1768,18 @@
           const registered = (authRes.data && authRes.data.provider) || await LokatorDB.registerProvider(formData);
           const serviceSlug = registered.primary_category_slug || encodeURIComponent(primarySkill);
 
+          // Phase 10.14: Attribute referral if ref param present in URL
+          const urlParams = new URLSearchParams(window.location.search);
+          const refParam = urlParams.get('ref');
+          if (refParam && LokatorDB.referrals && registered && registered.id) {
+            LokatorDB.referrals.processReferralRegistration(refParam, registered.id);
+          }
+
           if (typeof LokatorTelemetry !== 'undefined') {
             LokatorTelemetry.trackEvent('provider_onboarding_succeeded', {
               trade_slug: serviceSlug,
-              has_location: Boolean(userCoords)
+              has_location: Boolean(userCoords),
+              referred_by: refParam || null
             });
           }
 
