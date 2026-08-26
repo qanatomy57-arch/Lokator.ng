@@ -523,104 +523,6 @@ if (hamburger && navLinks) {
   });
 }
 
-// ===== GPS LOCATION DETECTION =====
-const gpsBtn = document.getElementById('gps-btn');
-const locationInput = document.getElementById('location-input');
-
-if (gpsBtn && locationInput) {
-  // Pre-fill location if previously detected in this session
-  try {
-    const savedLoc = sessionStorage.getItem('lokator_temp_location_name');
-    if (savedLoc && !locationInput.value) {
-      locationInput.value = savedLoc;
-      gpsBtn.title = 'Location saved from current session';
-    }
-  } catch (e) { }
-
-  gpsBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    if (!('geolocation' in navigator)) {
-      const fallback = 'Surulere, Lagos';
-      locationInput.value = fallback;
-      try {
-        sessionStorage.setItem('lokator_temp_location_name', fallback);
-      } catch (err) { }
-      return;
-    }
-    gpsBtn.style.background = '#006B3F';
-    gpsBtn.style.color = '#fff';
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const detectedArea = 'Surulere, Lagos';
-        locationInput.value = detectedArea;
-        gpsBtn.title = 'Location detected!';
-        try {
-          sessionStorage.setItem('lokator_temp_location_name', detectedArea);
-          sessionStorage.setItem('lokator_temp_lat', String(pos.coords.latitude));
-          sessionStorage.setItem('lokator_temp_lng', String(pos.coords.longitude));
-        } catch (err) { }
-      },
-      () => {
-        locationInput.placeholder = 'GPS denied — enter your area';
-        gpsBtn.style.background = '#FEE2E2';
-        gpsBtn.style.color = '#DC2626';
-      },
-      { timeout: 8000, enableHighAccuracy: true }
-    );
-  });
-}
-
-// ===== SEARCH BUTTON ON HOMEPAGE (REDIRECTS TO SEARCH.HTML) =====
-const searchBtn = document.getElementById('search-btn');
-const serviceInput = document.getElementById('service-input');
-
-function handleSearchRedirect() {
-  const serviceText = serviceInput ? serviceInput.value.trim() : '';
-  const locationText = locationInput ? locationInput.value.trim() : '';
-
-  const params = new URLSearchParams();
-  if (serviceText) {
-    params.set('q', serviceText);
-  }
-
-  // Preserve location from input or sessionStorage
-  let locToPass = locationText;
-  if (!locToPass) {
-    try {
-      const sessionLoc = sessionStorage.getItem('lokator_temp_location_name');
-      if (sessionLoc) locToPass = sessionLoc;
-    } catch (e) { }
-  }
-
-  if (locToPass) params.set('location', locToPass);
-
-  const targetUrl = params.toString() ? `search.html?${params.toString()}` : 'search.html';
-  window.location.href = targetUrl;
-}
-
-if (searchBtn) {
-  searchBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    handleSearchRedirect();
-  });
-}
-if (serviceInput) {
-  serviceInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      handleSearchRedirect();
-    }
-  });
-}
-if (locationInput) {
-  locationInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      handleSearchRedirect();
-    }
-  });
-}
-
 // ===== SCROLL REVEAL ANIMATION (Downstream Sections) =====
 const revealObserver = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
@@ -812,6 +714,24 @@ function setupHeroSearchCard() {
   let selectedLga = '';
   let userCoords = null;
 
+  // Pre-load previously detected session location
+  try {
+    const savedLoc = sessionStorage.getItem('lokator_temp_location_name');
+    const savedLat = sessionStorage.getItem('lokator_temp_lat');
+    const savedLng = sessionStorage.getItem('lokator_temp_lng');
+    const savedState = sessionStorage.getItem('lokator_temp_state');
+    const savedLga = sessionStorage.getItem('lokator_temp_lga');
+
+    if (savedLoc && locationInput && !locationInput.value) {
+      locationInput.value = savedLoc;
+      if (savedState) selectedState = savedState;
+      if (savedLga) selectedLga = savedLga;
+      if (savedLat && savedLng) {
+        userCoords = { lat: parseFloat(savedLat), lng: parseFloat(savedLng) };
+      }
+    }
+  } catch (e) {}
+
   function executeSearch() {
     const service = (serviceInput ? serviceInput.value : '').trim();
     const loc = (locationInput ? locationInput.value : '').trim();
@@ -822,12 +742,13 @@ function setupHeroSearchCard() {
     if (selectedState) params.set('state', selectedState);
     if (selectedLga) params.set('lga', selectedLga);
     if (userCoords) {
-      params.set('lat', userCoords.lat);
-      params.set('lng', userCoords.lng);
+      params.set('lat', userCoords.lat.toString());
+      params.set('lng', userCoords.lng.toString());
+      params.set('near_me', 'true');
     }
 
     if (typeof LokatorTelemetry !== 'undefined') {
-      LokatorTelemetry.trackEvent('hero_search_submitted', { service, location: loc });
+      LokatorTelemetry.trackEvent('hero_search_submitted', { service, location: loc, state: selectedState, lga: selectedLga });
     }
 
     window.location.href = `search.html?${params.toString()}`;
@@ -866,8 +787,8 @@ function setupHeroSearchCard() {
       }
 
       serviceSuggestions.innerHTML = suggestions.map(s => `
-        <div class="suggestion-item" data-val="${s}">
-          <span>⚡ ${s}</span>
+        <div class="suggestion-item" data-val="${escapeHtml(s)}">
+          <span>⚡ ${escapeHtml(s)}</span>
         </div>
       `).join('');
       serviceSuggestions.style.display = 'block';
@@ -914,8 +835,8 @@ function setupHeroSearchCard() {
       }
 
       locationSuggestions.innerHTML = matches.map(m => `
-        <div class="suggestion-item" data-state="${m.state}" data-lga="${m.lga || ''}" data-formatted="${m.formatted}">
-          <span>📍 ${m.formatted}</span>
+        <div class="suggestion-item" data-state="${escapeHtml(m.state)}" data-lga="${escapeHtml(m.lga || '')}" data-formatted="${escapeHtml(m.formatted)}">
+          <span>📍 ${escapeHtml(m.formatted)}</span>
         </div>
       `).join('');
       locationSuggestions.style.display = 'block';
@@ -941,35 +862,71 @@ function setupHeroSearchCard() {
   }
 
   if (gpsBtn) {
-    gpsBtn.addEventListener('click', (e) => {
+    gpsBtn.addEventListener('click', async (e) => {
       e.preventDefault();
       if (!('geolocation' in navigator)) {
-        alert('Geolocation is not supported by your device.');
+        alert('Geolocation is not supported by your device browser.');
         return;
       }
 
       gpsBtn.classList.add('is-loading');
-      if (locationInput) locationInput.placeholder = 'Detecting current location...';
+      if (locationInput) {
+        locationInput.value = '';
+        locationInput.placeholder = '📍 Detecting precise location...';
+      }
 
       navigator.geolocation.getCurrentPosition(
-        (pos) => {
+        async (pos) => {
           gpsBtn.classList.remove('is-loading');
-          userCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-          if (locationInput) {
-            locationInput.value = 'Current GPS Location';
+          gpsBtn.style.background = '#006B3F';
+          gpsBtn.style.color = '#fff';
+
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          userCoords = { lat, lng };
+
+          let resolved = null;
+          if (typeof NigeriaLocations !== 'undefined' && NigeriaLocations.reverseGeocode) {
+            resolved = await NigeriaLocations.reverseGeocode(lat, lng);
+          } else if (typeof NigeriaLocations !== 'undefined' && NigeriaLocations.findNearest) {
+            resolved = NigeriaLocations.findNearest(lat, lng);
           }
+
+          const detectedName = (resolved && resolved.formatted) ? resolved.formatted : `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+          if (locationInput) {
+            locationInput.value = detectedName;
+          }
+
+          if (resolved) {
+            selectedState = resolved.state || '';
+            selectedLga = resolved.lga || '';
+          }
+
           try {
-            sessionStorage.setItem('lokator_temp_lat', pos.coords.latitude.toString());
-            sessionStorage.setItem('lokator_temp_lng', pos.coords.longitude.toString());
-            sessionStorage.setItem('lokator_temp_location_name', 'Current GPS Location');
+            sessionStorage.setItem('lokator_temp_lat', lat.toString());
+            sessionStorage.setItem('lokator_temp_lng', lng.toString());
+            sessionStorage.setItem('lokator_temp_location_name', detectedName);
+            if (resolved && resolved.state) sessionStorage.setItem('lokator_temp_state', resolved.state);
+            if (resolved && resolved.lga) sessionStorage.setItem('lokator_temp_lga', resolved.lga);
           } catch (err) {}
+
+          if (typeof LokatorTelemetry !== 'undefined' && LokatorTelemetry.trackEvent) {
+            LokatorTelemetry.trackEvent('gps_location_detected', { lat, lng, locality: detectedName });
+          }
         },
         (err) => {
           gpsBtn.classList.remove('is-loading');
-          if (locationInput) locationInput.placeholder = 'Your location or area...';
-          alert('Could not detect location. Please type your city/LGA manually.');
+          gpsBtn.style.background = 'rgba(220, 38, 38, 0.15)';
+          gpsBtn.style.color = '#EF4444';
+          if (locationInput) locationInput.placeholder = 'Your area, LGA or city (e.g. Surulere, Ikeja)...';
+          
+          let errMsg = 'Could not detect your GPS location.';
+          if (err.code === 1) errMsg = 'Location access was denied. Please allow location permissions in your browser or select your city manually.';
+          else if (err.code === 2) errMsg = 'Location unavailable. Please check your device location settings.';
+          else if (err.code === 3) errMsg = 'Location request timed out.';
+          alert(errMsg);
         },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+        { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
       );
     });
   }

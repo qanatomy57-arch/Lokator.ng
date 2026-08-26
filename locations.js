@@ -1101,15 +1101,184 @@
         locality: null,
         cleanLocation: clean
       };
+    },
+
+    /**
+     * Find nearest Nigerian locality/LGA from GPS coordinates (lat, lng)
+     */
+    findNearest(lat, lng) {
+      if (lat == null || lng == null) return null;
+      const numLat = Number(lat);
+      const numLng = Number(lng);
+      if (isNaN(numLat) || isNaN(numLng)) return null;
+
+      let nearest = null;
+      let minDistance = Infinity;
+
+      const calcDist = (lat1, lon1, lat2, lon2) => {
+        const R = 6371; // km
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                  Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      };
+
+      for (const item of NIGERIA_COORDINATES_MAP) {
+        const dist = calcDist(numLat, numLng, item.lat, item.lng);
+        if (dist < minDistance) {
+          minDistance = dist;
+          nearest = { ...item, distanceKm: Number(dist.toFixed(1)) };
+        }
+      }
+
+      return nearest;
+    },
+
+    /**
+     * High accuracy reverse geocode with fast timeout and local fallback
+     */
+    async reverseGeocode(lat, lng) {
+      const nearest = this.findNearest(lat, lng);
+      
+      // Try fast client-side reverse geocoding via OpenStreetMap if online
+      if (typeof fetch !== 'undefined' && typeof window !== 'undefined' && window.navigator && window.navigator.onLine) {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 2500);
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=14&addressdetails=1`, {
+            signal: controller.signal,
+            headers: { 'Accept': 'application/json' }
+          });
+          clearTimeout(timeoutId);
+          if (res.ok) {
+            const data = await res.json();
+            const addr = data.address || {};
+            const locality = addr.suburb || addr.neighbourhood || addr.city_district || addr.town || addr.village || addr.city || '';
+            const stateRaw = addr.state || '';
+            const cleanState = stateRaw.replace(/ State$/i, '').trim();
+
+            if (cleanState && this.getState(cleanState)) {
+              const matchedState = this.getState(cleanState);
+              const lga = addr.county || locality || (nearest ? nearest.lga : 'Main');
+              const formatted = locality ? `${locality}, ${matchedState.name}` : (nearest ? nearest.formatted : `${matchedState.name} State`);
+              return {
+                state: matchedState.name,
+                lga: lga,
+                locality: locality || (nearest ? nearest.locality : ''),
+                formatted: formatted,
+                lat: Number(lat),
+                lng: Number(lng),
+                distanceKm: 0
+              };
+            }
+          }
+        } catch (e) {
+          // Fallback seamlessly to nearest centroid
+        }
+      }
+
+      return nearest;
     }
   };
 
+  // 2. NIGERIAN CENTROIDS & COMMERCIAL HUBS COORDINATE DATASET
+  const NIGERIA_COORDINATES_MAP = [
+    // Lagos
+    { state: 'Lagos', lga: 'Ikeja', locality: 'Ikeja', lat: 6.6018, lng: 3.3515, formatted: 'Ikeja, Lagos' },
+    { state: 'Lagos', lga: 'Surulere', locality: 'Surulere', lat: 6.4969, lng: 3.3556, formatted: 'Surulere, Lagos' },
+    { state: 'Lagos', lga: 'Lagos Island', locality: 'Lagos Island', lat: 6.4549, lng: 3.3884, formatted: 'Lagos Island, Lagos' },
+    { state: 'Lagos', lga: 'Eti-Osa', locality: 'Lekki Phase 1', lat: 6.4474, lng: 3.4842, formatted: 'Lekki, Lagos' },
+    { state: 'Lagos', lga: 'Eti-Osa', locality: 'Victoria Island', lat: 6.4281, lng: 3.4219, formatted: 'Victoria Island, Lagos' },
+    { state: 'Lagos', lga: 'Mainland', locality: 'Yaba', lat: 6.5095, lng: 3.3711, formatted: 'Yaba, Lagos' },
+    { state: 'Lagos', lga: 'Alimosho', locality: 'Egbeda / Iyana Ipaja', lat: 6.6083, lng: 3.2750, formatted: 'Alimosho, Lagos' },
+    { state: 'Lagos', lga: 'Ikorodu', locality: 'Ikorodu Town', lat: 6.6194, lng: 3.5105, formatted: 'Ikorodu, Lagos' },
+    { state: 'Lagos', lga: 'Oshodi-Isolo', locality: 'Oshodi', lat: 6.5414, lng: 3.3444, formatted: 'Oshodi-Isolo, Lagos' },
+    { state: 'Lagos', lga: 'Kosofe', locality: 'Gbagada / Ojota', lat: 6.5772, lng: 3.3855, formatted: 'Kosofe, Lagos' },
+
+    // FCT Abuja
+    { state: 'FCT', lga: 'Abuja Municipal', locality: 'Central Area / AMAC', lat: 9.0765, lng: 7.3986, formatted: 'AMAC, FCT Abuja' },
+    { state: 'FCT', lga: 'Abuja Municipal', locality: 'Garki', lat: 9.0306, lng: 7.4913, formatted: 'Garki, FCT Abuja' },
+    { state: 'FCT', lga: 'Abuja Municipal', locality: 'Wuse', lat: 9.0778, lng: 7.4694, formatted: 'Wuse, FCT Abuja' },
+    { state: 'FCT', lga: 'Abuja Municipal', locality: 'Maitama', lat: 9.0882, lng: 7.4988, formatted: 'Maitama, FCT Abuja' },
+    { state: 'FCT', lga: 'Abuja Municipal', locality: 'Gwarinpa', lat: 9.1122, lng: 7.4125, formatted: 'Gwarinpa, FCT Abuja' },
+    { state: 'FCT', lga: 'Bwari', locality: 'Kubwa', lat: 9.1539, lng: 7.3328, formatted: 'Kubwa (Bwari), FCT Abuja' },
+
+    // Delta
+    { state: 'Delta', lga: 'Warri South', locality: 'Warri Urban', lat: 5.5174, lng: 5.7501, formatted: 'Warri South, Delta' },
+    { state: 'Delta', lga: 'Uvwie', locality: 'Effurun', lat: 5.5564, lng: 5.7828, formatted: 'Effurun (Uvwie), Delta' },
+    { state: 'Delta', lga: 'Oshimili South', locality: 'Asaba', lat: 6.1983, lng: 6.7291, formatted: 'Asaba, Delta' },
+    { state: 'Delta', lga: 'Sapele', locality: 'Sapele Urban', lat: 5.8942, lng: 5.6767, formatted: 'Sapele, Delta' },
+    { state: 'Delta', lga: 'Ughelli North', locality: 'Ughelli', lat: 5.5002, lng: 5.9995, formatted: 'Ughelli North, Delta' },
+
+    // Rivers
+    { state: 'Rivers', lga: 'Port Harcourt', locality: 'Old GRA / Town', lat: 4.8156, lng: 7.0498, formatted: 'Port Harcourt, Rivers' },
+    { state: 'Rivers', lga: 'Obio/Akpor', locality: 'Rumuokoro / Rumuola', lat: 4.8631, lng: 6.9942, formatted: 'Obio/Akpor, Rivers' },
+
+    // Oyo
+    { state: 'Oyo', lga: 'Ibadan North', locality: 'Bodija / Agodi', lat: 7.4215, lng: 3.9059, formatted: 'Ibadan North, Oyo' },
+    { state: 'Oyo', lga: 'Ibadan South-West', locality: 'Ring Road / Challenge', lat: 7.3592, lng: 3.8644, formatted: 'Ibadan South-West, Oyo' },
+
+    // Edo
+    { state: 'Edo', lga: 'Oredo', locality: 'Benin City GRA / Ring Road', lat: 6.3350, lng: 5.6037, formatted: 'Benin City, Edo' },
+    { state: 'Edo', lga: 'Ikpoba-Okha', locality: 'Aduwawa / Ikpoba Hill', lat: 6.3686, lng: 5.6592, formatted: 'Ikpoba-Okha, Edo' },
+
+    // Kano
+    { state: 'Kano', lga: 'Kano Municipal', locality: 'Fagge / Sabon Gari', lat: 12.0022, lng: 8.5919, formatted: 'Kano Municipal, Kano' },
+    { state: 'Kano', lga: 'Nassarawa', locality: 'Bompai / GRA', lat: 12.0125, lng: 8.5411, formatted: 'Nassarawa, Kano' },
+
+    // Kaduna
+    { state: 'Kaduna', lga: 'Kaduna North', locality: 'Barnawa / Kawo', lat: 10.5222, lng: 7.4383, formatted: 'Kaduna North, Kaduna' },
+
+    // Enugu
+    { state: 'Enugu', lga: 'Enugu North', locality: 'Independence Layout / New Haven', lat: 6.4584, lng: 7.5464, formatted: 'Enugu North, Enugu' },
+
+    // Anambra
+    { state: 'Anambra', lga: 'Awka South', locality: 'Awka Urban', lat: 6.2209, lng: 7.0673, formatted: 'Awka South, Anambra' },
+    { state: 'Anambra', lga: 'Onitsha North', locality: 'Onitsha Main', lat: 6.1498, lng: 6.7856, formatted: 'Onitsha North, Anambra' },
+
+    // Ogun
+    { state: 'Ogun', lga: 'Abeokuta South', locality: 'Ake / Ibara', lat: 7.1557, lng: 3.3458, formatted: 'Abeokuta South, Ogun' },
+    { state: 'Ogun', lga: 'Ado-Odo/Ota', locality: 'Ota Industrial', lat: 6.6906, lng: 3.2359, formatted: 'Ado-Odo/Ota, Ogun' },
+
+    // Other State Capitals & Hubs
+    { state: 'Abia', lga: 'Aba South', locality: 'Aba Urban', lat: 5.1065, lng: 7.3667, formatted: 'Aba South, Abia' },
+    { state: 'Abia', lga: 'Umuahia North', locality: 'Umuahia Urban', lat: 5.5263, lng: 7.4896, formatted: 'Umuahia North, Abia' },
+    { state: 'Adamawa', lga: 'Yola North', locality: 'Jimeta', lat: 9.2094, lng: 12.4818, formatted: 'Yola North, Adamawa' },
+    { state: 'Akwa Ibom', lga: 'Uyo', locality: 'Uyo Urban', lat: 5.0377, lng: 7.9128, formatted: 'Uyo, Akwa Ibom' },
+    { state: 'Bauchi', lga: 'Bauchi', locality: 'Bauchi Urban', lat: 10.3158, lng: 9.8442, formatted: 'Bauchi, Bauchi' },
+    { state: 'Bayelsa', lga: 'Yenagoa', locality: 'Yenagoa Urban', lat: 4.9267, lng: 6.2676, formatted: 'Yenagoa, Bayelsa' },
+    { state: 'Benue', lga: 'Makurdi', locality: 'Makurdi Urban', lat: 7.7322, lng: 8.5391, formatted: 'Makurdi, Benue' },
+    { state: 'Borno', lga: 'Maiduguri', locality: 'Maiduguri Urban', lat: 11.8311, lng: 13.1510, formatted: 'Maiduguri, Borno' },
+    { state: 'Cross River', lga: 'Calabar Municipal', locality: 'Calabar Urban', lat: 4.9757, lng: 8.3417, formatted: 'Calabar Municipal, Cross River' },
+    { state: 'Ebonyi', lga: 'Abakaliki', locality: 'Abakaliki Urban', lat: 6.3249, lng: 8.1137, formatted: 'Abakaliki, Ebonyi' },
+    { state: 'Ekiti', lga: 'Ado-Ekiti', locality: 'Ado-Ekiti Urban', lat: 7.6213, lng: 5.2214, formatted: 'Ado-Ekiti, Ekiti' },
+    { state: 'Gombe', lga: 'Gombe', locality: 'Gombe Urban', lat: 10.2897, lng: 11.1673, formatted: 'Gombe, Gombe' },
+    { state: 'Imo', lga: 'Owerri Municipal', locality: 'Owerri Urban', lat: 5.4891, lng: 7.0176, formatted: 'Owerri Municipal, Imo' },
+    { state: 'Jigawa', lga: 'Dutse', locality: 'Dutse Urban', lat: 11.7592, lng: 9.3389, formatted: 'Dutse, Jigawa' },
+    { state: 'Katsina', lga: 'Katsina', locality: 'Katsina Urban', lat: 12.9908, lng: 7.6018, formatted: 'Katsina, Katsina' },
+    { state: 'Kebbi', lga: 'Birnin Kebbi', locality: 'Birnin Kebbi Urban', lat: 12.4539, lng: 4.1975, formatted: 'Birnin Kebbi, Kebbi' },
+    { state: 'Kogi', lga: 'Lokoja', locality: 'Lokoja Urban', lat: 7.7969, lng: 6.7406, formatted: 'Lokoja, Kogi' },
+    { state: 'Kwara', lga: 'Ilorin South', locality: 'Ilorin Urban', lat: 8.4966, lng: 4.5421, formatted: 'Ilorin South, Kwara' },
+    { state: 'Nasarawa', lga: 'Lafia', locality: 'Lafia Urban', lat: 8.4932, lng: 8.5153, formatted: 'Lafia, Nasarawa' },
+    { state: 'Niger', lga: 'Chanchaga', locality: 'Minna Urban', lat: 9.5836, lng: 6.5463, formatted: 'Minna (Chanchaga), Niger' },
+    { state: 'Ondo', lga: 'Akure South', locality: 'Akure Urban', lat: 7.2571, lng: 5.2058, formatted: 'Akure South, Ondo' },
+    { state: 'Osun', lga: 'Osogbo', locality: 'Osogbo Urban', lat: 7.7827, lng: 4.5418, formatted: 'Osogbo, Osun' },
+    { state: 'Plateau', lga: 'Jos North', locality: 'Jos Urban', lat: 9.8965, lng: 8.8583, formatted: 'Jos North, Plateau' },
+    { state: 'Sokoto', lga: 'Sokoto North', locality: 'Sokoto Urban', lat: 13.0609, lng: 5.2341, formatted: 'Sokoto North, Sokoto' },
+    { state: 'Taraba', lga: 'Jalingo', locality: 'Jalingo Urban', lat: 8.8937, lng: 11.3596, formatted: 'Jalingo, Taraba' },
+    { state: 'Yobe', lga: 'Damaturu', locality: 'Damaturu Urban', lat: 11.7470, lng: 11.9608, formatted: 'Damaturu, Yobe' },
+    { state: 'Zamfara', lga: 'Gusau', locality: 'Gusau Urban', lat: 12.1628, lng: 6.6614, formatted: 'Gusau, Zamfara' }
+  ];
+
   // Export to global scope & CommonJS
   global.NIGERIA_LOCATIONS_DATA = NIGERIA_LOCATIONS_DATA;
+  global.NIGERIA_COORDINATES_MAP = NIGERIA_COORDINATES_MAP;
   global.NigeriaLocations = NigeriaLocations;
 
   if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { NIGERIA_LOCATIONS_DATA, NigeriaLocations };
+    module.exports = { NIGERIA_LOCATIONS_DATA, NIGERIA_COORDINATES_MAP, NigeriaLocations };
   }
 
 })(typeof window !== 'undefined' ? window : (typeof global !== 'undefined' ? global : this));

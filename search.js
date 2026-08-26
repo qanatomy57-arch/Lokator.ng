@@ -140,6 +140,14 @@ document.addEventListener("DOMContentLoaded", () => {
       if (citySelect) citySelect.value = cityParam;
     }
 
+    const latParam = params.get("lat");
+    const lngParam = params.get("lng");
+    const nearMeParam = params.get("near_me");
+
+    if (latParam && lngParam && !isNaN(parseFloat(latParam)) && !isNaN(parseFloat(lngParam))) {
+      state.userCoords = { lat: parseFloat(latParam), lng: parseFloat(lngParam) };
+    }
+
     if (locParam && locationSearch) {
       locationSearch.value = locParam;
       state.locationQuery = locParam.trim();
@@ -149,14 +157,19 @@ document.addEventListener("DOMContentLoaded", () => {
         const savedLoc = sessionStorage.getItem('lokator_temp_location_name');
         const savedLat = sessionStorage.getItem('lokator_temp_lat');
         const savedLng = sessionStorage.getItem('lokator_temp_lng');
-        if (savedLoc && locationSearch) {
+        if (savedLoc && locationSearch && !locationSearch.value) {
           locationSearch.value = savedLoc;
           state.locationQuery = savedLoc;
         }
-        if (savedLat && savedLng) {
+        if (!state.userCoords && savedLat && savedLng) {
           state.userCoords = { lat: parseFloat(savedLat), lng: parseFloat(savedLng) };
         }
       } catch (e) {}
+    }
+
+    if ((nearMeParam === "true" || state.userCoords) && (!sortParam || sortParam === "distance-asc")) {
+      state.sortBy = "distance-asc";
+      if (sortSelect) sortSelect.value = "distance-asc";
     }
 
     if (verifiedParam === "true" && verifiedOnlyCb) {
@@ -1477,9 +1490,89 @@ document.addEventListener("DOMContentLoaded", () => {
         sessionStorage.removeItem('lokator_temp_location_name');
         sessionStorage.removeItem('lokator_temp_lat');
         sessionStorage.removeItem('lokator_temp_lng');
+        sessionStorage.removeItem('lokator_temp_state');
+        sessionStorage.removeItem('lokator_temp_lga');
       } catch (e) {}
 
       render();
+    });
+  }
+
+  // Phase 10.18B: Real GPS Trigger on Search Directory Page
+  if (gpsTrigger) {
+    gpsTrigger.addEventListener("click", async (e) => {
+      e.preventDefault();
+      if (!("geolocation" in navigator)) {
+        alert("Geolocation is not supported by your device browser.");
+        return;
+      }
+
+      gpsTrigger.classList.add("is-loading");
+      if (locationSearch) {
+        locationSearch.value = "";
+        locationSearch.placeholder = "📍 Detecting precise location...";
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          gpsTrigger.classList.remove("is-loading");
+          gpsTrigger.classList.add("active");
+          gpsTrigger.style.background = "#006B3F";
+          gpsTrigger.style.color = "#fff";
+
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          state.userCoords = { lat, lng };
+          state.sortBy = "distance-asc";
+          if (sortSelect) sortSelect.value = "distance-asc";
+
+          let resolved = null;
+          if (typeof NigeriaLocations !== "undefined" && NigeriaLocations.reverseGeocode) {
+            resolved = await NigeriaLocations.reverseGeocode(lat, lng);
+          } else if (typeof NigeriaLocations !== "undefined" && NigeriaLocations.findNearest) {
+            resolved = NigeriaLocations.findNearest(lat, lng);
+          }
+
+          const detectedName = (resolved && resolved.formatted) ? resolved.formatted : `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+          if (locationSearch) locationSearch.value = detectedName;
+          state.locationQuery = detectedName;
+
+          if (resolved) {
+            if (resolved.state && resolved.state !== "all") {
+              state.state = resolved.state;
+              if (stateSelect) stateSelect.value = resolved.state;
+              updateLgaSelect(resolved.state, resolved.lga || "all");
+            }
+            if (resolved.lga && resolved.lga !== "all") {
+              state.lga = resolved.lga;
+            }
+          }
+
+          try {
+            sessionStorage.setItem("lokator_temp_lat", lat.toString());
+            sessionStorage.setItem("lokator_temp_lng", lng.toString());
+            sessionStorage.setItem("lokator_temp_location_name", detectedName);
+            if (resolved && resolved.state) sessionStorage.setItem("lokator_temp_state", resolved.state);
+            if (resolved && resolved.lga) sessionStorage.setItem("lokator_temp_lga", resolved.lga);
+          } catch (err) {}
+
+          state.page = 1;
+          render();
+        },
+        (err) => {
+          gpsTrigger.classList.remove("is-loading");
+          gpsTrigger.style.background = "rgba(220, 38, 38, 0.15)";
+          gpsTrigger.style.color = "#EF4444";
+          if (locationSearch) locationSearch.placeholder = "City, LGA or neighborhood...";
+          
+          let errMsg = "Could not detect your GPS location.";
+          if (err.code === 1) errMsg = "Location access was denied. Please allow location permissions in your browser or select your city manually.";
+          else if (err.code === 2) errMsg = "Location unavailable. Please check your device location settings.";
+          else if (err.code === 3) errMsg = "Location request timed out.";
+          alert(errMsg);
+        },
+        { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
+      );
     });
   }
 
