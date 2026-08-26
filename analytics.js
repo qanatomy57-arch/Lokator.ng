@@ -2338,6 +2338,51 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
               }
 
+              // Post-Payment Financial Reconciliation Table (Phase 10.13H)
+              const recTbody = document.getElementById('mon-reconciliation-tbody');
+              const recBadge = document.getElementById('mon-reconciliation-badge');
+              const liveCapEl = document.getElementById('mon-live-cap-text');
+              const killswitchEl = document.getElementById('mon-killswitch-status');
+
+              if (monSummary.pilot_metrics && monSummary.pilot_metrics.reconciliation) {
+                const rec = monSummary.pilot_metrics.reconciliation;
+                if (recBadge) {
+                  recBadge.textContent = rec.reconciliation_status === 'RECONCILED' ? '100% RECONCILED' : 'INVESTIGATION REQUIRED';
+                  recBadge.className = rec.reconciliation_status === 'RECONCILED' ? 'status-tag status-good' : 'status-tag status-bad';
+                }
+                if (liveCapEl && monSummary.pilot_metrics.live_cap) {
+                  const cap = monSummary.pilot_metrics.live_cap;
+                  liveCapEl.textContent = `${cap.current_count} / ${cap.max_cap} Active Live Pilot Purchases`;
+                }
+                if (killswitchEl && monSummary.feature_flags) {
+                  const isLocked = !monSummary.feature_flags.PAYMENT_PROCESSING_ENABLED || !monSummary.feature_flags.PROMOTED_PILOT_ENABLED;
+                  killswitchEl.textContent = isLocked ? 'LOCKDOWN ACTIVE' : 'READY (STANDBY)';
+                  killswitchEl.style.color = isLocked ? '#F87171' : '#34D399';
+                }
+                if (recTbody) {
+                  if (!rec.items || rec.items.length === 0) {
+                    recTbody.innerHTML = `<tr><td colspan="8" style="padding: 16px; text-align: center; color: #64748B;">No transactions recorded in reconciliation ledger.</td></tr>`;
+                  } else {
+                    recTbody.innerHTML = rec.items.map(it => {
+                      const isClean = it.reconciliation_status === 'RECONCILED';
+                      const tagClass = isClean ? 'status-good' : 'status-bad';
+                      return `
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                          <td style="padding: 8px; font-family: monospace; color: #CBD5E1;">${it.order_id || 'N/A'}</td>
+                          <td style="padding: 8px; font-family: monospace; color: #94A3B8; font-size: 0.75rem;">${it.reference || 'N/A'}</td>
+                          <td style="padding: 8px; color: #34D399; font-weight: 700;">₦${it.amount_naira.toLocaleString()}</td>
+                          <td style="padding: 8px; color: #CBD5E1;">${it.gateway_status}</td>
+                          <td style="padding: 8px; color: #CBD5E1;">${it.local_status}</td>
+                          <td style="padding: 8px; color: #38BDF8;">${it.promotion_status}</td>
+                          <td style="padding: 8px; color: ${isClean ? '#34D399' : '#F87171'};">${it.discrepancy_flags && it.discrepancy_flags.length > 0 ? it.discrepancy_flags.join(', ') : 'Verified 1:1'}</td>
+                          <td style="padding: 8px;"><span class="status-tag ${tagClass}" style="font-size: 0.65rem;">${it.reconciliation_status}</span></td>
+                        </tr>
+                      `;
+                    }).join('');
+                  }
+                }
+              }
+
               // 0. Finalist Evaluation Table (Phase 10.13D)
               const finTbody = document.getElementById('mon-finalist-tbody');
               if (finTbody && monSummary.first_paid_product_decision && monSummary.first_paid_product_decision.finalist_evaluation) {

@@ -745,6 +745,39 @@
           </div>
         </div>
 
+        <!-- Post-Payment Financial Reconciliation Matrix (Phase 10.13H) -->
+        <div class="panel-card" style="margin-bottom: 20px; border-left: 4px solid #38BDF8; background: linear-gradient(180deg, rgba(56, 189, 248, 0.04) 0%, rgba(15, 23, 42, 0.6) 100%);">
+          <div style="font-size: 0.95rem; font-weight: 700; color: #F1F5F9; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+            <span>⚖️ Post-Payment Financial Reconciliation & Entitlement Invariants</span>
+            <span class="status-tag status-good" style="font-size: 0.7rem;" id="mon-reconciliation-badge">100% RECONCILED</span>
+          </div>
+          <div style="overflow-x: auto; margin-bottom: 12px;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.78rem; text-align: left;">
+              <thead>
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.08); color: #94A3B8;">
+                  <th style="padding: 8px;">Order ID</th>
+                  <th style="padding: 8px;">Paystack Ref</th>
+                  <th style="padding: 8px;">Amount (₦)</th>
+                  <th style="padding: 8px;">Paystack Status</th>
+                  <th style="padding: 8px;">Local Status</th>
+                  <th style="padding: 8px;">Entitlement</th>
+                  <th style="padding: 8px;">Promotion</th>
+                  <th style="padding: 8px;">Reconciliation Status</th>
+                </tr>
+              </thead>
+              <tbody id="mon-reconciliation-tbody">
+                <tr><td colspan="8" style="padding: 16px; text-align: center; color: #64748B;">No transactions pending reconciliation.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; font-size: 0.75rem; background: rgba(0,0,0,0.25); padding: 10px; border-radius: 6px;">
+            <div><strong style="color: #38BDF8;">Live Cap Limit:</strong> <span style="color: #CBD5E1;" id="mon-live-cap-text">Max 3 Live Transactions</span></div>
+            <div><strong style="color: #38BDF8;">Payment Invariant:</strong> <span style="color: #34D399;">Zero Unpaid Entitlements</span></div>
+            <div><strong style="color: #38BDF8;">Search Invariant:</strong> <span style="color: #34D399;">Max 2 Sponsored / Cluster</span></div>
+            <div><strong style="color: #38BDF8;">Kill Switch Status:</strong> <span style="color: #34D399;" id="mon-killswitch-status">READY (STANDBY)</span></div>
+          </div>
+        </div>
+
         <!-- 0. First Paid Product Decision & Finalist Evaluation Panel -->
         <div class="panel-card" style="margin-bottom: 20px; border-left: 4px solid #38BDF8; background: linear-gradient(180deg, rgba(56, 189, 248, 0.04) 0%, rgba(15, 23, 42, 0.6) 100%);">
           <div style="font-size: 0.95rem; font-weight: 700; color: #F1F5F9; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">

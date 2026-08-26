@@ -4906,6 +4906,18 @@
         }
       }
 
+      // Check first-live controlled purchase limit (max 3) if in live mode
+      if (MONETIZATION_FEATURE_FLAGS.PAYMENT_LIVE_MODE) {
+        const liveCap = this.checkLiveTransactionCap();
+        if (liveCap.cap_reached) {
+          return {
+            status: 'error',
+            code: 'PILOT_LIVE_CAP_REACHED',
+            message: `First-live controlled purchase limit reached (${liveCap.max_cap}). Awaiting formal reconciliation review.`
+          };
+        }
+      }
+
       // Check inventory limit before order creation
       const inv = this.checkInventoryAvailability(cat, st, lga);
       if (!inv.available) {
@@ -5336,6 +5348,133 @@
       return inquiry;
     },
 
+    MAX_LIVE_PILOT_TRANSACTIONS: 3,
+
+    checkLiveTransactionCap() {
+      const orders = getLocalStore(PILOT_ORDERS_STORAGE_KEY, []);
+      const liveOrders = orders.filter(o => o.live_mode === true && (o.status === 'active' || o.paid_at));
+      return {
+        cap_reached: liveOrders.length >= this.MAX_LIVE_PILOT_TRANSACTIONS,
+        current_count: liveOrders.length,
+        max_cap: this.MAX_LIVE_PILOT_TRANSACTIONS
+      };
+    },
+
+    reconcileTransactions(gatewayTransactions = null) {
+      const orders = getLocalStore(PILOT_ORDERS_STORAGE_KEY, []);
+      const promos = getLocalStore(PILOT_PROMOTIONS_STORAGE_KEY, []);
+      const gatewayRecords = Array.isArray(gatewayTransactions) ? gatewayTransactions : [];
+
+      const reconciliationItems = [];
+      let totalGatewayAmount = 0;
+      let totalLocalAmount = 0;
+      let totalEntitlementsActive = 0;
+      let discrepanciesCount = 0;
+
+      // Map references
+      const gatewayMap = new Map();
+      gatewayRecords.forEach(gtx => {
+        if (gtx.reference) gatewayMap.set(gtx.reference, gtx);
+      });
+
+      const orderMap = new Map();
+      orders.forEach(ord => {
+        if (ord.reference) orderMap.set(ord.reference, ord);
+      });
+
+      const promoMap = new Map();
+      promos.forEach(p => {
+        if (p.reference) promoMap.set(p.reference, p);
+      });
+
+      // All unique references
+      const allReferences = new Set([...gatewayMap.keys(), ...orderMap.keys(), ...promoMap.keys()]);
+
+      allReferences.forEach(ref => {
+        const gtx = gatewayMap.get(ref) || null;
+        const ord = orderMap.get(ref) || null;
+        const promo = promoMap.get(ref) || null;
+
+        let status = 'RECONCILED';
+        const flags = [];
+
+        const gtxStatus = gtx ? gtx.status : 'NO_GATEWAY_RECORD';
+        const localStatus = ord ? ord.status : 'NO_LOCAL_ORDER';
+        const promoStatus = promo ? promo.status : 'NO_PROMOTION';
+
+        if (gtx && gtx.status === 'success') totalGatewayAmount += (gtx.amount || 0);
+        if (ord && (ord.status === 'active' || ord.status === 'paid')) totalLocalAmount += (ord.amount || 0);
+        if (promo && promo.status === 'active') totalEntitlementsActive++;
+
+        // 1. Check PAYSTACK_PAID_LOCAL_UNPAID
+        if (gtx && gtx.status === 'success' && (!ord || (ord.status !== 'active' && ord.status !== 'paid'))) {
+          status = 'INVESTIGATION_REQUIRED';
+          flags.push('PAYSTACK_PAID_LOCAL_UNPAID');
+        }
+
+        // 2. Check LOCAL_PAID_PAYSTACK_UNVERIFIED
+        if (ord && (ord.status === 'active' || ord.status === 'paid') && (!gtx || gtx.status !== 'success')) {
+          status = 'INVESTIGATION_REQUIRED';
+          flags.push('LOCAL_PAID_PAYSTACK_UNVERIFIED');
+        }
+
+        // 3. Check PAID_NO_ENTITLEMENT
+        if (ord && (ord.status === 'active' || ord.status === 'paid') && (!promo || promo.status !== 'active')) {
+          status = 'INVESTIGATION_REQUIRED';
+          flags.push('PAID_NO_ENTITLEMENT');
+        }
+
+        // 4. Check ENTITLEMENT_NO_PAYMENT (CRITICAL SECURITY INVARIANT)
+        if (promo && promo.status === 'active' && (!ord || (ord.status !== 'active' && ord.status !== 'paid'))) {
+          status = 'INVESTIGATION_REQUIRED';
+          flags.push('ENTITLEMENT_NO_PAYMENT');
+        }
+
+        // 5. Check AMOUNT_MISMATCH
+        if (gtx && ord && gtx.amount !== ord.amount) {
+          status = 'INVESTIGATION_REQUIRED';
+          flags.push('AMOUNT_MISMATCH');
+        }
+
+        // 6. Check REFUND_ENTITLEMENT_MISMATCH
+        if ((ord && (ord.status === 'refunded' || ord.status === 'reversed')) && (promo && promo.status === 'active')) {
+          status = 'INVESTIGATION_REQUIRED';
+          flags.push('REFUND_ENTITLEMENT_MISMATCH');
+        }
+
+        if (flags.length > 0) discrepanciesCount++;
+
+        reconciliationItems.push({
+          reference: ref,
+          order_id: ord ? ord.order_id : null,
+          provider_id: ord ? ord.provider_id : (promo ? promo.provider_id : null),
+          amount_kobo: ord ? ord.amount : (gtx ? gtx.amount : 0),
+          amount_naira: (ord ? ord.amount : (gtx ? gtx.amount : 0)) / 100,
+          gateway_status: gtxStatus,
+          local_status: localStatus,
+          promotion_status: promoStatus,
+          reconciliation_status: status,
+          discrepancy_flags: flags
+        });
+      });
+
+      const overallReconciliation = discrepanciesCount === 0 ? 'RECONCILED' : 'INVESTIGATION_REQUIRED';
+
+      return {
+        reconciliation_status: overallReconciliation,
+        total_items: reconciliationItems.length,
+        discrepancies_count: discrepanciesCount,
+        financial_summary: {
+          total_gateway_kobo: totalGatewayAmount,
+          total_local_kobo: totalLocalAmount,
+          total_local_naira: totalLocalAmount / 100,
+          active_entitlements: totalEntitlementsActive,
+          reconciled_clean: discrepanciesCount === 0
+        },
+        items: reconciliationItems
+      };
+    },
+
     getOperationalMetrics() {
       const orders = getLocalStore(PILOT_ORDERS_STORAGE_KEY, []);
       const promos = getLocalStore(PILOT_PROMOTIONS_STORAGE_KEY, []);
@@ -5348,6 +5487,8 @@
       const refundsCount = orders.filter(o => o.status === 'refund_pending' || o.status === 'refunded' || o.status === 'reversed').length;
       const activePromotions = promos.filter(p => p.status === 'active' && new Date(p.effective_until).getTime() > nowMs).length;
       const expiredPromotions = promos.filter(p => p.status === 'expired' || new Date(p.effective_until).getTime() <= nowMs).length;
+      const liveCap = this.checkLiveTransactionCap();
+      const reconciliation = this.reconcileTransactions();
 
       return {
         total_checkout_starts: totalCheckoutStarts,
@@ -5360,7 +5501,10 @@
         live_mode: MONETIZATION_FEATURE_FLAGS.PAYMENT_LIVE_MODE,
         killswitch_active: this.isEmergencyLockdown(),
         pilot_product: PILOT_PRODUCT_STARTER.id,
-        price_kobo: PILOT_PRODUCT_STARTER.price_kobo
+        price_kobo: PILOT_PRODUCT_STARTER.price_kobo,
+        live_cap: liveCap,
+        reconciliation_status: reconciliation.reconciliation_status,
+        reconciled_clean: reconciliation.financial_summary.reconciled_clean
       };
     }
   };
@@ -6197,8 +6341,13 @@
         pilot_amount_display: '₦2,000',
         pilot_duration_days: 14,
         max_inventory_per_cluster: 2,
-        orders: pilotOrdersList
+        orders: pilotOrdersList,
+        reconciliation: paystackPilotEngine.reconcileTransactions(),
+        live_cap: paystackPilotEngine.checkLiveTransactionCap()
       },
+      live_pilot_classification: MONETIZATION_FEATURE_FLAGS.PAYMENT_LIVE_MODE
+        ? (paystackPilotEngine.checkLiveTransactionCap().cap_reached ? 'PILOT_LIVE_CAP_REACHED' : 'LIVE_PILOT_ACTIVE_UNDER_CONTROL')
+        : 'LIVE_PILOT_NOT_ACTIVATED',
       cohort_metrics: {
         total_exposed_providers: totalExposedCount,
         distinct_interested_providers: distinctInterestedProviders.size,
