@@ -186,6 +186,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.querySelectorAll('.dash-tab-panel').forEach(panel => {
       panel.classList.toggle('active', panel.id === `tab-${tabKey}`);
     });
+    if (tabKey === 'reviews') {
+      renderDashboardReviews();
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -1382,6 +1385,99 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
+  // ============================================================================
+  // PHASE 10.18: REPUTATION & REVIEWS DESK (PROVIDER DASHBOARD)
+  // ============================================================================
+  function renderDashboardReviews() {
+    const listEl = document.getElementById('all-reviews-list');
+    if (!listEl || !currentProvider) return;
+
+    const reviews = (typeof LokatorDB !== 'undefined' && LokatorDB.reviews)
+      ? LokatorDB.reviews.getProviderReviews(currentProvider.id)
+      : (currentProvider.reviews || []);
+
+    if (reviews.length === 0) {
+      listEl.innerHTML = `
+        <div style="text-align: center; padding: 40px 20px; color: var(--dash-muted);">
+          <div style="font-size: 32px; margin-bottom: 10px;">💬</div>
+          <h3>No Customer Reviews Yet</h3>
+          <p style="font-size: 13px; max-width: 420px; margin: 6px auto 16px;">When clients hire you and leave verified ratings, they will appear here. You can respond directly to thank them or clarify project details.</p>
+          <a href="profile.html?id=${currentProvider.id}" target="_blank" class="btn btn-outline btn-sm">View Your Public Profile ↗</a>
+        </div>
+      `;
+      return;
+    }
+
+    listEl.innerHTML = reviews.map(r => {
+      const safeRevId = r.id;
+      const author = r.customer_name || r.author || 'Verified Client';
+      const safeRating = Math.max(1, Math.min(5, Number(r.rating) || 5));
+      const starsStr = '★'.repeat(safeRating) + '☆'.repeat(5 - safeRating);
+      const dateStr = r.date || (r.created_at ? new Date(r.created_at).toLocaleDateString() : 'Recent');
+      const jobType = r.job_type || r.serviceType || 'General Service';
+      const comment = r.comment || '';
+      const reply = r.provider_reply;
+
+      return `
+        <div class="dash-review-card" id="dash-rev-${safeRevId}" style="background: #111827; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 18px; margin-bottom: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+            <div>
+              <strong style="color: #fff; font-size: 14.5px;">${escapeHtml(author)}</strong>
+              <div style="font-size: 12px; color: var(--dash-muted); margin-top: 2px;">
+                <span>🛠️ ${escapeHtml(jobType)}</span> • <span>${escapeHtml(dateStr)}</span>
+              </div>
+            </div>
+            <div style="color: #FBBF24; font-size: 14px; letter-spacing: 1px;">${starsStr}</div>
+          </div>
+          <p style="color: #CBD5E1; font-size: 13.5px; line-height: 1.5; margin: 10px 0;">${escapeHtml(comment)}</p>
+          
+          <!-- Reply Display or Reply Box -->
+          ${reply ? `
+            <div style="margin-top: 14px; background: rgba(0, 107, 63, 0.12); border-left: 3px solid #006B3F; padding: 10px 14px; border-radius: 6px;">
+              <div style="display: flex; justify-content: space-between; font-size: 11.5px; color: #52E58C; font-weight: 700; margin-bottom: 4px;">
+                <span>👑 Your Official Response</span>
+                <span style="color: var(--dash-muted); font-weight: 400;">${escapeHtml(reply.date || 'Recent')}</span>
+              </div>
+              <p style="color: #E2E8F0; font-size: 13px; margin: 0;">${escapeHtml(reply.text)}</p>
+            </div>
+          ` : `
+            <div class="dash-reply-form-wrap" id="reply-wrap-${safeRevId}" style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.05);">
+              <div style="display: flex; gap: 8px;">
+                <input type="text" id="input-reply-${safeRevId}" placeholder="Write an official response (e.g. Thank you for hiring me!)..." style="flex: 1; background: #1E293B; border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 8px 12px; border-radius: 6px; font-size: 13px;" />
+                <button type="button" class="btn btn-primary btn-sm btn-post-reply" data-rev-id="${safeRevId}" style="padding: 8px 14px; font-size: 12.5px;">Reply</button>
+              </div>
+            </div>
+          `}
+        </div>
+      `;
+    }).join('');
+
+    // Attach click listeners for posting reply
+    listEl.querySelectorAll('.btn-post-reply').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const revId = btn.getAttribute('data-rev-id');
+        const input = document.getElementById(`input-reply-${revId}`);
+        if (!input || !input.value.trim()) return;
+
+        const text = input.value.trim();
+        btn.disabled = true;
+        btn.textContent = 'Posting...';
+
+        try {
+          if (typeof LokatorDB !== 'undefined' && LokatorDB.reviews) {
+            LokatorDB.reviews.replyToReview(revId, text, currentProvider.id);
+            showToast('Response posted publicly!');
+            renderDashboardReviews();
+          }
+        } catch (err) {
+          showToast('Failed to post reply: ' + err.message, 'error');
+          btn.disabled = false;
+          btn.textContent = 'Reply';
+        }
+      });
+    });
+  }
+
   // 12. Run Initial Render Pipeline
   await loadMetrics();
   populateProfileForm();
@@ -1391,4 +1487,5 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderTrustCenter();
   renderReferralTool();
   renderMonetizationResearch();
+  renderDashboardReviews();
 });

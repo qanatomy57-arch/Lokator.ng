@@ -420,12 +420,26 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // 9. Customer Reviews & 5-Star Histogram Calculation
-  function renderReviews() {
-    const reviews = provider.reviews || [];
-    const reviewsCount = reviews.length;
-    const avgRating = reviewsCount > 0 
-      ? Number((reviews.reduce((acc, r) => acc + Number(r.rating || 5), 0) / reviewsCount).toFixed(1))
-      : provider.rating;
+  let currentReviewFilter = 'all';
+
+  function renderReviews(filter = 'all') {
+    currentReviewFilter = filter;
+    
+    // Fetch live reviews from LokatorDB.reviews if available
+    const liveReviews = (typeof LokatorDB !== 'undefined' && LokatorDB.reviews)
+      ? LokatorDB.reviews.getProviderReviews(provider.id)
+      : (provider.reviews || []);
+
+    const summary = (typeof LokatorDB !== 'undefined' && LokatorDB.reviews)
+      ? LokatorDB.reviews.getReviewSummary(provider.id)
+      : {
+          averageRating: provider.rating || 5.0,
+          totalCount: liveReviews.length,
+          distribution: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 }
+        };
+
+    const reviewsCount = summary.totalCount || liveReviews.length;
+    const avgRating = summary.averageRating || provider.rating || 5.0;
 
     const scoreBig = document.getElementById('score-big-val');
     if (scoreBig) scoreBig.textContent = avgRating.toFixed(1);
@@ -438,32 +452,43 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (metricRating) metricRating.textContent = `★ ${avgRating.toFixed(1)}`;
 
     // Histogram
-    const counts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
-    reviews.forEach(r => {
-      const star = Math.min(5, Math.max(1, Math.round(r.rating)));
-      counts[star] = (counts[star] || 0) + 1;
-    });
-
+    const dist = summary.distribution || { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
     for (let s = 1; s <= 5; s++) {
-      const pct = reviewsCount > 0 ? Math.round((counts[s] / reviewsCount) * 100) : 0;
+      const cntVal = dist[s] || 0;
+      const pct = reviewsCount > 0 ? Math.round((cntVal / reviewsCount) * 100) : 0;
       const bar = document.getElementById(`histo-bar-${s}`);
       const cnt = document.getElementById(`histo-cnt-${s}`);
       if (bar) bar.style.width = `${pct}%`;
       if (cnt) cnt.textContent = `${pct}%`;
     }
 
+    // Filter reviews
+    let filteredReviews = [...liveReviews];
+    if (filter === '5star') {
+      filteredReviews = filteredReviews.filter(r => Math.round(Number(r.rating || 5)) === 5);
+    } else if (filter === '4star') {
+      filteredReviews = filteredReviews.filter(r => Math.round(Number(r.rating || 5)) === 4);
+    } else if (filter === 'with_reply') {
+      filteredReviews = filteredReviews.filter(r => Boolean(r.provider_reply));
+    }
+
     const reviewsContainer = document.getElementById('reviews-container');
     if (reviewsContainer) {
-      if (reviews.length === 0) {
-        reviewsContainer.innerHTML = `<p style="color: var(--fg-muted); padding: 12px 0;">No reviews yet. Be the first customer to leave feedback!</p>`;
+      if (filteredReviews.length === 0) {
+        reviewsContainer.innerHTML = `<p style="color: var(--fg-muted); padding: 16px 0; text-align: center;">No reviews match this filter.</p>`;
         return;
       }
 
-      reviewsContainer.innerHTML = reviews.map(r => {
+      reviewsContainer.innerHTML = filteredReviews.map(r => {
         const safeRating = Math.min(5, Math.max(1, parseInt(r.rating, 10) || 5));
         const starsStr = '★'.repeat(safeRating) + '☆'.repeat(5 - safeRating);
-        const initials = (r.author || 'User').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-        const safeRevId = parseInt(r.id, 10) || 0;
+        const author = r.customer_name || r.author || 'Verified Client';
+        const initials = author.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+        const safeRevId = r.id || Date.now();
+        const dateStr = r.date || (r.created_at ? new Date(r.created_at).toLocaleDateString() : 'Recent');
+        const jobType = r.job_type || r.serviceType || 'Verified Task';
+        const isVerifiedClient = r.is_verified_client !== false && r.isVerifiedCustomer !== false;
+        const reply = r.provider_reply;
 
         return `
           <div class="review-item-card" id="rev-${safeRevId}">
@@ -471,17 +496,37 @@ document.addEventListener('DOMContentLoaded', async () => {
               <div class="review-author-info">
                 <div class="review-author-avatar">${escapeHtml(initials)}</div>
                 <div class="review-author-name">
-                  <strong>${escapeHtml(r.author)}</strong>
-                  <span>📍 ${escapeHtml(r.location)} • ${escapeHtml(r.date)}</span>
+                  <strong>${escapeHtml(author)}</strong>
+                  <span>📍 ${escapeHtml(r.location || 'Nigeria')} • ${escapeHtml(dateStr)}</span>
                 </div>
               </div>
               <div class="review-stars">${starsStr}</div>
             </div>
-            ${r.serviceType ? `<span class="review-service-tag">✓ ${escapeHtml(r.serviceType)}</span>` : ''}
+            ${jobType ? `<span class="review-service-tag">✓ ${escapeHtml(jobType)}</span>` : ''}
+            
+            <!-- Sub-Ratings Breakdown -->
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0; font-size: 11px; color: var(--fg-muted);">
+              ${r.punctuality ? `<span style="background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 4px;">⏱️ Punctuality: ${r.punctuality}★</span>` : ''}
+              ${r.pricing ? `<span style="background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 4px;">💰 Pricing: ${r.pricing}★</span>` : ''}
+              ${r.quality ? `<span style="background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 4px;">⭐ Quality: ${r.quality}★</span>` : ''}
+            </div>
+
             <p class="review-comment-text">${escapeHtml(r.comment)}</p>
+
+            <!-- Nested Official Provider Response -->
+            ${reply ? `
+              <div style="margin-top: 12px; background: rgba(0, 107, 63, 0.12); border-left: 3px solid #006B3F; padding: 10px 14px; border-radius: 6px;">
+                <div style="display: flex; justify-content: space-between; font-size: 11.5px; color: #52E58C; font-weight: 700; margin-bottom: 3px;">
+                  <span>👑 Response from Artisan</span>
+                  <span style="color: var(--fg-muted); font-weight: 400;">${escapeHtml(reply.date || 'Recent')}</span>
+                </div>
+                <p style="color: #E2E8F0; font-size: 13px; margin: 0; line-height: 1.4;">${escapeHtml(reply.text)}</p>
+              </div>
+            ` : ''}
+
             <div class="review-item-footer">
-              <span style="display: inline-flex; align-items: center; gap: 4px; color: ${r.isVerifiedCustomer ? '#006B3F' : 'var(--fg-muted)'}; font-weight: 600; font-size: 12px;">
-                ${r.isVerifiedCustomer 
+              <span style="display: inline-flex; align-items: center; gap: 4px; color: ${isVerifiedClient ? '#006B3F' : 'var(--fg-muted)'}; font-weight: 600; font-size: 12px;">
+                ${isVerifiedClient 
                   ? '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Verified Customer' 
                   : '💬 Customer Review'}
               </span>
@@ -500,7 +545,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  renderReviews();
+  renderReviews('all');
+
+  document.querySelectorAll('.btn-review-filter').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.btn-review-filter').forEach(b => {
+        b.classList.remove('active');
+        b.style.background = 'rgba(255,255,255,0.06)';
+        b.style.color = '#94A3B8';
+        b.style.border = '1px solid rgba(255,255,255,0.1)';
+      });
+      btn.classList.add('active');
+      btn.style.background = '#006B3F';
+      btn.style.color = '#FFF';
+      btn.style.border = 'none';
+      renderReviews(btn.dataset.filter);
+    });
+  });
 
   // 10. Write a Review Modal Form
   const reviewModal = document.getElementById('review-modal');
@@ -547,57 +608,51 @@ document.addEventListener('DOMContentLoaded', async () => {
     reviewForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const author = document.getElementById('rev-author').value.trim();
-      const location = document.getElementById('rev-location').value.trim();
-      const service = document.getElementById('rev-service').value.trim();
+      const location = document.getElementById('rev-location') ? document.getElementById('rev-location').value.trim() : '';
+      const service = document.getElementById('rev-service') ? document.getElementById('rev-service').value.trim() : 'General Service';
       const comment = document.getElementById('rev-comment').value.trim();
 
       if (!author || !comment) return;
 
-      const reviewData = {
-        author,
-        location,
-        serviceType: service,
-        rating: selectedRating,
-        comment
-      };
+      try {
+        if (typeof LokatorDB !== 'undefined' && LokatorDB.reviews) {
+          LokatorDB.reviews.addReview({
+            provider_id: provider.id,
+            customer_name: author,
+            rating: selectedRating,
+            punctuality: selectedRating,
+            pricing: selectedRating,
+            quality: selectedRating,
+            comment: comment,
+            job_type: service,
+            is_verified_client: true
+          });
+        }
 
-      const res = await LokatorDB.submitReview(providerId, reviewData);
-      
-      if (res && res.status === 'REMOTE_FAILURE') {
-        alert(res.message || 'Could not submit review.');
-        return;
+        if (typeof LokatorTelemetry !== 'undefined') {
+          LokatorTelemetry.trackEvent('provider_review_submitted', {
+            rating: selectedRating,
+            provider_id: provider.id,
+            page: 'profile'
+          });
+        }
+
+        renderReviews(currentReviewFilter);
+        reviewForm.reset();
+        selectedRating = 5;
+        if (starPicker) {
+          starPicker.querySelectorAll('.star-pick-btn').forEach(b => b.classList.add('active'));
+        }
+        if (reviewModal) {
+          reviewModal.classList.remove('active');
+          reviewModal.setAttribute('aria-hidden', 'true');
+        }
+        alert('Thank you! Your verified review has been published.');
+      } catch (err) {
+        alert('Could not submit review: ' + err.message);
       }
-
-      if (typeof LokatorTelemetry !== 'undefined') {
-        LokatorTelemetry.trackEvent('provider_review_submitted', {
-          rating: selectedRating,
-          page: 'profile'
-        });
-      }
-
-      // Update local provider object
-      if (!provider.reviews) provider.reviews = [];
-      provider.reviews.unshift({
-        id: Date.now(),
-        author: reviewData.author,
-        location: reviewData.location,
-        date: 'Today',
-        rating: reviewData.rating,
-        serviceType: reviewData.serviceType,
-        comment: reviewData.comment,
-        isVerifiedCustomer: true,
-        helpfulCount: 0
-      });
-
-      renderReviews();
-
-      reviewForm.reset();
-      selectedRating = 5;
-      if (starPicker) {
-        starPicker.querySelectorAll('.star-pick-btn').forEach(b => b.classList.add('active'));
-      }
-      reviewModal.classList.remove('active');
-      reviewModal.setAttribute('aria-hidden', 'true');
+    });
+  }
     });
   }
 

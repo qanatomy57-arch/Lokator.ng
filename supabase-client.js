@@ -9519,6 +9519,191 @@
     }
   };
 
+  // ============================================================================
+  // PHASE 10.18: ARTISAN REPUTATION & VERIFIED REVIEW ENGINE
+  // ============================================================================
+  const reviewsManager = {
+    /**
+     * Fetch all approved reviews for a given provider
+     */
+    getProviderReviews(providerId) {
+      const pId = Number(providerId);
+      if (!pId) return [];
+
+      const reviews = getLocalStore(DB_REVIEWS_KEY, []);
+      return reviews
+        .filter(r => Number(r.provider_id) === pId && r.is_approved !== false)
+        .sort((a, b) => new Date(b.created_at || b.date || 0) - new Date(a.created_at || a.date || 0));
+    },
+
+    /**
+     * Get computed review summary including average, distribution & sub-ratings
+     */
+    getReviewSummary(providerId) {
+      const reviews = this.getProviderReviews(providerId);
+      const totalCount = reviews.length;
+
+      if (totalCount === 0) {
+        return {
+          averageRating: 5.0,
+          totalCount: 0,
+          distribution: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 },
+          punctualityAvg: 5.0,
+          pricingAvg: 5.0,
+          qualityAvg: 5.0
+        };
+      }
+
+      let sumRating = 0;
+      let sumPunctuality = 0;
+      let sumPricing = 0;
+      let sumQuality = 0;
+      const distribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+
+      reviews.forEach(r => {
+        const star = Math.max(1, Math.min(5, Math.round(Number(r.rating || 5))));
+        distribution[star] = (distribution[star] || 0) + 1;
+        sumRating += Number(r.rating || 5);
+        sumPunctuality += Number(r.punctuality || r.rating || 5);
+        sumPricing += Number(r.pricing || r.rating || 5);
+        sumQuality += Number(r.quality || r.rating || 5);
+      });
+
+      const averageRating = Number((sumRating / totalCount).toFixed(1));
+      const punctualityAvg = Number((sumPunctuality / totalCount).toFixed(1));
+      const pricingAvg = Number((sumPricing / totalCount).toFixed(1));
+      const qualityAvg = Number((sumQuality / totalCount).toFixed(1));
+
+      return {
+        averageRating,
+        totalCount,
+        distribution,
+        punctualityAvg,
+        pricingAvg,
+        qualityAvg
+      };
+    },
+
+    /**
+     * Submit a customer review with content moderation
+     */
+    addReview(reviewData = {}) {
+      const {
+        provider_id,
+        customer_name,
+        customer_email = '',
+        rating = 5,
+        punctuality = 5,
+        pricing = 5,
+        quality = 5,
+        comment = '',
+        job_type = 'General Service',
+        is_verified_client = true
+      } = reviewData;
+
+      const pId = Number(provider_id);
+      if (!pId) throw new Error('Provider ID is required.');
+      if (!customer_name || !customer_name.trim()) throw new Error('Customer name is required.');
+      if (!comment || !comment.trim()) throw new Error('Review comment is required.');
+
+      // Content Moderation check
+      const ModEngine = (typeof ServiceModerator !== 'undefined' ? ServiceModerator : null) ||
+                        (typeof window !== 'undefined' && window.ServiceModerator ? window.ServiceModerator : null) ||
+                        (typeof global !== 'undefined' && global.ServiceModerator ? global.ServiceModerator : null) ||
+                        (typeof globalThis !== 'undefined' && globalThis.ServiceModerator ? globalThis.ServiceModerator : null) ||
+                        (global && global.ServiceModerator ? global.ServiceModerator : null);
+
+      if (ModEngine && ModEngine.validateReview) {
+        const mod = ModEngine.validateReview(comment);
+        if (!mod.valid) {
+          throw new Error(mod.error || 'Review contains prohibited content.');
+        }
+      }
+
+      const numRating = Math.max(1, Math.min(5, Number(rating) || 5));
+      const reviewId = `rev_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+
+      const newReview = {
+        id: reviewId,
+        provider_id: pId,
+        customer_name: customer_name.trim(),
+        customer_email: customer_email.trim(),
+        rating: numRating,
+        punctuality: Math.max(1, Math.min(5, Number(punctuality) || numRating)),
+        pricing: Math.max(1, Math.min(5, Number(pricing) || numRating)),
+        quality: Math.max(1, Math.min(5, Number(quality) || numRating)),
+        comment: comment.trim(),
+        job_type: job_type.trim() || 'General Craftsmanship',
+        is_verified_client: Boolean(is_verified_client),
+        is_approved: true,
+        created_at: new Date().toISOString(),
+        date: new Date().toISOString().split('T')[0],
+        provider_reply: null
+      };
+
+      const reviews = getLocalStore(DB_REVIEWS_KEY, []);
+      reviews.unshift(newReview);
+      setLocalStore(DB_REVIEWS_KEY, reviews);
+
+      // Re-calculate provider overall rating and reviews count in providers store
+      const providers = getLocalStore(DB_STORE_KEY, []);
+      const pIndex = providers.findIndex(p => Number(p.id) === pId);
+      if (pIndex !== -1) {
+        const summary = this.getReviewSummary(pId);
+        providers[pIndex].rating = summary.averageRating;
+        providers[pIndex].reviews_count = summary.totalCount;
+        setLocalStore(DB_STORE_KEY, providers);
+      }
+
+      if (typeof LokatorTelemetry !== 'undefined' && LokatorTelemetry.trackEvent) {
+        LokatorTelemetry.trackEvent('review_submitted', {
+          provider_id: pId,
+          rating: numRating,
+          job_type: newReview.job_type
+        });
+      }
+
+      return { success: true, review: newReview };
+    },
+
+    /**
+     * Post an official artisan response to a client review
+     */
+    replyToReview(reviewId, responseText, providerId = null) {
+      if (!reviewId || !responseText || !responseText.trim()) {
+        throw new Error('Review ID and response text are required.');
+      }
+
+      const reviews = getLocalStore(DB_REVIEWS_KEY, []);
+      const review = reviews.find(r => r.id === reviewId || String(r.id) === String(reviewId));
+      if (!review) {
+        throw new Error('Review not found.');
+      }
+
+      if (providerId && Number(review.provider_id) !== Number(providerId)) {
+        throw new Error('Unauthorized to respond to this review.');
+      }
+
+      review.provider_reply = {
+        text: responseText.trim(),
+        replied_at: new Date().toISOString(),
+        date: new Date().toISOString().split('T')[0]
+      };
+
+      setLocalStore(DB_REVIEWS_KEY, reviews);
+
+      if (typeof LokatorTelemetry !== 'undefined' && LokatorTelemetry.trackEvent) {
+        LokatorTelemetry.trackEvent('review_reply_posted', {
+          review_id: reviewId,
+          provider_id: review.provider_id
+        });
+      }
+
+      return { success: true, review };
+    }
+  };
+
+  LokatorDB.reviews = reviewsManager;
   LokatorDB.searchHistory = searchHistoryManager;
   LokatorDB.compliance = complianceManager;
   LokatorDB.offline = offlineManager;

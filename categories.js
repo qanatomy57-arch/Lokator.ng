@@ -673,6 +673,37 @@
     },
 
     /**
+     * Validates a customer review or feedback comment.
+     * Rejects profanity, abusive terms, extortion or prohibited content.
+     */
+    validateReview(reviewText) {
+      if (!reviewText || typeof reviewText !== 'string') {
+        return { valid: false, error: 'Review text cannot be empty.' };
+      }
+      const clean = reviewText.replace(/\s+/g, ' ').trim();
+      if (clean.length < 3) {
+        return { valid: false, error: 'Review must be at least 3 characters.' };
+      }
+      if (clean.length > 2000) {
+        return { valid: false, error: 'Review must be under 2000 characters.' };
+      }
+
+      const lower = clean.toLowerCase();
+      for (const word of BLOCKED_KEYWORDS) {
+        const regex = new RegExp('(^|[^a-zA-Z0-9])' + word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '($|[^a-zA-Z0-9])', 'i');
+        if (regex.test(lower)) {
+          return {
+            valid: false,
+            error: `Disallowed keyword detected ("${word}"). Reviews must adhere to community safety guidelines.`,
+            blockedWord: word
+          };
+        }
+      }
+
+      return { valid: true, cleanText: clean };
+    },
+
+    /**
      * Returns popular curated suggestion tags for UI chips.
      */
     getPopularSuggestions() {
