@@ -741,10 +741,12 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
     loadDynamicTopProviders();
     setupFunnelTelemetryListeners();
+    setupHeroSearchCard();
   });
 } else {
   loadDynamicTopProviders();
   setupFunnelTelemetryListeners();
+  setupHeroSearchCard();
 }
 
 function setupFunnelTelemetryListeners() {
@@ -794,5 +796,181 @@ function setupFunnelTelemetryListeners() {
     testiTrack.addEventListener('touchcancel', resumeTrack, { passive: true });
     testiTrack.addEventListener('pointerup', resumeTrack, { passive: true });
     testiTrack.addEventListener('pointercancel', resumeTrack, { passive: true });
+  }
+}
+
+// ===== PHASE 10.17: HERO SEARCH CARD & AUTOCOMPLETE ENGINE =====
+function setupHeroSearchCard() {
+  const serviceInput = document.getElementById('service-input');
+  const locationInput = document.getElementById('location-input');
+  const searchBtn = document.getElementById('search-btn');
+  const gpsBtn = document.getElementById('gps-btn');
+  const serviceSuggestions = document.getElementById('hero-service-suggestions');
+  const locationSuggestions = document.getElementById('hero-location-suggestions');
+
+  let selectedState = '';
+  let selectedLga = '';
+  let userCoords = null;
+
+  function executeSearch() {
+    const service = (serviceInput ? serviceInput.value : '').trim();
+    const loc = (locationInput ? locationInput.value : '').trim();
+
+    const params = new URLSearchParams();
+    if (service) params.set('service', service);
+    if (loc) params.set('location', loc);
+    if (selectedState) params.set('state', selectedState);
+    if (selectedLga) params.set('lga', selectedLga);
+    if (userCoords) {
+      params.set('lat', userCoords.lat);
+      params.set('lng', userCoords.lng);
+    }
+
+    if (typeof LokatorTelemetry !== 'undefined') {
+      LokatorTelemetry.trackEvent('hero_search_submitted', { service, location: loc });
+    }
+
+    window.location.href = `search.html?${params.toString()}`;
+  }
+
+  if (searchBtn) {
+    searchBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      executeSearch();
+    });
+  }
+
+  if (serviceInput) {
+    serviceInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        executeSearch();
+      }
+    });
+
+    serviceInput.addEventListener('input', (e) => {
+      const q = e.target.value.trim();
+      if (!serviceSuggestions) return;
+      if (!q) {
+        serviceSuggestions.style.display = 'none';
+        return;
+      }
+
+      const suggestions = (typeof LokatorDB !== 'undefined' && LokatorDB.getSkillSuggestions)
+        ? LokatorDB.getSkillSuggestions(q, 5)
+        : ['Electrician', 'Plumber', 'Solar Installer', 'Nail Tech', 'Carpenter', 'Mechanic'].filter(s => s.toLowerCase().includes(q.toLowerCase()));
+
+      if (suggestions.length === 0) {
+        serviceSuggestions.style.display = 'none';
+        return;
+      }
+
+      serviceSuggestions.innerHTML = suggestions.map(s => `
+        <div class="suggestion-item" data-val="${s}">
+          <span>⚡ ${s}</span>
+        </div>
+      `).join('');
+      serviceSuggestions.style.display = 'block';
+    });
+
+    serviceInput.addEventListener('blur', () => {
+      setTimeout(() => {
+        if (serviceSuggestions) serviceSuggestions.style.display = 'none';
+      }, 200);
+    });
+  }
+
+  if (serviceSuggestions) {
+    serviceSuggestions.addEventListener('click', (e) => {
+      const item = e.target.closest('.suggestion-item');
+      if (item && item.dataset.val) {
+        if (serviceInput) serviceInput.value = item.dataset.val;
+        serviceSuggestions.style.display = 'none';
+        if (locationInput) locationInput.focus();
+      }
+    });
+  }
+
+  if (locationInput) {
+    locationInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        executeSearch();
+      }
+    });
+
+    locationInput.addEventListener('input', (e) => {
+      const q = e.target.value.trim();
+      if (!locationSuggestions || typeof NigeriaLocations === 'undefined') return;
+      if (!q) {
+        locationSuggestions.style.display = 'none';
+        return;
+      }
+
+      const matches = NigeriaLocations.searchLocations(q, 5);
+      if (matches.length === 0) {
+        locationSuggestions.style.display = 'none';
+        return;
+      }
+
+      locationSuggestions.innerHTML = matches.map(m => `
+        <div class="suggestion-item" data-state="${m.state}" data-lga="${m.lga || ''}" data-formatted="${m.formatted}">
+          <span>📍 ${m.formatted}</span>
+        </div>
+      `).join('');
+      locationSuggestions.style.display = 'block';
+    });
+
+    locationInput.addEventListener('blur', () => {
+      setTimeout(() => {
+        if (locationSuggestions) locationSuggestions.style.display = 'none';
+      }, 200);
+    });
+  }
+
+  if (locationSuggestions) {
+    locationSuggestions.addEventListener('click', (e) => {
+      const item = e.target.closest('.suggestion-item');
+      if (item && item.dataset.formatted) {
+        if (locationInput) locationInput.value = item.dataset.formatted;
+        selectedState = item.dataset.state || '';
+        selectedLga = item.dataset.lga || '';
+        locationSuggestions.style.display = 'none';
+      }
+    });
+  }
+
+  if (gpsBtn) {
+    gpsBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (!('geolocation' in navigator)) {
+        alert('Geolocation is not supported by your device.');
+        return;
+      }
+
+      gpsBtn.classList.add('is-loading');
+      if (locationInput) locationInput.placeholder = 'Detecting current location...';
+
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          gpsBtn.classList.remove('is-loading');
+          userCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          if (locationInput) {
+            locationInput.value = 'Current GPS Location';
+          }
+          try {
+            sessionStorage.setItem('lokator_temp_lat', pos.coords.latitude.toString());
+            sessionStorage.setItem('lokator_temp_lng', pos.coords.longitude.toString());
+            sessionStorage.setItem('lokator_temp_location_name', 'Current GPS Location');
+          } catch (err) {}
+        },
+        (err) => {
+          gpsBtn.classList.remove('is-loading');
+          if (locationInput) locationInput.placeholder = 'Your location or area...';
+          alert('Could not detect location. Please type your city/LGA manually.');
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+      );
+    });
   }
 }

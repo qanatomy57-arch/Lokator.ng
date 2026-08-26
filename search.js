@@ -621,6 +621,8 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         }
         if (paginationControls) paginationControls.innerHTML = "";
+        updateSearchMap([]);
+        renderRecentSearches();
         return;
       }
 
@@ -743,6 +745,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Render Pagination if more than pageSize
       renderPagination(state.totalCount);
+
+      // Phase 10.17: Update Geospatial Map Markers & Bounds
+      updateSearchMap(providers);
+
+      // Phase 10.17: Record search in History if terms provided
+      if (typeof LokatorDB !== 'undefined' && LokatorDB.searchHistory) {
+        if (state.keyword || state.locationQuery || (state.state && state.state !== 'all') || (state.lga && state.lga !== 'all')) {
+          LokatorDB.searchHistory.addSearch({
+            keyword: state.keyword,
+            location: state.locationQuery,
+            state: state.state !== 'all' ? state.state : '',
+            lga: state.lga !== 'all' ? state.lga : ''
+          });
+        }
+        renderRecentSearches();
+      }
 
     } catch (err) {
       console.error('Error fetching providers from Supabase:', err);
@@ -916,6 +934,239 @@ document.addEventListener("DOMContentLoaded", () => {
         locationSuggestions.style.display = "none";
         state.page = 1;
         render();
+      }
+    });
+  }
+
+  // ============================================================================
+  // PHASE 10.17: GEOSPATIAL MAP & VIEW MODES LIFECYCLE
+  // ============================================================================
+  let leafletMap = null;
+  let mapMarkersLayer = null;
+  let currentViewMode = 'list';
+
+  const searchMapContainer = document.getElementById('search-map-container');
+  const searchMapEl = document.getElementById('search-map');
+  const mapCounterText = document.getElementById('map-counter-text');
+  const viewModeBtns = document.querySelectorAll('.btn-view-mode');
+  const mobileMapToggleBtn = document.getElementById('btn-mobile-map-toggle');
+  const resultsMain = document.querySelector('.results-main');
+
+  function initSearchMap() {
+    if (!searchMapEl || typeof L === 'undefined' || leafletMap) return;
+
+    try {
+      leafletMap = L.map('search-map', {
+        zoomControl: true,
+        scrollWheelZoom: false
+      }).setView([6.5244, 3.3792], 12);
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(leafletMap);
+
+      mapMarkersLayer = L.layerGroup().addTo(leafletMap);
+    } catch (e) {
+      console.warn('Could not initialize Leaflet search map:', e);
+    }
+  }
+
+  function updateSearchMap(providersList) {
+    if (!searchMapEl || typeof L === 'undefined') return;
+    if (!leafletMap) initSearchMap();
+    if (!leafletMap || !mapMarkersLayer) return;
+
+    mapMarkersLayer.clearLayers();
+
+    const validProviders = (providersList || []).filter(p => p.lat && p.lng);
+    if (mapCounterText) mapCounterText.textContent = validProviders.length;
+
+    const bounds = [];
+
+    validProviders.forEach(p => {
+      const lat = Number(p.lat);
+      const lng = Number(p.lng);
+      if (isNaN(lat) || isNaN(lng)) return;
+
+      bounds.push([lat, lng]);
+
+      const initials = (p.name || '').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+      const customIcon = L.divIcon({
+        className: 'custom-lokator-marker',
+        html: `<div class="lokator-pin" title="${escapeHtml(p.name)} (${escapeHtml(p.trade)})"><span>${escapeHtml(initials)}</span></div>`,
+        iconSize: [36, 36],
+        iconAnchor: [18, 18],
+        popupAnchor: [0, -20]
+      });
+
+      const PhoneEngine = (typeof NigeriaPhone !== 'undefined' ? NigeriaPhone : null) || (typeof window !== 'undefined' ? window.NigeriaPhone : null);
+      const telUrl = PhoneEngine ? PhoneEngine.buildTelUrl(p) : (p.phone ? `tel:${p.phone}` : '');
+      const waUrl = PhoneEngine ? PhoneEngine.buildWhatsAppUrl(p, { service: p.trade, location: p.area }) : '';
+
+      const popupHtml = `
+        <div class="lokator-popup-card">
+          <strong>${escapeHtml(p.name)}</strong>
+          <div class="lokator-popup-trade">${escapeHtml(p.trade)}</div>
+          <div class="lokator-popup-loc">📍 ${escapeHtml(p.area || p.city || 'Nigeria')}</div>
+          <div class="lokator-popup-actions">
+            ${telUrl ? `<a href="${escapeHtml(telUrl)}" class="lokator-popup-call">📞 Call</a>` : ''}
+            ${waUrl ? `<a href="${escapeHtml(waUrl)}" target="_blank" rel="noopener" class="lokator-popup-wa">💬 WhatsApp</a>` : ''}
+            <a href="profile.html?id=${p.id}" style="background: #38BDF8; color: #000;">Profile →</a>
+          </div>
+        </div>
+      `;
+
+      const marker = L.marker([lat, lng], { icon: customIcon }).bindPopup(popupHtml);
+      mapMarkersLayer.addLayer(marker);
+    });
+
+    if (state.userCoords && state.userCoords.lat && state.userCoords.lng) {
+      bounds.push([state.userCoords.lat, state.userCoords.lng]);
+      const userIcon = L.divIcon({
+        className: 'user-loc-marker',
+        html: `<div style="background: #3B82F6; width: 22px; height: 22px; border-radius: 50%; border: 3px solid #FFF; box-shadow: 0 0 10px rgba(59, 130, 246, 0.8);"></div>`,
+        iconSize: [22, 22],
+        iconAnchor: [11, 11]
+      });
+      L.marker([state.userCoords.lat, state.userCoords.lng], { icon: userIcon })
+        .bindPopup('<strong>📍 Your Location</strong>')
+        .addTo(mapMarkersLayer);
+    }
+
+    if (bounds.length > 0) {
+      try {
+        leafletMap.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
+      } catch (e) {}
+    } else {
+      leafletMap.setView([6.5244, 3.3792], 11);
+    }
+
+    setTimeout(() => {
+      if (leafletMap) leafletMap.invalidateSize();
+    }, 200);
+  }
+
+  function setViewMode(mode) {
+    currentViewMode = mode;
+    viewModeBtns.forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.view === mode);
+    });
+
+    if (resultsMain) {
+      resultsMain.classList.toggle('is-split-view', mode === 'split');
+      resultsMain.classList.toggle('is-map-view', mode === 'map');
+    }
+
+    if (searchMapContainer) {
+      searchMapContainer.style.display = (mode === 'list') ? 'none' : 'block';
+    }
+
+    if (mobileMapToggleBtn) {
+      const isMap = (mode === 'map');
+      const icon = document.getElementById('mobile-map-icon');
+      const text = document.getElementById('mobile-map-text');
+      if (icon) icon.textContent = isMap ? '📋' : '🗺️';
+      if (text) text.textContent = isMap ? 'View List' : 'View Map';
+    }
+
+    if (mode !== 'list') {
+      if (!leafletMap) initSearchMap();
+      setTimeout(() => {
+        if (leafletMap) leafletMap.invalidateSize();
+      }, 150);
+    }
+  }
+
+  viewModeBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      setViewMode(btn.dataset.view);
+    });
+  });
+
+  if (mobileMapToggleBtn) {
+    mobileMapToggleBtn.addEventListener('click', () => {
+      const nextMode = (currentViewMode === 'map') ? 'list' : 'map';
+      setViewMode(nextMode);
+    });
+  }
+
+  // ============================================================================
+  // PHASE 10.17: RECENT SEARCH HISTORY CHIPS
+  // ============================================================================
+  const recentSearchesBar = document.getElementById('recent-searches-bar');
+  const recentSearchesChips = document.getElementById('recent-searches-chips');
+  const btnClearHistory = document.getElementById('btn-clear-history');
+
+  function renderRecentSearches() {
+    if (!recentSearchesBar || !recentSearchesChips || typeof LokatorDB === 'undefined' || !LokatorDB.searchHistory) return;
+
+    const searches = LokatorDB.searchHistory.getRecentSearches();
+    if (!searches || searches.length === 0) {
+      recentSearchesBar.style.display = 'none';
+      recentSearchesChips.innerHTML = '';
+      return;
+    }
+
+    recentSearchesChips.innerHTML = searches.map((s, idx) => {
+      const labelParts = [];
+      if (s.keyword) labelParts.push(s.keyword);
+      if (s.location) labelParts.push(`in ${s.location}`);
+      else if (s.lga && s.lga !== 'all') labelParts.push(`in ${s.lga}`);
+      else if (s.state && s.state !== 'all') labelParts.push(`in ${s.state}`);
+
+      const fullLabel = labelParts.join(' ') || 'Recent Search';
+
+      return `
+        <div class="recent-chip" data-index="${idx}" data-keyword="${escapeHtml(s.keyword || '')}" data-loc="${escapeHtml(s.location || '')}" data-state="${escapeHtml(s.state || '')}" data-lga="${escapeHtml(s.lga || '')}">
+          <span>🔍 ${escapeHtml(fullLabel)}</span>
+          <button type="button" class="btn-remove-chip" data-idx="${idx}" title="Remove">×</button>
+        </div>
+      `;
+    }).join('');
+
+    recentSearchesBar.style.display = 'flex';
+  }
+
+  if (recentSearchesChips) {
+    recentSearchesChips.addEventListener('click', (e) => {
+      const btnRemove = e.target.closest('.btn-remove-chip');
+      if (btnRemove) {
+        e.stopPropagation();
+        const idx = parseInt(btnRemove.getAttribute('data-idx'), 10);
+        LokatorDB.searchHistory.removeSearch(idx);
+        renderRecentSearches();
+        return;
+      }
+
+      const chip = e.target.closest('.recent-chip');
+      if (chip) {
+        const kw = chip.getAttribute('data-keyword');
+        const loc = chip.getAttribute('data-loc');
+        const st = chip.getAttribute('data-state');
+        const lga = chip.getAttribute('data-lga');
+
+        state.keyword = kw || '';
+        state.locationQuery = loc || '';
+        if (searchInput) searchInput.value = state.keyword;
+        if (locationSearch) locationSearch.value = state.locationQuery;
+
+        if (st && st !== 'all') {
+          state.state = st;
+          if (stateSelect) stateSelect.value = st;
+          updateLgaSelect(st, lga || 'all');
+        }
+
+        state.page = 1;
+        render();
+      }
+    });
+  }
+
+  if (btnClearHistory) {
+    btnClearHistory.addEventListener('click', () => {
+      if (typeof LokatorDB !== 'undefined' && LokatorDB.searchHistory) {
+        LokatorDB.searchHistory.clearSearches();
+        renderRecentSearches();
       }
     });
   }

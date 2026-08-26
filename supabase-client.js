@@ -9410,6 +9410,69 @@
     }
   };
 
+  // ============================================================================
+  // PHASE 10.17: UNIFIED SEARCH HISTORY ENGINE
+  // ============================================================================
+  const SEARCH_HISTORY_STORE_KEY = 'lokator_recent_searches';
+
+  const searchHistoryManager = {
+    getRecentSearches() {
+      return getLocalStore(SEARCH_HISTORY_STORE_KEY, []);
+    },
+
+    addSearch(queryObj = {}) {
+      const keyword = (queryObj.keyword || queryObj.service || queryObj.q || '').trim();
+      const location = (queryObj.location || queryObj.loc || queryObj.area || '').trim();
+      const state = (queryObj.state || '').trim();
+      const lga = (queryObj.lga || '').trim();
+
+      if (!keyword && !location && !state && !lga) return { success: false };
+
+      let searches = this.getRecentSearches();
+      // Filter out identical searches
+      searches = searches.filter(s => {
+        const sameKw = (s.keyword || '').toLowerCase() === keyword.toLowerCase();
+        const sameLoc = (s.location || '').toLowerCase() === location.toLowerCase();
+        const sameState = (s.state || '').toLowerCase() === state.toLowerCase();
+        const sameLga = (s.lga || '').toLowerCase() === lga.toLowerCase();
+        return !(sameKw && sameLoc && sameState && sameLga);
+      });
+
+      searches.unshift({
+        keyword,
+        location,
+        state,
+        lga,
+        timestamp: Date.now()
+      });
+
+      // Keep max 10 recent searches
+      searches = searches.slice(0, 10);
+      setLocalStore(SEARCH_HISTORY_STORE_KEY, searches);
+
+      if (typeof LokatorTelemetry !== 'undefined' && LokatorTelemetry.trackEvent) {
+        LokatorTelemetry.trackEvent('search_history_added', { keyword, location, state, lga });
+      }
+
+      return { success: true, searches };
+    },
+
+    removeSearch(index) {
+      let searches = this.getRecentSearches();
+      if (index >= 0 && index < searches.length) {
+        searches.splice(index, 1);
+        setLocalStore(SEARCH_HISTORY_STORE_KEY, searches);
+      }
+      return { success: true, searches };
+    },
+
+    clearSearches() {
+      setLocalStore(SEARCH_HISTORY_STORE_KEY, []);
+      return { success: true, searches: [] };
+    }
+  };
+
+  LokatorDB.searchHistory = searchHistoryManager;
   LokatorDB.compliance = complianceManager;
   LokatorDB.offline = offlineManager;
   LokatorDB.liquidityEngine = liquidityEngine;
