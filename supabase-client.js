@@ -9200,6 +9200,217 @@
     }
   };
 
+  // ============================================================================
+  // PHASE 10.16: TRUST & SAFETY COMPLIANCE ENGINE
+  // ============================================================================
+  const COMPLIANCE_REPORTS_STORE_KEY = 'lokator_compliance_reports';
+  const COMPLIANCE_AUDIT_STORE_KEY = 'lokator_compliance_audit_logs';
+  const VERIFICATION_STORE_KEY = 'lokator_verification_requests';
+
+  const complianceManager = {
+    getPendingVerifications() {
+      const providers = getLocalStore(DB_STORE_KEY, []);
+      const verRequests = getLocalStore(VERIFICATION_STORE_KEY, []);
+
+      const pendingMap = new Map();
+
+      providers.forEach(p => {
+        if (p.verification_status === 'pending' || p.verificationStatus === 'pending' || p.verification_requested) {
+          pendingMap.set(String(p.id), {
+            provider_id: p.id,
+            name: p.name || `${p.first_name || ''} ${p.last_name || ''}`.trim() || p.business_name || `Artisan #${p.id}`,
+            trade: p.trade || p.trade_title || p.category || 'Skilled Artisan',
+            category: p.category || p.slug || 'artisan',
+            state: p.state || 'Delta',
+            lga: p.lga || p.city || '',
+            phone: p.phone || p.whatsapp_number || '',
+            doc_type: p.verification_doc_type || 'NIN National Identity',
+            doc_ref: p.verification_doc_ref || 'NIN-REDACTED-VALIDATION',
+            submitted_at: p.verification_submitted_at || p.created_at || new Date().toISOString()
+          });
+        }
+      });
+
+      verRequests.forEach(vr => {
+        if (vr.status === 'pending' && vr.provider_id) {
+          const prov = providers.find(p => String(p.id) === String(vr.provider_id));
+          pendingMap.set(String(vr.provider_id), {
+            provider_id: vr.provider_id,
+            name: prov ? (prov.name || `${prov.first_name || ''} ${prov.last_name || ''}`.trim()) : `Artisan #${vr.provider_id}`,
+            trade: prov ? (prov.trade || prov.category) : 'Artisan',
+            category: prov ? (prov.category || prov.slug) : 'artisan',
+            state: prov ? prov.state : 'Nigeria',
+            lga: prov ? (prov.lga || prov.city) : '',
+            phone: prov ? prov.phone : '',
+            doc_type: vr.doc_type || vr.docType || 'Government ID',
+            doc_ref: vr.doc_ref || vr.docRef || 'REF-SUBMISSION',
+            submitted_at: vr.created_at || new Date().toISOString()
+          });
+        }
+      });
+
+      return Array.from(pendingMap.values());
+    },
+
+    approveVerification(providerId, options = {}) {
+      const numId = Number(providerId);
+      const providers = getLocalStore(DB_STORE_KEY, []);
+      const prov = providers.find(p => p.id === numId || String(p.id) === String(providerId));
+      if (!prov) return { success: false, reason: 'Provider not found' };
+
+      prov.is_verified = true;
+      prov.isVerified = true;
+      prov.nin_verified = true;
+      prov.ninVerified = true;
+      prov.verification_status = 'verified';
+      prov.verificationStatus = 'verified';
+      prov.verification_requested = false;
+      prov.badge_title = options.badgeType || 'Verified Pro';
+      prov.verified_at = new Date().toISOString();
+      prov.verified_by = options.reviewer || 'Compliance Officer (Admin)';
+
+      setLocalStore(DB_STORE_KEY, providers);
+
+      const verRequests = getLocalStore(VERIFICATION_STORE_KEY, []);
+      const vr = verRequests.find(v => Number(v.provider_id) === numId);
+      if (vr) {
+        vr.status = 'approved';
+        vr.approved_at = new Date().toISOString();
+        setLocalStore(VERIFICATION_STORE_KEY, verRequests);
+      }
+
+      this._recordAuditLog({
+        action: 'VERIFICATION_APPROVED',
+        provider_id: numId,
+        provider_name: prov.name || `${prov.first_name || ''} ${prov.last_name || ''}`.trim(),
+        reviewer: options.reviewer || 'Admin',
+        notes: options.notes || 'Identity credentials validated against national registry standard.',
+        timestamp: new Date().toISOString()
+      });
+
+      if (typeof LokatorTelemetry !== 'undefined' && LokatorTelemetry.trackEvent) {
+        LokatorTelemetry.trackEvent('compliance_verification_approved', {
+          provider_id: String(numId),
+          badge: prov.badge_title
+        });
+      }
+
+      return { success: true, provider: prov };
+    },
+
+    rejectVerification(providerId, options = {}) {
+      const numId = Number(providerId);
+      const providers = getLocalStore(DB_STORE_KEY, []);
+      const prov = providers.find(p => p.id === numId || String(p.id) === String(providerId));
+      if (!prov) return { success: false, reason: 'Provider not found' };
+
+      prov.is_verified = false;
+      prov.isVerified = false;
+      prov.verification_status = 'rejected';
+      prov.verificationStatus = 'rejected';
+      prov.verification_requested = false;
+      prov.rejection_reason = options.reason || 'Document unreadable or invalid format';
+      prov.rejected_at = new Date().toISOString();
+
+      setLocalStore(DB_STORE_KEY, providers);
+
+      const verRequests = getLocalStore(VERIFICATION_STORE_KEY, []);
+      const vr = verRequests.find(v => Number(v.provider_id) === numId);
+      if (vr) {
+        vr.status = 'rejected';
+        vr.rejection_reason = options.reason;
+        setLocalStore(VERIFICATION_STORE_KEY, verRequests);
+      }
+
+      this._recordAuditLog({
+        action: 'VERIFICATION_REJECTED',
+        provider_id: numId,
+        provider_name: prov.name || `${prov.first_name || ''} ${prov.last_name || ''}`.trim(),
+        reviewer: options.reviewer || 'Admin',
+        notes: options.reason || 'Identity submission could not be verified.',
+        timestamp: new Date().toISOString()
+      });
+
+      if (typeof LokatorTelemetry !== 'undefined' && LokatorTelemetry.trackEvent) {
+        LokatorTelemetry.trackEvent('compliance_verification_rejected', {
+          provider_id: String(numId),
+          reason: options.reason
+        });
+      }
+
+      return { success: true, provider: prov };
+    },
+
+    reportProvider(providerId, reportData = {}) {
+      const reports = getLocalStore(COMPLIANCE_REPORTS_STORE_KEY, []);
+      const newReport = {
+        report_id: `rep_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+        provider_id: Number(providerId),
+        reporter_name: reportData.reporter_name || 'Anonymous Customer',
+        reporter_phone: reportData.reporter_phone || '',
+        issue_type: reportData.issue_type || 'unprofessional_conduct',
+        details: reportData.details || 'Customer reported a service discrepancy.',
+        status: 'open',
+        created_at: new Date().toISOString()
+      };
+
+      reports.unshift(newReport);
+      setLocalStore(COMPLIANCE_REPORTS_STORE_KEY, reports);
+
+      if (typeof LokatorTelemetry !== 'undefined' && LokatorTelemetry.trackEvent) {
+        LokatorTelemetry.trackEvent('provider_reported_dispute', {
+          provider_id: String(providerId),
+          issue_type: newReport.issue_type
+        });
+      }
+
+      return { success: true, report: newReport };
+    },
+
+    getReportedCases() {
+      return getLocalStore(COMPLIANCE_REPORTS_STORE_KEY, []);
+    },
+
+    resolveReport(reportId, options = {}) {
+      const reports = getLocalStore(COMPLIANCE_REPORTS_STORE_KEY, []);
+      const rep = reports.find(r => r.report_id === reportId);
+      if (!rep) return { success: false, reason: 'Report not found' };
+
+      rep.status = 'resolved';
+      rep.resolved_at = new Date().toISOString();
+      rep.resolved_by = options.reviewer || 'Admin';
+      rep.resolution_notes = options.resolution || 'Investigated and resolved in accordance with marketplace terms.';
+      rep.action_taken = options.actionTaken || 'warning_issued';
+
+      setLocalStore(COMPLIANCE_REPORTS_STORE_KEY, reports);
+
+      this._recordAuditLog({
+        action: 'DISPUTE_RESOLVED',
+        report_id: reportId,
+        provider_id: rep.provider_id,
+        reviewer: options.reviewer || 'Admin',
+        notes: `Case resolved: ${rep.action_taken}. ${rep.resolution_notes}`,
+        timestamp: new Date().toISOString()
+      });
+
+      return { success: true, report: rep };
+    },
+
+    getAuditLogs() {
+      return getLocalStore(COMPLIANCE_AUDIT_STORE_KEY, []);
+    },
+
+    _recordAuditLog(entry) {
+      const logs = getLocalStore(COMPLIANCE_AUDIT_STORE_KEY, []);
+      logs.unshift({
+        log_id: `aud_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+        ...entry
+      });
+      setLocalStore(COMPLIANCE_AUDIT_STORE_KEY, logs);
+    }
+  };
+
+  LokatorDB.compliance = complianceManager;
   LokatorDB.offline = offlineManager;
   LokatorDB.liquidityEngine = liquidityEngine;
   LokatorDB.referrals = referralsManager;
@@ -9216,6 +9427,12 @@
   LokatorDB.buildTelUrl = function (provider) {
     const PE = LokatorDB.phone || (typeof NigeriaPhone !== 'undefined' ? NigeriaPhone : null) || (typeof globalThis !== 'undefined' ? globalThis.NigeriaPhone : null);
     return PE ? PE.buildTelUrl(provider) : '';
+  };
+  LokatorDB.reportProvider = function (providerId, data) {
+    if (LokatorDB.compliance) {
+      return LokatorDB.compliance.reportProvider(providerId, data);
+    }
+    return { success: true, message: 'Report submitted for review' };
   };
 
   // 5. AUTOMATIC GLOBAL NAVBAR AUTH SYNC

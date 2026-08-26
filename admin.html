@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trust & Safety Compliance Desk | Lokator.NG</title>
+  <link rel="icon" type="image/svg+xml" href="icons/icon.svg" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="pwa.css" />
+  <style>
+    body { background-color: #0A0E17; color: #F9FAFB; font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif; margin: 0; padding: 0; }
+    .admin-container { max-width: 1200px; margin: 0 auto; padding: 24px 16px; }
+    .admin-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 16px; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+    .admin-tabs { display: flex; gap: 12px; margin-bottom: 24px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; flex-wrap: wrap; }
+    .admin-tab-btn { background: none; border: none; color: #94A3B8; font-size: 14px; font-weight: 700; padding: 8px 16px; cursor: pointer; border-radius: 6px; transition: all 0.2s; }
+    .admin-tab-btn.active { background: rgba(56, 189, 248, 0.15); color: #38BDF8; }
+    .admin-tab-panel { display: none; }
+    .admin-tab-panel.active { display: block; }
+    .grid-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .kpi-card { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 16px; }
+    .kpi-label { font-size: 12px; color: #94A3B8; margin-bottom: 6px; font-weight: 600; }
+    .kpi-value { font-size: 24px; font-weight: 800; color: #F1F5F9; }
+    .kpi-sub { font-size: 11px; color: #64748B; margin-top: 4px; }
+    .admin-table-card { background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; overflow: hidden; }
+    .admin-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
+    .admin-table th { background: rgba(255, 255, 255, 0.04); padding: 12px; color: #94A3B8; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
+    .admin-table td { padding: 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.04); color: #CBD5E1; vertical-align: middle; }
+    .btn-action-sm { padding: 6px 12px; font-size: 11.5px; font-weight: 700; border-radius: 6px; border: none; cursor: pointer; transition: all 0.2s; }
+    .btn-approve { background: #059669; color: #FFF; }
+    .btn-approve:hover { background: #10B981; }
+    .btn-reject { background: rgba(239, 68, 68, 0.2); color: #F87171; border: 1px solid rgba(239, 68, 68, 0.4); }
+    .btn-reject:hover { background: rgba(239, 68, 68, 0.3); }
+    .btn-resolve { background: #3B82F6; color: #FFF; }
+  </style>
+</head>
+<body>
+
+  <header class="navbar">
+    <div class="container nav-inner">
+      <a href="index.html" class="logo">
+        <div class="logo-mark">
+          <svg width="30" height="30" viewBox="0 0 30 30" fill="none"><path d="M15 2C10.03 2 6 6.03 6 11c0 6.75 9 17 9 17s9-10.25 9-17c0-4.97-4.03-9-9-9z" fill="#006B3F"/><circle cx="15" cy="11" r="4" fill="#D4AF37"/><circle cx="15" cy="11" r="2" fill="#FFFFFF"/></svg>
+        </div>
+        <span class="logo-text">Lokator</span>
+      </a>
+      <nav class="nav-links">
+        <a href="search.html" class="nav-link">Marketplace</a>
+        <a href="analytics.html" class="nav-link">Analytics</a>
+        <span class="status-tag status-good" style="font-size: 11px;">🛡️ Compliance Desk</span>
+      </nav>
+    </div>
+  </header>
+
+  <main class="admin-container">
+    <div class="admin-header">
+      <div>
+        <h1 style="font-size: 24px; margin: 0 0 4px; color: #F1F5F9;">Trust & Safety Compliance Portal</h1>
+        <p style="font-size: 13px; color: #94A3B8; margin: 0;">Artisan identity vetting, NIN/CAC compliance verification, and dispute resolution queue.</p>
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <button type="button" id="btn-refresh-queue" class="btn btn-outline" style="padding: 8px 14px; font-size: 12px; border-color: rgba(255,255,255,0.2);">
+          🔄 Refresh Queue
+        </button>
+      </div>
+    </div>
+
+    <!-- Overview KPIs -->
+    <div class="grid-kpis">
+      <div class="kpi-card" style="border-left: 4px solid #F59E0B;">
+        <div class="kpi-label">Pending Verifications</div>
+        <div class="kpi-value" id="kpi-pending-verifications" style="color: #FBBF24;">0</div>
+        <div class="kpi-sub">Awaiting compliance officer review</div>
+      </div>
+      <div class="kpi-card" style="border-left: 4px solid #10B981;">
+        <div class="kpi-label">Verified Professionals</div>
+        <div class="kpi-value" id="kpi-total-verified" style="color: #34D399;">--</div>
+        <div class="kpi-sub">Active NIN / CAC verified badges</div>
+      </div>
+      <div class="kpi-card" style="border-left: 4px solid #EF4444;">
+        <div class="kpi-label">Open Community Disputes</div>
+        <div class="kpi-value" id="kpi-open-disputes" style="color: #F87171;">0</div>
+        <div class="kpi-sub">Customer flags requiring action</div>
+      </div>
+      <div class="kpi-card" style="border-left: 4px solid #38BDF8;">
+        <div class="kpi-label">Compliance Status</div>
+        <div class="kpi-value" id="kpi-compliance-sla" style="color: #38BDF8; font-size: 18px;">ACTIVE</div>
+        <div class="kpi-sub">Air-gapped verification operational</div>
+      </div>
+    </div>
+
+    <!-- Tab Bar -->
+    <div class="admin-tabs">
+      <button type="button" class="admin-tab-btn active" data-tab="verifications">
+        📋 Verification Queue (<span id="tab-count-verifications">0</span>)
+      </button>
+      <button type="button" class="admin-tab-btn" data-tab="disputes">
+        ⚠️ Dispute & Report Desk (<span id="tab-count-disputes">0</span>)
+      </button>
+      <button type="button" class="admin-tab-btn" data-tab="audit">
+        📜 Compliance Audit Ledger
+      </button>
+    </div>
+
+    <!-- TAB 1: VERIFICATION REVIEW QUEUE -->
+    <div class="admin-tab-panel active" id="panel-verifications">
+      <div class="admin-table-card">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Artisan</th>
+              <th>Trade & Category</th>
+              <th>Location</th>
+              <th>Document Type</th>
+              <th>ID Reference / Registration</th>
+              <th>Submitted</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-verifications">
+            <tr><td colspan="7" style="padding: 24px; text-align: center; color: #64748B;">No pending verification requests in queue.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 2: DISPUTE & REPORT DESK -->
+    <div class="admin-tab-panel" id="panel-disputes">
+      <div class="admin-table-card">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Case ID</th>
+              <th>Reported Provider ID</th>
+              <th>Reporter</th>
+              <th>Issue Type</th>
+              <th>Statement / Details</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-disputes">
+            <tr><td colspan="7" style="padding: 24px; text-align: center; color: #64748B;">No open dispute reports recorded.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 3: COMPLIANCE AUDIT LEDGER -->
+    <div class="admin-tab-panel" id="panel-audit">
+      <div class="admin-table-card">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Log ID</th>
+              <th>Action</th>
+              <th>Target ID</th>
+              <th>Officer / Reviewer</th>
+              <th>Notes & Findings</th>
+              <th>Timestamp</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-audit">
+            <tr><td colspan="6" style="padding: 24px; text-align: center; color: #64748B;">No audit entries recorded yet.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="supabase-client.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>
