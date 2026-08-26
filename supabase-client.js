@@ -4875,6 +4875,7 @@
     PAYSTACK_ENABLED: true,             // Enabled
     PROMOTED_PILOT_ENABLED: true,       // Enabled
     PAYMENT_LIVE_MODE: false,           // Strictly false (test mode only)
+    LIVE_BILLING_ENABLED: false,        // Strictly locked
     VERIFICATION_PAYMENT_ENABLED: false,// Locked
     LEAD_PAYMENT_ENABLED: false,        // Locked
     SUBSCRIPTIONS_ENABLED: false,       // Locked
@@ -5724,8 +5725,8 @@
     }
 
     async createCheckoutSession(params) {
-      // In Phase 10.13, live checkout is held per architecture specification
-      if (!MONETIZATION_FEATURE_FLAGS.PAYMENT_PROCESSING_ENABLED) {
+      // In research mode / locked live mode, return safe research session
+      if (!MONETIZATION_FEATURE_FLAGS.PAYMENT_LIVE_MODE || !MONETIZATION_FEATURE_FLAGS.LIVE_BILLING_ENABLED) {
         return {
           status: 'RESEARCH_MODE',
           message: 'Live payment processing is deferred. Recorded in research intent log.',

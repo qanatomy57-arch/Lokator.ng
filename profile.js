@@ -854,28 +854,206 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // Hamburger menu
+  // 14. Phase 10.19: Real Location Map & Precise GPS Service Engine
+  function initProfileServiceMap(p) {
+    const mapEl = document.getElementById('profile-service-map');
+    if (!mapEl) return;
+
+    let pLat = Number(p.lat);
+    let pLng = Number(p.lng);
+
+    if ((!pLat || !pLng) && typeof NigeriaLocations !== 'undefined') {
+      const match = NigeriaLocations.searchLocations(p.area || p.lga || p.state || 'Lagos');
+      if (match && match.length > 0 && match[0].lat && match[0].lng) {
+        pLat = match[0].lat;
+        pLng = match[0].lng;
+      }
+    }
+    pLat = pLat || 6.5244;
+    pLng = pLng || 3.3792;
+
+    const displayLoc = p.area || (p.lga && p.state ? `${p.lga}, ${p.state}` : p.city) || 'Service Area';
+    const locBadge = document.getElementById('service-loc-locality-badge');
+    if (locBadge) locBadge.textContent = displayLoc;
+
+    const MapService = (typeof LokatorMapService !== 'undefined' ? LokatorMapService : null) || (typeof window !== 'undefined' ? window.LokatorMapService : null);
+    let mapInstance = null;
+
+    if (MapService) {
+      mapInstance = MapService.initServiceMap(mapEl, {
+        lat: pLat,
+        lng: pLng,
+        providerName: p.name,
+        locality: displayLoc,
+        zoom: 14
+      });
+    }
+
+    const btnGps = document.getElementById('btn-profile-gps');
+    const gpsMetaContainer = document.getElementById('gps-meta-container');
+    const gpsAccuracyVal = document.getElementById('gps-accuracy-val');
+    const gpsTimestampVal = document.getElementById('gps-timestamp-val');
+    const gpsStatusInd = document.getElementById('gps-status-indicator');
+    const gpsStatusText = document.getElementById('gps-status-text');
+    const gpsDistanceText = document.getElementById('gps-distance-text');
+
+    if (btnGps && MapService) {
+      btnGps.addEventListener('click', async () => {
+        const originalContent = btnGps.innerHTML;
+        btnGps.disabled = true;
+        btnGps.innerHTML = `
+          <div class="gps-cta-content">
+            <span class="gps-cta-icon">⏳</span>
+            <div>
+              <div style="font-size: 13.5px; font-weight: 700; color: #FFFFFF;">Detecting GPS Location...</div>
+              <div style="font-size: 11.5px; color: #94A3B8;">Connecting with device sensors</div>
+            </div>
+          </div>
+        `;
+
+        try {
+          const result = await MapService.requestUserGPS();
+
+          if (gpsAccuracyVal) gpsAccuracyVal.textContent = result.accuracyFormatted;
+          if (gpsTimestampVal) gpsTimestampVal.textContent = `● ${result.timestampFormatted}`;
+          if (gpsMetaContainer) gpsMetaContainer.style.display = 'grid';
+          if (gpsStatusInd) gpsStatusInd.style.display = 'flex';
+          if (gpsStatusText) gpsStatusText.textContent = 'Current location detected';
+
+          if (mapInstance && mapInstance.setUserLocation) {
+            mapInstance.setUserLocation(result.lat, result.lng, result.accuracy);
+          }
+
+          const distKm = MapService.calculateDistanceKm(result.lat, result.lng, pLat, pLng);
+          if (gpsDistanceText && distKm !== null) {
+            gpsDistanceText.textContent = `📍 ${p.name} is ${MapService.formatDistance(distKm)} (approx)`;
+            gpsDistanceText.style.display = 'block';
+          }
+
+          btnGps.innerHTML = `
+            <div class="gps-cta-content">
+              <span class="gps-cta-icon" style="color: #10B981;">✓</span>
+              <div>
+                <div style="font-size: 13.5px; font-weight: 700; color: #FFFFFF;">GPS Location Active</div>
+                <div style="font-size: 11.5px; color: #34D399;">Tap to refresh current location</div>
+              </div>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          `;
+        } catch (err) {
+          console.warn('GPS detection error:', err);
+          alert(`Location Notice: ${err.message}`);
+          btnGps.innerHTML = originalContent;
+        } finally {
+          btnGps.disabled = false;
+        }
+      });
+    }
+  }
+
+  // Initialize service location map
+  initProfileServiceMap(provider);
+
+  // 15. Phase 10.19: Mobile Navigation Drawer & Accessible Hamburger Control
   const hamburger = document.getElementById('hamburger');
+  const mobileDrawer = document.getElementById('mobile-nav-drawer');
+  const mobileBackdrop = document.getElementById('mobile-nav-backdrop');
+  const drawerCloseBtn = document.getElementById('mobile-nav-close-btn');
   const navLinks = document.getElementById('nav-links');
-  if (hamburger && navLinks) {
+
+  function openMobileDrawer() {
+    if (mobileDrawer) {
+      mobileDrawer.classList.add('open');
+      mobileDrawer.setAttribute('aria-hidden', 'false');
+    }
+    if (mobileBackdrop) {
+      mobileBackdrop.classList.add('open');
+      mobileBackdrop.setAttribute('aria-hidden', 'false');
+    }
+    if (hamburger) {
+      hamburger.setAttribute('aria-expanded', 'true');
+    }
+    if (navLinks) {
+      navLinks.classList.add('open');
+    }
+    document.body.classList.add('mobile-nav-open');
+
+    if (drawerCloseBtn) drawerCloseBtn.focus();
+  }
+
+  function closeMobileDrawer() {
+    if (mobileDrawer) {
+      mobileDrawer.classList.remove('open');
+      mobileDrawer.setAttribute('aria-hidden', 'true');
+    }
+    if (mobileBackdrop) {
+      mobileBackdrop.classList.remove('open');
+      mobileBackdrop.setAttribute('aria-hidden', 'true');
+    }
+    if (hamburger) {
+      hamburger.setAttribute('aria-expanded', 'false');
+      hamburger.focus();
+    }
+    if (navLinks) {
+      navLinks.classList.remove('open');
+    }
+    document.body.classList.remove('mobile-nav-open');
+  }
+
+  if (hamburger) {
     hamburger.addEventListener('click', (e) => {
       e.stopPropagation();
-      const isOpen = navLinks.classList.toggle('open');
-      hamburger.setAttribute('aria-expanded', isOpen);
-    });
-
-    navLinks.querySelectorAll('a, button').forEach(item => {
-      item.addEventListener('click', () => {
-        navLinks.classList.remove('open');
-        hamburger.setAttribute('aria-expanded', 'false');
-      });
-    });
-
-    document.addEventListener('click', (e) => {
-      if (navLinks.classList.contains('open') && !navLinks.contains(e.target) && !hamburger.contains(e.target)) {
-        navLinks.classList.remove('open');
-        hamburger.setAttribute('aria-expanded', 'false');
+      const isOpen = mobileDrawer ? mobileDrawer.classList.contains('open') : (navLinks && navLinks.classList.contains('open'));
+      if (isOpen) {
+        closeMobileDrawer();
+      } else {
+        openMobileDrawer();
       }
     });
+  }
+
+  if (drawerCloseBtn) {
+    drawerCloseBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      closeMobileDrawer();
+    });
+  }
+
+  if (mobileBackdrop) {
+    mobileBackdrop.addEventListener('click', closeMobileDrawer);
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && mobileDrawer && mobileDrawer.classList.contains('open')) {
+      closeMobileDrawer();
+    }
+  });
+
+  if (navLinks) {
+    navLinks.querySelectorAll('a, button').forEach(item => {
+      item.addEventListener('click', () => {
+        closeMobileDrawer();
+      });
+    });
+  }
+
+  // Dynamic Auth State in Drawer
+  if (typeof LokatorDB !== 'undefined' && LokatorDB.auth) {
+    const user = LokatorDB.auth.getCurrentUser();
+    const drawerLogin = document.getElementById('drawer-link-login');
+    const drawerLogout = document.getElementById('drawer-link-logout');
+    const drawerDash = document.getElementById('drawer-link-dash');
+    if (user) {
+      if (drawerLogin) drawerLogin.style.display = 'none';
+      if (drawerLogout) drawerLogout.style.display = 'flex';
+      if (drawerDash) drawerDash.style.display = 'flex';
+      if (drawerLogout) {
+        drawerLogout.addEventListener('click', async (e) => {
+          e.preventDefault();
+          await LokatorDB.auth.signOut();
+          window.location.reload();
+        });
+      }
+    }
   }
 });

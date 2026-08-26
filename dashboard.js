@@ -444,6 +444,118 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateDashMapPin();
   }
 
+  let dashMapInstance = null;
+
+  function initDashboardServiceMap() {
+    const mapEl = document.getElementById('dash-service-map');
+    if (!mapEl) return;
+
+    let pLat = Number(currentProvider.lat);
+    let pLng = Number(currentProvider.lng);
+
+    if ((!pLat || !pLng) && typeof NigeriaLocations !== 'undefined') {
+      const match = NigeriaLocations.searchLocations(currentProvider.area || currentProvider.city || currentProvider.state || 'Lagos');
+      if (match && match.length > 0 && match[0].lat && match[0].lng) {
+        pLat = match[0].lat;
+        pLng = match[0].lng;
+      }
+    }
+    pLat = pLat || 6.5244;
+    pLng = pLng || 3.3792;
+
+    const coordTag = document.getElementById('dash-map-coord-tag');
+    if (coordTag) coordTag.textContent = `${pLat.toFixed(4)}° N, ${pLng.toFixed(4)}° E`;
+
+    const MapService = (typeof LokatorMapService !== 'undefined' ? LokatorMapService : null) || (typeof window !== 'undefined' ? window.LokatorMapService : null);
+    if (MapService) {
+      dashMapInstance = MapService.initServiceMap(mapEl, {
+        lat: pLat,
+        lng: pLng,
+        providerName: currentProvider.businessName || currentProvider.name,
+        locality: currentProvider.area || currentProvider.city || 'Service Area',
+        zoom: 14
+      });
+    }
+
+    const btnDashGps = document.getElementById('dash-gps-btn');
+    const dashGpsMeta = document.getElementById('dash-gps-meta');
+    const dashGpsAccuracy = document.getElementById('dash-gps-accuracy');
+    const dashGpsStatus = document.getElementById('dash-gps-status');
+
+    if (btnDashGps && MapService) {
+      btnDashGps.addEventListener('click', async () => {
+        const originalContent = btnDashGps.innerHTML;
+        btnDashGps.disabled = true;
+        btnDashGps.innerHTML = 'Detecting GPS...';
+
+        try {
+          const result = await MapService.requestUserGPS();
+          currentProvider.lat = result.lat;
+          currentProvider.lng = result.lng;
+
+          if (dashGpsAccuracy) dashGpsAccuracy.textContent = result.accuracyFormatted;
+          if (dashGpsStatus) dashGpsStatus.textContent = '✓ Current location detected';
+          if (dashGpsMeta) dashGpsMeta.style.display = 'grid';
+          if (coordTag) coordTag.textContent = `${result.lat.toFixed(4)}° N, ${result.lng.toFixed(4)}° E`;
+
+          if (dashMapInstance) {
+            dashMapInstance.setCenter(result.lat, result.lng, 15);
+            if (dashMapInstance.setUserLocation) {
+              dashMapInstance.setUserLocation(result.lat, result.lng, result.accuracy);
+            }
+          }
+
+          if (typeof NigeriaLocations !== 'undefined' && NigeriaLocations.findNearest) {
+            const nearest = NigeriaLocations.findNearest(result.lat, result.lng);
+            if (nearest) {
+              const stateEl = document.getElementById('edit-state');
+              const cityEl = document.getElementById('edit-city');
+              const areaEl = document.getElementById('edit-area');
+              if (stateEl && nearest.state) stateEl.value = nearest.state;
+              if (cityEl && nearest.lga) cityEl.value = nearest.lga;
+              if (areaEl && nearest.locality) areaEl.value = `${nearest.locality}, ${nearest.lga}`;
+            }
+          }
+
+          showToast('GPS coordinates detected! Tap "Confirm Location" to save.');
+        } catch (err) {
+          console.warn('Dashboard GPS error:', err);
+          alert(`Location Notice: ${err.message}`);
+        } finally {
+          btnDashGps.disabled = false;
+          btnDashGps.innerHTML = originalContent;
+        }
+      });
+    }
+
+    const btnConfirm = document.getElementById('btn-confirm-location');
+    if (btnConfirm) {
+      btnConfirm.addEventListener('click', async () => {
+        btnConfirm.disabled = true;
+        btnConfirm.textContent = 'Saving...';
+        try {
+          await LokatorDB.updateProviderProfile(currentProvider.id, {
+            lat: currentProvider.lat,
+            lng: currentProvider.lng,
+            state: document.getElementById('edit-state') ? document.getElementById('edit-state').value : currentProvider.state,
+            city: document.getElementById('edit-city') ? document.getElementById('edit-city').value : currentProvider.city,
+            area: document.getElementById('edit-area') ? document.getElementById('edit-area').value : currentProvider.area
+          });
+          showToast('Service location coordinates confirmed & saved!');
+        } catch (err) {
+          showToast('Failed to save coordinates: ' + err.message, 'error');
+        } finally {
+          btnConfirm.disabled = false;
+          btnConfirm.textContent = '✓ Confirm Location';
+        }
+      });
+    }
+  }
+
+  function updateDashMapPin() {
+    initDashboardServiceMap();
+  }
+
   // Handle Edit Profile Form Submit
   const formProfile = document.getElementById('form-edit-profile');
   if (formProfile) {

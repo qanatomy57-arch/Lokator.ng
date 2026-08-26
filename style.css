@@ -4336,3 +4336,344 @@ body {
   color: #EF4444 !important;
   background: rgba(239, 68, 68, 0.08) !important;
 }
+
+/* ==========================================================================
+   PHASE 10.19 — REAL LOCATION MAP + INTERACTIVE MOBILE NAVIGATION STYLES
+   ========================================================================== */
+
+/* Universal Hamburger Toggle Target (>= 44x44px Touch Target) */
+.hamburger,
+.mobile-nav-toggle {
+  min-width: 44px;
+  min-height: 44px;
+  width: 44px;
+  height: 44px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 5px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  cursor: pointer;
+  padding: 0;
+  color: #FFFFFF;
+  transition: all 0.2s ease;
+  position: relative;
+  z-index: 100;
+}
+
+.hamburger:hover,
+.mobile-nav-toggle:hover {
+  background: rgba(0, 107, 63, 0.25);
+  border-color: rgba(82, 229, 140, 0.4);
+}
+
+.hamburger:active,
+.mobile-nav-toggle:active {
+  transform: scale(0.94);
+}
+
+.hamburger:focus-visible,
+.mobile-nav-toggle:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+.hamburger span {
+  width: 20px;
+  height: 2px;
+  background: #FFFFFF;
+  border-radius: 2px;
+  transition: all 0.25s ease;
+}
+
+/* Right-Side Sliding Mobile Navigation Drawer */
+.mobile-nav-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 290px;
+  max-width: 85vw;
+  background: linear-gradient(180deg, #06150B 0%, #0D2213 100%);
+  border-left: 1px solid rgba(212, 175, 55, 0.25);
+  box-shadow: -12px 0 40px rgba(0, 0, 0, 0.85);
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  padding: 24px 20px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.mobile-nav-drawer.open {
+  transform: translateX(0);
+}
+
+/* Semi-Transparent Backdrop */
+.mobile-nav-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  z-index: 99998;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.mobile-nav-backdrop.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Prevent Background Scroll When Drawer is Active */
+body.mobile-nav-open {
+  overflow: hidden !important;
+  touch-action: none;
+}
+
+/* Drawer Header with Close Button */
+.drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 18px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.drawer-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 17px;
+  color: #FFFFFF;
+  text-decoration: none;
+}
+
+.drawer-close-btn {
+  min-width: 44px;
+  min-height: 44px;
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  color: #E2E8F0;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.drawer-close-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #EF4444;
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+/* Drawer Navigation Links List */
+.drawer-nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.drawer-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  color: #E2E8F0;
+  font-size: 14.5px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.18s ease;
+}
+
+.drawer-link svg,
+.drawer-link span.drawer-icon {
+  font-size: 18px;
+  width: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #52E58C;
+}
+
+.drawer-link:hover,
+.drawer-link:focus-visible {
+  background: rgba(0, 107, 63, 0.25);
+  color: #52E58C;
+  transform: translateX(4px);
+}
+
+.drawer-link.drawer-logout {
+  color: #F87171;
+  margin-top: auto;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 14px;
+}
+
+.drawer-link.drawer-logout:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: #EF4444;
+}
+
+/* Phase 10.19 Service Location & GPS Card Styles */
+.service-location-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: var(--shadow-md);
+  margin-bottom: 24px;
+  position: relative;
+}
+
+.service-map-canvas {
+  width: 100%;
+  height: 260px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #0E1611;
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: 14px;
+}
+
+.gps-cta-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 12px 16px;
+  background: rgba(0, 107, 63, 0.12);
+  border: 1px solid rgba(0, 107, 63, 0.35);
+  border-radius: 10px;
+  color: #F1F5F9;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.gps-cta-button:hover {
+  background: rgba(0, 107, 63, 0.22);
+  border-color: rgba(82, 229, 140, 0.5);
+  transform: translateY(-1px);
+}
+
+.gps-cta-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.gps-cta-icon {
+  font-size: 18px;
+  color: #52E58C;
+}
+
+.gps-meta-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.gps-meta-box {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 12px;
+}
+
+.gps-meta-label {
+  color: var(--fg-muted);
+  display: block;
+  margin-bottom: 2px;
+}
+
+.gps-meta-val {
+  color: #F1F5F9;
+  font-weight: 700;
+}
+
+.gps-status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #10B981;
+  margin-top: 10px;
+}
+
+/* User Location Pulse Marker */
+.user-pulse-wrap {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-pulse-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: rgba(59, 130, 246, 0.4);
+  animation: userPulse 1.8s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+}
+
+.user-pulse-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #2563EB;
+  border: 2px solid #FFFFFF;
+  box-shadow: 0 0 8px rgba(37, 99, 235, 0.9);
+}
+
+@keyframes userPulse {
+  0% { transform: scale(0.6); opacity: 1; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+
+/* Service Pin Marker Badge */
+.service-pin-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #061D0F;
+  border: 1.5px solid #D4AF37;
+  color: #FFFFFF;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.65);
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .hamburger,
+  .mobile-nav-toggle {
+    display: inline-flex;
+  }
+}

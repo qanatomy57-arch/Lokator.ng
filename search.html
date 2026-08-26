@@ -68,7 +68,7 @@
         </button>
         <a href="register.html" class="btn btn-outline" id="nav-register">List Your Skill</a>
       </nav>
-      <button class="hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false">
+      <button class="hamburger mobile-nav-toggle" id="hamburger" aria-label="Open Navigation Menu" aria-expanded="false" aria-controls="mobile-nav-drawer">
         <span></span><span></span><span></span>
       </button>
     </div>
@@ -457,6 +457,30 @@
     </div>
   </footer>
 
+  <!-- ===== PHASE 10.19: MOBILE NAVIGATION DRAWER & BACKDROP ===== -->
+  <div class="mobile-nav-backdrop" id="mobile-nav-backdrop" aria-hidden="true"></div>
+  <aside class="mobile-nav-drawer" id="mobile-nav-drawer" aria-label="Mobile Navigation Menu" aria-hidden="true">
+    <div class="drawer-header">
+      <a href="index.html" class="drawer-brand">
+        <svg width="24" height="24" viewBox="0 0 30 30" fill="none"><path d="M15 2C10.03 2 6 6.03 6 11c0 6.75 9 17 9 17s9-10.25 9-17c0-4.97-4.03-9-9-9z" fill="#006B3F"/><circle cx="15" cy="11" r="4" fill="#D4AF37"/><circle cx="15" cy="11" r="2" fill="#FFFFFF"/></svg>
+        <span>Lokator<span style="color: #D4AF37;">.NG</span></span>
+      </a>
+      <button type="button" class="drawer-close-btn" id="mobile-nav-close-btn" aria-label="Close navigation menu">✕</button>
+    </div>
+    <nav class="drawer-nav-list">
+      <a href="index.html" class="drawer-link"><span class="drawer-icon">🏠</span> <span>Home</span></a>
+      <a href="search.html" class="drawer-link"><span class="drawer-icon">🔍</span> <span>Search Providers</span></a>
+      <a href="register.html" class="drawer-link" id="drawer-link-become"><span class="drawer-icon">👤</span> <span>Become a Provider</span></a>
+      <a href="dashboard.html" class="drawer-link" id="drawer-link-dash"><span class="drawer-icon">🎛️</span> <span>Dashboard</span></a>
+      <a href="profile.html" class="drawer-link" id="drawer-link-profile"><span class="drawer-icon">👤</span> <span>My Profile</span></a>
+      <a href="profile.html#reviews-section" class="drawer-link"><span class="drawer-icon">⭐</span> <span>Reviews & Ratings</span></a>
+      <a href="index.html#why-lokator" class="drawer-link"><span class="drawer-icon">🛡️</span> <span>Trust & Safety</span></a>
+      <a href="index.html#faq" class="drawer-link"><span class="drawer-icon">❓</span> <span>Help Center</span></a>
+      <a href="login.html" class="drawer-link" id="drawer-link-login"><span class="drawer-icon">🔑</span> <span>Provider Login</span></a>
+      <a href="#logout" class="drawer-link drawer-logout" id="drawer-link-logout" style="display: none;"><span class="drawer-icon">🚪</span> <span>Logout</span></a>
+    </nav>
+  </aside>
+
   <!-- Floating Mobile Map Toggle Pill (Optimized for Mobile PWA Experience) -->
   <button type="button" class="mobile-map-toggle-pill" id="btn-mobile-map-toggle" aria-label="Toggle map view">
     <span id="mobile-map-icon">🗺️</span>
@@ -467,6 +491,7 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="telemetry.js"></script>
   <script src="locations.js"></script>
+  <script src="map-service.js"></script>
   <script src="phone-utils.js"></script>
   <script src="search-language.js"></script>
   <script src="ai-service.js"></script>

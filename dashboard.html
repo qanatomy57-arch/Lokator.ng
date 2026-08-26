@@ -15,6 +15,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="dashboard.css" />
   <link rel="stylesheet" href="pwa.css" />
@@ -388,21 +389,35 @@
               <input type="text" id="edit-response" placeholder="~15 mins" />
             </div>
 
-            <!-- Location Map Preview -->
+            <!-- Location Map Preview (Phase 10.19 Interactive Google Maps / Leaflet) -->
             <div class="form-group dash-form-full">
-              <label>Location Map Preview</label>
-              <div class="loc-map-preview" id="dash-map-preview">
-                <div class="map-placeholder-bg">
-                  <div class="map-pin-marker">
-                    <span class="map-pin-icon">📍</span>
-                    <span class="map-pin-label" id="dash-map-pin-label">Surulere, Lagos</span>
-                  </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <label style="margin-bottom: 0;">Service Location & Map Coordinates</label>
+                <span id="dash-map-coord-tag" style="font-size: 11.5px; color: #52E58C; font-family: monospace;">6.5244° N, 3.3792° E</span>
+              </div>
+              <div class="service-map-canvas" id="dash-service-map" role="region" aria-label="Provider Service Location Map" style="height: 220px; border-radius: 8px; margin-bottom: 10px;"></div>
+              
+              <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button type="button" class="loc-gps-quick-btn" id="dash-gps-btn" style="flex: 1; padding: 10px 14px; font-weight: 600;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="8"/></svg>
+                  Use My Current GPS Location
+                </button>
+                <button type="button" class="btn btn-outline" id="btn-confirm-location" style="padding: 10px 14px; font-size: 13px;">
+                  ✓ Confirm Location
+                </button>
+              </div>
+
+              <!-- GPS Accuracy & Status telemetry -->
+              <div class="gps-meta-row" id="dash-gps-meta" style="display: none; margin-top: 10px;">
+                <div class="gps-meta-box">
+                  <span class="gps-meta-label">Detected Accuracy</span>
+                  <span class="gps-meta-val" id="dash-gps-accuracy">±12 m</span>
+                </div>
+                <div class="gps-meta-box">
+                  <span class="gps-meta-label">Status</span>
+                  <span class="gps-meta-val" id="dash-gps-status" style="color: #10B981;">✓ Current location detected</span>
                 </div>
               </div>
-              <button type="button" class="loc-gps-quick-btn dash-loc-btn-spaced" id="dash-gps-btn">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="8"/></svg>
-                Use my current location
-              </button>
             </div>
 
             <div class="form-group dash-form-full">
@@ -1014,9 +1029,11 @@
     </div>
   </div>
 
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="telemetry.js"></script>
   <script src="locations.js"></script>
+  <script src="map-service.js"></script>
   <script src="phone-utils.js"></script>
   <script src="search-language.js"></script>
   <script src="ai-service.js"></script>
