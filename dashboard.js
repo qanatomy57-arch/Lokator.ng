@@ -311,23 +311,110 @@ document.addEventListener('DOMContentLoaded', async () => {
       ratingBarsEl.innerHTML = barsHtml;
     }
 
-    // Share link
+    // Share link & WhatsApp integration
+    const profileUrl = `${window.location.origin}/profile.html?id=${currentProvider.id}`;
     const shareInput = document.getElementById('share-link-input');
     if (shareInput) {
-      shareInput.value = `${window.location.origin}/profile.html?id=${currentProvider.id}`;
+      shareInput.value = profileUrl;
     }
     const btnCopy = document.getElementById('btn-copy-share');
-    if (btnCopy && shareInput) {
-      btnCopy.addEventListener('click', () => {
-        navigator.clipboard.writeText(shareInput.value).then(() => {
-          showToast('Profile share link copied to clipboard!');
-        });
-      });
+    if (btnCopy) {
+      btnCopy.onclick = (e) => {
+        e.preventDefault();
+        copyToClipboard(profileUrl, 'Profile share link copied to clipboard!');
+      };
+    }
+    const btnShareProfileWa = document.getElementById('btn-share-profile-wa');
+    if (btnShareProfileWa) {
+      const waProfileText = encodeURIComponent(`Hello! Check out my verified artisan profile on Lokator.NG:\n${profileUrl}`);
+      btnShareProfileWa.href = `https://api.whatsapp.com/send?text=${waProfileText}`;
+    }
+
+    // Community Referral Link & WhatsApp sharing
+    const refUrl = `${window.location.origin}/register.html?ref=${encodeURIComponent(currentProvider.referralCode || currentProvider.id)}`;
+    const refInput = document.getElementById('dash-referral-link');
+    if (refInput) {
+      refInput.value = refUrl;
+    }
+    const btnCopyRef = document.getElementById('btn-copy-ref-link');
+    if (btnCopyRef) {
+      btnCopyRef.onclick = (e) => {
+        e.preventDefault();
+        copyToClipboard(refUrl, 'Referral link copied to clipboard!');
+        const notice = document.getElementById('dash-ref-copy-notice');
+        if (notice) {
+          notice.style.display = 'block';
+          setTimeout(() => { notice.style.display = 'none'; }, 3500);
+        }
+      };
+    }
+    const btnShareRefWa = document.getElementById('btn-share-ref-wa');
+    if (btnShareRefWa) {
+      const waRefText = encodeURIComponent(`Join me on Lokator.NG! List your skilled craft free and get direct customer calls with zero commission:\n${refUrl}`);
+      btnShareRefWa.href = `https://api.whatsapp.com/send?text=${waRefText}`;
     }
 
     // Render Overview Reviews
     renderReviews(currentMetrics.recentReviews || [], 'ov-reviews-list');
     renderReviews(currentProvider.reviews || [], 'all-reviews-list');
+  }
+
+  function showDashToast(message, type = 'success') {
+    let toastContainer = document.getElementById('dash-toast-container');
+    if (!toastContainer) {
+      toastContainer = document.createElement('div');
+      toastContainer.id = 'dash-toast-container';
+      toastContainer.style.cssText = 'position: fixed; bottom: 24px; right: 24px; z-index: 999999; display: flex; flex-direction: column; gap: 8px; pointer-events: none;';
+      document.body.appendChild(toastContainer);
+    }
+    const toast = document.createElement('div');
+    toast.style.cssText = `background: ${type === 'error' ? '#EF4444' : '#059669'}; color: #FFFFFF; padding: 12px 20px; border-radius: 8px; font-weight: 600; font-size: 14px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); pointer-events: auto; transition: all 0.3s ease; transform: translateY(20px); opacity: 0; display: flex; align-items: center; gap: 8px;`;
+    toast.innerHTML = `<span>${type === 'error' ? '⚠️' : '✅'}</span> <span>${escapeHtml(message)}</span>`;
+    toastContainer.appendChild(toast);
+    requestAnimationFrame(() => {
+      toast.style.transform = 'translateY(0)';
+      toast.style.opacity = '1';
+    });
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateY(10px)';
+      setTimeout(() => toast.remove(), 300);
+    }, 3000);
+  }
+
+  function copyToClipboard(text, successMsg = 'Copied to clipboard!') {
+    if (!text) return;
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(() => {
+        showDashToast(successMsg);
+      }).catch(() => {
+        fallbackCopy(text, successMsg);
+      });
+    } else {
+      fallbackCopy(text, successMsg);
+    }
+
+    function fallbackCopy(str, msg) {
+      try {
+        const tempInput = document.createElement('textarea');
+        tempInput.value = str;
+        tempInput.style.position = 'fixed';
+        tempInput.style.top = '-9999px';
+        tempInput.style.left = '-9999px';
+        document.body.appendChild(tempInput);
+        tempInput.focus();
+        tempInput.select();
+        const successful = document.execCommand('copy');
+        document.body.removeChild(tempInput);
+        if (successful) {
+          showDashToast(msg);
+        } else {
+          prompt('Copy link:', str);
+        }
+      } catch (err) {
+        prompt('Copy link:', str);
+      }
+    }
   }
 
   function renderReviews(reviewsList, targetId) {

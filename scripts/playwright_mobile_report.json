@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-08-27T13:56:16.392Z",
+  "timestamp": "2026-08-27T14:54:57.908Z",
   "devicesTested": [
     "iPhone 14 Pro (393x852)",
     "Pixel 7 (412x915)"
@@ -40,6 +40,7 @@
       "route": "/search.html",
       "name": "Search Directory & Map",
       "errors": [
+        "Console Error: Failed to load resource: the server responded with a status of 404 ()",
         "Console Error: Failed to load resource: the server responded with a status of 404 ()"
       ],
       "warnings": [],
@@ -60,6 +61,27 @@
           "size": "50x16px"
         },
         {
+          "text": "📋 List",
+          "tag": "BUTTON",
+          "id": "btn-view-list",
+          "class": "btn-view-mode active",
+          "size": "65x28px"
+        },
+        {
+          "text": "🔲 Split",
+          "tag": "BUTTON",
+          "id": "btn-view-split",
+          "class": "btn-view-mode",
+          "size": "70x28px"
+        },
+        {
+          "text": "🗺️ Map",
+          "tag": "BUTTON",
+          "id": "btn-view-map",
+          "class": "btn-view-mode",
+          "size": "68x28px"
+        },
+        {
           "text": "Update",
           "tag": "BUTTON",
           "id": "sw-update-btn",
@@ -74,7 +96,7 @@
         "Input font sizes >= 16px (iOS auto-zoom safe)",
         "Mobile filter bottom sheet opened",
         "Mobile filter bottom sheet closed",
-        "Mobile Map View toggled successfully (9 tiles active)"
+        "Mobile Map View toggled successfully (30 tiles active)"
       ]
     },
     {

@@ -239,16 +239,21 @@
           <div class="dash-card-section">
             <div class="dash-section-header">
               <div>
-                <h2>Customer WhatsApp Link</h2>
-                <p>Direct link for clients to message you</p>
+                <h2>Customer WhatsApp & Booking Link</h2>
+                <p>Direct link for clients to view your verified profile & hire you</p>
               </div>
             </div>
             <p class="share-link-desc">
-              Share your direct booking link on WhatsApp, Instagram, or Facebook. Clients can view your verified status and contact you instantly.
+              Share your direct profile link on WhatsApp, Instagram, or Facebook. Clients can view your verified status, past work photos, and contact you directly with zero commission.
             </p>
-            <div class="share-link-row">
-              <input type="text" id="share-link-input" readonly class="share-link-input" placeholder="Your profile link" aria-label="Your public profile share link" title="Public profile share link" />
-              <button type="button" class="btn btn-outline btn-copy-share" id="btn-copy-share">Copy</button>
+            <div class="share-link-row" style="display: flex; gap: 10px; flex-wrap: wrap;">
+              <input type="text" id="share-link-input" readonly class="share-link-input" placeholder="Your profile link" aria-label="Your public profile share link" title="Public profile share link" style="flex: 1; min-width: 220px;" />
+              <button type="button" class="btn btn-primary btn-copy-share" id="btn-copy-share" style="display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-weight: 700;">
+                <span>📋 Copy Link</span>
+              </button>
+              <a href="#" target="_blank" rel="noopener noreferrer" class="btn btn-outline" id="btn-share-profile-wa" style="display: inline-flex; align-items: center; justify-content: center; gap: 6px; border-color: #25D366; color: #25D366; font-weight: 700; text-decoration: none;">
+                <span>💬 Share on WhatsApp</span>
+              </a>
             </div>
           </div>
         </div>
@@ -268,31 +273,31 @@
         </div>
 
         <!-- Phase 10.12K: Provider Community Referral & Invitation Tool -->
-        <div class="dash-card-section dash-section-spaced" id="dash-referral-section" style="border-left: 4px solid #10B981; background: linear-gradient(145deg, #131A29, #0E1522);">
-          <div class="dash-section-header">
-            <div>
+        <div class="dash-card-section dash-section-spaced" id="dash-referral-section" style="border-left: 4px solid #10B981; background: linear-gradient(145deg, #131A29, #0E1522); border-radius: 12px; padding: 20px; border: 1px solid rgba(255,255,255,0.08);">
+          <div class="dash-referral-header" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 240px;">
               <div style="display: flex; align-items: center; gap: 8px;">
                 <span style="font-size: 1.2rem;">🤝</span>
                 <h2 style="margin: 0; font-size: 1.1rem; color: #FFFFFF;">Invite Fellow Artisans to Lokator</h2>
               </div>
-              <p style="margin-top: 4px; color: #94A3B8; font-size: 0.85rem;">
+              <p style="margin: 6px 0 0 0; color: #94A3B8; font-size: 0.85rem; line-height: 1.5;">
                 Help expand verified artisan supply in your state. Share your personal invite link with plumbers, electricians, solar installers, and skilled craftsmen.
               </p>
             </div>
-            <span class="status-tag status-good" style="font-size: 0.75rem;">COMMUNITY_GROWTH</span>
+            <span class="status-tag status-good" style="font-size: 0.72rem; padding: 4px 10px; border-radius: 6px; background: rgba(16,185,129,0.15); color: #34D399; border: 1px solid rgba(16,185,129,0.3); font-weight: 700; white-space: nowrap; align-self: flex-start;">COMMUNITY GROWTH</span>
           </div>
 
           <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 12px;">
             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-              <input type="text" id="dash-referral-link" readonly title="Artisan invite and referral link" aria-label="Artisan invite and referral link" placeholder="https://lokator-ng.vercel.app/join.html" style="flex: 1; min-width: 260px; padding: 10px 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: #0A0E17; color: #34D399; font-size: 0.85rem; font-family: monospace;" value="https://lokator-ng.vercel.app/join.html?source=provider_referral" />
-              <button type="button" class="btn btn-primary" id="btn-copy-ref-link" style="display: inline-flex; align-items: center; gap: 6px;">
+              <input type="text" id="dash-referral-link" readonly title="Artisan invite and referral link" aria-label="Artisan invite and referral link" placeholder="https://lokator-ng.vercel.app/register.html" style="flex: 1; min-width: 240px; padding: 10px 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.12); background: #0A0E17; color: #34D399; font-size: 0.85rem; font-family: monospace;" value="https://lokator-ng.vercel.app/register.html?source=provider_referral" />
+              <button type="button" class="btn btn-primary" id="btn-copy-ref-link" style="display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 18px; font-weight: 700; min-width: 130px;">
                 <span>📋 Copy Link</span>
               </button>
-              <a href="#" target="_blank" rel="noopener noreferrer" class="btn btn-outline" id="btn-share-ref-wa" style="display: inline-flex; align-items: center; gap: 6px; border-color: #25D366; color: #25D366;">
+              <a href="#" target="_blank" rel="noopener noreferrer" class="btn btn-outline" id="btn-share-ref-wa" style="display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 18px; border-color: #25D366; color: #25D366; font-weight: 700; text-decoration: none;">
                 <span>💬 Share on WhatsApp</span>
               </a>
             </div>
-            <div id="dash-ref-copy-notice" style="display: none; font-size: 0.8rem; color: #34D399; font-weight: 600;">
+            <div id="dash-ref-copy-notice" style="display: none; font-size: 0.85rem; color: #34D399; font-weight: 600;">
               ✅ Referral link copied to clipboard!
             </div>
           </div>

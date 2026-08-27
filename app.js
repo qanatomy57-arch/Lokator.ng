@@ -205,6 +205,7 @@ class ScrollDiscoveryEngine {
     let ticking = false;
 
     this.heroWrapper.addEventListener('scroll', () => {
+      if (this.isManualScrolling) return;
       if (!ticking) {
         window.requestAnimationFrame(() => {
           ticking = false;
@@ -230,19 +231,18 @@ class ScrollDiscoveryEngine {
       vid.setAttribute('playsinline', '');
       vid.setAttribute('webkit-playsinline', '');
       vid.setAttribute('muted', '');
+      vid.setAttribute('loop', '');
 
       // Error handler for graceful poster image fallback
       vid.addEventListener('error', () => {
         vid.style.opacity = '0';
       }, { once: true });
 
-      // Adaptive initial preloading:
-      // Slide 0: auto on fast connection, metadata on slow connection
-      // Slide 1..8: deferred to preload="none"
-      if (i === 0) {
-        vid.preload = this.isSlowConnection ? 'metadata' : 'auto';
+      // Adaptive preloading: slide 0 and 1 get auto; rest get metadata to enable instant play on demand
+      if (i <= 1) {
+        vid.preload = 'auto';
       } else {
-        vid.preload = 'none';
+        vid.preload = 'metadata';
       }
     });
   }
@@ -251,12 +251,13 @@ class ScrollDiscoveryEngine {
     const observerOptions = {
       root: this.heroWrapper,
       rootMargin: '0px',
-      threshold: 0.65
+      threshold: [0.25, 0.5, 0.75]
     };
 
     this.slideObserver = new IntersectionObserver((entries) => {
+      if (this.isManualScrolling) return;
       entries.forEach(entry => {
-        if (entry.isIntersecting) {
+        if (entry.isIntersecting && entry.intersectionRatio >= 0.4) {
           const slideIndex = parseInt(entry.target.dataset.index, 10);
           if (!isNaN(slideIndex)) {
             this.onSlideVisible(slideIndex);
@@ -366,27 +367,15 @@ class ScrollDiscoveryEngine {
 
   bufferAdjacentVideos(centerIdx) {
     if (this.isSlowConnection || this.saveData) {
-      // Slow network / Save-Data mode: do not eagerly preload adjacent videos
       return;
     }
 
-    // Preload active + next scene (controlled preloading)
-    const toBuffer = [centerIdx, centerIdx + 1];
+    const toBuffer = [centerIdx, centerIdx + 1, centerIdx - 1];
     toBuffer.forEach(idx => {
       if (idx >= 0 && idx < this.videos.length) {
         const vid = this.videos[idx];
         if (vid && vid.preload === 'none') {
-          vid.preload = idx === centerIdx ? 'auto' : 'metadata';
-        }
-      }
-    });
-
-    // Release resource pressure from distant scenes (> 2 slides away)
-    this.videos.forEach((vid, idx) => {
-      if (Math.abs(idx - centerIdx) > 2) {
-        vid.pause();
-        if (vid.preload !== 'none') {
-          vid.preload = 'none';
+          vid.preload = 'metadata';
         }
       }
     });
@@ -398,16 +387,24 @@ class ScrollDiscoveryEngine {
     const vid = this.videos[idx];
     if (!vid) return;
 
-    if (vid.preload === 'none') {
+    vid.muted = true;
+    vid.defaultMuted = true;
+    vid.playsInline = true;
+    vid.setAttribute('playsinline', '');
+    vid.setAttribute('webkit-playsinline', '');
+    vid.setAttribute('muted', '');
+
+    if (vid.readyState < 2 || vid.preload !== 'auto') {
       vid.preload = 'auto';
+      try { vid.load(); } catch (e) {}
     }
 
-    vid.muted = true;
-    vid.playsInline = true;
     const playPromise = vid.play();
     if (playPromise !== undefined) {
       playPromise.catch(() => {
-        // Graceful catch for mobile browser autoplay policies
+        vid.addEventListener('canplay', () => {
+          vid.play().catch(() => {});
+        }, { once: true });
       });
     }
   }
@@ -436,10 +433,18 @@ class ScrollDiscoveryEngine {
     const targetSlide = this.slides[stepIndex];
     if (!targetSlide) return;
 
+    this.isManualScrolling = true;
+    this.onSlideVisible(stepIndex);
+
     this.heroWrapper.scrollTo({
       top: targetSlide.offsetTop,
       behavior: 'smooth'
     });
+
+    clearTimeout(this.manualScrollTimer);
+    this.manualScrollTimer = setTimeout(() => {
+      this.isManualScrolling = false;
+    }, 650);
   }
 
   setupDesktopWheelControl() {

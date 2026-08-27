@@ -4671,10 +4671,18 @@ body.mobile-nav-open {
   white-space: nowrap;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1080px) {
+  .nav-links {
+    display: none !important;
+  }
   .hamburger,
   .mobile-nav-toggle {
-    display: inline-flex;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+  }
+  .nav-inner {
+    height: 60px;
   }
   input, select, textarea, .form-control, .search-input, .location-input, .input {
     font-size: 16px !important;
