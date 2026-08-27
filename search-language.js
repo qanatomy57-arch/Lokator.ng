@@ -427,8 +427,8 @@
       let extractedLocation = null;
       let locationHierarchy = null;
 
-      // 1. Check for location pattern: "in <location>", "at <location>", "around <location>", "inside <location>", "near <location>", "for <location>"
-      const locMatch = q.match(/\s+(?:in|at|around|inside|near|for)\s+([a-zA-Z0-9\s-]+)$/i);
+      // 1. Check for location pattern: "in <location>", "at <location>", "around <location>", "inside <location>", "near <location>"
+      const locMatch = q.match(/\s+(?:in|at|around|inside|near)\s+([a-zA-Z0-9\s-]+)$/i);
       if (locMatch && locMatch[1]) {
         const candidateLoc = locMatch[1].trim();
         const isNotLocation = /^(me|my|a|an|the|my area|here|now|house|home|flat|compound|close to me|around me|around here|repair|repairs|service|fixing|maintenance|cleaning|sewing)$/i.test(candidateLoc) || /^(my\s+|to\s+|for\s+)/i.test(candidateLoc);
