@@ -52,13 +52,37 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Update Page Title & Meta
   document.title = `${provider.name} — ${provider.trade} | Lokator`;
 
-  // 3. Populate Breadcrumbs & Hero Header with Phase 10.9 Discovery Context
+  // 3. Populate Breadcrumbs & Hero Header with Phase 10.9 & Phase 10.21 Discovery Context
+  const queryParam = params.get('q') || '';
   const skillParam = params.get('skill') || params.get('service');
+  const actionParam = params.get('action') || '';
+  const locParam = params.get('loc') || '';
+  const urgencyParam = params.get('urgency') || '';
+  const budgetParam = params.get('budget') || '';
   const stateParam = params.get('state') || provider.state;
   const lgaParam = params.get('lga') || provider.lga;
   const cityParam = params.get('city') || provider.city;
   const indParam = params.get('industry');
   const sourceParam = params.get('source');
+
+  // Phase 10.21: Search Context Notice Banner
+  const contextBanner = document.getElementById('profile-search-context-banner');
+  const contextTitle = document.getElementById('context-banner-query-title');
+  const contextSubtext = document.getElementById('context-banner-subtext');
+  if (contextBanner && (queryParam || skillParam || locParam || actionParam)) {
+    contextBanner.style.display = 'flex';
+    if (contextTitle) {
+      contextTitle.textContent = queryParam ? `Your Request: "${queryParam}"` : `Request: ${skillParam || provider.trade}`;
+    }
+    if (contextSubtext) {
+      const parts = [];
+      if (skillParam) parts.push(skillParam);
+      if (actionParam) parts.push(actionParam.toUpperCase());
+      if (locParam) parts.push(`in ${locParam}`);
+      if (urgencyParam) parts.push(`(${urgencyParam})`);
+      contextSubtext.textContent = parts.length > 0 ? `Context pre-filled: ${parts.join(' • ')}` : 'Context pre-filled into WhatsApp Job Brief below';
+    }
+  }
 
   const breadcrumbsEl = document.querySelector('.profile-breadcrumbs');
   if (breadcrumbsEl && typeof MarketplaceTaxonomy !== 'undefined') {
@@ -81,7 +105,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (lgaParam && lgaParam !== stateParam) {
       crumbs.push({ label: lgaParam, url: `search.html?state=${encodeURIComponent(stateParam || '')}&lga=${encodeURIComponent(lgaParam)}` });
     }
-    crumbs.push({ label: provider.trade, url: `search.html?service=${encodeURIComponent(provider.trade)}${stateParam ? '&state=' + encodeURIComponent(stateParam) : ''}` });
+    if (queryParam) {
+      crumbs.push({ label: `Search: "${queryParam}"`, url: `search.html?q=${encodeURIComponent(queryParam)}` });
+    } else {
+      crumbs.push({ label: provider.trade, url: `search.html?service=${encodeURIComponent(provider.trade)}${stateParam ? '&state=' + encodeURIComponent(stateParam) : ''}` });
+    }
     crumbs.push({ label: provider.name, url: null });
 
     breadcrumbsEl.innerHTML = crumbs.map((c, i) => {
@@ -93,6 +121,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   } else {
     const crumbName = document.getElementById('crumb-provider-name');
     if (crumbName) crumbName.textContent = provider.name;
+    const searchBackLink = document.getElementById('breadcrumb-search-link');
+    if (searchBackLink && queryParam) {
+      searchBackLink.href = `search.html?q=${encodeURIComponent(queryParam)}`;
+    }
   }
 
   const heroAvatar = document.getElementById('hero-avatar');
@@ -1066,20 +1098,74 @@ document.addEventListener('DOMContentLoaded', async () => {
     }, duration);
   }
 
+  // Phase 10.21: Pre-populate location from Search Intent or session
   try {
     const savedLoc = sessionStorage.getItem('lokator_temp_location_name');
-    if (savedLoc && waUserLocation) waUserLocation.value = savedLoc;
+    if (locParam && waUserLocation) {
+      waUserLocation.value = locParam;
+    } else if (savedLoc && waUserLocation) {
+      waUserLocation.value = savedLoc;
+    } else if (stateParam && waUserLocation) {
+      waUserLocation.value = lgaParam ? `${lgaParam}, ${stateParam}` : stateParam;
+    }
   } catch (e) {}
 
   if (waServiceSelect && provider.skills) {
     waServiceSelect.innerHTML = provider.skills.map(s => `
       <option value="${escapeHtml(s)}">${escapeHtml(s)}</option>
     `).join('');
+
+    // Pre-select service matching search intent
+    if (skillParam || queryParam) {
+      const targetTerm = (skillParam || queryParam).toLowerCase();
+      for (let i = 0; i < waServiceSelect.options.length; i++) {
+        const optVal = waServiceSelect.options[i].value.toLowerCase();
+        if (optVal.includes(targetTerm) || targetTerm.includes(optVal)) {
+          waServiceSelect.selectedIndex = i;
+          break;
+        }
+      }
+    }
+  }
+
+  // Pre-select action / job scope from search intent
+  if (actionParam) {
+    if (actionParam === 'repair') {
+      selectedJobScope = 'Emergency Repair';
+    } else if (actionParam === 'installation') {
+      selectedJobScope = 'New Installation';
+    } else if (actionParam === 'maintenance') {
+      selectedJobScope = 'Routine Maintenance';
+    } else if (actionParam === 'cleaning') {
+      selectedJobScope = 'Inspection & Diagnosis';
+    }
+  }
+
+  // Pre-select urgency timeline from search intent
+  if (urgencyParam && waUrgency) {
+    if (urgencyParam === 'immediate' || urgencyParam === 'today') {
+      waUrgency.value = 'Urgent / Today';
+    } else if (urgencyParam === 'tomorrow') {
+      waUrgency.value = 'Tomorrow';
+    } else if (urgencyParam === 'weekend') {
+      waUrgency.value = 'This Weekend';
+    }
+  }
+
+  // Pre-fill note if search query was provided
+  if (queryParam && waNote && !waNote.value) {
+    waNote.value = `I need help with: ${queryParam}`;
   }
 
   // Scope Pill Selection Handler via Event Delegation
   const waScopePillsContainer = document.getElementById('wa-scope-pills');
   if (waScopePillsContainer) {
+    // Reflect pre-selected job scope in buttons
+    waScopePillsContainer.querySelectorAll('.wa-scope-btn').forEach(b => {
+      const scopeVal = b.getAttribute('data-scope');
+      b.classList.toggle('active', scopeVal === selectedJobScope);
+    });
+
     waScopePillsContainer.addEventListener('click', (e) => {
       const btn = e.target.closest('.wa-scope-btn');
       if (btn) {
@@ -1087,6 +1173,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         btn.classList.add('active');
         selectedJobScope = btn.getAttribute('data-scope') || 'Inspection & Diagnosis';
         updateWhatsAppPreview();
+
+        if (typeof LokatorTelemetry !== 'undefined') {
+          LokatorTelemetry.trackEvent('whatsapp_brief_customized', {
+            providerId: provider.id,
+            trade: provider.trade,
+            scope: selectedJobScope
+          });
+        }
       }
     });
   }
@@ -1205,9 +1299,78 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (waCopyBriefBtn) waCopyBriefBtn.addEventListener('click', copyJobBriefHandler);
 
-  if (waServiceSelect) waServiceSelect.addEventListener('change', updateWhatsAppPreview);
+  if (waSendBtn) {
+    waSendBtn.addEventListener('click', () => {
+      if (typeof LokatorTelemetry !== 'undefined') {
+        LokatorTelemetry.trackEvent('whatsapp_brief_submitted', {
+          providerId: provider.id,
+          trade: provider.trade,
+          scope: selectedJobScope,
+          urgency: waUrgency ? waUrgency.value : null,
+          hasSearchIntent: Boolean(queryParam || skillParam)
+        });
+        LokatorTelemetry.trackEvent('whatsapp_clicked', {
+          providerId: provider.id,
+          trade: provider.trade,
+          surface: 'profile_whatsapp_brief'
+        });
+      }
+    });
+  }
+
+  // Phase 10.21: Mobile Sticky Bottom Action Bar
+  const stickyCallBtn = document.getElementById('sticky-call-btn');
+  const stickyWaBtn = document.getElementById('sticky-wa-btn');
+  if (stickyCallBtn) {
+    if (heroTelUrl) {
+      stickyCallBtn.href = heroTelUrl;
+      stickyCallBtn.addEventListener('click', () => {
+        if (typeof LokatorTelemetry !== 'undefined') {
+          LokatorTelemetry.trackEvent('call_clicked', {
+            providerId: provider.id,
+            trade: provider.trade,
+            surface: 'profile_mobile_sticky'
+          });
+        }
+      });
+    } else {
+      stickyCallBtn.style.display = 'none';
+    }
+  }
+
+  if (stickyWaBtn) {
+    stickyWaBtn.addEventListener('click', (e) => {
+      const waBuilder = document.getElementById('whatsapp-builder');
+      if (waBuilder) {
+        waBuilder.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      if (typeof LokatorTelemetry !== 'undefined') {
+        LokatorTelemetry.trackEvent('whatsapp_clicked', {
+          providerId: provider.id,
+          trade: provider.trade,
+          surface: 'profile_mobile_sticky'
+        });
+      }
+    });
+  }
+
+  document.body.classList.add('has-sticky-bar');
+
+  if (waServiceSelect) waServiceSelect.addEventListener('change', () => {
+    updateWhatsAppPreview();
+    if (typeof LokatorTelemetry !== 'undefined') {
+      LokatorTelemetry.trackEvent('whatsapp_brief_customized', { providerId: provider.id, trade: provider.trade, field: 'service' });
+    }
+  });
+
   if (waUserLocation) waUserLocation.addEventListener('input', updateWhatsAppPreview);
-  if (waUrgency) waUrgency.addEventListener('change', updateWhatsAppPreview);
+  if (waUrgency) waUrgency.addEventListener('change', () => {
+    updateWhatsAppPreview();
+    if (typeof LokatorTelemetry !== 'undefined') {
+      LokatorTelemetry.trackEvent('whatsapp_brief_customized', { providerId: provider.id, trade: provider.trade, field: 'urgency' });
+    }
+  });
+
   if (waMaterialsSelect) waMaterialsSelect.addEventListener('change', updateWhatsAppPreview);
   if (waNote) waNote.addEventListener('input', updateWhatsAppPreview);
 

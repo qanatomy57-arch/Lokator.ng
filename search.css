@@ -803,6 +803,48 @@
   margin-top: 1px;
 }
 
+/* Phase 10.21: Intent-Match Badges Row */
+.provider-intent-badges-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.intent-match-pill {
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.intent-match-pill.match-skill {
+  background: rgba(0, 107, 63, 0.12);
+  color: #006B3F;
+  border: 1px solid rgba(0, 107, 63, 0.25);
+}
+
+.intent-match-pill.match-trade {
+  background: rgba(2, 132, 199, 0.1);
+  color: #0284C7;
+  border: 1px solid rgba(2, 132, 199, 0.2);
+}
+
+.intent-match-pill.match-action {
+  background: rgba(245, 158, 11, 0.12);
+  color: #D97706;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+.intent-match-pill.match-loc {
+  background: rgba(99, 102, 241, 0.1);
+  color: #6366F1;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
 .provider-tags-row {
   display: flex;
   gap: 6px;

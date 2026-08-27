@@ -1412,3 +1412,146 @@
 .skill-tag-pill svg {
   stroke: currentColor;
 }
+
+/* ==================================================
+   PHASE 10.21: SEARCH CONTEXT BANNER & MOBILE STICKY BAR
+   ================================================== */
+
+/* 1. Search Context Carryover Banner */
+.profile-search-context-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: linear-gradient(135deg, rgba(0, 107, 63, 0.15), rgba(15, 23, 42, 0.95));
+  border: 1px solid rgba(0, 107, 63, 0.35);
+  border-radius: var(--radius-md);
+  padding: 12px 18px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.context-banner-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.context-banner-icon {
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.context-banner-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.context-banner-text strong {
+  font-size: 14px;
+  font-weight: 800;
+  color: #FFFFFF;
+}
+
+.context-banner-text span {
+  font-size: 12.5px;
+  color: #34D399;
+}
+
+.context-banner-action {
+  background: rgba(0, 107, 63, 0.3);
+  border: 1px solid rgba(52, 211, 153, 0.4);
+  color: #34D399;
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 20px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.context-banner-action:hover {
+  background: #006B3F;
+  color: #FFFFFF;
+  border-color: #006B3F;
+}
+
+/* 2. Mobile Sticky Bottom Action Bar (<992px) */
+.profile-mobile-sticky-bar {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 999;
+  background: rgba(10, 14, 23, 0.92);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 10px 16px;
+  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.35);
+}
+
+.mobile-sticky-inner {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 10px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.sticky-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  border-radius: 8px;
+  min-height: 48px;
+  text-decoration: none;
+}
+
+.sticky-btn.sticky-call {
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #FFFFFF;
+}
+
+.sticky-btn.sticky-call:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.sticky-btn.sticky-wa {
+  background: #006B3F;
+  border-color: #006B3F;
+  color: #FFFFFF;
+}
+
+.sticky-btn.sticky-wa:hover {
+  background: #005432;
+  border-color: #005432;
+}
+
+@media (max-width: 992px) {
+  .profile-mobile-sticky-bar {
+    display: block;
+  }
+  body.has-sticky-bar {
+    padding-bottom: 74px;
+  }
+}
+
+@media (max-width: 480px) {
+  .profile-search-context-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .context-banner-action {
+    align-self: flex-start;
+  }
+}

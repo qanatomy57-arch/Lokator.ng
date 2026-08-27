@@ -91,10 +91,11 @@
       primaryTrade: 'Phone & Gadget Technician',
       aliases: [
         'phone engineer', 'phone technician', 'phone repairer', 'phone repair',
-        'phonerepair', 'phone-repair', 'fix phone', 'phone fixer', 'phone screen',
+        'phonerepair', 'phone-repair', 'fix phone', 'fix my phone', 'phone fixer', 'phone screen',
         'screen replacement', 'iphone repairer', 'samsung repairer', 'laptop repairer',
         'computer repairer', 'gadget technician', 'screen changer', 'broken screen',
-        'computer village engineer', 'fix laptop', 'repair phone', 'repair laptop'
+        'computer village engineer', 'fix laptop', 'repair phone', 'repair my phone', 'repair laptop',
+        'phone'
       ],
       skills: ['Phone Repair', 'Screen Replacement', 'Laptop Repair', 'Computer Technician', 'iPhone Repair']
     },
@@ -225,7 +226,7 @@
       primaryTrade: 'Cleaning & Fumigation Specialist',
       aliases: [
         'cleaner', 'cleaners', 'cleaning', 'house cleaner', 'home cleaning',
-        'clean house', 'clean my house', 'deep clean', 'deep cleaning', 'fumigator', 'fumigation', 'pest control',
+        'clean house', 'clean my house', 'clean office', 'clean my office', 'office cleaning', 'deep clean', 'deep cleaning', 'fumigator', 'fumigation', 'pest control',
         'pest control person', 'post construction cleaning', 'office cleaner',
         'cleaning lady', 'housekeeping', 'clean compound'
       ],
@@ -637,39 +638,61 @@
       let extractedLocation = null;
       let locationHierarchy = null;
 
-      const LocEngine = (typeof NigeriaLocations !== 'undefined' ? NigeriaLocations : null) ||
-                        (typeof globalThis !== 'undefined' ? globalThis.NigeriaLocations : null) ||
-                        (typeof window !== 'undefined' ? window.NigeriaLocations : null) ||
-                        (typeof global !== 'undefined' ? global.NigeriaLocations : null);
+      let LocEngine = null;
+      try {
+        if (typeof NigeriaLocations !== 'undefined' && NigeriaLocations) LocEngine = NigeriaLocations;
+        else if (typeof globalThis !== 'undefined' && globalThis.NigeriaLocations) LocEngine = globalThis.NigeriaLocations;
+        else if (typeof window !== 'undefined' && window.NigeriaLocations) LocEngine = window.NigeriaLocations;
+        else if (typeof global !== 'undefined' && global.NigeriaLocations) LocEngine = global.NigeriaLocations;
+      } catch (e) {}
+      if (!LocEngine && typeof require !== 'undefined') {
+        try {
+          const locMod = require('./locations.js');
+          LocEngine = locMod.NigeriaLocations || locMod;
+        } catch (e) {}
+      }
 
       // 1. SMART LOCATION EXTRACTION
-      // Check prepositions: "in <loc>", "at <loc>", "around <loc>", "inside <loc>", "near <loc>", "for <loc>"
-      const locMatch = q.match(/\s+(?:in|at|around|inside|near|for)\s+([a-zA-Z0-9\s-]+)$/i);
-      if (locMatch && locMatch[1]) {
-        const candidateLoc = locMatch[1].trim();
-        const prep = locMatch[0].trim().split(/\s+/)[0].toLowerCase();
-        const isNotLocation = /^(me|us|my|a|an|the|my area|here|now|house|home|flat|compound|room|car|close to me|around me|around here|repair|repairs|service|fixing|maintenance|cleaning|sewing|bake|paint)$/i.test(candidateLoc) || /^(my\s+|to\s+|for\s+)/i.test(candidateLoc);
+      // Check prepositions from right to left: "in <loc>", "at <loc>", "around <loc>", "inside <loc>", "near <loc>", "for <loc>"
+      const prepositions = ['in', 'at', 'around', 'inside', 'near', 'for'];
+      let bestMatch = null;
+      let highestIndex = -1;
+      let chosenPrep = '';
+      let chosenLoc = '';
 
-        if (candidateLoc.length >= 2 && !isNotLocation) {
-          // If preposition is "for", verify candidate is a recognized Nigerian location or not a task clause
-          if (prep === 'for') {
-            if (LocEngine) {
-              const testHierarchy = LocEngine.resolveLocationHierarchy(candidateLoc);
-              if (testHierarchy && testHierarchy.state) {
-                extractedLocation = candidateLoc;
-                locationHierarchy = testHierarchy;
-                q = q.substring(0, locMatch.index).trim();
-              }
-            } else {
-              extractedLocation = candidateLoc;
-              q = q.substring(0, locMatch.index).trim();
+      for (const p of prepositions) {
+        const pRegex = new RegExp(`\\s+${p}\\s+([a-zA-Z0-9\\s-]+)$`, 'i');
+        const m = q.match(pRegex);
+        if (m && m.index > highestIndex) {
+          const cand = m[1].trim();
+          const isNotLocation = /^(me|us|my|a|an|the|my area|here|now|house|home|flat|compound|room|car|close to me|around me|around here|repair|repairs|service|fixing|maintenance|cleaning|sewing|bake|paint)$/i.test(cand) || /^(my\s+|to\s+|for\s+)/i.test(cand);
+          if (cand.length >= 2 && !isNotLocation) {
+            highestIndex = m.index;
+            bestMatch = m;
+            chosenPrep = p.toLowerCase();
+            chosenLoc = cand;
+          }
+        }
+      }
+
+      if (bestMatch && chosenLoc) {
+        if (chosenPrep === 'for') {
+          if (LocEngine) {
+            const testHierarchy = LocEngine.resolveLocationHierarchy(chosenLoc);
+            if (testHierarchy && testHierarchy.state) {
+              extractedLocation = chosenLoc;
+              locationHierarchy = testHierarchy;
+              q = q.substring(0, bestMatch.index).trim();
             }
           } else {
-            extractedLocation = candidateLoc;
-            q = q.substring(0, locMatch.index).trim();
-            if (LocEngine) {
-              locationHierarchy = LocEngine.resolveLocationHierarchy(extractedLocation);
-            }
+            extractedLocation = chosenLoc;
+            q = q.substring(0, bestMatch.index).trim();
+          }
+        } else {
+          extractedLocation = chosenLoc;
+          q = q.substring(0, bestMatch.index).trim();
+          if (LocEngine) {
+            locationHierarchy = LocEngine.resolveLocationHierarchy(extractedLocation);
           }
         }
       }
@@ -743,6 +766,7 @@
         rawQuery: rawTrimmed,
         cleanQuery: cleaned.toLowerCase(),
         serviceIntent,
+        canonicalSlug: serviceIntent ? serviceIntent.canonicalSlug : null,
         actionIntent,
         urgencyIntent,
         budgetIntent,

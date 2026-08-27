@@ -778,13 +778,40 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (emptyState) emptyState.style.display = "none";
 
-      // Render Provider Cards (Matches Image 2 Canonical Design)
-      providersContainer.innerHTML = providers.map(provider => {
+      // Render Provider Cards (Matches Image 2 Canonical Design with Phase 10.21 Conversion Intent)
+      providersContainer.innerHTML = providers.map((provider, index) => {
         const safeId = parseInt(provider.id, 10) || 0;
         const initials = getInitials(provider.name);
         const providerArea = provider.area || (provider.lga && provider.state ? `${provider.lga}, ${provider.state}` : provider.city) || 'your area';
         const serviceCtx = state.keyword || provider.trade;
         const locationCtx = state.locationQuery || providerArea;
+
+        // Phase 10.21: Construct contextual profile URL preserving search intent
+        const profileUrlParams = new URLSearchParams();
+        profileUrlParams.set('id', safeId);
+        if (state.keyword && state.keyword.trim()) {
+          profileUrlParams.set('q', state.keyword.trim());
+        }
+        if (naturalLanguageParsed && naturalLanguageParsed.serviceIntent) {
+          profileUrlParams.set('service', naturalLanguageParsed.serviceIntent.primaryTrade || naturalLanguageParsed.serviceIntent.canonicalSlug);
+        }
+        if (naturalLanguageParsed && naturalLanguageParsed.actionIntent) {
+          profileUrlParams.set('action', naturalLanguageParsed.actionIntent);
+        }
+        if (naturalLanguageParsed && naturalLanguageParsed.locationHierarchy && naturalLanguageParsed.locationHierarchy.cleanLocation) {
+          profileUrlParams.set('loc', naturalLanguageParsed.locationHierarchy.cleanLocation);
+        } else if (naturalLanguageParsed && naturalLanguageParsed.extractedLocation) {
+          profileUrlParams.set('loc', naturalLanguageParsed.extractedLocation);
+        } else if (state.locationQuery && state.locationQuery.trim()) {
+          profileUrlParams.set('loc', state.locationQuery.trim());
+        }
+        if (naturalLanguageParsed && naturalLanguageParsed.urgencyIntent) {
+          profileUrlParams.set('urgency', naturalLanguageParsed.urgencyIntent.level);
+        }
+        if (naturalLanguageParsed && naturalLanguageParsed.budgetIntent && naturalLanguageParsed.budgetIntent.maxBudget) {
+          profileUrlParams.set('budget', String(naturalLanguageParsed.budgetIntent.maxBudget));
+        }
+        const profileUrl = `profile.html?${profileUrlParams.toString()}`;
 
         const PhoneEngine = (typeof NigeriaPhone !== 'undefined' ? NigeriaPhone : null) || (typeof window !== 'undefined' ? window.NigeriaPhone : null);
         const telUrl = PhoneEngine ? PhoneEngine.buildTelUrl(provider) : (provider.phone ? `tel:${provider.phone}` : '');
@@ -803,27 +830,45 @@ document.addEventListener("DOMContentLoaded", () => {
         const safeExpYrs = parseInt(provider.experienceYrs || 3, 10);
         const safeAvatarBg = (provider.avatarBg && typeof provider.avatarBg === 'string' && provider.avatarBg.startsWith('linear-gradient')) ? provider.avatarBg : 'linear-gradient(135deg, #006B3F, #059669)';
 
-        // Dual Contact buttons: Call Now (solid green) & Message (WhatsApp outline)
+        // Phase 10.21: Intent-Match Visual Indicators
+        let intentBadgesHtml = '';
+        if (naturalLanguageParsed && naturalLanguageParsed.serviceIntent) {
+          const isTradeMatch = (provider.slug === naturalLanguageParsed.serviceIntent.canonicalSlug) || (provider.trade && provider.trade.toLowerCase().includes(naturalLanguageParsed.serviceIntent.canonicalSlug));
+          const matchedSkill = skillsList.find(s => s.toLowerCase().includes(naturalLanguageParsed.serviceIntent.canonicalSlug) || (naturalLanguageParsed.cleanQuery && s.toLowerCase().includes(naturalLanguageParsed.cleanQuery)));
+          if (matchedSkill) {
+            intentBadgesHtml += `<span class="intent-match-pill match-skill" title="Artisan offers requested skill">✓ ${escapeHtml(matchedSkill)}</span>`;
+          } else if (isTradeMatch) {
+            intentBadgesHtml += `<span class="intent-match-pill match-trade" title="Exact trade match">✓ Matches Service</span>`;
+          }
+        }
+        if (naturalLanguageParsed && naturalLanguageParsed.actionIntent) {
+          intentBadgesHtml += `<span class="intent-match-pill match-action" title="Supports ${naturalLanguageParsed.actionIntent}">⚡ ${escapeHtml(naturalLanguageParsed.actionIntent.toUpperCase())}</span>`;
+        }
+        if (naturalLanguageParsed && naturalLanguageParsed.locationHierarchy && provider.state && provider.state.toLowerCase() === naturalLanguageParsed.locationHierarchy.state.toLowerCase()) {
+          intentBadgesHtml += `<span class="intent-match-pill match-loc" title="Located in your state">📍 In Your State</span>`;
+        }
+
+        // Dual Contact buttons: Call Now (solid green) & Message on WhatsApp
         const callBtnHtml = telUrl
-          ? `<a href="${escapeHtml(telUrl)}" class="action-btn call-btn" aria-label="Call ${escapeHtml(provider.name)}">
+          ? `<a href="${escapeHtml(telUrl)}" class="action-btn call-btn" data-provider-id="${safeId}" data-trade="${escapeHtml(provider.trade)}" aria-label="Call ${escapeHtml(provider.name)}">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
               <span>Call Now</span>
             </a>`
           : `<button class="action-btn call-btn" disabled><span>Call Now</span></button>`;
 
         const messageBtnHtml = waUrl
-          ? `<a href="${escapeHtml(waUrl)}" target="_blank" rel="noopener" class="action-btn message-btn" aria-label="Message ${escapeHtml(provider.name)}">
+          ? `<a href="${escapeHtml(waUrl)}" target="_blank" rel="noopener" class="action-btn message-btn" data-provider-id="${safeId}" data-trade="${escapeHtml(provider.trade)}" aria-label="Message ${escapeHtml(provider.name)} on WhatsApp">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
               <span>Message</span>
             </a>`
-          : `<a href="profile.html?id=${safeId}" class="action-btn message-btn"><span>Message</span></a>`;
+          : `<a href="${escapeHtml(profileUrl)}" class="action-btn message-btn"><span>Message</span></a>`;
 
         return `
-          <article class="provider-item-card ${provider.isVerified ? 'is-verified' : ''}" id="card-prov-${safeId}">
+          <article class="provider-item-card ${provider.isVerified ? 'is-verified' : ''}" id="card-prov-${safeId}" data-provider-id="${safeId}" data-provider-trade="${escapeHtml(provider.trade)}" data-position="${index + 1}">
             <div class="provider-card-main-row">
               <!-- Avatar Column -->
               <div class="provider-avatar-col">
-                <a href="profile.html?id=${safeId}" title="Open Full Profile Page" style="text-decoration: none;">
+                <a href="${escapeHtml(profileUrl)}" class="provider-card-profile-link" title="Open Full Profile Page" style="text-decoration: none;">
                   <div class="big-avatar" style="background: ${safeAvatarBg};">
                     ${provider.avatarUrl ? `<img src="${escapeHtml(provider.avatarUrl)}" alt="${escapeHtml(provider.name)}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" />` : escapeHtml(initials)}
                   </div>
@@ -834,7 +879,7 @@ document.addEventListener("DOMContentLoaded", () => {
               <!-- Content Column -->
               <div class="provider-content-col">
                 <div class="provider-header-line">
-                  <a href="profile.html?id=${safeId}" title="Open Full Profile Page" style="text-decoration: none; color: inherit;">
+                  <a href="${escapeHtml(profileUrl)}" class="provider-card-profile-link" title="Open Full Profile Page" style="text-decoration: none; color: inherit;">
                     <h3 class="provider-title-name">${escapeHtml(provider.name)}</h3>
                   </a>
                   ${provider.isVerified ? `
@@ -859,6 +904,9 @@ document.addEventListener("DOMContentLoaded", () => {
                   <span>📍 ${escapeHtml(distText)}</span>
                 </div>
 
+                <!-- Intent Match Badges if present -->
+                ${intentBadgesHtml ? `<div class="provider-intent-badges-row">${intentBadgesHtml}</div>` : ''}
+
                 <!-- Skill tag pills -->
                 <div class="provider-tags-row">
                   ${skillsList.slice(0, 4).map(s => `<span class="mini-tag" data-skill="${escapeHtml(s)}">${escapeHtml(s)}</span>`).join('')}
@@ -874,6 +922,45 @@ document.addEventListener("DOMContentLoaded", () => {
           </article>
         `;
       }).join('');
+
+      // Telemetry click delegation on provider cards
+      if (!providersContainer._telemetryBound) {
+        providersContainer._telemetryBound = true;
+        providersContainer.addEventListener('click', (e) => {
+          const card = e.target.closest('.provider-item-card');
+          if (!card) return;
+          const providerId = parseInt(card.dataset.providerId, 10);
+          const trade = card.dataset.providerTrade;
+          const position = parseInt(card.dataset.position, 10) || 1;
+
+          if (e.target.closest('.call-btn')) {
+            if (typeof LokatorTelemetry !== 'undefined') {
+              LokatorTelemetry.trackEvent('call_clicked', {
+                providerId,
+                trade,
+                surface: 'search_card'
+              });
+            }
+          } else if (e.target.closest('.message-btn')) {
+            if (typeof LokatorTelemetry !== 'undefined') {
+              LokatorTelemetry.trackEvent('whatsapp_clicked', {
+                providerId,
+                trade,
+                surface: 'search_card'
+              });
+            }
+          } else if (e.target.closest('.provider-card-profile-link') || e.target.closest('.big-avatar') || e.target.closest('.provider-title-name')) {
+            if (typeof LokatorTelemetry !== 'undefined') {
+              LokatorTelemetry.trackEvent('provider_card_clicked', {
+                providerId,
+                trade,
+                position,
+                hasSearchIntent: Boolean(naturalLanguageParsed && naturalLanguageParsed.serviceIntent)
+              });
+            }
+          }
+        });
+      }
 
       // Render Pagination if more than pageSize
       renderPagination(state.totalCount);
