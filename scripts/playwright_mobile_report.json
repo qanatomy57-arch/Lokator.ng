@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-08-27T19:39:01.445Z",
+  "timestamp": "2026-08-27T21:42:45.107Z",
   "devicesTested": [
     "iPhone 14 Pro (393x852)",
     "Pixel 7 (412x915)"
@@ -86,7 +86,7 @@
         "Input font sizes >= 16px (iOS auto-zoom safe)",
         "Mobile filter bottom sheet opened",
         "Mobile filter bottom sheet closed",
-        "Mobile Map View toggled successfully (30 tiles active)"
+        "Mobile Map View toggled successfully (20 tiles active)"
       ]
     },
     {
@@ -166,7 +166,7 @@
         "Zero horizontal overflow",
         "Input font sizes >= 16px (iOS auto-zoom safe)",
         "Profile service map verified (4 tiles, 1 marker)",
-        "Call Provider button configured: tel:+2348077889900"
+        "Call Provider button configured: tel:+2347030313984"
       ]
     },
     {

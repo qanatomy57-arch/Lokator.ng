@@ -200,6 +200,24 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    // 6. Endpoint: /api/ai/job-brief (Phase 10.12D / Phase 10.20)
+    if (pathname === '/api/ai/job-brief' && req.method === 'POST') {
+      try {
+        const payload = await parseJsonBody(req);
+        const briefResult = LokatorAIService.generateStructuredJobBrief(payload.provider || payload, payload.inputs || payload);
+        sendJsonResponse(res, 200, {
+          success: true,
+          data: briefResult
+        });
+      } catch (err) {
+        sendJsonResponse(res, 400, {
+          success: false,
+          error: err.message || 'Structured job brief generation failed.'
+        });
+      }
+      return;
+    }
+
     sendJsonResponse(res, 404, { success: false, error: 'AI endpoint not found.' });
     return;
   }

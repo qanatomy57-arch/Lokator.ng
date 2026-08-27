@@ -1384,6 +1384,7 @@
         : (searchIntent.extractedLocation || (effectiveLga !== 'all' ? effectiveLga : (effectiveState !== 'all' ? effectiveState : 'all')));
 
       // 1. If remote live Supabase client is connected and active:
+      let remoteData = null;
       if (isRemoteActive()) {
         try {
           let queryBuilder = supabaseInstance
@@ -1454,20 +1455,19 @@
           const to = from + pageSize - 1;
           const { data, count, error } = await queryBuilder.range(from, to);
           if (!error && Array.isArray(data) && data.length > 0) {
-            return {
-              data: this._sanitizeProvidersList(data, userLat, userLng),
-              totalCount: count || data.length,
-              page,
-              pageSize
-            };
+            remoteData = data;
           }
         } catch (err) {
           console.warn('Supabase remote query failed, utilizing local sync layer:', err);
         }
       }
 
-      // 2. Local Supabase-compatible Driver Query
+      // 2. Unified Supabase-compatible Driver Query
       let providers = getLocalStore(DB_STORE_KEY, []);
+      if (Array.isArray(remoteData) && remoteData.length > 0) {
+        const remoteIds = new Set(remoteData.map(p => p.id));
+        providers = [...remoteData, ...providers.filter(p => !remoteIds.has(p.id))];
+      }
       const services = getLocalStore(DB_SERVICES_KEY, []);
 
       // Filter: only public & active

@@ -511,10 +511,8 @@ document.addEventListener("DOMContentLoaded", () => {
       if (LangEngine && state.keyword && !state.forceLiteral) {
         naturalLanguageParsed = LangEngine.parseNigerianQuery(state.keyword);
         
-        // Resolve trade intent if category dropdown is on "all"
-        if (naturalLanguageParsed.serviceIntent && (categorySelect ? categorySelect.value === 'all' : state.category === 'all')) {
-          effectiveCategory = naturalLanguageParsed.serviceIntent.canonicalSlug;
-        }
+        // If category is all, let the multi-tier searchIntent rank providers by trade and skills
+        effectiveCategory = categorySelect ? categorySelect.value : state.category;
 
         // Resolve location hierarchy if state dropdown is on "all"
         if (naturalLanguageParsed.locationHierarchy && (state.state === 'all' || !state.state)) {
@@ -537,11 +535,14 @@ document.addEventListener("DOMContentLoaded", () => {
       // Render Natural Language Search Intent Banner
       const intentBanner = document.getElementById('search-intent-banner');
       if (intentBanner) {
-        if (naturalLanguageParsed && (naturalLanguageParsed.serviceIntent || naturalLanguageParsed.extractedLocation || naturalLanguageParsed.isNearMe)) {
+        if (naturalLanguageParsed && (naturalLanguageParsed.serviceIntent || naturalLanguageParsed.extractedLocation || naturalLanguageParsed.isNearMe || naturalLanguageParsed.actionIntent || naturalLanguageParsed.urgencyIntent || naturalLanguageParsed.budgetIntent)) {
           const tradeLabel = naturalLanguageParsed.serviceIntent ? naturalLanguageParsed.serviceIntent.primaryTrade : 'Specialist Artisan';
           const locLabel = naturalLanguageParsed.locationHierarchy ? naturalLanguageParsed.locationHierarchy.cleanLocation : naturalLanguageParsed.extractedLocation;
           const locPart = locLabel ? ` in <strong class="intent-highlight">${escapeHtml(locLabel)}</strong>` : '';
           const nearPart = naturalLanguageParsed.isNearMe ? ' • <span class="intent-nearby-tag">📍 Nearby</span>' : '';
+          const actionPart = naturalLanguageParsed.actionIntent ? ` • <span class="intent-nearby-tag" style="background:#EFF6FF;color:#1E40AF;border-color:#BFDBFE;">⚡ ${escapeHtml(naturalLanguageParsed.actionIntent.toUpperCase())}</span>` : '';
+          const urgencyPart = naturalLanguageParsed.urgencyIntent ? ` • <span class="intent-nearby-tag" style="background:#FEF2F2;color:#991B1B;border-color:#FECACA;">⏳ ${escapeHtml(naturalLanguageParsed.urgencyIntent.label)}</span>` : '';
+          const budgetPart = naturalLanguageParsed.budgetIntent ? ` • <span class="intent-nearby-tag" style="background:#F0FDF4;color:#166534;border-color:#BBF7D0;">💰 ${escapeHtml(naturalLanguageParsed.budgetIntent.label)}</span>` : '';
 
           intentBanner.innerHTML = `
             <div class="search-intent-content">
@@ -550,7 +551,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 <div>
                   <div class="search-intent-title">Interpreted Nigerian Query: <span class="intent-query-text">"${escapeHtml(state.keyword)}"</span></div>
                   <div class="search-intent-details">
-                    Looking for <strong class="intent-highlight">${escapeHtml(tradeLabel)}</strong>${locPart}${nearPart}
+                    Looking for <strong class="intent-highlight">${escapeHtml(tradeLabel)}</strong>${locPart}${nearPart}${actionPart}${urgencyPart}${budgetPart}
                   </div>
                 </div>
               </div>
