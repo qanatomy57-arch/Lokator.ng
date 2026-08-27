@@ -1137,6 +1137,87 @@
     },
 
     /**
+     * Resolve precise lat/lng or best-matching Nigerian locality/state centroid
+     * from an object (with lat/lng or area/lga/state) or a location string.
+     */
+    resolveCoordinates(queryOrObj) {
+      if (!queryOrObj) {
+        return { lat: 6.5244, lng: 3.3792, formatted: 'Lagos, Nigeria', isCentroid: true };
+      }
+
+      // 1. Direct coordinates on object
+      if (typeof queryOrObj === 'object') {
+        const directLat = Number(queryOrObj.lat != null ? queryOrObj.lat : queryOrObj.latitude);
+        const directLng = Number(queryOrObj.lng != null ? queryOrObj.lng : queryOrObj.longitude);
+        if (!isNaN(directLat) && !isNaN(directLng) && directLat !== 0 && directLng !== 0) {
+          return {
+            lat: directLat,
+            lng: directLng,
+            formatted: queryOrObj.area || queryOrObj.formatted || `${directLat.toFixed(4)}, ${directLng.toFixed(4)}`,
+            isCentroid: false
+          };
+        }
+      }
+
+      // 2. Extract query string
+      let searchStr = '';
+      if (typeof queryOrObj === 'string') {
+        searchStr = queryOrObj.trim().toLowerCase();
+      } else if (typeof queryOrObj === 'object') {
+        const parts = [
+          queryOrObj.area,
+          queryOrObj.locality,
+          queryOrObj.lga,
+          queryOrObj.city,
+          queryOrObj.state
+        ].filter(Boolean);
+        searchStr = parts.join(' ').toLowerCase();
+      }
+
+      if (!searchStr) {
+        return { lat: 6.5244, lng: 3.3792, formatted: 'Lagos, Nigeria', isCentroid: true };
+      }
+
+      // 3. Match against NIGERIA_COORDINATES_MAP
+      // Exact locality or LGA match
+      for (const item of NIGERIA_COORDINATES_MAP) {
+        const locLower = (item.locality || '').toLowerCase();
+        const lgaLower = (item.lga || '').toLowerCase();
+        const fmtLower = (item.formatted || '').toLowerCase();
+
+        if (locLower && searchStr.includes(locLower)) {
+          return { lat: item.lat, lng: item.lng, formatted: item.formatted, isCentroid: true };
+        }
+        if (lgaLower && searchStr.includes(lgaLower)) {
+          return { lat: item.lat, lng: item.lng, formatted: item.formatted, isCentroid: true };
+        }
+        if (fmtLower && searchStr.includes(fmtLower)) {
+          return { lat: item.lat, lng: item.lng, formatted: item.formatted, isCentroid: true };
+        }
+      }
+
+      // Match State name
+      for (const item of NIGERIA_COORDINATES_MAP) {
+        const stateLower = (item.state || '').toLowerCase();
+        if (stateLower && searchStr.includes(stateLower)) {
+          return { lat: item.lat, lng: item.lng, formatted: item.formatted, isCentroid: true };
+        }
+      }
+
+      // Hierarchy fallback
+      const hier = this.resolveLocationHierarchy(searchStr);
+      if (hier && hier.state) {
+        for (const item of NIGERIA_COORDINATES_MAP) {
+          if (item.state.toLowerCase() === hier.state.toLowerCase()) {
+            return { lat: item.lat, lng: item.lng, formatted: item.formatted, isCentroid: true };
+          }
+        }
+      }
+
+      return { lat: 6.5244, lng: 3.3792, formatted: 'Lagos, Nigeria', isCentroid: true };
+    },
+
+    /**
      * High accuracy reverse geocode with fast timeout and local fallback
      */
     async reverseGeocode(lat, lng) {

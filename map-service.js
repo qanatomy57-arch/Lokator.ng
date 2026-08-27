@@ -279,6 +279,24 @@
             bounds.extend({ lat: userLat, lng: userLng });
             this.instance.fitBounds(bounds, { top: 35, right: 35, bottom: 35, left: 35 });
           }
+        },
+        invalidateSize: function () {
+          if (this.type === 'leaflet' && this.instance) {
+            try { this.instance.invalidateSize(); } catch (e) {}
+          } else if (this.type === 'google' && typeof google !== 'undefined' && google.maps && this.instance) {
+            try { google.maps.event.trigger(this.instance, 'resize'); } catch (e) {}
+          }
+        },
+
+        destroy: function () {
+          if (this.type === 'leaflet' && this.instance) {
+            try { this.instance.remove(); } catch (e) {}
+            this.instance = null;
+          }
+          if (container) {
+            if (container._lokator_lmap) container._lokator_lmap = null;
+            if (container._leaflet_id) container._leaflet_id = null;
+          }
         }
       };
 
@@ -319,7 +337,11 @@
       // Interactive Leaflet Fallback (Zero downtime & offline friendly)
       if (typeof L !== 'undefined') {
         try {
-          // Clear previous Leaflet instance if attached
+          // Clean up previous Leaflet instance if attached
+          if (container._lokator_lmap) {
+            try { container._lokator_lmap.remove(); } catch (e) {}
+            container._lokator_lmap = null;
+          }
           if (container._leaflet_id) {
             container._leaflet_id = null;
           }
@@ -331,8 +353,11 @@
             attributionControl: false
           }).setView([providerLat, providerLng], zoom);
 
+          container._lokator_lmap = lmap;
+
           L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19
+            maxZoom: 19,
+            subdomains: ['a', 'b', 'c']
           }).addTo(lmap);
 
           // Provider Pin Marker
@@ -349,11 +374,25 @@
           });
 
           const lMarker = L.marker([providerLat, providerLng], { icon: providerIcon }).addTo(lmap);
-          lMarker.bindPopup(`<strong>${escapeMapHtml(providerName)}</strong><br><span style="font-size:12px; color:#006B3F;">📍 ${escapeMapHtml(locality)}</span>`);
+          const navUrl = `https://www.google.com/maps/dir/?api=1&destination=${providerLat},${providerLng}`;
+          lMarker.bindPopup(`
+            <div style="font-family: inherit; font-size: 13px;">
+              <strong style="color:#006B3F; font-size:14px;">${escapeMapHtml(providerName)}</strong><br>
+              <span style="font-size:12px; color:#475569;">📍 ${escapeMapHtml(locality)}</span>
+              <div style="margin-top: 6px;">
+                <a href="${navUrl}" target="_blank" rel="noopener" style="font-size: 11px; color: #2563EB; text-decoration: underline; font-weight: 600;">Get Directions ↗</a>
+              </div>
+            </div>
+          `);
 
           mapHandle.type = 'leaflet';
           mapHandle.instance = lmap;
           mapHandle.providerMarker = lMarker;
+
+          setTimeout(() => {
+            if (lmap) lmap.invalidateSize();
+          }, 250);
+
           return mapHandle;
         } catch (err) {
           console.error('LokatorMapService: Leaflet initialization error:', err);
@@ -361,6 +400,144 @@
       }
 
       return mapHandle;
+    },
+
+    /**
+     * Initialize or update a multi-artisan search directory map
+     */
+    initSearchDirectoryMap: function (containerId, options) {
+      options = options || {};
+      const container = typeof containerId === 'string' ? document.getElementById(containerId) : containerId;
+      if (!container || typeof L === 'undefined') return null;
+
+      let lmap = container._lokator_lmap;
+      let markersLayer = container._lokator_markers_layer;
+
+      if (!lmap) {
+        if (container._leaflet_id) container._leaflet_id = null;
+        container.innerHTML = '';
+
+        lmap = L.map(container, {
+          zoomControl: true,
+          scrollWheelZoom: false,
+          attributionControl: false
+        }).setView([6.5244, 3.3792], 11);
+
+        container._lokator_lmap = lmap;
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          subdomains: ['a', 'b', 'c']
+        }).addTo(lmap);
+
+        markersLayer = L.layerGroup().addTo(lmap);
+        container._lokator_markers_layer = markersLayer;
+      }
+
+      const directoryHandle = {
+        instance: lmap,
+        markersLayer: markersLayer,
+
+        invalidateSize: function () {
+          if (lmap) {
+            setTimeout(() => {
+              try { lmap.invalidateSize(); } catch (e) {}
+            }, 100);
+          }
+        },
+
+        updateProviders: function (providersList, userCoords) {
+          if (!markersLayer || !lmap) return 0;
+          markersLayer.clearLayers();
+
+          const bounds = [];
+          let plottedCount = 0;
+
+          (providersList || []).forEach(p => {
+            let lat = Number(p.lat != null ? p.lat : p.latitude);
+            let lng = Number(p.lng != null ? p.lng : p.longitude);
+
+            if ((isNaN(lat) || isNaN(lng) || lat === 0 || lng === 0) && typeof NigeriaLocations !== 'undefined' && NigeriaLocations.resolveCoordinates) {
+              const res = NigeriaLocations.resolveCoordinates(p);
+              lat = res.lat;
+              lng = res.lng;
+            }
+
+            if (isNaN(lat) || isNaN(lng)) return;
+
+            bounds.push([lat, lng]);
+            plottedCount++;
+
+            const initials = (p.name || 'Pro').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+            const providerArea = p.area || (p.lga && p.state ? `${p.lga}, ${p.state}` : p.city) || 'Nigeria';
+
+            const customIcon = L.divIcon({
+              className: 'custom-lokator-marker',
+              html: `<div class="lokator-pin" title="${escapeMapHtml(p.name)} (${escapeMapHtml(p.trade)})"><span>${escapeMapHtml(initials)}</span></div>`,
+              iconSize: [36, 36],
+              iconAnchor: [18, 18],
+              popupAnchor: [0, -20]
+            });
+
+            const PhoneEngine = (typeof NigeriaPhone !== 'undefined' ? NigeriaPhone : null) || (typeof window !== 'undefined' ? window.NigeriaPhone : null);
+            const telUrl = PhoneEngine ? PhoneEngine.buildTelUrl(p) : (p.phone ? `tel:${p.phone}` : '');
+            const waUrl = PhoneEngine ? PhoneEngine.buildWhatsAppUrl(p, { service: p.trade, location: providerArea }) : '';
+            const navUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+
+            const popupHtml = `
+              <div class="lokator-popup-card">
+                <strong style="font-size: 14px; color: #006B3F;">${escapeMapHtml(p.name)}</strong>
+                <div class="lokator-popup-trade" style="font-size: 12px; font-weight: 600; color: #D4AF37;">${escapeMapHtml(p.trade || 'Artisan')}</div>
+                <div class="lokator-popup-loc" style="font-size: 11.5px; color: #94A3B8; margin: 4px 0;">📍 ${escapeMapHtml(providerArea)}</div>
+                <div class="lokator-popup-actions" style="display: flex; gap: 6px; margin-top: 8px;">
+                  ${telUrl ? `<a href="${escapeMapHtml(telUrl)}" class="lokator-popup-call" style="padding: 4px 8px; font-size: 11px; background: #006B3F; color: #FFF; border-radius: 4px; text-decoration: none;">📞 Call</a>` : ''}
+                  ${waUrl ? `<a href="${escapeMapHtml(waUrl)}" target="_blank" rel="noopener" class="lokator-popup-wa" style="padding: 4px 8px; font-size: 11px; background: #25D366; color: #000; font-weight: 700; border-radius: 4px; text-decoration: none;">💬 WhatsApp</a>` : ''}
+                  <a href="profile.html?id=${p.id}" style="padding: 4px 8px; font-size: 11px; background: #38BDF8; color: #000; font-weight: 700; border-radius: 4px; text-decoration: none;">Profile →</a>
+                </div>
+                <div style="margin-top: 6px; text-align: right;">
+                  <a href="${navUrl}" target="_blank" rel="noopener" style="font-size: 10.5px; color: #60A5FA; text-decoration: underline;">Directions ↗</a>
+                </div>
+              </div>
+            `;
+
+            const marker = L.marker([lat, lng], { icon: customIcon }).bindPopup(popupHtml);
+            markersLayer.addLayer(marker);
+          });
+
+          if (userCoords && userCoords.lat && userCoords.lng) {
+            bounds.push([userCoords.lat, userCoords.lng]);
+            const userIcon = L.divIcon({
+              className: 'user-loc-marker',
+              html: `<div style="background: #3B82F6; width: 22px; height: 22px; border-radius: 50%; border: 3px solid #FFF; box-shadow: 0 0 10px rgba(59, 130, 246, 0.8);"></div>`,
+              iconSize: [22, 22],
+              iconAnchor: [11, 11]
+            });
+            L.marker([userCoords.lat, userCoords.lng], { icon: userIcon })
+              .bindPopup('<strong>📍 Your Detected Location</strong>')
+              .addTo(markersLayer);
+          }
+
+          if (bounds.length > 0) {
+            try {
+              lmap.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
+            } catch (e) {}
+          } else {
+            lmap.setView([6.5244, 3.3792], 11);
+          }
+
+          setTimeout(() => {
+            if (lmap) lmap.invalidateSize();
+          }, 200);
+
+          return plottedCount;
+        }
+      };
+
+      if (options.providers) {
+        directoryHandle.updateProviders(options.providers, options.userCoords);
+      }
+
+      return directoryHandle;
     }
   };
 

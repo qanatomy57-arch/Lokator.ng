@@ -748,7 +748,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (sidebarPhoneText) sidebarPhoneText.textContent = provider.phone;
 
   const sidebarCallBtn = document.getElementById('sidebar-call-btn');
-  if (sidebarCallBtn) sidebarCallBtn.href = `tel:${cleanPhone}`;
+  if (sidebarCallBtn) {
+    if (heroTelUrl) {
+      sidebarCallBtn.href = heroTelUrl;
+    } else {
+      sidebarCallBtn.style.display = 'none';
+    }
+  }
 
   const waServiceSelect = document.getElementById('wa-service-type');
   const waUserLocation = document.getElementById('wa-user-location');
@@ -859,15 +865,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     const mapEl = document.getElementById('profile-service-map');
     if (!mapEl) return;
 
-    let pLat = Number(p.lat);
-    let pLng = Number(p.lng);
+    let pLat = Number(p.lat != null ? p.lat : p.latitude);
+    let pLng = Number(p.lng != null ? p.lng : p.longitude);
 
-    if ((!pLat || !pLng) && typeof NigeriaLocations !== 'undefined') {
-      const match = NigeriaLocations.searchLocations(p.area || p.lga || p.state || 'Lagos');
-      if (match && match.length > 0 && match[0].lat && match[0].lng) {
-        pLat = match[0].lat;
-        pLng = match[0].lng;
-      }
+    if ((isNaN(pLat) || isNaN(pLng) || pLat === 0 || pLng === 0) && typeof NigeriaLocations !== 'undefined' && NigeriaLocations.resolveCoordinates) {
+      const res = NigeriaLocations.resolveCoordinates(p);
+      pLat = res.lat;
+      pLng = res.lng;
     }
     pLat = pLat || 6.5244;
     pLng = pLng || 3.3792;

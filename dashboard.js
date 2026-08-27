@@ -189,6 +189,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (tabKey === 'reviews') {
       renderDashboardReviews();
     }
+    if (tabKey === 'profile') {
+      setTimeout(() => {
+        if (dashMapInstance && dashMapInstance.invalidateSize) {
+          dashMapInstance.invalidateSize();
+        } else {
+          initDashboardServiceMap();
+        }
+      }, 150);
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -450,15 +459,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     const mapEl = document.getElementById('dash-service-map');
     if (!mapEl) return;
 
-    let pLat = Number(currentProvider.lat);
-    let pLng = Number(currentProvider.lng);
+    let pLat = Number(currentProvider.lat != null ? currentProvider.lat : currentProvider.latitude);
+    let pLng = Number(currentProvider.lng != null ? currentProvider.lng : currentProvider.longitude);
 
-    if ((!pLat || !pLng) && typeof NigeriaLocations !== 'undefined') {
-      const match = NigeriaLocations.searchLocations(currentProvider.area || currentProvider.city || currentProvider.state || 'Lagos');
-      if (match && match.length > 0 && match[0].lat && match[0].lng) {
-        pLat = match[0].lat;
-        pLng = match[0].lng;
-      }
+    if ((isNaN(pLat) || isNaN(pLng) || pLat === 0 || pLng === 0) && typeof NigeriaLocations !== 'undefined' && NigeriaLocations.resolveCoordinates) {
+      const res = NigeriaLocations.resolveCoordinates(currentProvider);
+      pLat = res.lat;
+      pLng = res.lng;
     }
     pLat = pLat || 6.5244;
     pLng = pLng || 3.3792;

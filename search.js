@@ -516,6 +516,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       state.isLoading = false;
       const providers = result.data || [];
+      state.allProviders = providers;
       state.totalCount = result.totalCount || providers.length;
 
       if (typeof LokatorTelemetry !== 'undefined') {
@@ -954,8 +955,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // ============================================================================
   // PHASE 10.17: GEOSPATIAL MAP & VIEW MODES LIFECYCLE
   // ============================================================================
-  let leafletMap = null;
-  let mapMarkersLayer = null;
+  let directoryMapHandle = null;
   let currentViewMode = 'list';
 
   const searchMapContainer = document.getElementById('search-map-container');
@@ -965,98 +965,30 @@ document.addEventListener("DOMContentLoaded", () => {
   const mobileMapToggleBtn = document.getElementById('btn-mobile-map-toggle');
   const resultsMain = document.querySelector('.results-main');
 
-  function initSearchMap() {
-    if (!searchMapEl || typeof L === 'undefined' || leafletMap) return;
+  function initSearchMap(providersList) {
+    if (!searchMapEl || typeof L === 'undefined') return;
+    const MapService = (typeof LokatorMapService !== 'undefined' ? LokatorMapService : null) || (typeof window !== 'undefined' ? window.LokatorMapService : null);
 
-    try {
-      leafletMap = L.map('search-map', {
-        zoomControl: true,
-        scrollWheelZoom: false
-      }).setView([6.5244, 3.3792], 12);
-
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors'
-      }).addTo(leafletMap);
-
-      mapMarkersLayer = L.layerGroup().addTo(leafletMap);
-    } catch (e) {
-      console.warn('Could not initialize Leaflet search map:', e);
+    if (MapService && MapService.initSearchDirectoryMap) {
+      directoryMapHandle = MapService.initSearchDirectoryMap('search-map', {
+        providers: providersList || [],
+        userCoords: state.userCoords
+      });
     }
   }
 
   function updateSearchMap(providersList) {
     if (!searchMapEl || typeof L === 'undefined') return;
-    if (!leafletMap) initSearchMap();
-    if (!leafletMap || !mapMarkersLayer) return;
+    const list = providersList || [];
 
-    mapMarkersLayer.clearLayers();
-
-    const validProviders = (providersList || []).filter(p => p.lat && p.lng);
-    if (mapCounterText) mapCounterText.textContent = validProviders.length;
-
-    const bounds = [];
-
-    validProviders.forEach(p => {
-      const lat = Number(p.lat);
-      const lng = Number(p.lng);
-      if (isNaN(lat) || isNaN(lng)) return;
-
-      bounds.push([lat, lng]);
-
-      const initials = (p.name || '').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-      const customIcon = L.divIcon({
-        className: 'custom-lokator-marker',
-        html: `<div class="lokator-pin" title="${escapeHtml(p.name)} (${escapeHtml(p.trade)})"><span>${escapeHtml(initials)}</span></div>`,
-        iconSize: [36, 36],
-        iconAnchor: [18, 18],
-        popupAnchor: [0, -20]
-      });
-
-      const PhoneEngine = (typeof NigeriaPhone !== 'undefined' ? NigeriaPhone : null) || (typeof window !== 'undefined' ? window.NigeriaPhone : null);
-      const telUrl = PhoneEngine ? PhoneEngine.buildTelUrl(p) : (p.phone ? `tel:${p.phone}` : '');
-      const waUrl = PhoneEngine ? PhoneEngine.buildWhatsAppUrl(p, { service: p.trade, location: p.area }) : '';
-
-      const popupHtml = `
-        <div class="lokator-popup-card">
-          <strong>${escapeHtml(p.name)}</strong>
-          <div class="lokator-popup-trade">${escapeHtml(p.trade)}</div>
-          <div class="lokator-popup-loc">📍 ${escapeHtml(p.area || p.city || 'Nigeria')}</div>
-          <div class="lokator-popup-actions">
-            ${telUrl ? `<a href="${escapeHtml(telUrl)}" class="lokator-popup-call">📞 Call</a>` : ''}
-            ${waUrl ? `<a href="${escapeHtml(waUrl)}" target="_blank" rel="noopener" class="lokator-popup-wa">💬 WhatsApp</a>` : ''}
-            <a href="profile.html?id=${p.id}" style="background: #38BDF8; color: #000;">Profile →</a>
-          </div>
-        </div>
-      `;
-
-      const marker = L.marker([lat, lng], { icon: customIcon }).bindPopup(popupHtml);
-      mapMarkersLayer.addLayer(marker);
-    });
-
-    if (state.userCoords && state.userCoords.lat && state.userCoords.lng) {
-      bounds.push([state.userCoords.lat, state.userCoords.lng]);
-      const userIcon = L.divIcon({
-        className: 'user-loc-marker',
-        html: `<div style="background: #3B82F6; width: 22px; height: 22px; border-radius: 50%; border: 3px solid #FFF; box-shadow: 0 0 10px rgba(59, 130, 246, 0.8);"></div>`,
-        iconSize: [22, 22],
-        iconAnchor: [11, 11]
-      });
-      L.marker([state.userCoords.lat, state.userCoords.lng], { icon: userIcon })
-        .bindPopup('<strong>📍 Your Location</strong>')
-        .addTo(mapMarkersLayer);
+    if (!directoryMapHandle) {
+      initSearchMap(list);
     }
 
-    if (bounds.length > 0) {
-      try {
-        leafletMap.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
-      } catch (e) {}
-    } else {
-      leafletMap.setView([6.5244, 3.3792], 11);
+    if (directoryMapHandle && directoryMapHandle.updateProviders) {
+      const plotted = directoryMapHandle.updateProviders(list, state.userCoords);
+      if (mapCounterText) mapCounterText.textContent = plotted;
     }
-
-    setTimeout(() => {
-      if (leafletMap) leafletMap.invalidateSize();
-    }, 200);
   }
 
   function setViewMode(mode) {
@@ -1083,10 +1015,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (mode !== 'list') {
-      if (!leafletMap) initSearchMap();
-      setTimeout(() => {
-        if (leafletMap) leafletMap.invalidateSize();
-      }, 150);
+      if (!directoryMapHandle) {
+        initSearchMap(state.allProviders || []);
+      }
+      if (directoryMapHandle && directoryMapHandle.invalidateSize) {
+        directoryMapHandle.invalidateSize();
+      }
     }
   }
 
