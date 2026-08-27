@@ -422,6 +422,19 @@ document.addEventListener('DOMContentLoaded', async () => {
   // 9. Customer Reviews & 5-Star Histogram Calculation
   let currentReviewFilter = 'all';
 
+  function showProfileToast(msg, type = 'success') {
+    const toast = document.getElementById('profile-toast');
+    if (!toast) {
+      console.log(`[Toast ${type}]`, msg);
+      return;
+    }
+    toast.textContent = msg;
+    toast.className = `profile-toast ${type} active`;
+    setTimeout(() => {
+      toast.classList.remove('active');
+    }, 4000);
+  }
+
   function renderReviews(filter = 'all') {
     currentReviewFilter = filter;
     
@@ -489,6 +502,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const jobType = r.job_type || r.serviceType || 'Verified Task';
         const isVerifiedClient = r.is_verified_client !== false && r.isVerifiedCustomer !== false;
         const reply = r.provider_reply;
+        const tags = Array.isArray(r.praise_tags) ? r.praise_tags : [];
+        const photos = Array.isArray(r.photos) ? r.photos : [];
 
         return `
           <div class="review-item-card" id="rev-${safeRevId}">
@@ -511,7 +526,25 @@ document.addEventListener('DOMContentLoaded', async () => {
               ${r.quality ? `<span style="background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 4px;">⭐ Quality: ${r.quality}★</span>` : ''}
             </div>
 
+            <!-- Praise Tags -->
+            ${tags.length > 0 ? `
+              <div style="display: flex; gap: 6px; flex-wrap: wrap; margin: 6px 0;">
+                ${tags.map(t => `<span style="background: rgba(0, 107, 63, 0.15); color: #34D399; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 12px; border: 1px solid rgba(0, 107, 63, 0.3);">${escapeHtml(t)}</span>`).join('')}
+              </div>
+            ` : ''}
+
             <p class="review-comment-text">${escapeHtml(r.comment)}</p>
+
+            <!-- Attached Work Photos -->
+            ${photos.length > 0 ? `
+              <div style="display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap;">
+                ${photos.map(src => `
+                  <div style="width: 60px; height: 60px; border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,0.15);">
+                    <img src="${escapeHtml(src)}" alt="Work photo" style="width: 100%; height: 100%; object-fit: cover;" />
+                  </div>
+                `).join('')}
+              </div>
+            ` : ''}
 
             <!-- Nested Official Provider Response -->
             ${reply ? `
@@ -563,98 +596,347 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
-  // 10. Write a Review Modal Form
+  // 10. Multi-Dimensional Interactive Write a Review Modal & Drawer Form
   const reviewModal = document.getElementById('review-modal');
   const btnOpenReviewModal = document.getElementById('btn-open-review-modal');
   const btnCloseReviewModal = document.getElementById('review-modal-close');
+  const btnCancelReview = document.getElementById('btn-cancel-review');
   const reviewForm = document.getElementById('review-form');
   const starPicker = document.getElementById('star-picker');
+  const ratingMoodBadge = document.getElementById('rating-mood-badge');
+  const revCommentInput = document.getElementById('rev-comment');
+  const revCommentCounter = document.getElementById('rev-comment-counter');
+  const photoInput = document.getElementById('review-photo-input');
+  const btnTriggerPhoto = document.getElementById('btn-trigger-photo-upload');
+  const photoPreviewGrid = document.getElementById('review-photos-preview-grid');
+  const livePreviewWrap = document.getElementById('live-review-preview-wrap');
+  const livePreviewCard = document.getElementById('live-review-preview-card');
 
-  let selectedRating = 5;
+  let selectedOverallRating = 5;
+  let selectedSubRatings = {
+    punctuality: 5,
+    pricing: 5,
+    quality: 5
+  };
+  const selectedPraiseTags = new Set();
+  const attachedPhotos = []; // Array of Data URLs
 
+  const MOOD_MAP = {
+    1: '😡 Disappointing (1.0)',
+    2: '🙁 Fair (2.0)',
+    3: '😐 Good (3.0)',
+    4: '😊 Very Good (4.0)',
+    5: '🌟 Exceptional (5.0)'
+  };
+
+  // 10.1 Star Picker Handler (Overall)
   if (starPicker) {
     const starBtns = starPicker.querySelectorAll('.star-pick-btn');
     starBtns.forEach(btn => {
       btn.addEventListener('click', () => {
-        selectedRating = parseInt(btn.dataset.val, 10);
+        selectedOverallRating = parseInt(btn.dataset.val, 10);
         starBtns.forEach((b, i) => {
-          b.classList.toggle('active', i < selectedRating);
+          b.classList.toggle('active', i < selectedOverallRating);
         });
+        if (ratingMoodBadge) {
+          ratingMoodBadge.textContent = MOOD_MAP[selectedOverallRating] || `${selectedOverallRating}.0`;
+          if (selectedOverallRating <= 2) {
+            ratingMoodBadge.style.color = '#F87171';
+            ratingMoodBadge.style.background = 'rgba(239, 68, 68, 0.15)';
+            ratingMoodBadge.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+          } else if (selectedOverallRating === 3) {
+            ratingMoodBadge.style.color = '#FBBF24';
+            ratingMoodBadge.style.background = 'rgba(245, 158, 11, 0.15)';
+            ratingMoodBadge.style.borderColor = 'rgba(245, 158, 11, 0.3)';
+          } else {
+            ratingMoodBadge.style.color = '#34D399';
+            ratingMoodBadge.style.background = 'rgba(52, 211, 153, 0.15)';
+            ratingMoodBadge.style.borderColor = 'rgba(52, 211, 153, 0.3)';
+          }
+        }
+        updateLiveReviewPreview();
       });
     });
   }
 
-  if (btnOpenReviewModal && reviewModal) {
-    btnOpenReviewModal.addEventListener('click', () => {
+  // 10.2 Sub-Criteria Star Pickers
+  document.querySelectorAll('.star-picker-sub').forEach(picker => {
+    const field = picker.dataset.field;
+    const btns = picker.querySelectorAll('.star-sub-btn');
+    const labelVal = document.getElementById(`val-${field}`);
+
+    btns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const val = parseInt(btn.dataset.val, 10);
+        selectedSubRatings[field] = val;
+        btns.forEach((b, i) => {
+          b.classList.toggle('active', i < val);
+        });
+        if (labelVal) labelVal.textContent = `${val} ★`;
+        updateLiveReviewPreview();
+      });
+    });
+  });
+
+  // 10.3 Praise Tags
+  document.querySelectorAll('.praise-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      const tag = pill.dataset.tag;
+      if (selectedPraiseTags.has(tag)) {
+        selectedPraiseTags.delete(tag);
+        pill.classList.remove('active');
+      } else {
+        selectedPraiseTags.add(tag);
+        pill.classList.add('active');
+      }
+      updateLiveReviewPreview();
+    });
+  });
+
+  // 10.4 Character Counter
+  if (revCommentInput && revCommentCounter) {
+    revCommentInput.addEventListener('input', () => {
+      const len = revCommentInput.value.length;
+      revCommentCounter.textContent = `${len} / 500`;
+      if (len > 450) {
+        revCommentCounter.style.color = '#F87171';
+      } else {
+        revCommentCounter.style.color = '#94A3B8';
+      }
+      updateLiveReviewPreview();
+    });
+  }
+
+  // 10.5 Photo Upload & Image Previews
+  if (btnTriggerPhoto && photoInput) {
+    btnTriggerPhoto.addEventListener('click', () => photoInput.click());
+    photoInput.addEventListener('change', (e) => {
+      const files = Array.from(e.target.files);
+      files.forEach(file => {
+        if (attachedPhotos.length >= 3) return;
+        if (!file.type.startsWith('image/')) return;
+        const reader = new FileReader();
+        reader.onload = (loadEvt) => {
+          if (attachedPhotos.length < 3) {
+            attachedPhotos.push(loadEvt.target.result);
+            renderPhotoPreviews();
+            updateLiveReviewPreview();
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+      photoInput.value = '';
+    });
+  }
+
+  function renderPhotoPreviews() {
+    if (!photoPreviewGrid) return;
+    photoPreviewGrid.innerHTML = attachedPhotos.map((src, idx) => `
+      <div class="photo-preview-thumb">
+        <img src="${src}" alt="Attached photo" />
+        <button type="button" class="btn-remove-thumb" data-idx="${idx}" aria-label="Remove image">✕</button>
+      </div>
+    `).join('');
+
+    photoPreviewGrid.querySelectorAll('.btn-remove-thumb').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = parseInt(btn.dataset.idx, 10);
+        attachedPhotos.splice(idx, 1);
+        renderPhotoPreviews();
+        updateLiveReviewPreview();
+      });
+    });
+  }
+
+  // 10.6 Live Review Preview Generator
+  function updateLiveReviewPreview() {
+    if (!livePreviewWrap || !livePreviewCard) return;
+    const authorVal = (document.getElementById('rev-author')?.value || '').trim();
+    const commentVal = (revCommentInput?.value || '').trim();
+    const locationVal = (document.getElementById('rev-location')?.value || '').trim();
+    const serviceVal = (document.getElementById('rev-service')?.value || '').trim();
+
+    if (!authorVal && !commentVal) {
+      livePreviewWrap.style.display = 'none';
+      return;
+    }
+
+    livePreviewWrap.style.display = 'block';
+    const starsStr = '★'.repeat(selectedOverallRating) + '☆'.repeat(5 - selectedOverallRating);
+    const initials = (authorVal || 'You').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+    const tagsArr = Array.from(selectedPraiseTags);
+
+    livePreviewCard.innerHTML = `
+      <div class="review-item-header">
+        <div class="review-author-info">
+          <div class="review-author-avatar">${escapeHtml(initials)}</div>
+          <div class="review-author-name">
+            <strong>${escapeHtml(authorVal || 'Your Name')}</strong>
+            <span>📍 ${escapeHtml(locationVal || 'Your Location')} • Just Now</span>
+          </div>
+        </div>
+        <div class="review-stars">${starsStr}</div>
+      </div>
+      ${serviceVal ? `<span class="review-service-tag">✓ ${escapeHtml(serviceVal)}</span>` : ''}
+      
+      <div style="display: flex; gap: 8px; flex-wrap: wrap; margin: 6px 0; font-size: 11px; color: #94A3B8;">
+        <span>⏱️ Punctuality: ${selectedSubRatings.punctuality}★</span>
+        <span>💰 Pricing: ${selectedSubRatings.pricing}★</span>
+        <span>⭐ Quality: ${selectedSubRatings.quality}★</span>
+      </div>
+
+      ${tagsArr.length > 0 ? `
+        <div style="display: flex; gap: 6px; flex-wrap: wrap; margin: 6px 0;">
+          ${tagsArr.map(t => `<span style="background: rgba(0, 107, 63, 0.2); color: #34D399; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 12px;">${escapeHtml(t)}</span>`).join('')}
+        </div>
+      ` : ''}
+
+      <p class="review-comment-text">${escapeHtml(commentVal || 'Your review text will appear here...')}</p>
+
+      ${attachedPhotos.length > 0 ? `
+        <div style="display: flex; gap: 6px; margin-top: 8px;">
+          ${attachedPhotos.map(src => `
+            <div style="width: 50px; height: 50px; border-radius: 6px; overflow: hidden; border: 1px solid rgba(255,255,255,0.2);">
+              <img src="${src}" alt="Attached preview" style="width: 100%; height: 100%; object-fit: cover;" />
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
+    `;
+  }
+
+  // Live input binding
+  ['rev-author', 'rev-location', 'rev-service'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', updateLiveReviewPreview);
+  });
+
+  // Modal Open & Close Triggers
+  const openModalHandler = () => {
+    if (reviewModal) {
       reviewModal.classList.add('active');
       reviewModal.setAttribute('aria-hidden', 'false');
-    });
-  }
+      document.body.style.overflow = 'hidden'; // Lock scroll
+    }
+  };
 
-  if (btnCloseReviewModal && reviewModal) {
-    btnCloseReviewModal.addEventListener('click', () => {
+  const closeModalHandler = () => {
+    if (reviewModal) {
       reviewModal.classList.remove('active');
       reviewModal.setAttribute('aria-hidden', 'true');
-    });
+      document.body.style.overflow = '';
+    }
+  };
+
+  if (btnOpenReviewModal) btnOpenReviewModal.addEventListener('click', openModalHandler);
+  if (btnCloseReviewModal) btnCloseReviewModal.addEventListener('click', closeModalHandler);
+  if (btnCancelReview) btnCancelReview.addEventListener('click', closeModalHandler);
+
+  if (reviewModal) {
     reviewModal.addEventListener('click', (e) => {
-      if (e.target === reviewModal) {
-        reviewModal.classList.remove('active');
-        reviewModal.setAttribute('aria-hidden', 'true');
-      }
+      if (e.target === reviewModal) closeModalHandler();
     });
   }
 
+  // 10.7 Review Form Submission
   if (reviewForm) {
     reviewForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const author = document.getElementById('rev-author').value.trim();
-      const location = document.getElementById('rev-location') ? document.getElementById('rev-location').value.trim() : '';
-      const service = document.getElementById('rev-service') ? document.getElementById('rev-service').value.trim() : 'General Service';
-      const comment = document.getElementById('rev-comment').value.trim();
+      const location = document.getElementById('rev-location') ? document.getElementById('rev-location').value.trim() : 'Nigeria';
+      const service = document.getElementById('rev-service') ? document.getElementById('rev-service').value.trim() : (provider.trade || 'General Service');
+      const comment = revCommentInput ? revCommentInput.value.trim() : '';
+      const dateOption = document.getElementById('rev-date') ? document.getElementById('rev-date').value : 'This Week';
+      const isVerifiedChecked = document.getElementById('rev-verified-check') ? document.getElementById('rev-verified-check').checked : true;
 
-      if (!author || !comment) return;
+      if (!author || !comment) {
+        showProfileToast('Please enter your name and review comments.', 'error');
+        return;
+      }
+
+      const submitBtn = document.getElementById('btn-submit-review-form');
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = 'Publishing Review...';
+      }
 
       try {
+        const reviewRecord = {
+          provider_id: provider.id,
+          customer_name: author,
+          location: location,
+          rating: selectedOverallRating,
+          punctuality: selectedSubRatings.punctuality,
+          pricing: selectedSubRatings.pricing,
+          quality: selectedSubRatings.quality,
+          praise_tags: Array.from(selectedPraiseTags),
+          photos: [...attachedPhotos],
+          comment: comment,
+          job_type: service,
+          date: dateOption,
+          is_verified_client: isVerifiedChecked,
+          isVerifiedCustomer: isVerifiedChecked,
+          helpfulCount: 0,
+          created_at: new Date().toISOString()
+        };
+
         if (typeof LokatorDB !== 'undefined' && LokatorDB.reviews) {
-          LokatorDB.reviews.addReview({
-            provider_id: provider.id,
-            customer_name: author,
-            rating: selectedRating,
-            punctuality: selectedRating,
-            pricing: selectedRating,
-            quality: selectedRating,
-            comment: comment,
-            job_type: service,
-            is_verified_client: true
-          });
+          LokatorDB.reviews.addReview(reviewRecord);
         }
 
         if (typeof LokatorTelemetry !== 'undefined') {
           LokatorTelemetry.trackEvent('provider_review_submitted', {
-            rating: selectedRating,
+            rating: selectedOverallRating,
+            punctuality: selectedSubRatings.punctuality,
+            pricing: selectedSubRatings.pricing,
+            quality: selectedSubRatings.quality,
+            has_photos: attachedPhotos.length > 0,
+            praise_tags_count: selectedPraiseTags.size,
             provider_id: provider.id,
             page: 'profile'
           });
         }
 
+        // Re-render UI
         renderReviews(currentReviewFilter);
         reviewForm.reset();
-        selectedRating = 5;
+        selectedOverallRating = 5;
+        selectedSubRatings = { punctuality: 5, pricing: 5, quality: 5 };
+        selectedPraiseTags.clear();
+        attachedPhotos.length = 0;
+        document.querySelectorAll('.praise-pill').forEach(p => p.classList.remove('active'));
         if (starPicker) {
           starPicker.querySelectorAll('.star-pick-btn').forEach(b => b.classList.add('active'));
         }
-        if (reviewModal) {
-          reviewModal.classList.remove('active');
-          reviewModal.setAttribute('aria-hidden', 'true');
+        document.querySelectorAll('.star-picker-sub').forEach(p => {
+          p.querySelectorAll('.star-sub-btn').forEach(b => b.classList.add('active'));
+        });
+        if (ratingMoodBadge) {
+          ratingMoodBadge.textContent = '🌟 Exceptional (5.0)';
+          ratingMoodBadge.style.color = '#34D399';
+          ratingMoodBadge.style.background = 'rgba(52, 211, 153, 0.15)';
         }
-        alert('Thank you! Your verified review has been published.');
+        renderPhotoPreviews();
+        if (livePreviewWrap) livePreviewWrap.style.display = 'none';
+
+        closeModalHandler();
+        showProfileToast('🎉 Thank you! Your verified review has been published.');
+
       } catch (err) {
-        alert('Could not submit review: ' + err.message);
+        showProfileToast('Could not submit review: ' + err.message, 'error');
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = `
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            Publish Verified Review
+          `;
+        }
       }
     });
   }
 
-  // 10.1 Report Provider Modal & Handling
+  // 10.8 Report Provider Modal & Handling
   const reportModal = document.getElementById('report-modal');
   const btnOpenReportModal = document.getElementById('btn-open-report-modal');
   const btnCloseReportModal = document.getElementById('report-modal-close');
@@ -756,12 +1038,33 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
+  // 11. Phase 10.12D / Phase 10.20: Interactive Structured WhatsApp Job Brief & Quote Generator
   const waServiceSelect = document.getElementById('wa-service-type');
   const waUserLocation = document.getElementById('wa-user-location');
   const waUrgency = document.getElementById('wa-urgency');
+  const waMaterialsSelect = document.getElementById('wa-materials-select');
   const waNote = document.getElementById('wa-note');
   const waPreviewText = document.getElementById('wa-preview-text');
   const waSendBtn = document.getElementById('wa-send-btn');
+  const waCopyBriefBtn = document.getElementById('wa-copy-brief-btn');
+  const waPriceRangeText = document.getElementById('wa-price-range-text');
+  const waPriceSubtext = document.getElementById('wa-price-subtext');
+  const waHintText = document.getElementById('wa-hint-text');
+  const waScopeBtns = document.querySelectorAll('.wa-scope-btn');
+
+  let selectedJobScope = 'Inspection & Diagnosis';
+
+  // Toast Notification Helper
+  function showProfileToast(message, duration = 3200) {
+    const toast = document.getElementById('profile-toast');
+    if (!toast) return;
+    toast.innerHTML = `<span>✓</span> <span>${escapeHtml(message)}</span>`;
+    toast.classList.add('show');
+    clearTimeout(toast._timer);
+    toast._timer = setTimeout(() => {
+      toast.classList.remove('show');
+    }, duration);
+  }
 
   try {
     const savedLoc = sessionStorage.getItem('lokator_temp_location_name');
@@ -774,15 +1077,75 @@ document.addEventListener('DOMContentLoaded', async () => {
     `).join('');
   }
 
+  // Scope Pill Selection Handler via Event Delegation
+  const waScopePillsContainer = document.getElementById('wa-scope-pills');
+  if (waScopePillsContainer) {
+    waScopePillsContainer.addEventListener('click', (e) => {
+      const btn = e.target.closest('.wa-scope-btn');
+      if (btn) {
+        waScopePillsContainer.querySelectorAll('.wa-scope-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedJobScope = btn.getAttribute('data-scope') || 'Inspection & Diagnosis';
+        updateWhatsAppPreview();
+      }
+    });
+  }
+
   function updateWhatsAppPreview() {
     const serviceVal = waServiceSelect ? waServiceSelect.value : provider.trade;
     const locVal = waUserLocation && waUserLocation.value.trim() ? waUserLocation.value.trim() : providerLocation;
-    const urgVal = waUrgency ? waUrgency.value : 'Urgent';
-    const noteVal = waNote && waNote.value.trim() ? `\n• Details: ${waNote.value.trim()}` : '';
+    const urgVal = waUrgency ? waUrgency.value : 'Urgent / Today';
+    const matVal = waMaterialsSelect ? waMaterialsSelect.value : 'Labor Only (I will supply materials)';
+    const noteVal = waNote && waNote.value.trim() ? waNote.value.trim() : '';
 
-    const formattedMessage = `Hello ${provider.name},\n\nI found your profile on Lokator.NG.\n\nI need your ${serviceVal} service.\n\nLocation:\n${locVal}\n\nPreferred time:\n${urgVal}${noteVal}\n\nAre you available? Thank you.`;
+    let formattedMessage = '';
+    const AIService = (typeof LokatorAIService !== 'undefined' ? LokatorAIService : null) ||
+                      (typeof globalThis !== 'undefined' ? globalThis.LokatorAIService : null) ||
+                      (typeof window !== 'undefined' ? window.LokatorAIService : null);
+
+    if (AIService && typeof AIService.generateStructuredJobBrief === 'function') {
+      try {
+        const briefObj = AIService.generateStructuredJobBrief(provider, {
+          serviceType: serviceVal,
+          jobScope: selectedJobScope,
+          clientLocation: locVal,
+          urgency: urgVal,
+          materialsOption: matVal,
+          details: noteVal
+        });
+
+        formattedMessage = briefObj.plainText;
+
+        // Update pricing guidance badge
+        if (briefObj.pricingGuidance) {
+          const pg = briefObj.pricingGuidance;
+          if (waPriceRangeText && pg.suggested_range) {
+            waPriceRangeText.textContent = `Benchmark: ${pg.suggested_range}`;
+          }
+          if (waPriceSubtext && pg.inspection_fee_range) {
+            waPriceSubtext.textContent = `Inspection fee: ${pg.inspection_fee_range} • ${pg.pricing_factors[0] || 'Labor benchmark'}`;
+          }
+          if (waHintText) {
+            if (pg.key_questions && pg.key_questions.length > 0) {
+              waHintText.textContent = `Tip: ${pg.key_questions[0]}`;
+            } else {
+              waHintText.textContent = 'Tip: Mention if parts or materials are already on site.';
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('AI Job brief generation fallback:', err);
+      }
+    }
+
+    // Fallback if AI Service is unavailable
+    if (!formattedMessage) {
+      const detailsLine = noteVal ? `\n📝 *Job Notes:* ${noteVal}` : '';
+      formattedMessage = `🛠️ *JOB INQUIRY VIA LOKATOR.NG*\n━━━━━━━━━━━━━━━━━━━━\n👋 *Hello ${provider.name}*,\nI found your verified profile on Lokator.NG.\n\n📋 *Service:* ${serviceVal}\n🎯 *Job Scope:* ${selectedJobScope}\n📍 *Location:* ${locVal}\n⏰ *Preferred Time:* ${urgVal}\n📦 *Materials:* ${matVal}${detailsLine}\n\n━━━━━━━━━━━━━━━━━━━━\nAre you available to take on this job? Please let me know your availability. Thank you!`;
+    }
 
     if (waPreviewText) waPreviewText.textContent = formattedMessage;
+    
     if (waSendBtn) {
       const waLink = PhoneEngine ? PhoneEngine.buildWhatsAppUrl(provider, { customMessage: formattedMessage }) : '';
       if (waLink) {
@@ -794,9 +1157,58 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
+  // Copy Job Brief Handler
+  async function copyJobBriefHandler() {
+    const briefText = waPreviewText ? waPreviewText.textContent : '';
+    if (!briefText) return;
+
+    let copied = false;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      try {
+        await navigator.clipboard.writeText(briefText);
+        copied = true;
+      } catch (e) {
+        console.warn('navigator.clipboard writeText failed, using fallback:', e);
+      }
+    }
+
+    if (!copied) {
+      try {
+        const tempEl = document.createElement('textarea');
+        tempEl.value = briefText;
+        tempEl.style.position = 'fixed';
+        tempEl.style.left = '-9999px';
+        document.body.appendChild(tempEl);
+        tempEl.focus();
+        tempEl.select();
+        copied = document.execCommand('copy');
+        document.body.removeChild(tempEl);
+      } catch (err) {
+        console.error('Fallback execCommand copy failed:', err);
+      }
+    }
+
+    if (copied) {
+      showProfileToast('📋 Job brief copied! Ready to paste into WhatsApp.');
+    } else {
+      showProfileToast('⚠️ Unable to copy automatically. Please copy the text above.');
+    }
+
+    if (typeof LokatorTelemetry !== 'undefined') {
+      LokatorTelemetry.trackEvent('whatsapp_job_brief_copied', {
+        providerId: provider.id,
+        trade: provider.trade,
+        scope: selectedJobScope
+      });
+    }
+  }
+
+  if (waCopyBriefBtn) waCopyBriefBtn.addEventListener('click', copyJobBriefHandler);
+
   if (waServiceSelect) waServiceSelect.addEventListener('change', updateWhatsAppPreview);
   if (waUserLocation) waUserLocation.addEventListener('input', updateWhatsAppPreview);
   if (waUrgency) waUrgency.addEventListener('change', updateWhatsAppPreview);
+  if (waMaterialsSelect) waMaterialsSelect.addEventListener('change', updateWhatsAppPreview);
   if (waNote) waNote.addEventListener('input', updateWhatsAppPreview);
 
   updateWhatsAppPreview();

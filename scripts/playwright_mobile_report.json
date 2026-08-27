@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-08-27T14:54:57.908Z",
+  "timestamp": "2026-08-27T19:39:01.445Z",
   "devicesTested": [
     "iPhone 14 Pro (393x852)",
     "Pixel 7 (412x915)"
@@ -39,10 +39,7 @@
     {
       "route": "/search.html",
       "name": "Search Directory & Map",
-      "errors": [
-        "Console Error: Failed to load resource: the server responded with a status of 404 ()",
-        "Console Error: Failed to load resource: the server responded with a status of 404 ()"
-      ],
+      "errors": [],
       "warnings": [],
       "overflowIssues": [],
       "smallTouchTargets": [
@@ -51,7 +48,7 @@
           "tag": "BUTTON",
           "id": "gps-trigger",
           "class": "gps-inline-btn",
-          "size": "84x25px"
+          "size": "93x27px"
         },
         {
           "text": "Clear all",
@@ -65,21 +62,14 @@
           "tag": "BUTTON",
           "id": "btn-view-list",
           "class": "btn-view-mode active",
-          "size": "65x28px"
-        },
-        {
-          "text": "🔲 Split",
-          "tag": "BUTTON",
-          "id": "btn-view-split",
-          "class": "btn-view-mode",
-          "size": "70x28px"
+          "size": "55x25px"
         },
         {
           "text": "🗺️ Map",
           "tag": "BUTTON",
           "id": "btn-view-map",
           "class": "btn-view-mode",
-          "size": "68x28px"
+          "size": "58x25px"
         },
         {
           "text": "Update",
@@ -102,9 +92,7 @@
     {
       "route": "/profile.html?id=8",
       "name": "Provider Profile Page",
-      "errors": [
-        "Console Error: Failed to load resource: the server responded with a status of 404 ()"
-      ],
+      "errors": [],
       "warnings": [],
       "overflowIssues": [],
       "smallTouchTargets": [
@@ -137,6 +125,34 @@
           "size": "152x30px"
         },
         {
+          "text": "🔍 Inspection",
+          "tag": "BUTTON",
+          "id": "",
+          "class": "wa-scope-btn active",
+          "size": "151x32px"
+        },
+        {
+          "text": "⚡ Urgent Fix",
+          "tag": "BUTTON",
+          "id": "",
+          "class": "wa-scope-btn",
+          "size": "151x32px"
+        },
+        {
+          "text": "🛠️ Installation",
+          "tag": "BUTTON",
+          "id": "",
+          "class": "wa-scope-btn",
+          "size": "151x32px"
+        },
+        {
+          "text": "🔧 Maintenance",
+          "tag": "BUTTON",
+          "id": "",
+          "class": "wa-scope-btn",
+          "size": "151x32px"
+        },
+        {
           "text": "Update",
           "tag": "BUTTON",
           "id": "sw-update-btn",
@@ -150,7 +166,7 @@
         "Zero horizontal overflow",
         "Input font sizes >= 16px (iOS auto-zoom safe)",
         "Profile service map verified (4 tiles, 1 marker)",
-        "Call Provider button configured: tel:+2347030313984"
+        "Call Provider button configured: tel:+2348077889900"
       ]
     },
     {

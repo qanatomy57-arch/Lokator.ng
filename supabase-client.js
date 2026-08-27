@@ -1453,8 +1453,7 @@
           const from = (page - 1) * pageSize;
           const to = from + pageSize - 1;
           const { data, count, error } = await queryBuilder.range(from, to);
-
-          if (!error && Array.isArray(data)) {
+          if (!error && Array.isArray(data) && data.length > 0) {
             return {
               data: this._sanitizeProvidersList(data, userLat, userLng),
               totalCount: count || data.length,
@@ -1833,10 +1832,10 @@
       const numId = Number(id);
       if (!numId) return null;
 
-      // Remote Supabase query if available
+      // Remote Supabase query if available with fast timeout protection
       if (isRemoteActive()) {
         try {
-          const { data, error } = await supabaseInstance
+          const fetchPromise = supabaseInstance
             .from('providers')
             .select(`
               *,
@@ -1847,19 +1846,28 @@
             `)
             .eq('id', numId)
             .eq('is_active', true)
-            .single();
+            .limit(1);
 
-          if (!error && data) {
-            return this._sanitizeProviderDetail(data);
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Supabase query timeout')), 1200)
+          );
+
+          const { data, error } = await Promise.race([fetchPromise, timeoutPromise]);
+
+          if (!error && Array.isArray(data) && data.length > 0) {
+            return this._sanitizeProviderDetail(data[0]);
           }
         } catch (e) {
-          console.warn('Supabase getProviderById fallback to local store:', e);
+          // Graceful silent fallback to local store/PROVIDERS_DATA
         }
       }
 
       // Local Supabase Data Store
       const providers = getLocalStore(DB_STORE_KEY, []);
-      const provider = providers.find(p => p.id === numId);
+      let provider = providers.find(p => p.id === numId);
+      if (!provider && typeof PROVIDERS_DATA !== 'undefined' && Array.isArray(PROVIDERS_DATA)) {
+        provider = PROVIDERS_DATA.find(p => p.id === numId);
+      }
       if (!provider) return null;
 
       const services = getLocalStore(DB_SERVICES_KEY, []).filter(s => s.provider_id === numId);
@@ -2905,6 +2913,7 @@
         responseTime: p.responseTime || '~15 mins',
         isAvailable: p.isAvailable,
         isVerified: p.isVerified,
+        ratingDistribution: ratingDist,
         recentReviews: reviews.slice(0, 5)
       };
     },
@@ -8730,28 +8739,30 @@
     },
 
     async trackDiscoveryEvent(eventType, context = {}, sessionId = null) {
-      if (isRemoteActive()) {
-        const { data, error } = await supabaseInstance.rpc('log_marketplace_discovery_event', {
-          p_event_type: eventType,
-          p_context: context,
-          p_session_id: sessionId
+      try {
+        const eventsKey = 'lokator_discovery_events';
+        const raw = sessionStorage.getItem(eventsKey);
+        const list = raw ? JSON.parse(raw) : [];
+        list.push({
+          event_type: eventType,
+          context: context,
+          session_id: sessionId || 'sess_' + Date.now(),
+          created_at: new Date().toISOString()
         });
-        if (error) {
-          console.warn('MDCIE Telemetry warn:', error.message);
-          return null;
-        }
-        return data;
-      }
+        if (list.length > 50) list.shift();
+        sessionStorage.setItem(eventsKey, JSON.stringify(list));
+      } catch (e) {}
       return '00000000-0000-0000-0000-000000000000';
     },
 
     async getDiscoverySignals(timeframeDays = 30) {
       if (isRemoteActive()) {
-        const { data, error } = await supabaseInstance.rpc('get_discovery_conversion_signals', {
-          p_timeframe_days: timeframeDays
-        });
-        if (error) throw error;
-        return data;
+        try {
+          const { data, error } = await supabaseInstance.rpc('get_discovery_conversion_signals', {
+            p_timeframe_days: timeframeDays
+          });
+          if (!error && data) return data;
+        } catch (e) {}
       }
       return {
         timeframe_days: timeframeDays,

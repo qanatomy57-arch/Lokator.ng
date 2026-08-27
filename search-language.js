@@ -16,8 +16,8 @@
       aliases: [
         'fashion designer', 'fashion-designer', 'fashiondesign', 'fashiondesigner',
         'tailor', 'tailors', 'tailoring', 'tailor man', 'tailorman', 'seamstress',
-        'dressmaker', 'dress maker', 'dress-maker', 'cloth designer', 'agbada maker',
-        'senator maker', 'senator wear', 'native wear', 'aso ebi tailor',
+        'dressmaker', 'dress maker', 'dress-maker', 'cloth designer', 'agbada maker', 'agbada',
+        'senator maker', 'senator wear', 'senator', 'native wear', 'aso ebi tailor', 'aso ebi',
         'clothes maker', 'sewing', 'alterations', 'bespoke tailor', 'bespoke suits'
       ],
       skills: ['Tailor', 'Fashion Designer', 'Bespoke Tailoring', 'Dressmaking', 'Senator Wear', 'Agbada']
@@ -427,11 +427,12 @@
       let extractedLocation = null;
       let locationHierarchy = null;
 
-      // 1. Check for location pattern: "in <location>", "at <location>", "around <location>", "inside <location>", "near <location>"
-      const locMatch = q.match(/\s+(?:in|at|around|inside|near)\s+([a-zA-Z0-9\s-]+)$/i);
+      // 1. Check for location pattern: "in <location>", "at <location>", "around <location>", "inside <location>", "near <location>", "for <location>"
+      const locMatch = q.match(/\s+(?:in|at|around|inside|near|for)\s+([a-zA-Z0-9\s-]+)$/i);
       if (locMatch && locMatch[1]) {
         const candidateLoc = locMatch[1].trim();
-        if (candidateLoc.length >= 2 && !/^(me|my area|here|now|house|home|flat|compound|close to me|around me|around here)$/i.test(candidateLoc)) {
+        const isNotLocation = /^(me|my|a|an|the|my area|here|now|house|home|flat|compound|close to me|around me|around here|repair|repairs|service|fixing|maintenance|cleaning|sewing)$/i.test(candidateLoc) || /^(my\s+|to\s+|for\s+)/i.test(candidateLoc);
+        if (candidateLoc.length >= 2 && !isNotLocation) {
           extractedLocation = candidateLoc;
           q = q.substring(0, locMatch.index).trim();
         }

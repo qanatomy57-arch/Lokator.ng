@@ -1452,6 +1452,73 @@
           helpfulCount: 19
         }
       ]
+    },
+    {
+      id: 22,
+      name: "Arise Wire",
+      trade: "Master Electrician & Plumber",
+      category: "Electrician",
+      slug: "electrician",
+      city: "Okpe",
+      state: "Delta",
+      lga: "Okpe",
+      area: "Orerokpe, Okpe",
+      address: "Market Road, Orerokpe, Okpe, Delta State",
+      lat: 5.6370,
+      lng: 5.8890,
+      latitude: 5.6370,
+      longitude: 5.8890,
+      distanceKm: 2.4,
+      rating: 5.0,
+      reviewsCount: 45,
+      experienceYrs: 3,
+      completedJobs: 110,
+      isVerified: true,
+      nin_verified: true,
+      isAvailable: true,
+      isTop: true,
+      phone: "+2348033445566",
+      avatarBg: "linear-gradient(135deg, #006B3F, #059669)",
+      badgeTitle: "NIN Verified Multi-Trade Specialist",
+      responseTime: "~10 mins",
+      bio: "Professional plumber, certified electrician, mason & painter in Okpe, Delta State. High quality craftsmanship.",
+      skills: ["Electrician", "Plumber", "Mason"],
+      startingPrice: "₦4,000 / inspection",
+      workingHours: {
+        weekday: "8:00 AM – 7:00 PM",
+        saturday: "8:30 AM – 6:00 PM",
+        sunday: "Emergency Callouts (24/7)"
+      },
+      pricingGuide: [
+        { item: "Electrical Diagnostic & Fault Isolation", price: "₦4,000" },
+        { item: "Conduit Pipe & Wiring Installation", price: "₦20,000 – ₦50,000" },
+        { item: "Plumbing Leak Fix & Pipe Fitting", price: "₦6,000 – ₦15,000" }
+      ],
+      portfolio: [
+        {
+          id: "p22-1",
+          title: "Residential Conduit Wiring & Water Tank Plumbing",
+          category: "Electrical & Plumbing",
+          isBeforeAfter: true,
+          tag: "Completed Project",
+          description: "Installed concealed PVC conduit electrical circuits and connected 2000L overhead water tank piping in Orerokpe.",
+          accentColor: "#059669",
+          icon: "⚡"
+        }
+      ],
+      reviews: [
+        {
+          id: "r22-1",
+          author: "Okiemute Oghenero",
+          location: "Orerokpe, Okpe",
+          date: "12 Aug 2026",
+          rating: 5,
+          serviceType: "Electrical Wiring & Plumbing Repair",
+          comment: "Arise Wire did a fantastic job at our site in Orerokpe. Very knowledgeable in electrical and plumbing work.",
+          isVerifiedCustomer: true,
+          helpfulCount: 15
+        }
+      ]
     }
   ];
 

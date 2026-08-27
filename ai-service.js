@@ -516,6 +516,82 @@
         confidence: 'high',
         model: 'lokator-pricing-intelligence-v1'
       };
+    },
+
+    /**
+     * Generates a structured, polite, high-conversion WhatsApp job brief.
+     * Integrates Nigerian trade context, pricing guidance benchmarks, and anti-hallucination checks.
+     *
+     * @param {object} provider Provider facts
+     * @param {object} [inputs] User input selections
+     * @returns {{
+     *   plainText: string,
+     *   pricingGuidance: object,
+     *   tradeQuestions: string[],
+     *   confidence: string,
+     *   model: string
+     * }}
+     */
+    generateStructuredJobBrief(provider = {}, inputs = {}) {
+      const sanitizedProv = this.sanitizeInputs(provider);
+      const provName = sanitizedProv.name || (sanitizedProv.firstName ? `${sanitizedProv.firstName} ${sanitizedProv.lastName || ''}`.trim() : 'Artisan');
+      const provTrade = sanitizedProv.trade || sanitizedProv.trade_title || sanitizedProv.category || 'Specialist';
+      
+      const serviceNeeded = (inputs.serviceType || inputs.service || provTrade).trim();
+      const scope = (inputs.jobScope || inputs.scope || 'General Task / Inspection').trim();
+      const location = (inputs.clientLocation || inputs.location || sanitizedProv.area || sanitizedProv.locality || 'my area').trim();
+      const urgency = (inputs.urgency || 'Urgent / Today').trim();
+      const materials = (inputs.materialsOption || inputs.materials || 'Labor Only (I will supply materials)').trim();
+      const details = (inputs.details || inputs.note || inputs.jobDetails || '').trim();
+      
+      const isEmergency = /urgent|emergency|today|asap/i.test(urgency) || /emergency|breakdown/i.test(scope);
+      const includesMaterials = /artisan to supply|materials included|supplier/i.test(materials);
+
+      // Fetch dynamic pricing guidance
+      const pricingGuidance = this.getPricingGuidance({
+        trade: provTrade,
+        service: serviceNeeded,
+        locality: sanitizedProv.locality || sanitizedProv.area,
+        state: sanitizedProv.state,
+        is_emergency: isEmergency,
+        includes_materials: includesMaterials
+      });
+
+      // Compose structured WhatsApp message
+      const lines = [
+        '🛠️ *JOB INQUIRY VIA LOKATOR.NG*',
+        '━━━━━━━━━━━━━━━━━━━━',
+        `👋 *Hello ${provName}*,`,
+        `I found your verified profile on Lokator.NG and would like to request your service.`,
+        '',
+        `📋 *Service:* ${serviceNeeded}`,
+        `🎯 *Job Scope:* ${scope}`,
+        `📍 *Location:* ${location}`,
+        `⏰ *Preferred Time:* ${urgency}`,
+        `📦 *Materials:* ${materials}`
+      ];
+
+      if (details) {
+        lines.push(`📝 *Job Notes:* ${details}`);
+      }
+
+      if (pricingGuidance && pricingGuidance.suggested_range) {
+        lines.push(`💡 *Reference Rate Guidance:* ${pricingGuidance.suggested_range} (Inspection: ${pricingGuidance.inspection_fee_range || '₦3,500 – ₦6,000'})`);
+      }
+
+      lines.push('');
+      lines.push('━━━━━━━━━━━━━━━━━━━━');
+      lines.push('Are you available to take on this job? Please let me know your availability and initial assessment. Thank you!');
+
+      const formattedBrief = lines.join('\n');
+
+      return {
+        plainText: formattedBrief,
+        pricingGuidance,
+        tradeQuestions: pricingGuidance.key_questions || [],
+        confidence: 'high',
+        model: 'lokator-brief-intelligence-v1'
+      };
     }
   };
 

@@ -30,6 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
     page: 1,
     pageSize: 20,
     isLoading: false,
+    forceLiteral: false,
     totalCount: 0
   };
 
@@ -348,8 +349,50 @@ document.addEventListener("DOMContentLoaded", () => {
     }).join('');
   }
 
+  function renderBreadcrumbs() {
+    const breadcrumbsNav = document.getElementById("marketplace-breadcrumbs");
+    if (!breadcrumbsNav) return;
+
+    const crumbs = [{ label: "Home", url: "index.html" }];
+    
+    let industryName = null;
+    let categoryName = null;
+
+    if (state.category && state.category !== "all") {
+      const catObj = typeof CategoryMap !== 'undefined' ? CategoryMap.getBySlug(state.category) : null;
+      categoryName = catObj ? (catObj.name || catObj.displayName) : (state.category.charAt(0).toUpperCase() + state.category.slice(1));
+      industryName = (catObj && catObj.industry) ? catObj.industry : "Technical Repairs";
+    } else if (state.keyword) {
+      categoryName = state.keyword.charAt(0).toUpperCase() + state.keyword.slice(1);
+      industryName = "Technical Repairs";
+    }
+
+    if (industryName) {
+      crumbs.push({ label: industryName, url: `search.html` });
+    }
+    if (categoryName) {
+      crumbs.push({ label: categoryName, isCurrent: true });
+    }
+
+    breadcrumbsNav.innerHTML = crumbs.map((crumb, idx) => {
+      if (crumb.isCurrent) {
+        return `<span class="breadcrumb-current" aria-current="page">${escapeHtml(crumb.label)}</span>`;
+      }
+      return `<a href="${crumb.url}" class="breadcrumb-link">${escapeHtml(crumb.label)}</a><span class="breadcrumb-sep">›</span>`;
+    }).join(" ");
+  }
+
   function renderBrowseGrid() {
     if (!browseSection || typeof MarketplaceTaxonomy === 'undefined') return;
+
+    const hasActiveQuery = Boolean(state.keyword || (state.category && state.category !== 'all') || (state.industry && state.industry !== 'all') || (state.state && state.state !== 'all') || state.locationQuery);
+
+    // Hide browse banner when user is searching or viewing specific trade/location (matches Image 2)
+    if (hasActiveQuery) {
+      browseSection.style.display = "none";
+      browseSection.innerHTML = "";
+      return;
+    }
 
     const industries = MarketplaceTaxonomy.getIndustries();
     if (!industries || industries.length === 0) {
@@ -358,51 +401,19 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     browseSection.style.display = "block";
-    const hasActiveQuery = Boolean(state.keyword || (state.category && state.category !== 'all') || (state.industry && state.industry !== 'all'));
-
-    if (hasActiveQuery) {
-      browseSection.classList.add('is-compact');
-      const activeInd = state.industry !== 'all' ? MarketplaceTaxonomy.getIndustryById(state.industry) : null;
-      browseSection.innerHTML = `
-        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <span style="font-size: 14px;">⚡</span>
-            <span style="font-size: 13px; font-weight: 700; color: var(--fg);">${activeInd ? `Industry: ${escapeHtml(activeInd.name)}` : 'Browse all 15 trades & industries'}</span>
-          </div>
-          <button type="button" class="browse-toggle-btn" id="toggle-browse-grid-btn" aria-expanded="false">
-            <span>${activeInd ? 'Change Industry' : 'Explore All Trades'}</span> ↓
-          </button>
+    browseSection.classList.remove('is-compact');
+    browseSection.innerHTML = `
+      <div class="browse-section-header">
+        <div class="browse-header-text">
+          <span class="browse-badge">⚡ Explore by Trade</span>
+          <h3 class="browse-title">Browse Nigeria's Canonical Trades & Industries</h3>
+          <p class="browse-subtitle">Select an industry or popular trade to find verified artisans and specialists near you.</p>
         </div>
-        <div class="industry-cards-grid" id="industry-cards-grid-inner" style="display: none; margin-top: 14px;">
-          ${buildIndustryCardsHtml(industries)}
-        </div>
-      `;
-      const toggleBtn = document.getElementById('toggle-browse-grid-btn');
-      const gridInner = document.getElementById('industry-cards-grid-inner');
-      if (toggleBtn && gridInner) {
-        toggleBtn.addEventListener('click', (e) => {
-          e.preventDefault();
-          const isHidden = gridInner.style.display === 'none';
-          gridInner.style.display = isHidden ? 'grid' : 'none';
-          toggleBtn.setAttribute('aria-expanded', String(isHidden));
-          toggleBtn.innerHTML = isHidden ? `<span>Collapse Trades</span> ↑` : `<span>${activeInd ? 'Change Industry' : 'Explore All Trades'}</span> ↓`;
-        });
-      }
-    } else {
-      browseSection.classList.remove('is-compact');
-      browseSection.innerHTML = `
-        <div class="browse-section-header">
-          <div class="browse-header-text">
-            <span class="browse-badge">⚡ Explore by Trade</span>
-            <h3 class="browse-title">Browse Nigeria's Canonical Trades & Industries</h3>
-            <p class="browse-subtitle">Select an industry or popular trade to find verified artisans and specialists near you.</p>
-          </div>
-        </div>
-        <div class="industry-cards-grid" id="industry-cards-grid-inner">
-          ${buildIndustryCardsHtml(industries)}
-        </div>
-      `;
-    }
+      </div>
+      <div class="industry-cards-grid" id="industry-cards-grid-inner">
+        ${buildIndustryCardsHtml(industries)}
+      </div>
+    `;
   }
 
   // Synchronize browser address bar with search state (shareable & refresh-safe)
@@ -485,25 +496,128 @@ document.addEventListener("DOMContentLoaded", () => {
       const userLat = state.userCoords ? state.userCoords.lat : null;
       const userLng = state.userCoords ? state.userCoords.lng : null;
 
+      // Phase 10.12C / Phase 10.20: Natural Language & Nigerian Pidgin Intent Recognition
+      let naturalLanguageParsed = null;
+      let effectiveCategory = categorySlug;
+      let effectiveState = state.state;
+      let effectiveLga = state.lga;
+      let effectiveLocality = state.locality;
+      let effectiveQuery = state.keyword;
+
+      const LangEngine = (typeof NigeriaSearchLanguage !== 'undefined' ? NigeriaSearchLanguage : null) ||
+                         (typeof globalThis !== 'undefined' ? globalThis.NigeriaSearchLanguage : null) ||
+                         (typeof window !== 'undefined' ? window.NigeriaSearchLanguage : null);
+
+      if (LangEngine && state.keyword && !state.forceLiteral) {
+        naturalLanguageParsed = LangEngine.parseNigerianQuery(state.keyword);
+        
+        // Resolve trade intent if category dropdown is on "all"
+        if (naturalLanguageParsed.serviceIntent && (categorySelect ? categorySelect.value === 'all' : state.category === 'all')) {
+          effectiveCategory = naturalLanguageParsed.serviceIntent.canonicalSlug;
+        }
+
+        // Resolve location hierarchy if state dropdown is on "all"
+        if (naturalLanguageParsed.locationHierarchy && (state.state === 'all' || !state.state)) {
+          effectiveState = naturalLanguageParsed.locationHierarchy.state || effectiveState;
+          effectiveLga = naturalLanguageParsed.locationHierarchy.lga || effectiveLga;
+          effectiveLocality = naturalLanguageParsed.locationHierarchy.locality || effectiveLocality;
+        }
+
+        // Clean query tokens for DB query
+        if (naturalLanguageParsed.cleanQuery) {
+          effectiveQuery = naturalLanguageParsed.cleanQuery;
+        }
+
+        // Proximity intent detection
+        if (naturalLanguageParsed.isNearMe && (!state.sortBy || state.sortBy === 'distance-asc')) {
+          state.sortBy = "distance-asc";
+        }
+      }
+
+      // Render Natural Language Search Intent Banner
+      const intentBanner = document.getElementById('search-intent-banner');
+      if (intentBanner) {
+        if (naturalLanguageParsed && (naturalLanguageParsed.serviceIntent || naturalLanguageParsed.extractedLocation || naturalLanguageParsed.isNearMe)) {
+          const tradeLabel = naturalLanguageParsed.serviceIntent ? naturalLanguageParsed.serviceIntent.primaryTrade : 'Specialist Artisan';
+          const locLabel = naturalLanguageParsed.locationHierarchy ? naturalLanguageParsed.locationHierarchy.cleanLocation : naturalLanguageParsed.extractedLocation;
+          const locPart = locLabel ? ` in <strong class="intent-highlight">${escapeHtml(locLabel)}</strong>` : '';
+          const nearPart = naturalLanguageParsed.isNearMe ? ' • <span class="intent-nearby-tag">📍 Nearby</span>' : '';
+
+          intentBanner.innerHTML = `
+            <div class="search-intent-content">
+              <div class="search-intent-info">
+                <span class="intent-badge-icon">🇳🇬</span>
+                <div>
+                  <div class="search-intent-title">Interpreted Nigerian Query: <span class="intent-query-text">"${escapeHtml(state.keyword)}"</span></div>
+                  <div class="search-intent-details">
+                    Looking for <strong class="intent-highlight">${escapeHtml(tradeLabel)}</strong>${locPart}${nearPart}
+                  </div>
+                </div>
+              </div>
+              <button type="button" class="btn-toggle-literal" id="btn-revert-literal" title="Search exact literal keywords">
+                Search Literal
+              </button>
+            </div>
+          `;
+          intentBanner.style.display = 'block';
+
+          const revertBtn = document.getElementById('btn-revert-literal');
+          if (revertBtn) {
+            revertBtn.addEventListener('click', () => {
+              state.forceLiteral = true;
+              render();
+            });
+          }
+        } else if (state.forceLiteral && state.keyword) {
+          intentBanner.innerHTML = `
+            <div class="search-intent-content literal-mode">
+              <div class="search-intent-info">
+                <span class="intent-badge-icon">🔤</span>
+                <div>
+                  <div class="search-intent-title">Literal Keyword Search Active</div>
+                  <div class="search-intent-details">Searching exact text: "${escapeHtml(state.keyword)}"</div>
+                </div>
+              </div>
+              <button type="button" class="btn-toggle-literal" id="btn-enable-natural" title="Enable Nigerian natural language & Pidgin interpretation">
+                Enable Nigerian Smart Search
+              </button>
+            </div>
+          `;
+          intentBanner.style.display = 'block';
+
+          const enableBtn = document.getElementById('btn-enable-natural');
+          if (enableBtn) {
+            enableBtn.addEventListener('click', () => {
+              state.forceLiteral = false;
+              render();
+            });
+          }
+        } else {
+          intentBanner.style.display = 'none';
+          intentBanner.innerHTML = '';
+        }
+      }
+
       // Query database via LokatorDB
       if (typeof LokatorTelemetry !== 'undefined') {
         LokatorTelemetry.trackEvent('search_submitted', {
-          category: categorySlug,
-          keyword: state.keyword,
+          category: effectiveCategory,
+          keyword: effectiveQuery,
+          rawKeyword: state.keyword,
           city: loc,
-          state: state.state,
-          lga: state.lga,
+          state: effectiveState,
+          lga: effectiveLga,
           verifiedOnly: state.verifiedOnly
         });
       }
 
       const result = await LokatorDB.getProviders({
-        category: categorySlug,
+        category: effectiveCategory,
         city: loc,
-        state: state.state,
-        lga: state.lga,
-        locality: state.locality,
-        query: state.keyword,
+        state: effectiveState,
+        lga: effectiveLga,
+        locality: effectiveLocality,
+        query: effectiveQuery,
         isVerified: state.verifiedOnly,
         isAvailable: state.availableOnly,
         minRating: state.minRating,
@@ -561,7 +675,18 @@ document.addEventListener("DOMContentLoaded", () => {
       renderBreadcrumbs();
       renderBrowseGrid();
       if (resultsCountText) {
-        resultsCountText.textContent = `Found ${state.totalCount} verified professional${state.totalCount === 1 ? "" : "s"} near you`;
+        let tradeWord = 'Professional';
+        if (effectiveCategory && effectiveCategory !== 'all') {
+          const catObj = (typeof CategoryMap !== 'undefined') ? CategoryMap.getBySlug(effectiveCategory) : null;
+          tradeWord = catObj ? (catObj.name || catObj.displayName) : (effectiveCategory.charAt(0).toUpperCase() + effectiveCategory.slice(1).replace(/-/g, ' '));
+        } else if (state.keyword) {
+          const kw = state.keyword.trim();
+          tradeWord = kw.charAt(0).toUpperCase() + kw.slice(1);
+        }
+
+        const countNum = state.totalCount;
+        const pluralTrade = countNum === 1 ? tradeWord : (tradeWord.endsWith('s') ? tradeWord : tradeWord + 's');
+        resultsCountText.textContent = `Found ${countNum} Verified ${pluralTrade}`;
       }
 
       if (providers.length === 0) {
@@ -652,7 +777,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (emptyState) emptyState.style.display = "none";
 
-      // Render Provider Cards
+      // Render Provider Cards (Matches Image 2 Canonical Design)
       providersContainer.innerHTML = providers.map(provider => {
         const safeId = parseInt(provider.id, 10) || 0;
         const initials = getInitials(provider.name);
@@ -666,90 +791,84 @@ document.addEventListener("DOMContentLoaded", () => {
           ? PhoneEngine.buildWhatsAppUrl(provider, { service: serviceCtx, location: locationCtx })
           : '';
 
-        // Distance text — safe fallback for missing area
+        // Distance format: Orerokpe, Okpe (2.4 km)
         const distText = (provider.distanceKm != null) 
-          ? `📍 ${provider.distanceKm} km away • ${providerArea}`
-          : `📍 ${providerArea}`;
+          ? `${providerArea} (${provider.distanceKm} km)`
+          : `${providerArea}`;
 
         const skillsList = Array.isArray(provider.skills) ? provider.skills : [provider.trade];
         const safeRating = Number(provider.rating || 5).toFixed(1);
         const safeReviewsCount = parseInt(provider.reviewsCount || 0, 10);
         const safeExpYrs = parseInt(provider.experienceYrs || 3, 10);
-        const safeAvatarBg = (provider.avatarBg && typeof provider.avatarBg === 'string' && provider.avatarBg.startsWith('linear-gradient')) ? provider.avatarBg : 'var(--green)';
+        const safeAvatarBg = (provider.avatarBg && typeof provider.avatarBg === 'string' && provider.avatarBg.startsWith('linear-gradient')) ? provider.avatarBg : 'linear-gradient(135deg, #006B3F, #059669)';
 
-        // Contact action buttons generated via central NigeriaPhone utility
+        // Dual Contact buttons: Call Now (solid green) & Message (WhatsApp outline)
         const callBtnHtml = telUrl
           ? `<a href="${escapeHtml(telUrl)}" class="action-btn call-btn" aria-label="Call ${escapeHtml(provider.name)}">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-              Call Now
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              <span>Call Now</span>
             </a>`
-          : '';
+          : `<button class="action-btn call-btn" disabled><span>Call Now</span></button>`;
 
-        const waBtnHtml = waUrl
-          ? `<a href="${escapeHtml(waUrl)}" target="_blank" rel="noopener" class="action-btn wa-btn" aria-label="WhatsApp ${escapeHtml(provider.name)}">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.625.846 5.059 2.284 7.034L.789 23.492a.5.5 0 0 0 .611.611l4.458-1.495A11.952 11.952 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22a9.94 9.94 0 0 1-5.39-1.585l-.386-.231-2.646.887.887-2.646-.231-.386A9.94 9.94 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
-              WhatsApp
+        const messageBtnHtml = waUrl
+          ? `<a href="${escapeHtml(waUrl)}" target="_blank" rel="noopener" class="action-btn message-btn" aria-label="Message ${escapeHtml(provider.name)}">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+              <span>Message</span>
             </a>`
-          : '';
-        const isSaved = (typeof LokatorDB !== 'undefined' && LokatorDB.offline) ? LokatorDB.offline.isProviderSaved(provider.id) : false;
+          : `<a href="profile.html?id=${safeId}" class="action-btn message-btn"><span>Message</span></a>`;
 
         return `
           <article class="provider-item-card ${provider.isVerified ? 'is-verified' : ''}" id="card-prov-${safeId}">
-            <!-- Avatar Column -->
-            <div class="provider-avatar-col">
-              <a href="profile.html?id=${safeId}" style="text-decoration: none;">
-                <div class="big-avatar" style="background: ${safeAvatarBg}; overflow: hidden;">
-                  ${provider.avatarUrl ? `<img src="${escapeHtml(provider.avatarUrl)}" alt="${escapeHtml(provider.name)}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" />` : escapeHtml(initials)}
-                </div>
-              </a>
-              <span class="status-dot ${provider.isAvailable ? 'online' : 'offline'}" title="${provider.isAvailable ? 'Available today' : 'Currently busy'}"></span>
-            </div>
-
-            <!-- Content Column -->
-            <div class="provider-content-col">
-              <div class="provider-header-line">
-                <a href="profile.html?id=${safeId}" style="text-decoration: none; color: inherit;">
-                  <h3 class="provider-title-name">${escapeHtml(provider.name)}</h3>
+            <div class="provider-card-main-row">
+              <!-- Avatar Column -->
+              <div class="provider-avatar-col">
+                <a href="profile.html?id=${safeId}" title="Open Full Profile Page" style="text-decoration: none;">
+                  <div class="big-avatar" style="background: ${safeAvatarBg};">
+                    ${provider.avatarUrl ? `<img src="${escapeHtml(provider.avatarUrl)}" alt="${escapeHtml(provider.name)}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" />` : escapeHtml(initials)}
+                  </div>
                 </a>
-                ${provider.isVerified ? `
-                  <span class="badge-tag-verified" title="NIN and Government ID Verified">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-                    Verified Pro
-                  </span>` : ''
-                }
-                ${provider.isTop ? `<span class="badge-tag-top">⭐ Top Pick</span>` : ''}
-                ${(provider.is_sponsored || provider.isSponsored) ? `<span class="badge-tag-sponsored" style="background: rgba(56, 189, 248, 0.15); color: #38BDF8; border: 1px solid rgba(56, 189, 248, 0.4); font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; display: inline-flex; align-items: center; gap: 3px;">⚡ Sponsored</span>` : ''}
-                ${(provider.is_community_builder || provider.isCommunityBuilder) ? `<span class="badge-tag-community" style="background: rgba(251, 191, 36, 0.15); color: #FBBF24; border: 1px solid rgba(251, 191, 36, 0.4); font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; display: inline-flex; align-items: center; gap: 3px;">🌟 Community Builder</span>` : ''}
+                <span class="status-dot ${provider.isAvailable ? 'online' : 'offline'}" title="${provider.isAvailable ? 'Available today' : 'Currently busy'}"></span>
               </div>
 
-              <div class="provider-specialty">${escapeHtml(provider.trade)}</div>
+              <!-- Content Column -->
+              <div class="provider-content-col">
+                <div class="provider-header-line">
+                  <a href="profile.html?id=${safeId}" title="Open Full Profile Page" style="text-decoration: none; color: inherit;">
+                    <h3 class="provider-title-name">${escapeHtml(provider.name)}</h3>
+                  </a>
+                  ${provider.isVerified ? `
+                    <span class="verified-badge-icon" title="NIN Verified Professional">
+                      <svg width="17" height="17" viewBox="0 0 24 24" fill="#0284C7"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                    </span>` : ''
+                  }
+                  ${provider.isTop ? `<span class="badge-tag-top">⭐ Top</span>` : ''}
+                </div>
 
-              <div class="provider-meta-row">
-                <span class="meta-distance">${escapeHtml(distText)}</span>
-                <span class="meta-rating">
-                  ★ ${safeRating} <span>(${safeReviewsCount} reviews)</span>
-                </span>
-                <span>• ${safeExpYrs} yrs exp</span>
-              </div>
+                <!-- Rating & Experience Meta -->
+                <div class="provider-rating-row">
+                  <span class="meta-rating-num">${safeRating}</span>
+                  <span class="meta-rating-star">★</span>
+                  <span class="meta-reviews-count">(${safeReviewsCount} reviews)</span>
+                  <span class="meta-sep">•</span>
+                  <span class="meta-exp">${safeExpYrs} yrs exp</span>
+                </div>
 
-              <p class="provider-bio-snippet">${escapeHtml(provider.bio || `Specialist ${provider.trade} providing verified local services.`)}</p>
+                <!-- Location line -->
+                <div class="provider-location-row">
+                  <span>📍 ${escapeHtml(distText)}</span>
+                </div>
 
-              <div class="provider-tags-row">
-                ${skillsList.map(s => `<span class="mini-tag" data-skill="${escapeHtml(s)}" title="Search ${escapeHtml(s)}">${escapeHtml(s)}</span>`).join('')}
+                <!-- Skill tag pills -->
+                <div class="provider-tags-row">
+                  ${skillsList.slice(0, 4).map(s => `<span class="mini-tag" data-skill="${escapeHtml(s)}">${escapeHtml(s)}</span>`).join('')}
+                </div>
               </div>
             </div>
 
-            <!-- Direct Actions Column -->
+            <!-- Dual Action Buttons matching Image 2 -->
             <div class="provider-actions-col">
               ${callBtnHtml}
-              ${waBtnHtml}
-              <a href="profile.html?id=${safeId}" class="btn-view-profile" style="text-decoration: none; text-align: center;">
-                View Full Profile →
-              </a>
-              <button type="button" class="btn-save-bookmark-card bookmark-icon-btn ${isSaved ? 'is-saved' : ''}" data-provider-id="${safeId}" style="margin-top: 4px; font-size: 0.78rem; color: #94A3B8; display: inline-flex; align-items: center; justify-content: center; gap: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 5px 8px; width: 100%; cursor: pointer;">
-                <span>${isSaved ? '❤️' : '🤍'}</span>
-                <span>${isSaved ? 'Saved Offline' : 'Save Contact'}</span>
-              </button>
+              ${messageBtnHtml}
             </div>
           </article>
         `;
@@ -791,16 +910,26 @@ document.addEventListener("DOMContentLoaded", () => {
   function renderActiveTags() {
     if (!activeFilterTags) return;
     const tags = [];
-    if (state.category && state.category !== "all") tags.push(`Category: ${state.category}`);
-    if (state.state && state.state !== "all") tags.push(`State: ${state.state}`);
-    if (state.lga && state.lga !== "all") tags.push(`LGA: ${state.lga}`);
-    if (state.locality && state.locality !== "all") tags.push(`Neighborhood: ${state.locality}`);
-    if (state.city && state.city !== "all" && state.city !== state.lga && state.city !== state.state) tags.push(`City: ${state.city}`);
-    if (state.locationQuery && state.locationQuery !== state.state && state.locationQuery !== state.lga && state.locationQuery !== state.locality) tags.push(`Location: "${state.locationQuery}"`);
-    if (state.keyword) tags.push(`Skill / Service: "${state.keyword}"`);
-    if (state.verifiedOnly) tags.push(`Verified only`);
-    if (state.availableOnly) tags.push(`Available now`);
-    if (state.minRating > 0) tags.push(`★ ${state.minRating}+`);
+    let filterCount = 0;
+    if (state.category && state.category !== "all") { tags.push(`Category: ${state.category}`); filterCount++; }
+    if (state.state && state.state !== "all") { tags.push(`State: ${state.state}`); filterCount++; }
+    if (state.lga && state.lga !== "all") { tags.push(`LGA: ${state.lga}`); filterCount++; }
+    if (state.locality && state.locality !== "all") { tags.push(`Neighborhood: ${state.locality}`); filterCount++; }
+    if (state.city && state.city !== "all" && state.city !== state.lga && state.city !== state.state) { tags.push(`City: ${state.city}`); filterCount++; }
+    if (state.locationQuery && state.locationQuery !== state.state && state.locationQuery !== state.lga && state.locationQuery !== state.locality) { tags.push(`Location: "${state.locationQuery}"`); }
+    if (state.keyword) { tags.push(`Skill / Service: "${state.keyword}"`); }
+    if (state.verifiedOnly) { tags.push(`Verified only`); filterCount++; }
+    if (state.availableOnly) { tags.push(`Available now`); filterCount++; }
+    if (state.minRating > 0) { tags.push(`★ ${state.minRating}+`); filterCount++; }
+
+    // Update Mobile Filter Button label (e.g. Filters (2))
+    const mobileFilterTriggerBtn = document.getElementById('mobile-filter-btn');
+    if (mobileFilterTriggerBtn) {
+      mobileFilterTriggerBtn.innerHTML = `
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+        <span>Filters${filterCount > 0 ? ` (${filterCount})` : ''}</span>
+      `;
+    }
 
     activeFilterTags.innerHTML = tags
       .map(t => `<span class="filter-badge-tag">${escapeHtml(t)}</span>`)
@@ -846,12 +975,55 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // 6. Live Search Suggestions Dropdown Handling
+  // 6. Live Search Suggestions Dropdown Handling (Enhanced with Nigerian Pidgin Intelligence)
   function renderSuggestions(query) {
     if (!suggestionsDropdown) return;
-    const suggestions = (LokatorDB && LokatorDB.getSkillSuggestions)
+    const qLower = (query || '').toLowerCase().trim();
+    if (!qLower) {
+      suggestionsDropdown.style.display = "none";
+      suggestionsDropdown.innerHTML = "";
+      return;
+    }
+
+    const suggestions = [];
+
+    // Check for conversational / Pidgin search matches
+    const LangEngine = (typeof NigeriaSearchLanguage !== 'undefined' ? NigeriaSearchLanguage : null) ||
+                       (typeof globalThis !== 'undefined' ? globalThis.NigeriaSearchLanguage : null) ||
+                       (typeof window !== 'undefined' ? window.NigeriaSearchLanguage : null);
+
+    if (LangEngine) {
+      const pidginPhrases = [
+        { text: "Person wey fit fix generator", icon: "⚡" },
+        { text: "Who sabi sew agbada / senator wear", icon: "🧵" },
+        { text: "AC repairer wey dey near me", icon: "❄️" },
+        { text: "Plumber wey fit fix pipe leak", icon: "🔧" },
+        { text: "Mechanic for engine repair & rewire", icon: "🔩" },
+        { text: "Phone engineer for screen change", icon: "📱" },
+        { text: "Cleaner for deep house cleaning", icon: "✨" },
+        { text: "Welder for iron gate & burglar proof", icon: "🔥" }
+      ];
+
+      const isConversational = /^(who|person|wey|sabi|i need|abeg|help|find|where|somebody|fix|repair|close|near)/i.test(qLower);
+      if (isConversational) {
+        pidginPhrases.forEach(p => {
+          if (p.text.toLowerCase().includes(qLower) || qLower.split(' ').some(w => w.length >= 3 && p.text.toLowerCase().includes(w))) {
+            suggestions.push({ label: p.text, icon: p.icon, isPidgin: true });
+          }
+        });
+      }
+    }
+
+    // Standard skill suggestions
+    const dbSuggestions = (LokatorDB && LokatorDB.getSkillSuggestions)
       ? LokatorDB.getSkillSuggestions(query, 6)
       : [];
+
+    dbSuggestions.forEach(s => {
+      if (!suggestions.some(item => item.label.toLowerCase() === s.toLowerCase())) {
+        suggestions.push({ label: s, icon: "⚡", isPidgin: false });
+      }
+    });
 
     if (suggestions.length === 0) {
       suggestionsDropdown.style.display = "none";
@@ -859,11 +1031,12 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    suggestionsDropdown.innerHTML = suggestions.map(s => `
-      <div class="suggestion-item" data-val="${escapeHtml(s)}">
-        <span class="sugg-icon">⚡</span>
+    suggestionsDropdown.innerHTML = suggestions.slice(0, 6).map(s => `
+      <div class="suggestion-item" data-val="${escapeHtml(s.label)}">
+        <span class="sugg-icon">${escapeHtml(s.icon)}</span>
         <div class="sugg-meta">
-          <span class="sugg-title">${escapeHtml(s)}</span>
+          <span class="sugg-title">${escapeHtml(s.label)}</span>
+          ${s.isPidgin ? '<span class="sugg-sub" style="color: #34D399; font-size: 11px;">🇳🇬 Nigerian Smart Search</span>' : ''}
         </div>
       </div>
     `).join('');
@@ -885,6 +1058,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const val = item.dataset.val;
         if (searchInput) searchInput.value = val;
         state.keyword = val;
+        state.forceLiteral = false;
         state.category = "all";
         if (categorySelect) categorySelect.value = "all";
         suggestionsDropdown.style.display = "none";
@@ -1055,18 +1229,17 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     recentSearchesChips.innerHTML = searches.map((s, idx) => {
-      const labelParts = [];
-      if (s.keyword) labelParts.push(s.keyword);
-      if (s.location) labelParts.push(`in ${s.location}`);
-      else if (s.lga && s.lga !== 'all') labelParts.push(`in ${s.lga}`);
-      else if (s.state && s.state !== 'all') labelParts.push(`in ${s.state}`);
+      let rawText = s.keyword || (s.category && s.category !== 'all' ? s.category : (s.location || ''));
+      if (!rawText && s.state && s.state !== 'all') rawText = s.state;
+      if (!rawText) rawText = 'Search';
 
-      const fullLabel = labelParts.join(' ') || 'Recent Search';
+      // Title case format (e.g. Electrician, Plumber, AC Repair)
+      const cleanTitle = rawText.split(' ').map(w => w ? (w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()) : '').join(' ');
 
       return `
         <div class="recent-chip" data-index="${idx}" data-keyword="${escapeHtml(s.keyword || '')}" data-loc="${escapeHtml(s.location || '')}" data-state="${escapeHtml(s.state || '')}" data-lga="${escapeHtml(s.lga || '')}">
-          <span>🔍 ${escapeHtml(fullLabel)}</span>
-          <button type="button" class="btn-remove-chip" data-idx="${idx}" title="Remove">×</button>
+          <span>${escapeHtml(cleanTitle)}</span>
+          <button type="button" class="btn-remove-chip" data-idx="${idx}" title="Remove" aria-label="Remove ${escapeHtml(cleanTitle)}">×</button>
         </div>
       `;
     }).join('');
@@ -1890,6 +2063,62 @@ document.addEventListener("DOMContentLoaded", () => {
       btnDataSaver.style.color = '#34D399';
     }
   }
+
+  // Mobile Filter Drawer Sheet Handlers
+  function openMobileFilterDrawer() {
+    if (filterSidebar) {
+      filterSidebar.classList.add("open", "mobile-open");
+      document.body.style.overflow = "hidden";
+    }
+  }
+
+  function closeMobileFilterDrawer() {
+    if (filterSidebar) {
+      filterSidebar.classList.remove("open", "mobile-open");
+      document.body.style.overflow = "";
+    }
+  }
+
+  if (mobileFilterBtn) {
+    mobileFilterBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      openMobileFilterDrawer();
+    });
+  }
+
+  if (mobileFilterCloseBtn) {
+    mobileFilterCloseBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      closeMobileFilterDrawer();
+    });
+  }
+
+  if (mobileApplyFiltersBtn) {
+    mobileApplyFiltersBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      closeMobileFilterDrawer();
+      state.page = 1;
+      render();
+    });
+  }
+
+  if (mobileResetFiltersBtn) {
+    mobileResetFiltersBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      if (resetFiltersBtn) resetFiltersBtn.click();
+      closeMobileFilterDrawer();
+    });
+  }
+
+  if (filterBackdrop) {
+    filterBackdrop.addEventListener("click", closeMobileFilterDrawer);
+  }
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && filterSidebar && (filterSidebar.classList.contains("open") || filterSidebar.classList.contains("mobile-open"))) {
+      closeMobileFilterDrawer();
+    }
+  });
 
   // Handle browser back/forward navigation
   window.addEventListener("popstate", () => {

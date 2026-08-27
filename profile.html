@@ -6,6 +6,7 @@
   <title>Provider Profile — Lokator</title>
   <meta name="description" content="View verified artisan profile, portfolio showcase, customer reviews, pricing guide, and connect directly via phone or WhatsApp on Lokator." />
   <meta name="theme-color" content="#006B3F" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Lokator" />
@@ -293,47 +294,104 @@
 
           <!-- STRUCTURED WHATSAPP BOOKING GENERATOR -->
           <div class="whatsapp-builder-card" id="whatsapp-builder">
-            <h3>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="#006B3F"><path d="M12 0C5.373 0 0 5.373 0 12c0 2.625.846 5.059 2.284 7.034L.789 23.492a.5.5 0 0 0 .611.611l4.458-1.495A11.952 11.952 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0z"/></svg>
-              Instant WhatsApp Booking
-            </h3>
-            <p style="font-size: 13px; color: var(--green-dark);">Build a structured message with your job requirements and send directly to the provider.</p>
+            <div class="wa-builder-header">
+              <div class="wa-builder-title-wrap">
+                <span class="wa-icon-ring">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="#25D366"><path d="M12 0C5.373 0 0 5.373 0 12c0 2.625.846 5.059 2.284 7.034L.789 23.492a.5.5 0 0 0 .611.611l4.458-1.495A11.952 11.952 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0z"/></svg>
+                </span>
+                <div>
+                  <h3 style="margin: 0; font-size: 16px; font-weight: 800; color: #FFFFFF;">Instant WhatsApp Booking</h3>
+                  <span style="font-size: 12px; color: #94A3B8;">Structured Job Brief & Rate Card Estimator</span>
+                </div>
+              </div>
+              <span class="wa-ai-badge">⚡ AI Guided</span>
+            </div>
 
+            <!-- Dynamic AI Pricing Benchmark Pill -->
+            <div class="wa-pricing-guidance-pill" id="wa-pricing-guidance-pill">
+              <div class="wa-price-pill-header">
+                <span class="wa-price-sparkle">💡</span>
+                <strong id="wa-price-range-text">Benchmark: ₦10,000 – ₦30,000</strong>
+              </div>
+              <span class="wa-price-subtext" id="wa-price-subtext">Inspection fee: ₦3,500 – ₦6,000 • Labor benchmark</span>
+            </div>
+
+            <!-- Service Selection -->
             <div class="form-field-group">
               <label for="wa-service-type">Service Needed</label>
-              <select id="wa-service-type" class="filter-select">
+              <select id="wa-service-type" aria-label="Service Needed" class="filter-select">
                 <!-- Dynamically populated from provider skills -->
               </select>
             </div>
 
+            <!-- Scope Selection Pills -->
+            <div class="form-field-group">
+              <label>Job Scope</label>
+              <div class="wa-scope-pills" id="wa-scope-pills">
+                <button type="button" class="wa-scope-btn active" data-scope="Inspection & Diagnosis">🔍 Inspection</button>
+                <button type="button" class="wa-scope-btn" data-scope="Emergency Repair">⚡ Urgent Fix</button>
+                <button type="button" class="wa-scope-btn" data-scope="New Installation">🛠️ Installation</button>
+                <button type="button" class="wa-scope-btn" data-scope="Routine Maintenance">🔧 Maintenance</button>
+              </div>
+            </div>
+
+            <!-- Location -->
             <div class="form-field-group">
               <label for="wa-user-location">Your Location / Address</label>
-              <input type="text" id="wa-user-location" placeholder="e.g. 14 Ogunlana Dr, Surulere" />
+              <input type="text" id="wa-user-location" aria-label="Your Location or Address" placeholder="e.g. 14 Ogunlana Dr, Surulere" />
             </div>
 
-            <div class="form-field-group">
-              <label for="wa-urgency">When is it needed?</label>
-              <select id="wa-urgency" class="filter-select">
-                <option value="Urgent / Today">Urgent (Today / Emergency)</option>
-                <option value="Tomorrow">Tomorrow</option>
-                <option value="This Weekend">This Weekend</option>
-                <option value="Next Week">Next Week / Flexible</option>
-              </select>
+            <!-- Urgency & Materials Grid -->
+            <div class="wa-form-row">
+              <div class="form-field-group">
+                <label for="wa-urgency">Timeline</label>
+                <select id="wa-urgency" aria-label="Timeline Urgency" class="filter-select">
+                  <option value="Urgent / Today">🚨 Urgent (Today)</option>
+                  <option value="Tomorrow">📅 Tomorrow</option>
+                  <option value="This Weekend">🌴 This Weekend</option>
+                  <option value="Next Week / Flexible">🕒 Flexible</option>
+                </select>
+              </div>
+              <div class="form-field-group">
+                <label for="wa-materials-select">Materials</label>
+                <select id="wa-materials-select" aria-label="Materials Responsibility" class="filter-select">
+                  <option value="Labor Only (I will supply materials)">Labor Only</option>
+                  <option value="Materials Included (Artisan supplies parts)">Artisan Supplies</option>
+                  <option value="Need Advice on Materials">Need Advice</option>
+                </select>
+              </div>
             </div>
 
+            <!-- Trade Diagnostic Checklist Tip -->
+            <div class="wa-questions-hint" id="wa-questions-hint">
+              <span>💡 <strong id="wa-hint-text">Tip: Tell artisan if materials are already on-site.</strong></span>
+            </div>
+
+            <!-- Job Notes -->
             <div class="form-field-group">
               <label for="wa-note">Job Details (Optional)</label>
-              <input type="text" id="wa-note" placeholder="e.g. Inverter tripped, need inspection" />
+              <input type="text" id="wa-note" aria-label="Job Details Optional" placeholder="e.g. Inverter tripped, need inspection" />
             </div>
 
+            <!-- Live Preview -->
             <div>
-              <label style="font-size: 12px; font-weight: 700; color: var(--green-dark); margin-bottom: 4px; display: block;">Message Preview:</label>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                <label style="font-size: 12px; font-weight: 700; color: #34D399;">WhatsApp Message Preview:</label>
+                <span style="font-size: 11px; color: #94A3B8;">Auto-updates</span>
+              </div>
               <div class="wa-preview-box" id="wa-preview-text">Preview will appear here...</div>
             </div>
 
-            <a href="#" id="wa-send-btn" target="_blank" rel="noopener" class="btn btn-gold btn-block" style="margin-top: 4px;">
-              Open in WhatsApp →
-            </a>
+            <!-- Action Buttons -->
+            <div class="wa-actions-grid">
+              <a href="#" id="wa-send-btn" target="_blank" rel="noopener" class="btn btn-gold btn-block" style="margin-top: 0; min-height: 48px; font-weight: 700;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12c0 2.625.846 5.059 2.284 7.034L.789 23.492a.5.5 0 0 0 .611.611l4.458-1.495A11.952 11.952 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22a9.94 9.94 0 0 1-5.39-1.585l-.386-.231-2.646.887.887-2.646-.231-.386A9.94 9.94 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
+                Open in WhatsApp →
+              </a>
+              <button type="button" class="btn btn-outline btn-block" id="wa-copy-brief-btn" style="min-height: 44px; font-size: 13.5px; border-color: rgba(255,255,255,0.15);">
+                📋 Copy Job Brief
+              </button>
+            </div>
           </div>
 
           <!-- PHASE 10.19: REAL SERVICE LOCATION & INTERACTIVE MAP CARD -->
@@ -451,49 +509,188 @@
     </div>
   </div>
 
-  <!-- Write A Review Modal -->
-  <div class="review-modal-overlay" id="review-modal" aria-hidden="true" role="dialog">
+  <!-- Write A Review Modal & Bottom Sheet Drawer -->
+  <div class="review-modal-overlay" id="review-modal" aria-hidden="true" role="dialog" aria-labelledby="review-modal-title">
     <div class="review-modal-dialog">
+      <div class="drawer-drag-handle" aria-hidden="true"></div>
       <div class="review-modal-header">
-        <h3>Write a Review</h3>
-        <button class="lightbox-close-btn" id="review-modal-close" style="position: static; background: var(--muted); color: var(--fg);" aria-label="Close review dialog">✕</button>
+        <div>
+          <h3 id="review-modal-title" style="margin: 0; font-size: 1.25rem; font-weight: 800; color: #FFFFFF;">Write a Customer Review</h3>
+          <p style="margin: 4px 0 0; font-size: 12.5px; color: #94A3B8;">Share your honest experience to help other Nigerians find quality hands</p>
+        </div>
+        <button type="button" class="lightbox-close-btn" id="review-modal-close" style="position: static; background: rgba(255,255,255,0.08); color: #F8FAFC;" aria-label="Close review dialog">✕</button>
       </div>
-      <form id="review-form">
+
+      <form id="review-form" class="review-drawer-form">
         
-        <div class="form-field-group">
-          <label>Your Overall Rating *</label>
-          <div class="star-picker-row" id="star-picker">
-            <button type="button" class="star-pick-btn active" data-val="1">★</button>
-            <button type="button" class="star-pick-btn active" data-val="2">★</button>
-            <button type="button" class="star-pick-btn active" data-val="3">★</button>
-            <button type="button" class="star-pick-btn active" data-val="4">★</button>
-            <button type="button" class="star-pick-btn active" data-val="5">★</button>
+        <!-- 1. Overall Rating & Mood Indicator -->
+        <div class="form-field-group review-overall-group">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label style="font-size: 13.5px; font-weight: 700; color: #F8FAFC;">Overall Experience *</label>
+            <span class="rating-mood-badge" id="rating-mood-badge">🌟 Exceptional (5.0)</span>
+          </div>
+          <div class="star-picker-row star-picker-lg" id="star-picker" role="radiogroup" aria-label="Overall Star Rating">
+            <button type="button" class="star-pick-btn active" data-val="1" aria-label="1 star">★</button>
+            <button type="button" class="star-pick-btn active" data-val="2" aria-label="2 stars">★</button>
+            <button type="button" class="star-pick-btn active" data-val="3" aria-label="3 stars">★</button>
+            <button type="button" class="star-pick-btn active" data-val="4" aria-label="4 stars">★</button>
+            <button type="button" class="star-pick-btn active" data-val="5" aria-label="5 stars">★</button>
           </div>
         </div>
 
-        <div class="form-field-group">
-          <label for="rev-author">Your Name *</label>
-          <input type="text" id="rev-author" required placeholder="e.g. Babajide Sanusi" />
+        <!-- 2. Sub-Criteria Granular Ratings -->
+        <div class="sub-ratings-box">
+          <span style="font-size: 12px; font-weight: 700; color: #34D399; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">
+            ⭐ Rate Specific Categories
+          </span>
+
+          <div class="sub-rating-item">
+            <div class="sub-rating-label">
+              <span>⏱️ Punctuality & Arrival</span>
+              <strong id="val-punctuality" style="color: #F8FAFC; font-size: 12px;">5 ★</strong>
+            </div>
+            <div class="star-picker-sub" id="star-picker-punctuality" data-field="punctuality">
+              <button type="button" class="star-sub-btn active" data-val="1">★</button>
+              <button type="button" class="star-sub-btn active" data-val="2">★</button>
+              <button type="button" class="star-sub-btn active" data-val="3">★</button>
+              <button type="button" class="star-sub-btn active" data-val="4">★</button>
+              <button type="button" class="star-sub-btn active" data-val="5">★</button>
+            </div>
+          </div>
+
+          <div class="sub-rating-item">
+            <div class="sub-rating-label">
+              <span>💰 Pricing & Transparency</span>
+              <strong id="val-pricing" style="color: #F8FAFC; font-size: 12px;">5 ★</strong>
+            </div>
+            <div class="star-picker-sub" id="star-picker-pricing" data-field="pricing">
+              <button type="button" class="star-sub-btn active" data-val="1">★</button>
+              <button type="button" class="star-sub-btn active" data-val="2">★</button>
+              <button type="button" class="star-sub-btn active" data-val="3">★</button>
+              <button type="button" class="star-sub-btn active" data-val="4">★</button>
+              <button type="button" class="star-sub-btn active" data-val="5">★</button>
+            </div>
+          </div>
+
+          <div class="sub-rating-item">
+            <div class="sub-rating-label">
+              <span>🛠️ Work Quality & Cleanliness</span>
+              <strong id="val-quality" style="color: #F8FAFC; font-size: 12px;">5 ★</strong>
+            </div>
+            <div class="star-picker-sub" id="star-picker-quality" data-field="quality">
+              <button type="button" class="star-sub-btn active" data-val="1">★</button>
+              <button type="button" class="star-sub-btn active" data-val="2">★</button>
+              <button type="button" class="star-sub-btn active" data-val="3">★</button>
+              <button type="button" class="star-sub-btn active" data-val="4">★</button>
+              <button type="button" class="star-sub-btn active" data-val="5">★</button>
+            </div>
+          </div>
         </div>
 
+        <!-- 3. Praise & Trait Badges -->
         <div class="form-field-group">
-          <label for="rev-location">Your Area / Location *</label>
-          <input type="text" id="rev-location" required placeholder="e.g. Surulere, Lagos" />
+          <label style="font-size: 13px; font-weight: 700; color: #F8FAFC; margin-bottom: 8px; display: block;">
+            ✨ Highlight Notable Strengths (Optional)
+          </label>
+          <div class="praise-pills-wrap" id="praise-pills-wrap">
+            <button type="button" class="praise-pill" data-tag="⚡ Came On Time">⚡ Came On Time</button>
+            <button type="button" class="praise-pill" data-tag="🧼 Left Worksite Clean">🧼 Left Worksite Clean</button>
+            <button type="button" class="praise-pill" data-tag="🔧 Brought Right Tools">🔧 Brought Right Tools</button>
+            <button type="button" class="praise-pill" data-tag="🤝 Polite & Respectful">🤝 Polite & Respectful</button>
+            <button type="button" class="praise-pill" data-tag="💵 Stuck to Agreed Price">💵 Stuck to Agreed Price</button>
+            <button type="button" class="praise-pill" data-tag="💡 Expert Diagnostic">💡 Expert Diagnostic</button>
+          </div>
         </div>
 
-        <div class="form-field-group">
-          <label for="rev-service">Service Received *</label>
-          <input type="text" id="rev-service" required placeholder="e.g. Inverter Installation, Pipe Repair" />
+        <!-- 4. Reviewer Details Row -->
+        <div class="review-form-row">
+          <div class="form-field-group">
+            <label for="rev-author">Your Name *</label>
+            <input type="text" id="rev-author" aria-label="Your Name" required placeholder="e.g. Adebayo Ogunlesi" class="review-input" />
+          </div>
+
+          <div class="form-field-group">
+            <label for="rev-location">Your Location / City *</label>
+            <input type="text" id="rev-location" aria-label="Your Location or City" required placeholder="e.g. Surulere, Lagos" class="review-input" />
+          </div>
         </div>
 
-        <div class="form-field-group">
-          <label for="rev-comment">Your Honest Review *</label>
-          <textarea id="rev-comment" rows="4" required placeholder="Describe the quality of work, punctuality, and pricing..."></textarea>
+        <!-- 5. Service Rendered & Completion Date -->
+        <div class="review-form-row">
+          <div class="form-field-group">
+            <label for="rev-service">Service or Job Done *</label>
+            <input type="text" id="rev-service" aria-label="Service or Job Done" required placeholder="e.g. Inverter Wiring, Pipe Leak Fix" class="review-input" />
+          </div>
+
+          <div class="form-field-group">
+            <label for="rev-date">When Was Job Completed?</label>
+            <select id="rev-date" aria-label="When Was Job Completed" class="review-input">
+              <option value="This Week">📅 This Week</option>
+              <option value="This Month">📅 Within the last month</option>
+              <option value="1–3 Months Ago">📅 1–3 months ago</option>
+              <option value="Earlier this year">📅 Earlier this year</option>
+            </select>
+          </div>
         </div>
 
-        <button type="submit" class="btn btn-primary btn-block" style="padding: 14px; margin-top: 8px;">
-          Submit Verified Review
-        </button>
+        <!-- 6. Detailed Written Review -->
+        <div class="form-field-group">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <label for="rev-comment">Your Detailed Review *</label>
+            <span id="rev-comment-counter" style="font-size: 11.5px; color: #94A3B8;">0 / 500</span>
+          </div>
+          <textarea id="rev-comment" aria-label="Your Detailed Review" rows="3" required placeholder="Describe the artisan's responsiveness, quality of materials, communication, and overall professionalism..." class="review-input" style="resize: vertical; min-height: 80px;"></textarea>
+        </div>
+
+        <!-- 7. Job Proof Photos (Optional) -->
+        <div class="form-field-group">
+          <label style="font-size: 13px; font-weight: 700; color: #F8FAFC; margin-bottom: 6px; display: block;">
+            📸 Add Photos of Completed Work (Optional, Max 3)
+          </label>
+          <div class="photo-upload-zone" id="photo-upload-zone">
+            <input type="file" id="review-photo-input" name="review-photo-input" aria-label="Attach photos of completed work" accept="image/*" multiple style="display: none;" />
+            <button type="button" class="btn-upload-photos" id="btn-trigger-photo-upload">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              <span>Attach Work Photos</span>
+            </button>
+            <span style="font-size: 11.5px; color: #94A3B8;">Helps verify genuine work</span>
+          </div>
+          <div class="review-photos-preview-grid" id="review-photos-preview-grid"></div>
+        </div>
+
+        <!-- 8. Verification Consent Checkbox -->
+        <div class="review-verification-checkbox-row">
+          <label class="custom-checkbox-wrap" for="rev-verified-check">
+            <input type="checkbox" id="rev-verified-check" aria-label="Confirm genuine client review" checked />
+            <span class="custom-checkbox-mark"></span>
+            <span class="custom-checkbox-label">
+              <strong>I am a genuine client who used this artisan's service</strong>
+              <small style="display: block; color: #94A3B8; font-size: 11.5px;">I confirm this review is truthful and complies with Lokator.NG community guidelines.</small>
+            </span>
+          </label>
+        </div>
+
+        <!-- 9. Real-Time Review Card Preview -->
+        <div class="live-review-preview-wrap" id="live-review-preview-wrap" style="display: none;">
+          <div style="font-size: 12px; font-weight: 700; color: #34D399; margin-bottom: 6px;">
+            👀 Live Preview:
+          </div>
+          <div class="review-item-card preview-card-box" id="live-review-preview-card">
+            <!-- Dynamically generated preview -->
+          </div>
+        </div>
+
+        <!-- 10. Submission Actions -->
+        <div class="review-drawer-actions">
+          <button type="button" class="btn btn-outline" id="btn-cancel-review" style="border-color: rgba(255,255,255,0.15); color: #94A3B8;">
+            Cancel
+          </button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-review-form" style="min-height: 48px; font-weight: 800; font-size: 15px; flex: 2;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            Publish Verified Review
+          </button>
+        </div>
+
       </form>
     </div>
   </div>
@@ -511,7 +708,7 @@
         </p>
         <div class="form-field-group">
           <label for="report-reason">Reason for Report *</label>
-          <select id="report-reason" class="filter-select" required style="width: 100%; background: #111827; border: 1px solid var(--border); color: #fff; padding: 10px; border-radius: 8px;">
+          <select id="report-reason" aria-label="Reason for Report" class="filter-select" required style="width: 100%; background: #111827; border: 1px solid var(--border); color: #fff; padding: 10px; border-radius: 8px;">
             <option value="misleading_information">Misleading or false information</option>
             <option value="wrong_contact">Wrong / unreachable phone number</option>
             <option value="wrong_location">Wrong location or service area</option>
@@ -523,7 +720,7 @@
         </div>
         <div class="form-field-group">
           <label for="report-details">Provide Details (Optional)</label>
-          <textarea id="report-details" rows="3" placeholder="Explain what is inaccurate or suspicious about this listing..." style="width: 100%; background: #111827; border: 1px solid var(--border); color: #fff; padding: 10px; border-radius: 8px; font-family: inherit; font-size: 13.5px; resize: vertical;"></textarea>
+          <textarea id="report-details" aria-label="Report Additional Details" rows="3" placeholder="Explain what is inaccurate or suspicious about this listing..." style="width: 100%; background: #111827; border: 1px solid var(--border); color: #fff; padding: 10px; border-radius: 8px; font-family: inherit; font-size: 13.5px; resize: vertical;"></textarea>
         </div>
         <div style="display: flex; gap: 10px; margin-top: 16px;">
           <button type="button" class="btn btn-outline" id="btn-cancel-report" style="flex: 1;">Cancel</button>
@@ -566,9 +763,9 @@
         </div>
         <div class="fcol">
           <h4>Legal</h4>
-          <a href="#">Privacy Policy</a>
-          <a href="#">Terms of Use</a>
-          <a href="#">Safety</a>
+          <a href="privacy.html">Privacy Policy</a>
+          <a href="terms.html">Terms of Use</a>
+          <a href="how-it-works.html">Safety Guidelines</a>
         </div>
       </div>
     </div>
@@ -578,6 +775,9 @@
       </div>
     </div>
   </footer>
+
+  <!-- ===== FLOATING TOAST NOTIFICATION CONTAINER ===== -->
+  <div id="profile-toast" class="profile-toast" aria-live="polite" role="status"></div>
 
   <!-- ===== PHASE 10.19: MOBILE NAVIGATION DRAWER & BACKDROP ===== -->
   <div class="mobile-nav-backdrop" id="mobile-nav-backdrop" aria-hidden="true"></div>
@@ -597,7 +797,7 @@
       <a href="profile.html" class="drawer-link" id="drawer-link-profile"><span class="drawer-icon">👤</span> <span>My Profile</span></a>
       <a href="profile.html#reviews-section" class="drawer-link"><span class="drawer-icon">⭐</span> <span>Reviews & Ratings</span></a>
       <a href="index.html#why-lokator" class="drawer-link"><span class="drawer-icon">🛡️</span> <span>Trust & Safety</span></a>
-      <a href="index.html#faq" class="drawer-link"><span class="drawer-icon">❓</span> <span>Help Center</span></a>
+      <a href="how-it-works.html" class="drawer-link"><span class="drawer-icon">❓</span> <span>How It Works</span></a>
       <a href="login.html" class="drawer-link" id="drawer-link-login"><span class="drawer-icon">🔑</span> <span>Provider Login</span></a>
       <a href="#logout" class="drawer-link drawer-logout" id="drawer-link-logout" style="display: none;"><span class="drawer-icon">🚪</span> <span>Logout</span></a>
     </nav>

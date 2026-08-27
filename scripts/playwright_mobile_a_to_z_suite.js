@@ -11,7 +11,7 @@ const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
 
-const BASE_URL = process.env.TEST_BASE_URL || 'http://localhost:4195';
+const BASE_URL = process.env.TEST_BASE_URL || 'http://localhost:3000';
 
 const ROUTES_TO_AUDIT = [
   { name: 'Home Discovery Page', path: '/index.html' },
@@ -215,6 +215,11 @@ async function runMobileAudit() {
         }
 
         if (route.path.startsWith('/profile.html')) {
+          await page.waitForFunction(() => {
+            const h = document.getElementById('btn-call-hero')?.href;
+            return h && h.startsWith('tel:');
+          }, { timeout: 4000 }).catch(() => {});
+
           // Check Leaflet map and GPS button
           const mapTiles = await page.locator('#profile-service-map .leaflet-tile-pane img').count();
           const markerCount = await page.locator('#profile-service-map .leaflet-marker-pane .lokator-service-marker').count();

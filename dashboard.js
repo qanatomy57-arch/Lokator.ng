@@ -191,11 +191,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     if (tabKey === 'profile') {
       setTimeout(() => {
-        if (dashMapInstance && dashMapInstance.invalidateSize) {
-          dashMapInstance.invalidateSize();
-        } else {
-          initDashboardServiceMap();
-        }
+        try {
+          if (typeof dashMapInstance !== 'undefined' && dashMapInstance && dashMapInstance.invalidateSize) {
+            dashMapInstance.invalidateSize();
+          } else if (typeof initDashboardServiceMap === 'function') {
+            initDashboardServiceMap();
+          }
+        } catch (e) {}
       }, 150);
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
