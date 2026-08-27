@@ -1,0 +1,496 @@
+{
+  "timestamp": "2026-08-27T13:56:16.392Z",
+  "devicesTested": [
+    "iPhone 14 Pro (393x852)",
+    "Pixel 7 (412x915)"
+  ],
+  "results": [
+    {
+      "route": "/index.html",
+      "name": "Home Discovery Page",
+      "errors": [],
+      "warnings": [],
+      "overflowIssues": [],
+      "smallTouchTargets": [
+        {
+          "text": "",
+          "tag": "BUTTON",
+          "id": "gps-btn",
+          "class": "gps-btn",
+          "size": "30x30px"
+        },
+        {
+          "text": "Update",
+          "tag": "BUTTON",
+          "id": "sw-update-btn",
+          "class": "sw-update-btn",
+          "size": "74x30px"
+        }
+      ],
+      "mapStatus": null,
+      "checksPassed": [
+        "HTTP 200 OK",
+        "Zero horizontal overflow",
+        "Input font sizes >= 16px (iOS auto-zoom safe)",
+        "Mobile navigation drawer opens smoothly",
+        "Navigation drawer closes on Escape key"
+      ]
+    },
+    {
+      "route": "/search.html",
+      "name": "Search Directory & Map",
+      "errors": [
+        "Console Error: Failed to load resource: the server responded with a status of 404 ()"
+      ],
+      "warnings": [],
+      "overflowIssues": [],
+      "smallTouchTargets": [
+        {
+          "text": "Near Me",
+          "tag": "BUTTON",
+          "id": "gps-trigger",
+          "class": "gps-inline-btn",
+          "size": "84x25px"
+        },
+        {
+          "text": "Clear all",
+          "tag": "BUTTON",
+          "id": "reset-filters",
+          "class": "reset-btn",
+          "size": "50x16px"
+        },
+        {
+          "text": "Update",
+          "tag": "BUTTON",
+          "id": "sw-update-btn",
+          "class": "sw-update-btn",
+          "size": "74x30px"
+        }
+      ],
+      "mapStatus": null,
+      "checksPassed": [
+        "HTTP 200 OK",
+        "Zero horizontal overflow",
+        "Input font sizes >= 16px (iOS auto-zoom safe)",
+        "Mobile filter bottom sheet opened",
+        "Mobile filter bottom sheet closed",
+        "Mobile Map View toggled successfully (9 tiles active)"
+      ]
+    },
+    {
+      "route": "/profile.html?id=8",
+      "name": "Provider Profile Page",
+      "errors": [
+        "Console Error: Failed to load resource: the server responded with a status of 404 ()"
+      ],
+      "warnings": [],
+      "overflowIssues": [],
+      "smallTouchTargets": [
+        {
+          "text": "All Reviews",
+          "tag": "BUTTON",
+          "id": "",
+          "class": "btn-review-filter active",
+          "size": "91x30px"
+        },
+        {
+          "text": "5 ★ Only",
+          "tag": "BUTTON",
+          "id": "",
+          "class": "btn-review-filter",
+          "size": "76x30px"
+        },
+        {
+          "text": "4 ★ Only",
+          "tag": "BUTTON",
+          "id": "",
+          "class": "btn-review-filter",
+          "size": "76x30px"
+        },
+        {
+          "text": "👑 With Artisan Repl",
+          "tag": "BUTTON",
+          "id": "",
+          "class": "btn-review-filter",
+          "size": "152x30px"
+        },
+        {
+          "text": "Update",
+          "tag": "BUTTON",
+          "id": "sw-update-btn",
+          "class": "sw-update-btn",
+          "size": "74x30px"
+        }
+      ],
+      "mapStatus": null,
+      "checksPassed": [
+        "HTTP 200 OK",
+        "Zero horizontal overflow",
+        "Input font sizes >= 16px (iOS auto-zoom safe)",
+        "Profile service map verified (4 tiles, 1 marker)",
+        "Call Provider button configured: tel:+2347030313984"
+      ]
+    },
+    {
+      "route": "/login.html",
+      "name": "Provider Login Page",
+      "errors": [],
+      "warnings": [],
+      "overflowIssues": [],
+      "smallTouchTargets": [
+        {
+          "text": "👁️",
+          "tag": "BUTTON",
+          "id": "toggle-pwd",
+          "class": "toggle-pwd",
+          "size": "27x27px"
+        },
+        {
+          "text": "Update",
+          "tag": "BUTTON",
+          "id": "sw-update-btn",
+          "class": "sw-update-btn",
+          "size": "74x30px"
+        }
+      ],
+      "mapStatus": null,
+      "checksPassed": [
+        "HTTP 200 OK",
+        "Zero horizontal overflow",
+        "Input font sizes >= 16px (iOS auto-zoom safe)"
+      ]
+    },
+    {
+      "route": "/register.html",
+      "name": "Provider Registration Wizard",
+      "errors": [],
+      "warnings": [],
+      "overflowIssues": [],
+      "smallTouchTargets": [
+        {
+          "text": "1\n            Identi",
+          "tag": "BUTTON",
+          "id": "step-btn-1",
+          "class": "step-indicator is-active",
+          "size": "73x26px"
+        },
+        {
+          "text": "2\n            Servic",
+          "tag": "BUTTON",
+          "id": "step-btn-2",
+          "class": "step-indicator",
+          "size": "30x26px"
+        },
+        {
+          "text": "3\n            Locati",
+          "tag": "BUTTON",
+          "id": "step-btn-3",
+          "class": "step-indicator",
+          "size": "30x26px"
+        },
+        {
+          "text": "4\n            Enhanc",
+          "tag": "BUTTON",
+          "id": "step-btn-4",
+          "class": "step-indicator",
+          "size": "30x26px"
+        },
+        {
+          "text": "5\n            Publis",
+          "tag": "BUTTON",
+          "id": "step-btn-5",
+          "class": "step-indicator",
+          "size": "30x26px"
+        },
+        {
+          "text": "👁️",
+          "tag": "BUTTON",
+          "id": "toggle-reg-pwd",
+          "class": "btn-toggle-reg-pwd",
+          "size": "18x17px"
+        },
+        {
+          "text": "Update",
+          "tag": "BUTTON",
+          "id": "sw-update-btn",
+          "class": "sw-update-btn",
+          "size": "74x30px"
+        }
+      ],
+      "mapStatus": null,
+      "checksPassed": [
+        "HTTP 200 OK",
+        "Zero horizontal overflow",
+        "Input font sizes >= 16px (iOS auto-zoom safe)"
+      ]
+    },
+    {
+      "route": "/dashboard.html",
+      "name": "Provider Dashboard Hub",
+      "errors": [],
+      "warnings": [],
+      "overflowIssues": [],
+      "smallTouchTargets": [
+        {
+          "text": "View All Leads",
+          "tag": "BUTTON",
+          "id": "",
+          "class": "btn btn-outline btn-view-all-revs",
+          "size": "118x32px"
+        },
+        {
+          "text": "All Reviews →",
+          "tag": "BUTTON",
+          "id": "",
+          "class": "btn btn-outline btn-view-all-revs",
+          "size": "112x33px"
+        },
+        {
+          "text": "Update",
+          "tag": "BUTTON",
+          "id": "sw-update-btn",
+          "class": "sw-update-btn",
+          "size": "74x30px"
+        }
+      ],
+      "mapStatus": null,
+      "checksPassed": [
+        "HTTP 200 OK",
+        "Zero horizontal overflow",
+        "Input font sizes >= 16px (iOS auto-zoom safe)",
+        "Bottom navigation tab switching verified",
+        "More provider tools bottom sheet verified"
+      ]
+    },
+    {
+      "route": "/analytics.html",
+      "name": "Internal Analytics Dashboard",
+      "errors": [],
+      "warnings": [],
+      "overflowIssues": [],
+      "smallTouchTargets": [
+        {
+          "text": "Refresh Data",
+          "tag": "BUTTON",
+          "id": "btn-refresh",
+          "class": "btn-action",
+          "size": "116x31px"
+        },
+        {
+          "text": "Evaluate Synthesis",
+          "tag": "BUTTON",
+          "id": "btn-refresh-command-center",
+          "class": "btn-action",
+          "size": "145x27px"
+        },
+        {
+          "text": "Evaluate Orchestrati",
+          "tag": "BUTTON",
+          "id": "btn-evaluate-orchestration-cycle",
+          "class": "btn-action",
+          "size": "191x22px"
+        },
+        {
+          "text": "Refresh Simulations",
+          "tag": "BUTTON",
+          "id": "btn-refresh-scenarios",
+          "class": "btn-action",
+          "size": "140x22px"
+        },
+        {
+          "text": "Run Rollup Evaluatio",
+          "tag": "BUTTON",
+          "id": "btn-generate-recommendations",
+          "class": "btn-action",
+          "size": "148x22px"
+        },
+        {
+          "text": "Evaluate Multi-Windo",
+          "tag": "BUTTON",
+          "id": "btn-refresh-realtime-signals",
+          "class": "btn-action",
+          "size": "191x22px"
+        },
+        {
+          "text": "Execute Bounded 60-D",
+          "tag": "BUTTON",
+          "id": "btn-run-prune",
+          "class": "btn-action",
+          "size": "250x31px"
+        },
+        {
+          "text": "Generate Daily Summa",
+          "tag": "BUTTON",
+          "id": "btn-run-summary",
+          "class": "btn-action",
+          "size": "239x31px"
+        },
+        {
+          "text": "Generate Portfolio A",
+          "tag": "BUTTON",
+          "id": "btn-generate-portfolio",
+          "class": "btn-action",
+          "size": "186x22px"
+        },
+        {
+          "text": "Optimize Resource Al",
+          "tag": "BUTTON",
+          "id": "btn-generate-resource-plan",
+          "class": "btn-action",
+          "size": "190x22px"
+        },
+        {
+          "text": "Run Macro Resilience",
+          "tag": "BUTTON",
+          "id": "btn-run-resilience-stress",
+          "class": "btn-action",
+          "size": "212x22px"
+        },
+        {
+          "text": "Register Governed Re",
+          "tag": "BUTTON",
+          "id": "btn-create-governed-recommendation",
+          "class": "btn-action",
+          "size": "231x22px"
+        },
+        {
+          "text": "Evaluate Model Healt",
+          "tag": "BUTTON",
+          "id": "btn-evaluate-model-health",
+          "class": "btn-action",
+          "size": "187x22px"
+        },
+        {
+          "text": "Synthesize Decision ",
+          "tag": "BUTTON",
+          "id": "btn-synthesize-decision-pkg",
+          "class": "btn-action",
+          "size": "188x22px"
+        },
+        {
+          "text": "Create Strategic Pla",
+          "tag": "BUTTON",
+          "id": "btn-create-strategic-plan",
+          "class": "btn-action",
+          "size": "141x22px"
+        },
+        {
+          "text": "Record Execution Obs",
+          "tag": "BUTTON",
+          "id": "btn-record-execution-obs",
+          "class": "btn-action",
+          "size": "195x22px"
+        },
+        {
+          "text": "Optimize Resource Al",
+          "tag": "BUTTON",
+          "id": "btn-generate-rebalancing-cands",
+          "class": "btn-action",
+          "size": "190x22px"
+        },
+        {
+          "text": "Forecast Strategic C",
+          "tag": "BUTTON",
+          "id": "btn-generate-capacity-fc",
+          "class": "btn-action",
+          "size": "178x22px"
+        },
+        {
+          "text": "Forecast Strategic D",
+          "tag": "BUTTON",
+          "id": "btn-generate-demand-fc",
+          "class": "btn-action",
+          "size": "175x22px"
+        },
+        {
+          "text": "Synthesize Executive",
+          "tag": "BUTTON",
+          "id": "btn-generate-executive-snap",
+          "class": "btn-action",
+          "size": "200x22px"
+        },
+        {
+          "text": "Reconcile Strategic ",
+          "tag": "BUTTON",
+          "id": "btn-reconcile-soile-outcome",
+          "class": "btn-action",
+          "size": "187x22px"
+        },
+        {
+          "text": "Evaluate Portfolio G",
+          "tag": "BUTTON",
+          "id": "btn-evaluate-spgdce-portfolio",
+          "class": "btn-action",
+          "size": "195x22px"
+        }
+      ],
+      "mapStatus": null,
+      "checksPassed": [
+        "HTTP 200 OK",
+        "Zero horizontal overflow",
+        "Input font sizes >= 16px (iOS auto-zoom safe)"
+      ]
+    },
+    {
+      "route": "/terms.html",
+      "name": "Terms of Service",
+      "errors": [],
+      "warnings": [],
+      "overflowIssues": [],
+      "smallTouchTargets": [],
+      "mapStatus": null,
+      "checksPassed": [
+        "HTTP 200 OK",
+        "Zero horizontal overflow",
+        "All key buttons meet touch target guidelines (>= 36-44px)",
+        "Input font sizes >= 16px (iOS auto-zoom safe)"
+      ]
+    },
+    {
+      "route": "/privacy.html",
+      "name": "Privacy Policy",
+      "errors": [],
+      "warnings": [],
+      "overflowIssues": [],
+      "smallTouchTargets": [],
+      "mapStatus": null,
+      "checksPassed": [
+        "HTTP 200 OK",
+        "Zero horizontal overflow",
+        "All key buttons meet touch target guidelines (>= 36-44px)",
+        "Input font sizes >= 16px (iOS auto-zoom safe)"
+      ]
+    },
+    {
+      "route": "/about.html",
+      "name": "About Lokator",
+      "errors": [],
+      "warnings": [],
+      "overflowIssues": [],
+      "smallTouchTargets": [],
+      "mapStatus": null,
+      "checksPassed": [
+        "HTTP 200 OK",
+        "Zero horizontal overflow",
+        "All key buttons meet touch target guidelines (>= 36-44px)",
+        "Input font sizes >= 16px (iOS auto-zoom safe)"
+      ]
+    },
+    {
+      "route": "/how-it-works.html",
+      "name": "How It Works",
+      "errors": [],
+      "warnings": [],
+      "overflowIssues": [],
+      "smallTouchTargets": [],
+      "mapStatus": null,
+      "checksPassed": [
+        "HTTP 200 OK",
+        "Zero horizontal overflow",
+        "All key buttons meet touch target guidelines (>= 36-44px)",
+        "Input font sizes >= 16px (iOS auto-zoom safe)"
+      ]
+    }
+  ],
+  "issuesFound": []
+}

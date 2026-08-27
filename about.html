@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About Lokator.NG — Nigeria's Premier Artisan Directory</title>
+  <meta name="description" content="Learn about Lokator.NG's mission to empower Nigerian artisans, technicians, and skilled professionals with zero-commission discovery." />
+  <meta name="theme-color" content="#006B3F" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="icons/icon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="pwa.css" />
+  <style>
+    .about-hero {
+      padding: 60px 0 40px;
+      text-align: center;
+    }
+    .about-hero h1 {
+      font-size: 2.6rem;
+      font-weight: 800;
+      color: var(--fg);
+      margin-bottom: 16px;
+    }
+    .about-hero p {
+      font-size: 1.15rem;
+      color: var(--fg-muted);
+      max-width: 680px;
+      margin: 0 auto 32px;
+      line-height: 1.6;
+    }
+    .about-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+      margin: 40px 0 60px;
+    }
+    .about-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 32px 24px;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+    .about-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--green);
+    }
+    .about-icon {
+      font-size: 2.4rem;
+      margin-bottom: 16px;
+    }
+    .about-card h3 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--fg);
+      margin-bottom: 10px;
+    }
+    .about-card p {
+      color: var(--fg-muted);
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+    @media (max-width: 768px) {
+      .about-hero h1 {
+        font-size: 1.9rem;
+      }
+      .about-hero p {
+        font-size: 1rem;
+      }
+      .about-card {
+        padding: 24px 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <header class="navbar" id="navbar">
+    <div class="container nav-inner">
+      <a href="index.html" class="logo" id="logo-link">
+        <div class="logo-mark">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#006B3F"/>
+            <circle cx="12" cy="9" r="2.5" fill="#FFFFFF"/>
+          </svg>
+        </div>
+        <span class="logo-text">Lokator<span class="logo-dot">.NG</span></span>
+      </a>
+
+      <nav class="nav-links" id="nav-links">
+        <a href="index.html" class="nav-link">Home</a>
+        <a href="search.html" class="nav-link">Directory</a>
+        <a href="how-it-works.html" class="nav-link">How It Works</a>
+        <a href="register.html" class="btn btn-outline btn-sm">Join as Artisan</a>
+        <a href="login.html" class="btn btn-primary btn-sm">Provider Login</a>
+      </nav>
+
+      <button class="hamburger" id="hamburger" aria-label="Open Navigation Drawer" aria-expanded="false" aria-controls="mobile-nav-drawer">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Mobile Navigation Drawer -->
+  <div class="mobile-nav-backdrop" id="mobile-nav-backdrop" aria-hidden="true"></div>
+  <aside class="mobile-nav-drawer" id="mobile-nav-drawer" aria-label="Mobile Navigation" aria-hidden="true">
+    <div class="drawer-header">
+      <div class="drawer-logo">
+        <span class="logo-mark">📍</span>
+        <span class="logo-text">Lokator<span class="logo-accent">.NG</span></span>
+      </div>
+      <button type="button" class="drawer-close-btn" id="mobile-nav-close-btn" aria-label="Close navigation">✕</button>
+    </div>
+    <nav class="drawer-nav">
+      <a href="index.html" class="drawer-link"><span class="drawer-icon">🏠</span> <span>Home</span></a>
+      <a href="search.html" class="drawer-link"><span class="drawer-icon">🔍</span> <span>Search Providers</span></a>
+      <a href="register.html" class="drawer-link"><span class="drawer-icon">🛠️</span> <span>Become a Provider</span></a>
+      <a href="dashboard.html" class="drawer-link"><span class="drawer-icon">📊</span> <span>Dashboard</span></a>
+      <a href="how-it-works.html" class="drawer-link"><span class="drawer-icon">ℹ️</span> <span>How It Works</span></a>
+      <a href="about.html" class="drawer-link active"><span class="drawer-icon">🏢</span> <span>About Us</span></a>
+      <a href="terms.html" class="drawer-link"><span class="drawer-icon">📜</span> <span>Terms of Service</span></a>
+      <a href="privacy.html" class="drawer-link"><span class="drawer-icon">🛡️</span> <span>Privacy Policy</span></a>
+      <a href="login.html" class="drawer-link"><span class="drawer-icon">🔑</span> <span>Provider Login</span></a>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="container">
+    <section class="about-hero">
+      <span class="badge" style="background: rgba(0, 107, 63, 0.15); color: var(--green-light); border: 1px solid rgba(0, 107, 63, 0.3); padding: 6px 14px; border-radius: 20px; font-weight: 700; font-size: 0.85rem; display: inline-block; margin-bottom: 14px;">Our Mission</span>
+      <h1>Empowering Nigerian Artisans with Direct Visibility</h1>
+      <p>Lokator.NG is built to bridge the gap between verified Nigerian technicians and homeowners, businesses, and drivers who need reliable on-demand repairs.</p>
+    </section>
+
+    <div class="about-grid">
+      <div class="about-card">
+        <div class="about-icon">⚡</div>
+        <h3>0% Middleman Fees</h3>
+        <p>Unlike agency platforms that deduct 20–30% of artisan earnings, Lokator connects customers directly via standard phone calls and WhatsApp with zero commission.</p>
+      </div>
+      <div class="about-card">
+        <div class="about-icon">🗺️</div>
+        <h3>36 States + FCT Coverage</h3>
+        <p>From Lagos Island and Abuja AMAC to Warri, Port Harcourt, and Kano, our geospatial directory powers localized discovery down to LGA and town centroids.</p>
+      </div>
+      <div class="about-card">
+        <div class="about-icon">🛡️</div>
+        <h3>Trust & Verification</h3>
+        <p>We champion identity integrity with Nigerian vNIN verification, genuine phone confirmation, and transparent customer review histograms.</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer" style="background: #0A0E17; border-top: 1px solid var(--border); padding: 32px 0; text-align: center; color: var(--fg-muted); font-size: 0.9rem;">
+    <div class="container">
+      <p>© 2026 Lokator.NG — Nigeria's #1 Verified Artisan Discovery Directory. All rights reserved.</p>
+      <div style="margin-top: 12px; display: flex; justify-content: center; gap: 20px;">
+        <a href="index.html" style="color: var(--fg-muted); text-decoration: none;">Home</a>
+        <a href="search.html" style="color: var(--fg-muted); text-decoration: none;">Directory</a>
+        <a href="how-it-works.html" style="color: var(--fg-muted); text-decoration: none;">How It Works</a>
+        <a href="terms.html" style="color: var(--fg-muted); text-decoration: none;">Terms</a>
+        <a href="privacy.html" style="color: var(--fg-muted); text-decoration: none;">Privacy</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="telemetry.js"></script>
+  <script>
+    const ham = document.getElementById('hamburger');
+    const drawer = document.getElementById('mobile-nav-drawer');
+    const backdrop = document.getElementById('mobile-nav-backdrop');
+    const closeBtn = document.getElementById('mobile-nav-close-btn');
+
+    if (ham && drawer) {
+      ham.addEventListener('click', () => {
+        const isOpen = drawer.classList.toggle('open');
+        if (backdrop) backdrop.classList.toggle('open', isOpen);
+        document.body.classList.toggle('mobile-nav-open', isOpen);
+      });
+      if (closeBtn) closeBtn.addEventListener('click', () => {
+        drawer.classList.remove('open');
+        if (backdrop) backdrop.classList.remove('open');
+        document.body.classList.remove('mobile-nav-open');
+      });
+      if (backdrop) backdrop.addEventListener('click', () => {
+        drawer.classList.remove('open');
+        backdrop.classList.remove('open');
+        document.body.classList.remove('mobile-nav-open');
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && drawer.classList.contains('open')) {
+          drawer.classList.remove('open');
+          if (backdrop) backdrop.classList.remove('open');
+          document.body.classList.remove('mobile-nav-open');
+        }
+      });
+    }
+  </script>
+</body>
+</html>

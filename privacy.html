@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy Policy — Lokator.NG</title>
+  <meta name="description" content="NDPR compliant privacy policy for Lokator.NG. Learn how we handle artisan listings, customer searches, and geospatial privacy." />
+  <meta name="theme-color" content="#006B3F" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="icons/icon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="pwa.css" />
+  <style>
+    .legal-page-main {
+      padding: 48px 0 80px;
+      min-height: 75vh;
+    }
+    .legal-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 40px;
+      max-width: 860px;
+      margin: 0 auto;
+      box-shadow: var(--shadow-lg);
+    }
+    .legal-card h1 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: var(--fg);
+      margin-bottom: 8px;
+    }
+    .legal-date {
+      color: var(--fg-muted);
+      font-size: 0.9rem;
+      margin-bottom: 32px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .legal-section {
+      margin-bottom: 28px;
+    }
+    .legal-section h2 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--green-light);
+      margin-bottom: 12px;
+    }
+    .legal-section p, .legal-section li {
+      color: var(--fg-muted);
+      line-height: 1.75;
+      font-size: 0.95rem;
+      margin-bottom: 12px;
+    }
+    .legal-section ul {
+      padding-left: 20px;
+      margin-bottom: 16px;
+    }
+    @media (max-width: 768px) {
+      .legal-card {
+        padding: 24px 18px;
+      }
+      .legal-card h1 {
+        font-size: 1.7rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <header class="navbar" id="navbar">
+    <div class="container nav-inner">
+      <a href="index.html" class="logo" id="logo-link">
+        <div class="logo-mark">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#006B3F"/>
+            <circle cx="12" cy="9" r="2.5" fill="#FFFFFF"/>
+          </svg>
+        </div>
+        <span class="logo-text">Lokator<span class="logo-dot">.NG</span></span>
+      </a>
+
+      <nav class="nav-links" id="nav-links">
+        <a href="index.html" class="nav-link">Home</a>
+        <a href="search.html" class="nav-link">Directory</a>
+        <a href="how-it-works.html" class="nav-link">How It Works</a>
+        <a href="register.html" class="btn btn-outline btn-sm">Join as Artisan</a>
+        <a href="login.html" class="btn btn-primary btn-sm">Provider Login</a>
+      </nav>
+
+      <button class="hamburger" id="hamburger" aria-label="Open Navigation Drawer" aria-expanded="false" aria-controls="mobile-nav-drawer">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Mobile Navigation Drawer -->
+  <div class="mobile-nav-backdrop" id="mobile-nav-backdrop" aria-hidden="true"></div>
+  <aside class="mobile-nav-drawer" id="mobile-nav-drawer" aria-label="Mobile Navigation" aria-hidden="true">
+    <div class="drawer-header">
+      <div class="drawer-logo">
+        <span class="logo-mark">📍</span>
+        <span class="logo-text">Lokator<span class="logo-accent">.NG</span></span>
+      </div>
+      <button type="button" class="drawer-close-btn" id="mobile-nav-close-btn" aria-label="Close navigation">✕</button>
+    </div>
+    <nav class="drawer-nav">
+      <a href="index.html" class="drawer-link"><span class="drawer-icon">🏠</span> <span>Home</span></a>
+      <a href="search.html" class="drawer-link"><span class="drawer-icon">🔍</span> <span>Search Providers</span></a>
+      <a href="register.html" class="drawer-link"><span class="drawer-icon">🛠️</span> <span>Become a Provider</span></a>
+      <a href="dashboard.html" class="drawer-link"><span class="drawer-icon">📊</span> <span>Dashboard</span></a>
+      <a href="how-it-works.html" class="drawer-link"><span class="drawer-icon">ℹ️</span> <span>How It Works</span></a>
+      <a href="terms.html" class="drawer-link"><span class="drawer-icon">📜</span> <span>Terms of Service</span></a>
+      <a href="privacy.html" class="drawer-link active"><span class="drawer-icon">🛡️</span> <span>Privacy Policy</span></a>
+      <a href="login.html" class="drawer-link"><span class="drawer-icon">🔑</span> <span>Provider Login</span></a>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="legal-page-main">
+    <div class="container">
+      <article class="legal-card">
+        <h1>Privacy Policy</h1>
+        <div class="legal-date">Compliant with the Nigeria Data Protection Act (NDPA) • August 2026</div>
+
+        <div class="legal-section">
+          <h2>1. Data Protection Commitment</h2>
+          <p>Lokator.NG respects your privacy and is dedicated to protecting personal information in compliance with the Nigeria Data Protection Act (NDPA) and international best practices.</p>
+        </div>
+
+        <div class="legal-section">
+          <h2>2. Information We Collect</h2>
+          <ul>
+            <li><strong>Provider Profile Data:</strong> Business name, trade category, public contact phone/WhatsApp number, state, LGA, locality, experience, and optional portfolio photographs.</li>
+            <li><strong>Geospatial Data:</strong> Approximate locality and commercial centroid coordinates to power radius search. We do not expose private residential street addresses on public maps.</li>
+            <li><strong>Client Search Data:</strong> Search keywords, selected filters, and anonymous telemetry metrics to improve platform speed and relevancy.</li>
+          </ul>
+        </div>
+
+        <div class="legal-section">
+          <h2>3. How We Use Information</h2>
+          <p>We use collected data solely to:</p>
+          <ul>
+            <li>Display verified artisan listings to potential local customers.</li>
+            <li>Enable direct phone and WhatsApp contact without middleman interception.</li>
+            <li>Detect spam, verify artisan identity, and maintain marketplace trust.</li>
+          </ul>
+        </div>
+
+        <div class="legal-section">
+          <h2>4. Data Storage & Security</h2>
+          <p>All sensitive credentials and database interactions are encrypted in transit via SSL/TLS and secured by PostgreSQL Row Level Security (RLS) policies.</p>
+        </div>
+
+        <div class="legal-section">
+          <h2>5. Your Rights</h2>
+          <p>You have the right to review, update, or delete your provider profile at any time directly through your Provider Dashboard or by contacting support@lokator.ng.</p>
+        </div>
+      </article>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer" style="background: #0A0E17; border-top: 1px solid var(--border); padding: 32px 0; text-align: center; color: var(--fg-muted); font-size: 0.9rem;">
+    <div class="container">
+      <p>© 2026 Lokator.NG — Nigeria's #1 Verified Artisan Discovery Directory. All rights reserved.</p>
+      <div style="margin-top: 12px; display: flex; justify-content: center; gap: 20px;">
+        <a href="index.html" style="color: var(--fg-muted); text-decoration: none;">Home</a>
+        <a href="search.html" style="color: var(--fg-muted); text-decoration: none;">Directory</a>
+        <a href="how-it-works.html" style="color: var(--fg-muted); text-decoration: none;">How It Works</a>
+        <a href="terms.html" style="color: var(--fg-muted); text-decoration: none;">Terms</a>
+        <a href="privacy.html" style="color: var(--green-light); text-decoration: none; font-weight: 700;">Privacy</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="telemetry.js"></script>
+  <script>
+    const ham = document.getElementById('hamburger');
+    const drawer = document.getElementById('mobile-nav-drawer');
+    const backdrop = document.getElementById('mobile-nav-backdrop');
+    const closeBtn = document.getElementById('mobile-nav-close-btn');
+
+    if (ham && drawer) {
+      ham.addEventListener('click', () => {
+        const isOpen = drawer.classList.toggle('open');
+        if (backdrop) backdrop.classList.toggle('open', isOpen);
+        document.body.classList.toggle('mobile-nav-open', isOpen);
+      });
+      if (closeBtn) closeBtn.addEventListener('click', () => {
+        drawer.classList.remove('open');
+        if (backdrop) backdrop.classList.remove('open');
+        document.body.classList.remove('mobile-nav-open');
+      });
+      if (backdrop) backdrop.addEventListener('click', () => {
+        drawer.classList.remove('open');
+        backdrop.classList.remove('open');
+        document.body.classList.remove('mobile-nav-open');
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && drawer.classList.contains('open')) {
+          drawer.classList.remove('open');
+          if (backdrop) backdrop.classList.remove('open');
+          document.body.classList.remove('mobile-nav-open');
+        }
+      });
+    }
+  </script>
+</body>
+</html>

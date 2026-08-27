@@ -1043,21 +1043,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Dynamic Auth State in Drawer
   if (typeof LokatorDB !== 'undefined' && LokatorDB.auth) {
-    const user = LokatorDB.auth.getCurrentUser();
-    const drawerLogin = document.getElementById('drawer-link-login');
-    const drawerLogout = document.getElementById('drawer-link-logout');
-    const drawerDash = document.getElementById('drawer-link-dash');
-    if (user) {
-      if (drawerLogin) drawerLogin.style.display = 'none';
-      if (drawerLogout) drawerLogout.style.display = 'flex';
-      if (drawerDash) drawerDash.style.display = 'flex';
-      if (drawerLogout) {
-        drawerLogout.addEventListener('click', async (e) => {
-          e.preventDefault();
-          await LokatorDB.auth.signOut();
-          window.location.reload();
-        });
+    try {
+      const user = LokatorDB.auth.getUser ? (await LokatorDB.auth.getUser()) : (LokatorDB.auth.getSession ? (await LokatorDB.auth.getSession())?.user : null);
+      const drawerLogin = document.getElementById('drawer-link-login');
+      const drawerLogout = document.getElementById('drawer-link-logout');
+      const drawerDash = document.getElementById('drawer-link-dash');
+      if (user) {
+        if (drawerLogin) drawerLogin.style.display = 'none';
+        if (drawerLogout) drawerLogout.style.display = 'flex';
+        if (drawerDash) drawerDash.style.display = 'flex';
+        if (drawerLogout) {
+          drawerLogout.addEventListener('click', async (e) => {
+            e.preventDefault();
+            await LokatorDB.auth.signOut();
+            window.location.reload();
+          });
+        }
       }
-    }
+    } catch (e) {}
   }
 });
