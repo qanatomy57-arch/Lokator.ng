@@ -532,14 +532,58 @@
      *   model: string
      * }}
      */
-    generateStructuredJobBrief(provider = {}, inputs = {}) {
+    /**
+     * Maps action intent string to structured job scope
+     * @param {string} action
+     * @returns {string}
+     */
+    mapScopeFromAction(action) {
+      if (!action) return 'Inspection & Diagnosis';
+      const a = String(action).toLowerCase();
+      if (a === 'repair') return 'Emergency Repair';
+      if (a === 'installation') return 'New Installation';
+      if (a === 'maintenance') return 'Routine Maintenance';
+      if (a === 'cleaning') return 'Inspection & Diagnosis';
+      return 'General Task / Inspection';
+    },
+
+    /**
+     * Generates a structured, polite, high-conversion WhatsApp job brief.
+     * Integrates Nigerian trade context, pricing guidance benchmarks, and anti-hallucination checks.
+     *
+     * @param {object} providerOrInputs Provider facts or merged input object
+     * @param {object} [optionalInputs] User input selections if provider is passed as first arg
+     * @returns {{
+     *   plainText: string,
+     *   pricingGuidance: object,
+     *   tradeQuestions: string[],
+     *   confidence: string,
+     *   model: string
+     * }}
+     */
+    generateStructuredJobBrief(providerOrInputs = {}, optionalInputs = null) {
+      let provider = {};
+      let inputs = {};
+
+      if (optionalInputs !== null && typeof optionalInputs === 'object') {
+        provider = providerOrInputs || {};
+        inputs = optionalInputs || {};
+      } else {
+        inputs = providerOrInputs || {};
+        provider = {
+          name: inputs.providerName || inputs.name || 'Artisan',
+          trade: inputs.trade || inputs.service || 'Specialist',
+          area: inputs.location || inputs.userLocation || inputs.clientLocation || 'my area'
+        };
+      }
+
       const sanitizedProv = this.sanitizeInputs(provider);
       const provName = sanitizedProv.name || (sanitizedProv.firstName ? `${sanitizedProv.firstName} ${sanitizedProv.lastName || ''}`.trim() : 'Artisan');
       const provTrade = sanitizedProv.trade || sanitizedProv.trade_title || sanitizedProv.category || 'Specialist';
       
       const serviceNeeded = (inputs.serviceType || inputs.service || provTrade).trim();
       const scope = (inputs.jobScope || inputs.scope || 'General Task / Inspection').trim();
-      const location = (inputs.clientLocation || inputs.location || sanitizedProv.area || sanitizedProv.locality || 'my area').trim();
+      const location = (inputs.clientLocation || inputs.userLocation || inputs.location || sanitizedProv.area || sanitizedProv.locality || 'my area').trim();
       const urgency = (inputs.urgency || 'Urgent / Today').trim();
       const materials = (inputs.materialsOption || inputs.materials || 'Labor Only (I will supply materials)').trim();
       const details = (inputs.details || inputs.note || inputs.jobDetails || '').trim();

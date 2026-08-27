@@ -25,6 +25,9 @@
   let sessionEventsCount = 0;
   let inMemoryBatch = [];
   let flushTimer = null;
+  let lastEventSignature = '';
+  let lastEventTime = 0;
+  const DEDUPLICATION_WINDOW_MS = 350;
 
   // Performance & Core Web Vitals Tracking State
   let lcpValue = null;
@@ -275,8 +278,18 @@
           return;
         }
 
-        const pathStr = (typeof window !== 'undefined' && window.location) ? window.location.pathname.substring(0, 128) : '/';
         const sanitizedProps = sanitizeProperties(properties);
+
+        // Deduplicate rapid bursts (same event and properties within 350ms)
+        const now = Date.now();
+        const signature = `${eventName}:${JSON.stringify(sanitizedProps)}`;
+        if (signature === lastEventSignature && (now - lastEventTime) < DEDUPLICATION_WINDOW_MS) {
+          return; // Suppress duplicate burst
+        }
+        lastEventSignature = signature;
+        lastEventTime = now;
+
+        const pathStr = (typeof window !== 'undefined' && window.location) ? window.location.pathname.substring(0, 128) : '/';
         if (!sanitizedProps.device_class) {
           sanitizedProps.device_class = getDeviceClass();
         }
@@ -525,30 +538,34 @@
     }
 
     // 3. Emit web_vitals_summary and flush queue on page unload / hide
-    window.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'hidden') {
+    if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+      window.addEventListener('visibilitychange', () => {
+        if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+          emitWebVitalsSummary();
+          LokatorTelemetry.flushBatch();
+        }
+      });
+
+      window.addEventListener('pagehide', () => {
         emitWebVitalsSummary();
         LokatorTelemetry.flushBatch();
-      }
-    });
+      });
 
-    window.addEventListener('pagehide', () => {
-      emitWebVitalsSummary();
-      LokatorTelemetry.flushBatch();
-    });
-
-    window.addEventListener('beforeunload', () => {
-      emitWebVitalsSummary();
-    });
+      window.addEventListener('beforeunload', () => {
+        emitWebVitalsSummary();
+      });
+    }
 
     // 4. Global uncaught error listener
-    window.addEventListener('error', (event) => {
-      LokatorTelemetry.reportError(event.error || event.message, { source: 'window.onerror' });
-    });
+    if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+      window.addEventListener('error', (event) => {
+        LokatorTelemetry.reportError(event.error || event.message, { source: 'window.onerror' });
+      });
 
-    window.addEventListener('unhandledrejection', (event) => {
-      LokatorTelemetry.reportError(event.reason || 'Unhandled Promise Rejection', { source: 'unhandledrejection' });
-    });
+      window.addEventListener('unhandledrejection', (event) => {
+        LokatorTelemetry.reportError(event.reason || 'Unhandled Promise Rejection', { source: 'unhandledrejection' });
+      });
+    }
   }
 
   // Expose globally

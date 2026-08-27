@@ -82,6 +82,45 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   }
 
+  // Safe Avatar Initials Helper
+  function getInitials(name) {
+    if (!name || typeof name !== 'string') return 'LK';
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return 'LK';
+    if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+
+  // Sync state to URL search parameters for back/forward navigation stability
+  function syncUrlParams() {
+    if (typeof window === 'undefined' || !window.history || !window.history.replaceState) return;
+    try {
+      const url = new URL(window.location.href);
+      if (state.keyword && state.keyword.trim()) url.searchParams.set('q', state.keyword.trim());
+      else url.searchParams.delete('q');
+
+      if (state.category && state.category !== 'all') url.searchParams.set('category', state.category);
+      else url.searchParams.delete('category');
+
+      if (state.state && state.state !== 'all') url.searchParams.set('state', state.state);
+      else url.searchParams.delete('state');
+
+      if (state.lga && state.lga !== 'all') url.searchParams.set('lga', state.lga);
+      else url.searchParams.delete('lga');
+
+      if (state.locality && state.locality !== 'all') url.searchParams.set('locality', state.locality);
+      else url.searchParams.delete('locality');
+
+      if (state.locationQuery && state.locationQuery.trim()) url.searchParams.set('location', state.locationQuery.trim());
+      else url.searchParams.delete('location');
+
+      if (state.page > 1) url.searchParams.set('page', state.page.toString());
+      else url.searchParams.delete('page');
+
+      window.history.replaceState(null, '', url.toString());
+    } catch (e) {}
+  }
+
   // 1. Initialize from URL Search Parameters
   function initFromUrlParams() {
     const params = new URLSearchParams(window.location.search);
@@ -980,6 +1019,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         renderRecentSearches();
       }
+
+      // Sync active state to URL search parameters
+      syncUrlParams();
 
     } catch (err) {
       console.error('Error fetching providers from Supabase:', err);

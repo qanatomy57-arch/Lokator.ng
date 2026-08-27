@@ -34,6 +34,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function showNotFound() {
+    document.title = 'Provider Not Found — Lokator.NG';
     const main = document.querySelector('.profile-page-main');
     if (main) {
       main.innerHTML = `
@@ -47,10 +48,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         </div>
       `;
     }
+    const stickyBar = document.getElementById('profile-mobile-sticky-bar');
+    if (stickyBar) stickyBar.style.display = 'none';
+    document.body.classList.remove('has-sticky-bar');
+    const searchContextBanner = document.getElementById('profile-search-context-banner');
+    if (searchContextBanner) searchContextBanner.style.display = 'none';
   }
 
   // Update Page Title & Meta
-  document.title = `${provider.name} — ${provider.trade} | Lokator`;
+  document.title = `${provider.name || 'Artisan'} — ${provider.trade || 'Service'} | Lokator`;
 
   // 3. Populate Breadcrumbs & Hero Header with Phase 10.9 & Phase 10.21 Discovery Context
   const queryParam = params.get('q') || '';
@@ -132,7 +138,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (provider.avatarUrl) {
       heroAvatar.innerHTML = `<img src="${escapeHtml(provider.avatarUrl)}" alt="${escapeHtml(provider.name)}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" />`;
     } else {
-      const initials = provider.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+      const parts = (provider.name || 'Artisan').trim().split(/\s+/).filter(Boolean);
+      const initials = parts.length > 0 ? (parts.length === 1 ? parts[0].substring(0, 2) : (parts[0][0] + parts[parts.length - 1][0])).toUpperCase() : 'LK';
       heroAvatar.textContent = initials;
       heroAvatar.style.background = provider.avatarBg || 'var(--green)';
     }
@@ -147,13 +154,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   const heroName = document.getElementById('hero-name');
   if (heroName) {
     heroName.innerHTML = `
-      ${escapeHtml(provider.name)}
+      ${escapeHtml(provider.name || 'Service Provider')}
       ${provider.isTop ? '<span class="badge-tag-top" style="font-size: 12px; vertical-align: middle; margin-left: 8px;">⭐ Top Pick</span>' : ''}
     `;
   }
 
   const heroTrade = document.getElementById('hero-trade');
-  if (heroTrade) heroTrade.textContent = provider.trade;
+  if (heroTrade) heroTrade.textContent = provider.trade || provider.category || 'Specialist Artisan';
 
   const heroLocationText = document.getElementById('hero-location-text');
   if (heroLocationText) {
@@ -162,10 +169,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   const heroRatingVal = document.getElementById('hero-rating-val');
-  if (heroRatingVal) heroRatingVal.textContent = provider.rating.toFixed(1);
+  if (heroRatingVal) heroRatingVal.textContent = Number(provider.rating != null ? provider.rating : 5).toFixed(1);
 
   const heroReviewsCount = document.getElementById('hero-reviews-count');
-  if (heroReviewsCount) heroReviewsCount.textContent = provider.reviewsCount;
+  if (heroReviewsCount) heroReviewsCount.textContent = String(provider.reviewsCount != null ? provider.reviewsCount : 0);
 
   // 3.1 Dynamic Verification & Trust Badge
   const heroVerifiedBadge = document.getElementById('hero-verified-badge');
@@ -191,7 +198,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // 4. Populate Metric Badges
   const metricRating = document.getElementById('metric-rating');
-  if (metricRating) metricRating.textContent = `★ ${provider.rating.toFixed(1)}`;
+  if (metricRating) metricRating.textContent = `★ ${Number(provider.rating != null ? provider.rating : 5).toFixed(1)}`;
 
   const metricJobs = document.getElementById('metric-jobs');
   if (metricJobs) metricJobs.textContent = `${parseInt(provider.completedJobs, 10) || 50}+`;
