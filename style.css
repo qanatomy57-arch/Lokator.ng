@@ -41,6 +41,8 @@
 
 html {
   scroll-behavior: smooth;
+  overflow-x: clip;
+  max-width: 100vw;
 }
 
 body {
@@ -48,7 +50,8 @@ body {
   background: var(--bg);
   color: var(--fg);
   line-height: 1.6;
-  overflow-x: hidden;
+  overflow-x: clip;
+  max-width: 100vw;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -57,6 +60,12 @@ body {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 24px;
+}
+
+.marketplace-browse,
+.top-providers {
+  overflow-x: clip;
+  max-width: 100vw;
 }
 
 .section-pad {
@@ -1622,29 +1631,37 @@ body {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
+.testimonials {
+  position: relative;
+  width: 100%;
+  max-width: 100vw;
+  overflow: hidden;
+}
+
 .testi-viewport {
   position: relative;
   width: 100%;
+  max-width: 100%;
   overflow: hidden;
-  padding: 12px 0 24px;
-  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 6%, black 94%, transparent 100%);
-  mask-image: linear-gradient(to right, transparent 0%, black 6%, black 94%, transparent 100%);
+  padding: 16px 0 28px;
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
 }
 
 .testi-track {
   display: flex;
-  gap: 24px;
   width: max-content;
   will-change: transform;
-  animation: scrollTestimonials 30s linear infinite;
+  animation: scrollTestimonials 55s linear infinite;
   animation-direction: normal;
 }
 
-.testi-track:hover,
-.testi-track:active,
-.testi-track:focus-within,
-.testi-track.is-paused {
-  animation-play-state: paused;
+.testi-group {
+  display: flex;
+  align-items: stretch;
+  gap: 24px;
+  padding-right: 24px; /* Matches gap exactly so inter-group spacing equals inter-card gap */
+  flex-shrink: 0;
 }
 
 @keyframes scrollTestimonials {
@@ -2642,12 +2659,13 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 
   .testi-viewport {
@@ -2661,20 +2679,16 @@ body {
 
   .testi-track {
     animation: none !important;
-    flex-wrap: nowrap;
+    transform: none !important;
     width: max-content;
-    gap: 20px;
+  }
+
+  .testi-group[aria-hidden="true"] {
+    display: none !important;
   }
 
   .testi-card {
-    width: 340px;
-    min-width: 280px;
-    max-width: 380px;
-    scroll-snap-align: center;
-  }
-
-  .testi-card[aria-hidden="true"] {
-    display: none !important;
+    scroll-snap-align: start;
   }
 }
 
@@ -2851,18 +2865,22 @@ body {
   .testi-viewport {
     -webkit-mask-image: linear-gradient(to right, transparent 0%, black 4%, black 96%, transparent 100%);
     mask-image: linear-gradient(to right, transparent 0%, black 4%, black 96%, transparent 100%);
-    padding: 8px 0 16px;
+    padding: 10px 0 20px;
   }
 
   .testi-track {
+    animation-duration: 45s;
+  }
+
+  .testi-group {
     gap: 16px;
-    animation-duration: 26s;
+    padding-right: 16px;
   }
 
   .testi-card {
-    width: 86vw;
-    min-width: 86vw;
-    max-width: 360px;
+    width: 300px;
+    min-width: 280px;
+    max-width: 320px;
     padding: 22px 18px;
   }
 
@@ -4632,7 +4650,9 @@ body {
   border-left: 1px solid rgba(212, 175, 55, 0.25);
   box-shadow: -12px 0 40px rgba(0, 0, 0, 0.85);
   transform: translateX(100%);
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  visibility: hidden;
+  pointer-events: none;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.3s;
   z-index: 99999;
   display: flex;
   flex-direction: column;
@@ -4643,6 +4663,8 @@ body {
 
 .mobile-nav-drawer.open {
   transform: translateX(0);
+  visibility: visible;
+  pointer-events: auto;
 }
 
 /* Semi-Transparent Backdrop */

@@ -739,29 +739,11 @@ function setupFunnelTelemetryListeners() {
     });
   });
 
-  // Testimonials Continuous Marquee Touch Pause & Resume
+  // Testimonials Continuous Marquee Integrity
   const testiTrack = document.getElementById('testi-track');
   if (testiTrack) {
-    let touchResumeTimer = null;
-    const resumeTrack = () => {
-      if (touchResumeTimer) {
-        clearTimeout(touchResumeTimer);
-        touchResumeTimer = null;
-      }
-      testiTrack.classList.remove('is-paused');
-    };
-
-    testiTrack.addEventListener('touchstart', () => {
-      testiTrack.classList.add('is-paused');
-      if (touchResumeTimer) clearTimeout(touchResumeTimer);
-      // Auto-resume after 4s safeguard even if touchend was cancelled by vertical document scroll
-      touchResumeTimer = setTimeout(resumeTrack, 4000);
-    }, { passive: true });
-
-    testiTrack.addEventListener('touchend', resumeTrack, { passive: true });
-    testiTrack.addEventListener('touchcancel', resumeTrack, { passive: true });
-    testiTrack.addEventListener('pointerup', resumeTrack, { passive: true });
-    testiTrack.addEventListener('pointercancel', resumeTrack, { passive: true });
+    // Ensure track remains running continuously without disruption
+    testiTrack.classList.remove('is-paused');
   }
 }
 
