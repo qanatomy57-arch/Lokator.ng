@@ -1820,8 +1820,8 @@ body {
 
 .reg-hero-inner {
   display: grid;
-  grid-template-columns: 1fr 480px;
-  gap: 56px;
+  grid-template-columns: 1fr minmax(360px, 480px);
+  gap: clamp(24px, 4vw, 56px);
   align-items: start;
 }
 
@@ -3902,12 +3902,14 @@ body {
 }
 
 .step-label {
+  display: none;
   font-size: 13px;
   font-weight: 600;
   color: #64748B;
 }
 
 .step-indicator.is-active .step-label {
+  display: inline-block;
   color: var(--green, #006B3F);
   font-weight: 800;
 }
