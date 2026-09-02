@@ -1652,7 +1652,7 @@ body {
   display: flex;
   width: max-content;
   will-change: transform;
-  animation: scrollTestimonials 55s linear infinite;
+  animation: scrollTestimonials 30s linear infinite;
   animation-direction: normal;
 }
 
@@ -2869,7 +2869,7 @@ body {
   }
 
   .testi-track {
-    animation-duration: 45s;
+    animation-duration: 24s;
   }
 
   .testi-group {

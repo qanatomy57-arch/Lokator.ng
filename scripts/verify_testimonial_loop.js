@@ -65,7 +65,8 @@ async function runTestSuite() {
       const context = await browser.newContext({
         viewport: { width: vp.width, height: vp.height },
         deviceScaleFactor: 2,
-        locale: 'en-NG'
+        locale: 'en-NG',
+        serviceWorkers: 'block'
       });
       const page = await context.newPage();
       await page.goto('http://127.0.0.1:8080/index.html', { waitUntil: 'domcontentloaded' });
@@ -107,7 +108,7 @@ async function runTestSuite() {
         };
       });
 
-      assert(trackStructure.groupCount === 4, `${vp.name}: Exactly 4 groups present for seamless 4K infinite coverage`);
+      assert(trackStructure.groupCount === 2, `${vp.name}: Exactly 2 groups present (1 canonical + 1 duplicate loop cycle)`);
       assert(trackStructure.cardsPerGroup === 6, `${vp.name}: Exactly 6 testimonial cards per group`);
       assert(trackStructure.animationName === 'scrollTestimonials', `${vp.name}: animationName is scrollTestimonials`);
       assert(trackStructure.animationPlayState === 'running', `${vp.name}: animationPlayState is running`);
@@ -187,7 +188,7 @@ async function runTestSuite() {
     // 2. Interaction & Lifecycle Verification
     console.log('\n--- Auditing Lifecycle & Interaction Resilience ---');
     {
-      const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+      const context = await browser.newContext({ viewport: { width: 1280, height: 800 }, serviceWorkers: 'block' });
       const page = await context.newPage();
       await page.goto('http://127.0.0.1:8080/index.html', { waitUntil: 'domcontentloaded' });
 
@@ -260,7 +261,8 @@ async function runTestSuite() {
     {
       const context = await browser.newContext({
         viewport: { width: 1280, height: 800 },
-        reducedMotion: 'reduce'
+        reducedMotion: 'reduce',
+        serviceWorkers: 'block'
       });
       const page = await context.newPage();
       await page.goto('http://127.0.0.1:8080/index.html', { waitUntil: 'domcontentloaded' });

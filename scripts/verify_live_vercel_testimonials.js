@@ -41,7 +41,7 @@ async function verifyLiveVercelTestimonials() {
   const requiredHtmlSignatures = [
     'testi-group',
     'Group 1: Primary Set',
-    'Group 4: Seamless Clone Set 3'
+    'Group 2: Seamless Clone Set 1'
   ];
 
   for (const sig of requiredHtmlSignatures) {
@@ -52,7 +52,7 @@ async function verifyLiveVercelTestimonials() {
 
   const requiredCssSignatures = [
     '.testi-group',
-    'scrollTestimonials 55s linear infinite',
+    'scrollTestimonials 30s linear infinite',
     'overflow-x: clip'
   ];
 
@@ -75,8 +75,9 @@ async function verifyLiveVercelTestimonials() {
     });
 
     const page = await context.newPage();
-    await page.goto(PROD_HOME_URL, { waitUntil: 'networkidle', timeout: 60000 });
-    await page.waitForSelector('#testimonials', { timeout: 30000 });
+    await page.route('**/*.{mp4,webm,ogg}', route => route.abort());
+    await page.goto(PROD_HOME_URL, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    await page.waitForSelector('#testimonials', { timeout: 15000 });
     // Wait until style.css is active
     await page.waitForFunction(() => {
       const track = document.getElementById('testi-track');
@@ -110,12 +111,12 @@ async function verifyLiveVercelTestimonials() {
       };
     });
 
-    console.log(`   ✓ Live Marquee Group Count: ${liveMarqueeAudit.groupCount} (Expected 4)`);
+    console.log(`   ✓ Live Marquee Group Count: ${liveMarqueeAudit.groupCount} (Expected 2)`);
     console.log(`   ✓ Live Marquee Animation: ${liveMarqueeAudit.animationName} ${liveMarqueeAudit.animationDuration} ${liveMarqueeAudit.animationTimingFunction}`);
     console.log(`   ✓ Live Marquee Play State: ${liveMarqueeAudit.animationPlayState}`);
     console.log(`   ✓ Live Horizontal Overflow: docW=${liveMarqueeAudit.docW}, docScrollW=${liveMarqueeAudit.scrollW}, bodyScrollW=${liveMarqueeAudit.bodyScrollW} (0px OVERFLOW: ${liveMarqueeAudit.noOverflow ? 'YES' : 'NO'})`);
 
-    if (liveMarqueeAudit.groupCount !== 4) throw new Error('Live Vercel does not have 4 groups yet');
+    if (liveMarqueeAudit.groupCount !== 2) throw new Error('Live Vercel does not have 2 groups yet');
     if (!liveMarqueeAudit.noOverflow) throw new Error('Live Vercel has horizontal body overflow');
 
     // Live Motion Sampling over time on Vercel
