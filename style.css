@@ -289,16 +289,19 @@ body {
 .hero-scroll-wrapper {
   position: relative;
   width: 100%;
-  height: 750vh; /* Scroll runway allowing all 9 scenes to breathe */
+  height: 750vh; /* Scroll runway allowing all 9 scenes to breathe on desktop */
   background: #060D07;
+  touch-action: pan-y;
 }
 
 /* Sticky Stage pinned at top of viewport */
 .hero-stage {
+  position: -webkit-sticky;
   position: sticky;
   top: 0;
   left: 0;
   width: 100%;
+  height: 100vh;
   height: 100dvh;
   max-height: 100dvh;
   overflow: hidden;
@@ -307,11 +310,13 @@ body {
   justify-content: center;
   z-index: 10;
   background: #040905;
+  touch-action: pan-y;
 }
 
 @media (max-width: 768px) {
   .hero-scroll-wrapper {
-    height: 600svh;
+    height: 420vh;
+    height: 420svh; /* Snappy mobile runway (~40vh per scene = 1 comfortable flick per scene) */
   }
 }
 
@@ -472,6 +477,7 @@ body {
   border-top-color: rgba(82, 229, 140, 0.45);
   border-radius: 20px;
   padding: 24px 26px;
+  touch-action: pan-y;
   -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45),
@@ -2754,9 +2760,6 @@ body {
 
   .story-card {
     max-width: 100%;
-    max-height: calc(100dvh - 84px);
-    overflow-y: auto;
-    overscroll-behavior: contain;
     padding: 18px 16px;
     border-radius: 18px;
     background: rgba(255, 255, 255, 0.05);
@@ -2766,6 +2769,7 @@ body {
     border-top-color: rgba(82, 229, 140, 0.45);
     box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), 0 0 24px rgba(0, 107, 63, 0.15);
     gap: 10px;
+    touch-action: pan-y;
   }
 
   /* On mobile viewports: Hide vertical dots sidebar so it does not cover card content (matching Photo 1) */

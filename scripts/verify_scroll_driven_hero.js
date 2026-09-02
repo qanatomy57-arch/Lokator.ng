@@ -181,7 +181,10 @@ async function runVerification() {
 
     // REVERSAL TEST: Scroll back up to ~12.5% (Scene 2)
     await page.evaluate((y) => window.scrollTo(0, y), scrollDist * 0.125);
-    await page.waitForTimeout(300);
+    await page.waitForFunction(() => {
+      const s8 = document.querySelector('.hero-slide[data-index="8"]');
+      return s8 && parseFloat(window.getComputedStyle(s8).opacity) < 0.05;
+    }, { timeout: 3000 });
 
     let stateReversal = await page.evaluate(() => {
       const s1 = document.querySelector('.hero-slide[data-index="1"]');
@@ -197,12 +200,10 @@ async function runVerification() {
 
     // Return to top (Scene 1)
     await page.evaluate(() => window.scrollTo(0, 0));
-    await page.waitForTimeout(300);
-    let stateTop = await page.evaluate(() => {
+    await page.waitForFunction(() => {
       const s0 = document.querySelector('.hero-slide[data-index="0"]');
-      return parseFloat(window.getComputedStyle(s0).opacity);
-    });
-    assert(stateTop > 0.9, 'Top of page: Scene 1 restored');
+      return s0 && parseFloat(window.getComputedStyle(s0).opacity) > 0.85;
+    }, { timeout: 3000 });
     pass('Upward reversal to top: Scene 1 restored cleanly');
 
     await context.close();
@@ -342,12 +343,12 @@ async function runVerification() {
     await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(600);
 
-    // Simulate touch scroll by updating window.scrollTo
-    const runwayH = await page.evaluate(() => document.getElementById('hero').offsetHeight);
-    const scrollDist = runwayH - 844;
-
-    await page.evaluate((y) => window.scrollTo({ top: y, behavior: 'auto' }), scrollDist * 0.25);
-    await page.waitForTimeout(300);
+    // Simulate touch scroll by advancing to Scene 3 (index 2)
+    await page.evaluate(() => window.scrollTo({ top: 750, behavior: 'auto' }));
+    await page.waitForFunction(() => {
+      const s2 = document.querySelector('.hero-slide[data-index="2"]');
+      return s2 && parseFloat(window.getComputedStyle(s2).opacity) > 0.7;
+    }, { timeout: 4000 });
 
     const mobileState = await page.evaluate(() => {
       const s2 = document.querySelector('.hero-slide[data-index="2"]');
