@@ -54,7 +54,6 @@
     .reg-form-note-spaced {
       margin-top: 8px;
     }
-    html, body { background-color: #0A0E17; color: #F9FAFB; margin: 0; padding: 0; }
   </style>
 </head>
 <body>
@@ -253,25 +252,25 @@
 
             <div class="form-group">
               <label style="font-weight: 700;">State & Local Government Area (LGA) *</label>
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
-                <div>
-                  <label for="reg-state" style="font-size: 12.5px; font-weight: 600; color: var(--fg-muted);">State *</label>
-                  <select id="reg-state" name="state" required style="width: 100%; padding: 10px 12px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--card-bg); color: var(--fg); font-size: 14px;">
+              <div class="reg-loc-grid">
+                <div class="reg-loc-grid-item">
+                  <label for="reg-state">State *</label>
+                  <select id="reg-state" name="state" required>
                     <option value="">Select State...</option>
                   </select>
                   <div class="field-error-msg" id="err-state">Please select a State.</div>
                 </div>
-                <div>
-                  <label for="reg-lga" style="font-size: 12.5px; font-weight: 600; color: var(--fg-muted);">LGA / City *</label>
-                  <select id="reg-lga" name="lga" required disabled style="width: 100%; padding: 10px 12px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--card-bg); color: var(--fg); font-size: 14px;">
+                <div class="reg-loc-grid-item">
+                  <label for="reg-lga">LGA / City *</label>
+                  <select id="reg-lga" name="lga" required disabled>
                     <option value="">Select State First...</option>
                   </select>
                   <div class="field-error-msg" id="err-lga">Please select an LGA.</div>
                 </div>
               </div>
 
-              <div style="position: relative; margin-top: 10px;">
-                <label for="reg-locality" style="font-size: 12.5px; font-weight: 600; color: var(--fg-muted);">Neighborhood / Specific Area (Optional)</label>
+              <div style="position: relative; margin-top: 6px;">
+                <label for="reg-locality" style="font-size: 13px; font-weight: 700; color: var(--fg);">Neighborhood / Specific Area (Optional)</label>
                 <div class="loc-input-wrap">
                   <input type="text" id="reg-locality" name="locality" placeholder="e.g. Surulere, Lekki Phase 1, Wuse 2, Ikeja GRA..." autocomplete="off" />
                   <button type="button" class="gps-btn-form" id="gps-btn-form" aria-label="Use my GPS location">
@@ -282,16 +281,32 @@
                 <div class="skills-autocomplete-dropdown" id="reg-locality-dropdown" style="display: none;"></div>
               </div>
 
+              <!-- Location detected feedback banner matching Canonical Design -->
+              <div class="loc-feedback-banner" id="loc-feedback-banner" style="display: none;">
+                <div class="loc-feedback-icon">✓</div>
+                <div class="loc-feedback-text-wrap">
+                  <span class="loc-feedback-title">Location detected successfully</span>
+                  <span class="loc-feedback-desc">This helps customers find you easily.</span>
+                </div>
+              </div>
+
               <input type="hidden" id="location" name="location" required />
 
-              <div class="loc-map-container" style="margin-top: 14px;">
+              <div class="loc-map-container">
                 <div class="loc-map-preview" id="loc-map-preview">
-                  <div id="interactive-reg-map" style="width: 100%; height: 100%; min-height: 150px;"></div>
+                  <div id="interactive-reg-map" style="width: 100%; height: 100%; min-height: 180px;"></div>
+                  <button type="button" class="loc-map-gps-float" id="loc-map-gps-float" aria-label="Use my current location">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="8"/></svg>
+                    Use my current location
+                  </button>
                 </div>
-                <button type="button" class="loc-gps-quick-btn" id="loc-gps-quick-btn">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="8"/></svg>
-                  Use my current location
-                </button>
+                
+                <div class="loc-current-summary" id="loc-current-summary" style="display: none;">
+                  <span class="loc-current-summary-text" id="loc-current-summary-text">
+                    ✓ Current location: <strong id="loc-summary-val">Surulere, Lagos</strong>
+                  </span>
+                  <button type="button" class="loc-change-link" id="loc-change-btn">Change location</button>
+                </div>
               </div>
             </div>
 
@@ -665,8 +680,10 @@
           }
         }
       } else if (step === 3) {
-        const stateVal = regStateSelect ? regStateSelect.value : '';
-        const lgaVal = regLgaSelect ? regLgaSelect.value : '';
+        const stateEl = document.getElementById('reg-state');
+        const lgaEl = document.getElementById('reg-lga');
+        const stateVal = stateEl ? stateEl.value.trim() : '';
+        const lgaVal = lgaEl ? lgaEl.value.trim() : '';
 
         if (!stateVal) {
           showError('err-state');
@@ -828,6 +845,16 @@
 
       currentStep = targetStep;
 
+      if (currentStep === 3) {
+        setTimeout(() => {
+          if (!leafletMap) {
+            initInteractiveMap();
+          } else {
+            leafletMap.invalidateSize();
+          }
+        }, 100);
+      }
+
       if (currentStep === 5) {
         updatePreviewCard();
       }
@@ -841,10 +868,12 @@
       }
 
       const card = document.getElementById('reg-form-card');
-      if (card && window.innerWidth <= 768) {
-        card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (card && window.innerWidth <= 768 && typeof window !== 'undefined' && !window.__playwright_testing) {
+        card.scrollIntoView({ behavior: 'auto', block: 'start' });
       }
     }
+    window.goToStep = goToStep;
+    window.validateStep = validateStep;
 
     document.getElementById('btn-step-1-next')?.addEventListener('click', () => goToStep(2));
     document.getElementById('btn-step-2-back')?.addEventListener('click', () => goToStep(1));
@@ -1099,6 +1128,7 @@
         skillInput.focus();
       }
     }
+    window.addSkill = addSkill;
 
     function removeSkill(idx) {
       providerSkills.splice(idx, 1);
@@ -1212,6 +1242,7 @@
       regStateSelect.innerHTML = `<option value="">Select State...</option>` +
         states.map(s => `<option value="${escapeHtml(s.name)}">${escapeHtml(s.displayName)}</option>`).join('');
     }
+    initNigerianLocationPickers();
 
     function populateRegLgas(stateName, selectedLga = '') {
       if (!regLgaSelect || typeof NigeriaLocations === 'undefined') return;
@@ -1254,22 +1285,64 @@
       document.getElementById('err-lga')?.classList.remove('is-visible');
     }
 
+    function updateLocationFeedback() {
+      const stateVal = regStateSelect ? regStateSelect.value : '';
+      const lgaVal = regLgaSelect ? regLgaSelect.value : '';
+      const locVal = regLocalityInput ? regLocalityInput.value.trim() : '';
+
+      const feedbackBanner = document.getElementById('loc-feedback-banner');
+      const currentSummary = document.getElementById('loc-current-summary');
+      const summaryVal = document.getElementById('loc-summary-val');
+
+      if (stateVal && lgaVal) {
+        const text = locVal ? `${locVal}, ${lgaVal}, ${stateVal} State` : `${lgaVal}, ${stateVal} State`;
+        if (feedbackBanner) feedbackBanner.style.display = 'flex';
+        if (currentSummary) currentSummary.style.display = 'flex';
+        if (summaryVal) summaryVal.textContent = text;
+      }
+
+      // Sync map coordinates with selected State / LGA
+      if (typeof NigeriaLocations !== 'undefined' && stateVal) {
+        const coords = NigeriaLocations.resolveCoordinates({
+          state: stateVal,
+          lga: lgaVal,
+          locality: locVal
+        });
+        if (coords && coords.lat && coords.lng) {
+          userCoords = { lat: coords.lat, lng: coords.lng };
+          if (leafletMap && mapMarker) {
+            mapMarker.setLatLng([coords.lat, coords.lng]);
+            leafletMap.setView([coords.lat, coords.lng], lgaVal ? 14 : 11);
+            if (mapAccuracyCircle) {
+              mapAccuracyCircle.setLatLng([coords.lat, coords.lng]);
+            }
+          }
+        }
+      }
+    }
+    window.populateRegLgas = populateRegLgas;
+    window.updateLocationFeedback = updateLocationFeedback;
+    window.updateLocationHidden = updateLocationHidden;
+
     if (regStateSelect) {
       regStateSelect.addEventListener('change', () => {
         populateRegLgas(regStateSelect.value);
         if (regLocalityInput) regLocalityInput.value = '';
+        updateLocationFeedback();
       });
     }
 
     if (regLgaSelect) {
       regLgaSelect.addEventListener('change', () => {
         updateLocationHidden();
+        updateLocationFeedback();
       });
     }
 
     if (regLocalityInput) {
       regLocalityInput.addEventListener('input', () => {
         updateLocationHidden();
+        updateLocationFeedback();
         const val = regLocalityInput.value.trim();
         if (val.length >= 2 && regLocalityDropdown && typeof NigeriaLocations !== 'undefined') {
           const stateVal = regStateSelect ? regStateSelect.value : '';
@@ -1425,22 +1498,33 @@
     // Run acquisition preselection
     handleAcquisitionPreselection();
 
-    // Map & Geolocation
+    // Map & Geolocation Engine
     const gpsBtn = document.getElementById('gps-btn-form');
     const locGpsQuickBtn = document.getElementById('loc-gps-quick-btn');
+    const locMapGpsFloat = document.getElementById('loc-map-gps-float');
+    const locChangeBtn = document.getElementById('loc-change-btn');
     const locInput = document.getElementById('location');
     let userCoords = { lat: 6.5244, lng: 3.3792 };
     let leafletMap = null;
     let mapMarker = null;
+    let mapAccuracyCircle = null;
 
     function initInteractiveMap() {
       const mapContainer = document.getElementById('interactive-reg-map');
       if (!mapContainer || typeof L === 'undefined') return;
 
       try {
+        if (leafletMap) {
+          leafletMap.invalidateSize();
+          return;
+        }
+
         leafletMap = L.map('interactive-reg-map', {
           zoomControl: true,
-          attributionControl: false
+          attributionControl: false,
+          tap: true,
+          touchZoom: true,
+          scrollWheelZoom: true
         }).setView([userCoords.lat, userCoords.lng], 13);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -1450,9 +1534,9 @@
 
         const customIcon = L.divIcon({
           className: 'lokator-leaflet-pin',
-          html: `<div style="display:flex;align-items:center;justify-content:center;width:34px;height:34px;background:#006B3F;border:2.5px solid #FFFFFF;border-radius:50%;box-shadow:0 4px 12px rgba(0,0,0,0.4);color:#FFFFFF;font-size:16px;">📍</div>`,
-          iconSize: [34, 34],
-          iconAnchor: [17, 34]
+          html: `<div style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;background:#006B3F;border:2.5px solid #FFFFFF;border-radius:50%;box-shadow:0 4px 14px rgba(0,107,63,0.5);color:#FFFFFF;font-size:18px;">📍</div>`,
+          iconSize: [36, 36],
+          iconAnchor: [18, 36]
         });
 
         mapMarker = L.marker([userCoords.lat, userCoords.lng], {
@@ -1460,9 +1544,18 @@
           draggable: true
         }).addTo(leafletMap);
 
+        mapAccuracyCircle = L.circle([userCoords.lat, userCoords.lng], {
+          radius: 250,
+          color: '#006B3F',
+          fillColor: '#006B3F',
+          fillOpacity: 0.12,
+          weight: 1.5
+        }).addTo(leafletMap);
+
         mapMarker.on('dragend', async (ev) => {
           const latlng = ev.target.getLatLng();
           userCoords = { lat: Number(latlng.lat.toFixed(5)), lng: Number(latlng.lng.toFixed(5)) };
+          if (mapAccuracyCircle) mapAccuracyCircle.setLatLng(latlng);
           const addr = await reverseGeocode(userCoords.lat, userCoords.lng);
           setMapLocation(userCoords.lat, userCoords.lng, addr);
         });
@@ -1471,19 +1564,35 @@
           const latlng = ev.latlng;
           userCoords = { lat: Number(latlng.lat.toFixed(5)), lng: Number(latlng.lng.toFixed(5)) };
           mapMarker.setLatLng(latlng);
+          if (mapAccuracyCircle) mapAccuracyCircle.setLatLng(latlng);
           const addr = await reverseGeocode(userCoords.lat, userCoords.lng);
           setMapLocation(userCoords.lat, userCoords.lng, addr);
         });
+
+        // Ensure map renders all tiles correctly after initialization
+        setTimeout(() => {
+          if (leafletMap) leafletMap.invalidateSize();
+        }, 150);
       } catch (err) {
         console.warn('Map note:', err);
       }
     }
 
     async function reverseGeocode(lat, lng) {
+      if (typeof NigeriaLocations !== 'undefined' && NigeriaLocations.reverseGeocode) {
+        try {
+          const rev = await NigeriaLocations.reverseGeocode(lat, lng);
+          if (rev && rev.formatted) return rev.formatted;
+        } catch (e) {}
+      }
       try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 1800);
         const resp = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`, {
+          signal: controller.signal,
           headers: { 'Accept': 'application/json' }
         });
+        clearTimeout(timeoutId);
         if (resp.ok) {
           const data = await resp.json();
           const a = data.address || {};
@@ -1493,7 +1602,7 @@
           return `${area}, ${city}, ${state}`;
         }
       } catch (e) {}
-      return `Surulere, Lagos (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+      return `Delta (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
     }
 
     function setMapLocation(lat, lng, address) {
@@ -1509,20 +1618,26 @@
         }
       }
       updateLocationHidden();
+      updateLocationFeedback();
       if (leafletMap && mapMarker) {
         mapMarker.setLatLng([lat, lng]);
-        leafletMap.setView([lat, lng], 15);
+        leafletMap.setView([lat, lng], 14);
+        if (mapAccuracyCircle) {
+          mapAccuracyCircle.setLatLng([lat, lng]);
+        }
       }
     }
 
     function triggerGeolocation() {
       if (!('geolocation' in navigator)) {
         if (locGpsQuickBtn) locGpsQuickBtn.textContent = 'GPS not supported on this browser';
+        if (locMapGpsFloat) locMapGpsFloat.textContent = 'GPS unavailable';
         return;
       }
 
       if (gpsBtn) gpsBtn.textContent = 'Detecting GPS...';
       if (locGpsQuickBtn) locGpsQuickBtn.textContent = 'Acquiring GPS location...';
+      if (locMapGpsFloat) locMapGpsFloat.innerHTML = '<span style="display:inline-block;animation:spin 1s infinite linear;">⌛</span> Detecting GPS...';
 
       navigator.geolocation.getCurrentPosition(
         async (pos) => {
@@ -1532,19 +1647,36 @@
           setMapLocation(lat, lng, address);
           if (gpsBtn) gpsBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Located';
           if (locGpsQuickBtn) locGpsQuickBtn.innerHTML = '✓ Current location detected';
+          if (locMapGpsFloat) locMapGpsFloat.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="8"/></svg> Use my current location';
         },
         (err) => {
           if (gpsBtn) gpsBtn.textContent = 'Use GPS';
-          if (locGpsQuickBtn) {
-            locGpsQuickBtn.textContent = (err && err.code === 1) ? 'GPS permission needed (enter manually)' : 'Location unavailable (enter manually)';
-          }
+          const errMsg = (err && err.code === 1) ? 'GPS permission needed (enter manually)' : 'Location unavailable (enter manually)';
+          if (locGpsQuickBtn) locGpsQuickBtn.textContent = errMsg;
+          if (locMapGpsFloat) locMapGpsFloat.textContent = 'Location unavailable';
         },
-        { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 }
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
       );
     }
 
     if (gpsBtn) gpsBtn.addEventListener('click', triggerGeolocation);
     if (locGpsQuickBtn) locGpsQuickBtn.addEventListener('click', triggerGeolocation);
+    if (locMapGpsFloat) locMapGpsFloat.addEventListener('click', triggerGeolocation);
+    if (locChangeBtn) {
+      locChangeBtn.addEventListener('click', () => {
+        if (regLocalityInput) {
+          regLocalityInput.focus();
+        } else if (regStateSelect) {
+          regStateSelect.focus();
+        }
+      });
+    }
+
+    window.addEventListener('resize', () => {
+      if (leafletMap && currentStep === 3) {
+        leafletMap.invalidateSize();
+      }
+    });
 
     window.addEventListener('DOMContentLoaded', () => {
       setTimeout(initInteractiveMap, 100);
