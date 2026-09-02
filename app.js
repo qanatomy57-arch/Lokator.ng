@@ -112,10 +112,11 @@ const SCENES = [
   }
 ];
 
-// ===== SCROLL DISCOVERY ENGINE (VERTICAL SCROLL-SNAP + INTERSECTION OBSERVER) =====
+// ===== SCROLL DISCOVERY ENGINE (DOCUMENT-DRIVEN STICKY PINNED HERO) =====
 class ScrollDiscoveryEngine {
   constructor() {
     this.heroWrapper = document.getElementById('hero');
+    this.heroStage = document.getElementById('hero-stage');
     if (!this.heroWrapper) return;
 
     this.slides = Array.from(document.querySelectorAll('.hero-slide'));
@@ -124,9 +125,15 @@ class ScrollDiscoveryEngine {
     this.scrollPrompt = document.getElementById('scroll-prompt');
 
     this.currentIndex = 0;
+    this.currentProgress = 0;
     this.isHeroInViewport = true;
+    this.isTicking = false;
     this.activeProgressVideo = null;
     this.activeProgressHandler = null;
+
+    // Explicit Scene Lifecycle states: DISTANT (0), READY (1), ACTIVE (2)
+    this.SCENE_STATE = { DISTANT: 0, READY: 1, ACTIVE: 2 };
+    this.videoStates = new Array(this.videos.length).fill(this.SCENE_STATE.DISTANT);
 
     this.init();
   }
@@ -138,16 +145,16 @@ class ScrollDiscoveryEngine {
     // 1. Configure and prime initial video preloads
     this.primeAllVideos();
 
-    // 3. IntersectionObserver for slide visibility within hero container
-    this.setupIntersectionObserver();
+    // 2. Setup document scroll engine
+    this.setupScrollEngine();
 
-    // 4. Viewport observer for hero section (pause all videos when scrolled down page)
+    // 3. Viewport observer for hero section (pause all videos when scrolled down page)
     this.setupHeroViewportObserver();
 
-    // 5. User interaction listener to ensure mobile media autoplay permission
+    // 4. User interaction listener to ensure mobile media autoplay permission
     const unlockAutoplay = () => {
       if (this.isHeroInViewport && !this.prefersReducedMotion) {
-        this.playVideo(this.currentIndex);
+        this.transitionVideoState(this.currentIndex, this.SCENE_STATE.ACTIVE);
         this.bufferAdjacentVideos(this.currentIndex);
         this.bindVideoProgress(this.currentIndex);
       }
@@ -157,7 +164,7 @@ class ScrollDiscoveryEngine {
     window.addEventListener('touchstart', unlockAutoplay, { passive: true, once: true });
     window.addEventListener('click', unlockAutoplay, { passive: true, once: true });
 
-    // 6. Interactive timeline step clicks
+    // 5. Interactive timeline step clicks
     this.timelineSteps.forEach((btn) => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
@@ -168,24 +175,18 @@ class ScrollDiscoveryEngine {
       });
     });
 
-    // 7. Scroll prompt click
+    // 6. Scroll prompt click
     if (this.scrollPrompt) {
       this.scrollPrompt.addEventListener('click', () => {
         this.scrollToStep(1);
       });
     }
 
-    // 8. Continuous Scrollbar & Scroll Position Tracker
-    this.setupContinuousScrollTracking();
-
-    // 9. Desktop Wheel Control for Scene Scroll Lock
-    this.setupDesktopWheelControl();
-
-    // 10. Initial active state on slide 0
-    this.updateActiveSlide(0);
+    // 7. Initial render pass & active state on slide 0
+    this.renderProgress(0);
     this.bindVideoProgress(0);
     if (!this.prefersReducedMotion) {
-      this.playVideo(0);
+      this.transitionVideoState(0, this.SCENE_STATE.ACTIVE);
     }
   }
 
@@ -201,26 +202,163 @@ class ScrollDiscoveryEngine {
       window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   }
 
-  setupContinuousScrollTracking() {
-    let ticking = false;
+  setupScrollEngine() {
+    const onScroll = () => {
+      if (this.isTicking) return;
+      this.isTicking = true;
+      window.requestAnimationFrame(() => {
+        this.isTicking = false;
+        this.updateScroll();
+      });
+    };
 
-    this.heroWrapper.addEventListener('scroll', () => {
-      if (this.isManualScrolling) return;
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          ticking = false;
-          const scrollTop = this.heroWrapper.scrollTop;
-          const slideHeight = this.heroWrapper.clientHeight || window.innerHeight;
-          const calculatedIndex = Math.round(scrollTop / slideHeight);
-          const clampedIndex = Math.max(0, Math.min(this.slides.length - 1, calculatedIndex));
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+  }
 
-          if (clampedIndex !== this.currentIndex) {
-            this.onSlideVisible(clampedIndex);
-          }
-        });
-        ticking = true;
+  updateScroll() {
+    if (this.prefersReducedMotion) return;
+
+    const heroRect = this.heroWrapper.getBoundingClientRect();
+    const heroHeight = this.heroWrapper.offsetHeight;
+    const windowH = window.innerHeight;
+    const scrollDistance = Math.max(1, heroHeight - windowH);
+    const scrolledPx = -heroRect.top;
+
+    const rawProgress = scrolledPx / scrollDistance;
+    const progress = Math.min(1, Math.max(0, rawProgress));
+
+    this.currentProgress = progress;
+    this.renderProgress(progress);
+  }
+
+  renderProgress(progress) {
+    if (this.prefersReducedMotion) return;
+
+    const totalSlides = this.slides.length;
+    const maxIdx = totalSlides - 1;
+    const floatIdx = progress * maxIdx;
+    const baseIdx = Math.min(maxIdx, Math.floor(floatIdx));
+    const nextIdx = Math.min(maxIdx, baseIdx + 1);
+    const fraction = floatIdx - baseIdx;
+
+    // Smooth cubic S-curve (3t^2 - 2t^3) for velvety cinematic crossfade transition
+    const blend = fraction * fraction * (3 - 2 * fraction);
+
+    // Dominant active scene index
+    const dominantIdx = Math.min(maxIdx, Math.max(0, Math.round(floatIdx)));
+    if (dominantIdx !== this.currentIndex) {
+      this.onDominantSceneChanged(dominantIdx);
+    }
+
+    // Explicit Scene Lifecycle state update: At most 2 adjacent videos decode during crossfades
+    for (let i = 0; i < totalSlides; i++) {
+      let targetState = this.SCENE_STATE.DISTANT;
+
+      if (i === baseIdx) {
+        targetState = this.SCENE_STATE.ACTIVE;
+      } else if (i === nextIdx && blend > 0.05) {
+        targetState = this.SCENE_STATE.ACTIVE;
+      } else if (Math.abs(i - dominantIdx) <= 1) {
+        targetState = this.SCENE_STATE.READY;
+      } else {
+        targetState = this.SCENE_STATE.DISTANT;
       }
-    }, { passive: true });
+
+      this.transitionVideoState(i, targetState);
+    }
+
+    // Interpolate slide visibility, opacity and subtle scale/translation
+    for (let i = 0; i < totalSlides; i++) {
+      const slide = this.slides[i];
+      const card = slide.querySelector('.story-card');
+
+      if (i === baseIdx) {
+        const op = nextIdx === baseIdx ? 1 : 1 - blend;
+        slide.style.opacity = op.toFixed(3);
+        slide.style.visibility = op > 0.002 ? 'visible' : 'hidden';
+        slide.style.pointerEvents = blend < 0.5 ? 'auto' : 'none';
+        slide.style.transform = `scale(${(1 + 0.02 * blend).toFixed(4)}) translate3d(0, 0, 0)`;
+        if (card) {
+          card.style.transform = `translate3d(0, ${(-22 * blend).toFixed(1)}px, 0)`;
+          card.style.opacity = nextIdx === baseIdx ? '1' : Math.max(0, 1 - blend * 2.8).toFixed(3);
+        }
+      } else if (i === nextIdx && nextIdx !== baseIdx) {
+        const op = blend;
+        slide.style.opacity = op.toFixed(3);
+        slide.style.visibility = op > 0.002 ? 'visible' : 'hidden';
+        slide.style.pointerEvents = blend >= 0.5 ? 'auto' : 'none';
+        slide.style.transform = `scale(${(0.98 + 0.02 * blend).toFixed(4)}) translate3d(0, 0, 0)`;
+        if (card) {
+          card.style.transform = `translate3d(0, ${(22 * (1 - blend)).toFixed(1)}px, 0)`;
+          card.style.opacity = Math.max(0, (blend - 0.65) / 0.35).toFixed(3);
+        }
+      } else {
+        slide.style.opacity = '0';
+        slide.style.visibility = 'hidden';
+        slide.style.pointerEvents = 'none';
+        if (card) {
+          card.style.transform = 'translate3d(0, 0, 0)';
+          card.style.opacity = '0';
+        }
+      }
+    }
+
+    // Scroll prompt fadeout
+    if (this.scrollPrompt) {
+      const promptOp = progress < 0.03 ? 1 : 0;
+      this.scrollPrompt.style.opacity = promptOp;
+      this.scrollPrompt.style.pointerEvents = promptOp ? 'auto' : 'none';
+    }
+
+    // Timeline dots progress fill
+    this.timelineSteps.forEach((step, idx) => {
+      const stepPct = idx / maxIdx;
+      const isPast = progress >= stepPct;
+      const isActive = idx === dominantIdx;
+      step.classList.toggle('active', isActive);
+      step.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      step.setAttribute('aria-current', isActive ? 'true' : 'false');
+      if (isActive || isPast) {
+        step.style.setProperty('--video-progress', '100%');
+      } else {
+        step.style.removeProperty('--video-progress');
+      }
+    });
+  }
+
+  transitionVideoState(idx, targetState) {
+    if (this.videoStates[idx] === targetState) return;
+    const vid = this.videos[idx];
+    if (!vid) return;
+
+    this.videoStates[idx] = targetState;
+
+    if (targetState === this.SCENE_STATE.ACTIVE) {
+      if (this.isHeroInViewport && !this.prefersReducedMotion) {
+        this.playVideo(idx);
+      }
+    } else if (targetState === this.SCENE_STATE.READY) {
+      this.pauseVideo(idx);
+      if (!this.isSlowConnection && !this.saveData && vid.preload === 'none') {
+        vid.preload = 'metadata';
+      }
+    } else if (targetState === this.SCENE_STATE.DISTANT) {
+      this.pauseVideo(idx);
+      // Release decoder channels and memory for distant videos
+      vid.preload = 'none';
+    }
+  }
+
+  onDominantSceneChanged(newIndex) {
+    this.currentIndex = newIndex;
+
+    this.slides.forEach((slide, i) => {
+      slide.classList.toggle('is-active', i === newIndex);
+    });
+
+    this.bufferAdjacentVideos(newIndex);
+    this.bindVideoProgress(newIndex);
   }
 
   primeAllVideos() {
@@ -238,36 +376,12 @@ class ScrollDiscoveryEngine {
         vid.style.opacity = '0';
       }, { once: true });
 
-      // Adaptive preloading: slide 0 and 1 get auto; rest get metadata to enable instant play on demand
+      // Adaptive preloading: slide 0 and 1 get auto; rest get metadata
       if (i <= 1) {
         vid.preload = 'auto';
       } else {
-        vid.preload = 'metadata';
+        vid.preload = 'none';
       }
-    });
-  }
-
-  setupIntersectionObserver() {
-    const observerOptions = {
-      root: this.heroWrapper,
-      rootMargin: '0px',
-      threshold: [0.25, 0.5, 0.75]
-    };
-
-    this.slideObserver = new IntersectionObserver((entries) => {
-      if (this.isManualScrolling) return;
-      entries.forEach(entry => {
-        if (entry.isIntersecting && entry.intersectionRatio >= 0.4) {
-          const slideIndex = parseInt(entry.target.dataset.index, 10);
-          if (!isNaN(slideIndex)) {
-            this.onSlideVisible(slideIndex);
-          }
-        }
-      });
-    }, observerOptions);
-
-    this.slides.forEach(slide => {
-      this.slideObserver.observe(slide);
     });
   }
 
@@ -277,67 +391,23 @@ class ScrollDiscoveryEngine {
       entries.forEach(entry => {
         this.isHeroInViewport = entry.isIntersecting;
         if (!this.isHeroInViewport) {
-          // Off-screen: pause all hero videos to save battery/GPU
           this.pauseAllVideos();
           if (this.activeProgressVideo && this.activeProgressHandler) {
             this.activeProgressVideo.removeEventListener('timeupdate', this.activeProgressHandler);
           }
         } else {
-          // Back in view: resume the active video and progress tracking if allowed
           if (!this.prefersReducedMotion) {
             this.playVideo(this.currentIndex);
           }
           this.bindVideoProgress(this.currentIndex);
         }
       });
-    }, { threshold: 0.15 });
+    }, { threshold: 0.05 });
 
     this.heroViewportObserver.observe(this.heroWrapper);
   }
 
-  onSlideVisible(newIndex) {
-    if (newIndex === this.currentIndex && this.slides[newIndex].classList.contains('is-active')) return;
-
-    this.currentIndex = newIndex;
-
-    // 1. Update visual is-active state on slides
-    this.updateActiveSlide(newIndex);
-
-    // 2. Strict invariant: At most ONE hero video plays at a time
-    this.pauseAllVideosExcept(newIndex);
-
-    // 3. Play active video if hero is in viewport and motion permitted
-    if (this.isHeroInViewport && !this.prefersReducedMotion) {
-      this.playVideo(newIndex);
-    }
-
-    // 4. Pre-buffer adjacent slides
-    this.bufferAdjacentVideos(newIndex);
-
-    // 5. Update timeline navigation dots & accessibility attributes
-    this.timelineSteps.forEach((step, i) => {
-      const isActive = i === newIndex;
-      step.classList.toggle('active', isActive);
-      step.setAttribute('aria-selected', isActive ? 'true' : 'false');
-      step.setAttribute('aria-current', isActive ? 'true' : 'false');
-      if (!isActive) {
-        step.style.removeProperty('--video-progress');
-      }
-    });
-
-    // 6. Bind active video playback progress
-    this.bindVideoProgress(newIndex);
-
-    // 7. Smoothly fade scroll prompt when navigating away from first slide
-    if (this.scrollPrompt) {
-      this.scrollPrompt.style.opacity = newIndex === 0 ? '1' : '0';
-      this.scrollPrompt.style.pointerEvents = newIndex === 0 ? 'auto' : 'none';
-      this.scrollPrompt.style.transition = 'opacity 0.4s ease';
-    }
-  }
-
   bindVideoProgress(idx) {
-    // Unbind previous video progress handler
     if (this.activeProgressVideo && this.activeProgressHandler) {
       this.activeProgressVideo.removeEventListener('timeupdate', this.activeProgressHandler);
       this.activeProgressVideo = null;
@@ -359,22 +429,17 @@ class ScrollDiscoveryEngine {
     this.activeProgressVideo = currentVideo;
   }
 
-  updateActiveSlide(idx) {
-    this.slides.forEach((slide, i) => {
-      slide.classList.toggle('is-active', i === idx);
-    });
-  }
-
   bufferAdjacentVideos(centerIdx) {
     if (this.isSlowConnection || this.saveData) {
       return;
     }
 
-    const toBuffer = [centerIdx, centerIdx + 1, centerIdx - 1];
-    toBuffer.forEach(idx => {
-      if (idx >= 0 && idx < this.videos.length) {
-        const vid = this.videos[idx];
-        if (vid && vid.preload === 'none') {
+    this.videos.forEach((vid, idx) => {
+      if (Math.abs(idx - centerIdx) > 2) {
+        vid.pause();
+        vid.preload = 'none';
+      } else if (Math.abs(idx - centerIdx) <= 1) {
+        if (vid.preload === 'none') {
           vid.preload = 'metadata';
         }
       }
@@ -430,65 +495,23 @@ class ScrollDiscoveryEngine {
 
   scrollToStep(stepIndex) {
     if (stepIndex < 0 || stepIndex >= this.slides.length) return;
-    const targetSlide = this.slides[stepIndex];
-    if (!targetSlide) return;
+    const heroRect = this.heroWrapper.getBoundingClientRect();
+    const runwayTop = heroRect.top + window.scrollY;
+    const scrollDistance = Math.max(1, this.heroWrapper.offsetHeight - window.innerHeight);
+    const targetScroll = runwayTop + (stepIndex / (this.slides.length - 1)) * scrollDistance;
 
-    this.isManualScrolling = true;
-    this.onSlideVisible(stepIndex);
-
-    this.heroWrapper.scrollTo({
-      top: targetSlide.offsetTop,
-      behavior: 'smooth'
+    window.scrollTo({
+      top: targetScroll,
+      behavior: this.prefersReducedMotion ? 'auto' : 'smooth'
     });
-
-    clearTimeout(this.manualScrollTimer);
-    this.manualScrollTimer = setTimeout(() => {
-      this.isManualScrolling = false;
-    }, 650);
   }
 
-  setupDesktopWheelControl() {
-    let wheelCooldown = false;
-    const heroEl = this.heroWrapper;
-
-    heroEl.addEventListener('wheel', (e) => {
-      // Only apply on desktop viewports
-      if (window.innerWidth < 769) return;
-      if (wheelCooldown) {
-        if (this.currentIndex < this.slides.length - 1 && e.deltaY > 0) e.preventDefault();
-        if (this.currentIndex > 0 && e.deltaY < 0 && window.scrollY <= 10) e.preventDefault();
-        return;
-      }
-
-      if (e.deltaY > 30) {
-        // Scrolling down through scenes
-        if (this.currentIndex < this.slides.length - 1) {
-          e.preventDefault();
-          wheelCooldown = true;
-          this.scrollToStep(this.currentIndex + 1);
-          setTimeout(() => { wheelCooldown = false; }, 600);
-        } else {
-          // At 9th scene (last slide): release scroll lock so page continues to Testimonials/Categories
-          const downstreamSection = document.getElementById('how-it-works') || document.querySelector('.why-lokator') || document.querySelector('footer');
-          if (downstreamSection && window.scrollY <= 10) {
-            downstreamSection.scrollIntoView({ behavior: 'smooth' });
-          }
-        }
-      } else if (e.deltaY < -30) {
-        // If downstream on page, let normal window scroll up to top first
-        if (window.scrollY > 15) {
-          return;
-        }
-
-        // Scrolling up through scenes once at top of document
-        if (this.currentIndex > 0) {
-          e.preventDefault();
-          wheelCooldown = true;
-          this.scrollToStep(this.currentIndex - 1);
-          setTimeout(() => { wheelCooldown = false; }, 600);
-        }
-      }
-    }, { passive: false });
+  // Smooth hero scroll release helper for downstream sections after scene 9
+  releaseToDownstream() {
+    const downstreamSection = document.getElementById('browse-skills') || document.getElementById('how-it-works') || document.querySelector('.why-lokator');
+    if (downstreamSection) {
+      downstreamSection.scrollIntoView({ behavior: 'smooth' });
+    }
   }
 }
 

@@ -285,70 +285,69 @@ body {
   transition: all var(--transition);
 }
 
-/* ===== HERO VERTICAL VIDEO SCROLL ===== */
+/* ===== HERO VERTICAL VIDEO SCROLL (DOCUMENT-DRIVEN PINNED ENGINE) ===== */
 .hero-scroll-wrapper {
   position: relative;
   width: 100%;
-  height: 100dvh;
-  overflow-y: auto;
-  overflow-x: hidden;
-  scroll-snap-type: y mandatory;
-  overscroll-behavior-y: auto;
-  touch-action: pan-y;
+  height: 750vh; /* Scroll runway allowing all 9 scenes to breathe */
   background: #060D07;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
 }
 
-/* Single unified hero sidebar: Hide raw browser scrollbar in favor of dedicated hero timeline nav */
-.hero-scroll-wrapper::-webkit-scrollbar {
-  display: none !important;
-  width: 0 !important;
-  height: 0 !important;
-}
-
-.hero-scroll-wrapper::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.hero-scroll-wrapper::-webkit-scrollbar-thumb {
-  background: transparent;
+/* Sticky Stage pinned at top of viewport */
+.hero-stage {
+  position: sticky;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  background: #040905;
 }
 
 @media (max-width: 768px) {
   .hero-scroll-wrapper {
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-  }
-  .hero-scroll-wrapper::-webkit-scrollbar {
-    display: none !important;
-    width: 0 !important;
-    height: 0 !important;
+    height: 600svh;
   }
 }
 
-/* Sticky wrapper to keep the timeline nav visible during scroll */
+/* Timeline navigation overlay positioned inside pinned stage */
 .hero-timeline-sticky {
-  position: sticky;
+  position: absolute;
   top: 0;
-  height: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   z-index: 50;
   pointer-events: none;
 }
 
-/* Individual hero video slide */
+/* Individual hero video slide (stacked absolute in pinned stage) */
 .hero-slide {
-  position: relative;
+  position: absolute;
+  inset: 0;
   width: 100%;
-  height: 100dvh;
-  min-height: 100dvh;
+  height: 100%;
   overflow: hidden;
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
   display: flex;
   align-items: center;
   color: var(--white);
   background: #040905;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  will-change: opacity, transform;
+  transition: opacity 0.15s ease-out;
+}
+
+.hero-slide.is-active {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
 }
 
 /* Full-bleed background video within each slide */
@@ -2690,6 +2689,34 @@ body {
   .testi-card {
     scroll-snap-align: start;
   }
+
+  /* Hero Pinned Stage Reduced Motion: Clean static Scene 1 presentation without scroll trap */
+  .hero-scroll-wrapper {
+    height: auto !important;
+    min-height: 100vh !important;
+  }
+
+  .hero-stage {
+    position: relative !important;
+    height: auto !important;
+    min-height: 100vh !important;
+  }
+
+  .hero-slide {
+    position: relative !important;
+    display: none !important;
+  }
+
+  .hero-slide[data-index="0"] {
+    display: flex !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+  }
+
+  .hero-timeline-sticky {
+    display: none !important;
+  }
 }
 
 /* ===== RESPONSIVE ===== */
@@ -2703,11 +2730,11 @@ body {
 
   html,
   body {
-    overflow-x: hidden;
+    overflow-x: clip;
   }
 
   .hero-scroll-wrapper {
-    overflow-x: hidden;
+    overflow: visible;
   }
 
   .hero-slide {
