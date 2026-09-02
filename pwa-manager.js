@@ -291,11 +291,11 @@
         window.removeEventListener('click', onFirstInteraction);
         window.removeEventListener('keydown', onFirstInteraction);
 
-        // If iOS and not dismissed, show gentle guidance after delay
+        // If iOS and not dismissed, show gentle guidance after user has explored the app
         if (this.isIOS() && !this.isIOSDismissed()) {
           setTimeout(() => {
             this.showIOSGuidance();
-          }, 4500);
+          }, 60000);
         }
       };
 

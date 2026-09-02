@@ -19,7 +19,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
     rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=10.24" />
+  <link rel="stylesheet" href="style.css?v=10.25" />
   <link rel="stylesheet" href="pwa.css" />
   <style>
     html, body { background-color: #0A0E17; color: #F9FAFB; margin: 0; padding: 0; }
@@ -111,9 +111,16 @@
           <button class="t-step" data-step="8" role="tab" aria-selected="false" aria-current="false" aria-label="Scene 9: Nationwide Pro Network" title="Nationwide Pro Network">
             <span class="t-indicator"><span class="t-fill"></span></span>
           </button>
-        </div>
-      </nav>
-    </div>
+      </div>
+    </nav>
+  </div>
+
+  <!-- Mobile Hero Scene Indicator Pill & Quick Step Controls -->
+  <nav class="hero-mobile-nav" id="hero-mobile-nav" aria-label="Mobile scene controls">
+    <button type="button" class="hero-mobile-nav-btn" id="hero-mobile-prev" aria-label="Previous scene" title="Previous scene">&#8592;</button>
+    <span class="hero-mobile-counter" id="hero-mobile-counter"><span class="current-num">1</span> / 9</span>
+    <button type="button" class="hero-mobile-nav-btn" id="hero-mobile-next" aria-label="Next scene" title="Next scene">&#8594;</button>
+  </nav>
 
     <!-- SLIDE 0: MASTER MARKETPLACE -->
     <div class="hero-slide is-active" data-index="0">
@@ -1229,7 +1236,7 @@
   <script src="categories.js"></script>
   <script src="providers-data.js"></script>
   <script src="supabase-client.js"></script>
-  <script src="app.js?v=10.24"></script>
+  <script src="app.js?v=10.25"></script>
   <script src="pwa-manager.js"></script>
   <script>
     if ('serviceWorker' in navigator) {

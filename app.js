@@ -182,7 +182,10 @@ class ScrollDiscoveryEngine {
       });
     }
 
-    // 7. Initial render pass & active state on slide 0
+    // 7. Mobile direct touch swipe & quick pill navigation
+    this.setupMobileTouchEngine();
+
+    // 8. Initial render pass & active state on slide 0
     this.renderProgress(0);
     this.bindVideoProgress(0);
     if (!this.prefersReducedMotion) {
@@ -219,8 +222,6 @@ class ScrollDiscoveryEngine {
   }
 
   updateScroll() {
-    if (this.prefersReducedMotion) return;
-
     const heroRect = this.heroWrapper.getBoundingClientRect();
     const heroHeight = this.heroWrapper.offsetHeight;
     const windowH = window.innerHeight;
@@ -235,8 +236,6 @@ class ScrollDiscoveryEngine {
   }
 
   renderProgress(progress) {
-    if (this.prefersReducedMotion) return;
-
     const totalSlides = this.slides.length;
     const maxIdx = totalSlides - 1;
     const floatIdx = progress * maxIdx;
@@ -280,9 +279,17 @@ class ScrollDiscoveryEngine {
         slide.style.opacity = op.toFixed(3);
         slide.style.visibility = op > 0.002 ? 'visible' : 'hidden';
         slide.style.pointerEvents = blend < 0.5 ? 'auto' : 'none';
-        slide.style.transform = `scale(${(1 + 0.02 * blend).toFixed(4)}) translate3d(0, 0, 0)`;
+        if (!this.prefersReducedMotion) {
+          slide.style.transform = `scale(${(1 + 0.02 * blend).toFixed(4)}) translate3d(0, 0, 0)`;
+        } else {
+          slide.style.transform = 'none';
+        }
         if (card) {
-          card.style.transform = `translate3d(0, ${(-22 * blend).toFixed(1)}px, 0)`;
+          if (!this.prefersReducedMotion) {
+            card.style.transform = `translate3d(0, ${(-22 * blend).toFixed(1)}px, 0)`;
+          } else {
+            card.style.transform = 'none';
+          }
           card.style.opacity = nextIdx === baseIdx ? '1' : Math.max(0, 1 - blend * 2.8).toFixed(3);
         }
       } else if (i === nextIdx && nextIdx !== baseIdx) {
@@ -290,15 +297,24 @@ class ScrollDiscoveryEngine {
         slide.style.opacity = op.toFixed(3);
         slide.style.visibility = op > 0.002 ? 'visible' : 'hidden';
         slide.style.pointerEvents = blend >= 0.5 ? 'auto' : 'none';
-        slide.style.transform = `scale(${(0.98 + 0.02 * blend).toFixed(4)}) translate3d(0, 0, 0)`;
+        if (!this.prefersReducedMotion) {
+          slide.style.transform = `scale(${(0.98 + 0.02 * blend).toFixed(4)}) translate3d(0, 0, 0)`;
+        } else {
+          slide.style.transform = 'none';
+        }
         if (card) {
-          card.style.transform = `translate3d(0, ${(22 * (1 - blend)).toFixed(1)}px, 0)`;
+          if (!this.prefersReducedMotion) {
+            card.style.transform = `translate3d(0, ${(22 * (1 - blend)).toFixed(1)}px, 0)`;
+          } else {
+            card.style.transform = 'none';
+          }
           card.style.opacity = Math.max(0, (blend - 0.65) / 0.35).toFixed(3);
         }
       } else {
         slide.style.opacity = '0';
         slide.style.visibility = 'hidden';
         slide.style.pointerEvents = 'none';
+        slide.style.transform = 'none';
         if (card) {
           card.style.transform = 'translate3d(0, 0, 0)';
           card.style.opacity = '0';
@@ -358,6 +374,11 @@ class ScrollDiscoveryEngine {
     this.slides.forEach((slide, i) => {
       slide.classList.toggle('is-active', i === newIndex);
     });
+
+    const mobileCounter = document.getElementById('hero-mobile-counter');
+    if (mobileCounter) {
+      mobileCounter.innerHTML = `<span class="current-num">${newIndex + 1}</span> / ${this.slides.length}`;
+    }
 
     this.bufferAdjacentVideos(newIndex);
     this.bindVideoProgress(newIndex);
@@ -500,6 +521,14 @@ class ScrollDiscoveryEngine {
 
   scrollToStep(stepIndex) {
     if (stepIndex < 0 || stepIndex >= this.slides.length) return;
+    if (this.prefersReducedMotion) {
+      this.currentIndex = stepIndex;
+      this.currentProgress = stepIndex / (this.slides.length - 1);
+      this.renderProgress(this.currentProgress);
+      this.onDominantSceneChanged(stepIndex);
+      return;
+    }
+
     const heroRect = this.heroWrapper.getBoundingClientRect();
     const runwayTop = heroRect.top + window.scrollY;
     const scrollDistance = Math.max(1, this.heroWrapper.offsetHeight - window.innerHeight);
@@ -507,8 +536,107 @@ class ScrollDiscoveryEngine {
 
     window.scrollTo({
       top: targetScroll,
-      behavior: this.prefersReducedMotion ? 'auto' : 'smooth'
+      behavior: 'smooth'
     });
+  }
+
+  setupMobileTouchEngine() {
+    let touchStartY = 0;
+    let touchStartX = 0;
+    let touchStartTime = 0;
+    let isSwiping = false;
+    let hasMoved = false;
+
+    const heroStage = document.getElementById('hero-stage');
+    if (!heroStage) return;
+
+    heroStage.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) {
+        touchStartY = e.touches[0].clientY;
+        touchStartX = e.touches[0].clientX;
+        touchStartTime = Date.now();
+        isSwiping = true;
+        hasMoved = false;
+      }
+    }, { passive: true });
+
+    heroStage.addEventListener('touchmove', (e) => {
+      if (isSwiping && e.touches.length === 1) {
+        const dY = Math.abs(e.touches[0].clientY - touchStartY);
+        if (dY > 10) {
+          hasMoved = true;
+        }
+      }
+    }, { passive: true });
+
+    heroStage.addEventListener('click', (e) => {
+      if (hasMoved) {
+        e.preventDefault();
+        e.stopPropagation();
+        hasMoved = false;
+      }
+    }, true);
+
+    heroStage.addEventListener('touchend', (e) => {
+      if (!isSwiping || e.changedTouches.length === 0) return;
+      isSwiping = false;
+
+      const touchEndY = e.changedTouches[0].clientY;
+      const touchEndX = e.changedTouches[0].clientX;
+      const deltaY = touchStartY - touchEndY;
+      const deltaX = touchStartX - touchEndX;
+      const deltaTime = Date.now() - touchStartTime;
+
+      // Only handle intentional vertical flicks (swipe threshold: 40px, time < 550ms)
+      if (Math.abs(deltaX) > Math.abs(deltaY) || Math.abs(deltaY) < 40 || deltaTime > 550) {
+        return;
+      }
+
+      if (deltaY > 0) {
+        // Swiped UP -> Advance to next video
+        if (this.currentIndex < this.slides.length - 1) {
+          this.scrollToStep(this.currentIndex + 1);
+        } else {
+          // At Scene 9 -> Release naturally into downstream
+          this.releaseToDownstream();
+        }
+      } else {
+        // Swiped DOWN -> Go back to previous video
+        if (this.currentIndex > 0) {
+          this.scrollToStep(this.currentIndex - 1);
+        } else {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      }
+    }, { passive: true });
+
+    // Mobile Navigation Pill Previous/Next buttons
+    const prevBtn = document.getElementById('hero-mobile-prev');
+    const nextBtn = document.getElementById('hero-mobile-next');
+
+    if (prevBtn) {
+      prevBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (this.currentIndex > 0) {
+          this.scrollToStep(this.currentIndex - 1);
+        } else {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      });
+    }
+
+    if (nextBtn) {
+      nextBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (this.currentIndex < this.slides.length - 1) {
+          this.scrollToStep(this.currentIndex + 1);
+        } else {
+          this.releaseToDownstream();
+        }
+      });
+    }
   }
 
   // Smooth hero scroll release helper for downstream sections after scene 9
