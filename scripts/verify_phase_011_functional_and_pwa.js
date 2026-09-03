@@ -41,23 +41,35 @@ const BASE_URL = 'http://localhost:8080';
   assert(swContent.includes('padifix-v11.00'), 'sw.js cache version bumped to padifix-v11.00');
   assert(!swContent.includes('lokator-v10'), 'Old lokator cache version removed from sw.js');
 
+  async function safeGoto(targetUrl) {
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 15000 });
+        return;
+      } catch (err) {
+        if (attempt === 3) throw err;
+        await page.waitForTimeout(500);
+      }
+    }
+  }
+
   // 2. SEARCH ENGINE & CANONICAL FILTERING
   console.log('\n--- 2. SEARCH & FILTER REGRESSION ---');
-  await page.goto(`${BASE_URL}/search.html?q=electrician`, { waitUntil: 'domcontentloaded' });
-  await page.waitForTimeout(1000);
+  await safeGoto(`${BASE_URL}/search.html?q=electrician`);
+  await page.waitForSelector('.provider-item-card:not(.skeleton-card)', { timeout: 10000 });
 
-  const filteredCount = await page.locator('.provider-item-card').count();
+  const filteredCount = await page.locator('.provider-item-card:not(.skeleton-card)').count();
   assert(filteredCount > 0, `Search query 'q=electrician' renders ${filteredCount} matching provider cards`);
 
-  const firstCardText = await page.locator('.provider-item-card').first().innerText();
-  assert(firstCardText.length > 20, 'Provider card contains rich profile details and contact actions');
+  const firstCardText = await page.locator('.provider-item-card:not(.skeleton-card)').first().innerText();
+  assert(firstCardText && firstCardText.length > 20, 'Provider card contains rich profile details and contact actions');
 
   // 3. WHATSAPP CTA DISPATCH ON PROVIDER PROFILE
   console.log('\n--- 3. PROVIDER PROFILE & CONTACT ACTIONS ---');
-  await page.goto(`${BASE_URL}/profile.html?id=1`, { waitUntil: 'domcontentloaded' });
-  await page.waitForTimeout(600);
+  await safeGoto(`${BASE_URL}/profile.html?id=1`);
+  await page.waitForSelector('#btn-wa-hero', { timeout: 10000 });
 
-  const waBtn = await page.locator('#btn-wa-hero, #wa-send-btn').first();
+  const waBtn = page.locator('#btn-wa-hero').first();
   const waBtnVisible = await waBtn.isVisible().catch(() => false);
   assert(waBtnVisible, 'WhatsApp contact action is visible on provider profile');
 
