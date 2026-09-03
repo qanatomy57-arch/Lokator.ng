@@ -3,7 +3,7 @@
 // Progressive Web App Offline Shell & Resilient Runtime Caching Engine
 // ============================================================================
 
-const CACHE_VERSION = 'padifix-v11.00';
+const CACHE_VERSION = 'padifix-v12.00';
 const STATIC_CACHE = `padifix-static-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `padifix-runtime-${CACHE_VERSION}`;
 
@@ -18,6 +18,8 @@ const SHELL_ASSETS = [
   '/dashboard.html',
   '/offline.html',
   '/manifest.json',
+  '/favicon.png',
+  '/apple-touch-icon.png',
   '/style.css',
   '/search.css',
   '/profile.css',
@@ -26,6 +28,8 @@ const SHELL_ASSETS = [
   '/app.js',
   '/search.js',
   '/profile.js',
+  '/register.js',
+  '/login.js',
   '/dashboard.js',
   '/locations.js',
   '/phone-utils.js',
@@ -37,7 +41,8 @@ const SHELL_ASSETS = [
   '/telemetry.js',
   '/pwa-manager.js',
   '/pwa.js',
-  '/icons/icon.svg',
+  '/icons/padifix-logo-dark.png',
+  '/icons/padifix-mark.png',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
   '/icons/icon-maskable-192.png',

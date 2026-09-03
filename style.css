@@ -239,6 +239,26 @@ body {
   align-items: center;
 }
 
+.brand-logo-img {
+  height: 38px;
+  width: auto;
+  display: block;
+  border-radius: 8px;
+  object-fit: contain;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.logo:hover .brand-logo-img {
+  transform: scale(1.02);
+  opacity: 0.95;
+}
+
+@media (max-width: 480px) {
+  .brand-logo-img {
+    height: 32px;
+  }
+}
+
 .logo-text {
   font-size: 22px;
   font-weight: 800;

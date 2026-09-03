@@ -3,8 +3,7 @@
   "version": "1.0.0",
   "description": "PadiFix — Nigeria's Local-Services Marketplace. Find Skills. Get Things Done.",
   "scripts": {
-    "test": "node scripts/verify_phase_012_3r_production.js",
-    "build": "node -e \"console.log('PadiFix production build certified.');\""
+    "test": "node scripts/verify_phase_012_3r_production.js"
   },
   "devDependencies": {
     "playwright": "^1.62.1"
