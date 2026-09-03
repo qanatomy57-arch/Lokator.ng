@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-08-27T21:42:45.107Z",
+  "timestamp": "2026-08-27T23:25:57.248Z",
   "devicesTested": [
     "iPhone 14 Pro (393x852)",
     "Pixel 7 (412x915)"
@@ -58,20 +58,6 @@
           "size": "50x16px"
         },
         {
-          "text": "📋 List",
-          "tag": "BUTTON",
-          "id": "btn-view-list",
-          "class": "btn-view-mode active",
-          "size": "55x25px"
-        },
-        {
-          "text": "🗺️ Map",
-          "tag": "BUTTON",
-          "id": "btn-view-map",
-          "class": "btn-view-mode",
-          "size": "58x25px"
-        },
-        {
           "text": "Update",
           "tag": "BUTTON",
           "id": "sw-update-btn",
@@ -86,7 +72,7 @@
         "Input font sizes >= 16px (iOS auto-zoom safe)",
         "Mobile filter bottom sheet opened",
         "Mobile filter bottom sheet closed",
-        "Mobile Map View toggled successfully (20 tiles active)"
+        "Mobile Map View toggled successfully (6 tiles active)"
       ]
     },
     {
@@ -165,8 +151,8 @@
         "HTTP 200 OK",
         "Zero horizontal overflow",
         "Input font sizes >= 16px (iOS auto-zoom safe)",
-        "Profile service map verified (4 tiles, 1 marker)",
-        "Call Provider button configured: tel:+2347030313984"
+        "Profile service map verified (0 tiles, 0 marker)",
+        "Call Provider button configured: tel:+2348077889900"
       ]
     },
     {
