@@ -4,23 +4,32 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Lokator — Locate Skilled Hands Near You</title>
+  <title>PadiFix — Find Skills. Get Things Done. | Nigeria's Local-Services Marketplace</title>
   <meta name="description"
-    content="Lokator connects you with the closest verified artisans and service providers near your location across Nigeria. Find electricians, plumbers, nail techs, tailors and more — instantly." />
-  <meta name="theme-color" content="#006B3F" />
+    content="PadiFix connects you with verified local skilled professionals and service providers across Nigeria. Whatever You Need. We’ve Got You." />
+  <meta name="theme-color" content="#00A859" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Lokator" />
+  <meta name="apple-mobile-web-app-title" content="PadiFix" />
+  <meta property="og:title" content="PadiFix — Find Skills. Get Things Done." />
+  <meta property="og:description" content="Nigeria's local-services marketplace. Whatever You Need. We’ve Got You." />
+  <meta property="og:image" content="https://lokator-ng.vercel.app/og-image.png" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="PadiFix — Find Skills. Get Things Done." />
+  <meta name="twitter:description" content="Nigeria's local-services marketplace. Whatever You Need. We’ve Got You." />
+  <meta name="twitter:image" content="https://lokator-ng.vercel.app/og-image.png" />
   <link rel="manifest" href="manifest.json" />
-  <link rel="icon" type="image/svg+xml" href="icons/icon.svg" />
-  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="icon" type="image/png" sizes="64x64" href="favicon.png" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
     rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=10.29" />
-  <link rel="stylesheet" href="pwa.css?v=10.29" />
+  <link rel="stylesheet" href="style.css?v=11.00" />
+  <link rel="stylesheet" href="pwa.css?v=11.00" />
   <style>
     html, body { background-color: #0A0E17; color: #F9FAFB; margin: 0; padding: 0; }
   </style>
@@ -33,36 +42,42 @@
     <div class="splash-logo-wrap">
       <div class="splash-logo-ring"></div>
       <div class="splash-logo-mark">
-        <svg width="32" height="32" viewBox="0 0 30 30" fill="none">
-          <path d="M15 2C10.03 2 6 6.03 6 11c0 6.75 9 17 9 17s9-10.25 9-17c0-4.97-4.03-9-9-9z" fill="#FFFFFF"/>
-          <circle cx="15" cy="11" r="4" fill="#D4AF37"/>
-          <circle cx="15" cy="11" r="2" fill="#006B3F"/>
+        <svg width="36" height="36" viewBox="0 0 100 100" fill="none">
+          <path d="M63 67 L80 84 C82 86 85 86 87 84 C89 82 89 79 87 77 L70 60" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+          <circle cx="48" cy="46" r="32" stroke="#FFFFFF" stroke-width="7" />
+          <circle cx="28" cy="28" r="6" fill="#00A859" />
+          <circle cx="68" cy="28" r="6" fill="#00A859" />
+          <path d="M22 46 C22 36 29 34 38 34 C43 34 46 38 46 44 L44 48 L37 54 L32 50 C30 48 26 49 26 52 C26 55 30 57 33 57 L40 59 L45 53" fill="#00A859" />
+          <path d="M37 52 L43 47 C45 45 48 45 50 47 L53 50 L75 28 C78 25 83 27 82 31 L58 60 C56 62 53 62 51 60 L44 54 Z" fill="#00A859" />
         </svg>
       </div>
     </div>
-    <h2 class="splash-brand-title">Lokator<span class="splash-brand-accent">.NG</span></h2>
-    <p class="splash-brand-subtitle">Locating Skilled Hands</p>
+    <h2 class="splash-brand-title">Padi<span class="splash-brand-accent">Fix</span></h2>
+    <p class="splash-brand-subtitle">Find Skills. Get Things Done.</p>
   </div>
 
   <!-- ===== NAVBAR ===== -->
   <header class="navbar" id="navbar">
     <div class="container nav-inner">
-      <a href="index.html" class="logo" id="logo-link">
+      <a href="index.html" class="logo" id="logo-link" aria-label="PadiFix home">
         <div class="logo-mark">
-          <svg width="30" height="30" viewBox="0 0 30 30" fill="none">
-            <path d="M15 2C10.03 2 6 6.03 6 11c0 6.75 9 17 9 17s9-10.25 9-17c0-4.97-4.03-9-9-9z" fill="#006B3F" />
-            <circle cx="15" cy="11" r="4" fill="#D4AF37" />
-            <circle cx="15" cy="11" r="2" fill="#FFFFFF" />
+          <svg width="30" height="30" viewBox="0 0 100 100" fill="none">
+            <path d="M63 67 L80 84 C82 86 85 86 87 84 C89 82 89 79 87 77 L70 60" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+            <circle cx="48" cy="46" r="32" stroke="#FFFFFF" stroke-width="7" />
+            <circle cx="28" cy="28" r="6" fill="#00A859" />
+            <circle cx="68" cy="28" r="6" fill="#00A859" />
+            <path d="M22 46 C22 36 29 34 38 34 C43 34 46 38 46 44 L44 48 L37 54 L32 50 C30 48 26 49 26 52 C26 55 30 57 33 57 L40 59 L45 53" fill="#00A859" />
+            <path d="M37 52 L43 47 C45 45 48 45 50 47 L53 50 L75 28 C78 25 83 27 82 31 L58 60 C56 62 53 62 51 60 L44 54 Z" fill="#00A859" />
           </svg>
         </div>
-        <span class="logo-text">Lokator</span>
+        <span class="logo-text">Padi<span style="color: #00A859;">Fix</span></span>
       </a>
       <nav class="nav-links" id="nav-links">
         <a href="search.html" class="nav-link">Find Providers</a>
         <a href="#how-it-works" class="nav-link">How It Works</a>
         <a href="#categories" class="nav-link">Services</a>
-        <a href="#why-lokator" class="nav-link">Why Lokator</a>
-        <button type="button" class="pwa-install-nav-btn" id="nav-pwa-install-btn" aria-label="Install Lokator App">
+        <a href="#why-padifix" class="nav-link">Why PadiFix</a>
+        <button type="button" class="pwa-install-nav-btn" id="nav-pwa-install-btn" aria-label="Install PadiFix App">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           <span>Install App</span>
         </button>
@@ -130,7 +145,7 @@
                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                 <circle cx="12" cy="10" r="3" />
               </svg>
-              Nigeria's #1 Service Locator
+              Nigeria's Local-Services Marketplace
             </div>
             <div class="story-slide-counter" aria-label="Scene 1 of 9">01 / 09</div>
           </div>
@@ -273,7 +288,7 @@
           <h2 class="scene-title">Plumbing Services</h2>
           <p class="scene-sub">Find skilled plumbers near you.</p>
           <p class="scene-desc">Burst pipe emergencies, water heater installations, overhead tank pump issues, or
-            bathroom remodels. Lokator connects you with fast-response plumbers within minutes.</p>
+            bathroom remodels. PadiFix connects you with fast-response plumbers within minutes.</p>
 
           <div class="scene-tags">
             <span class="stag">🔧 Burst Pipe Repair</span>
@@ -295,7 +310,7 @@
               aria-label="Find Plumbers">
               Find Plumbers
             </a>
-            <a href="https://wa.me/2348034567890?text=Hello,%20I%20need%20a%20verified%20plumber%20via%20Lokator"
+            <a href="https://wa.me/2348034567890?text=Hello,%20I%20need%20a%20verified%20plumber%20via%20PadiFix"
               target="_blank" rel="noopener" class="btn btn-outline btn-lg wa-quick-btn"
               aria-label="WhatsApp Plumber">
               WhatsApp Plumber
@@ -840,12 +855,12 @@
     </div>
   </section>
 
-  <!-- ===== WHY LOKATOR ===== -->
-  <section class="why section-pad" id="why-lokator">
+  <!-- ===== WHY PADIFIX ===== -->
+  <section class="why section-pad" id="why-padifix">
     <div class="container">
       <div class="section-header">
-        <span class="badge-pill">Why Lokator</span>
-        <h2>Why 200,000+ Nigerians Trust Lokator</h2>
+        <span class="badge-pill">Why PadiFix</span>
+        <h2>Why 200,000+ Nigerians Trust PadiFix</h2>
         <p>We're solving the #1 problem: finding trusted skilled people near you</p>
       </div>
       <div class="why-grid">
@@ -934,7 +949,7 @@
           <span class="tp-loc">📍 Surulere, Lagos · 0.8 km</span>
           <div class="tp-actions">
             <a href="tel:+2348012345678" class="action-btn call-btn sm">📞 Call</a>
-            <a href="https://wa.me/2348012345678?text=Hello%20Adebayo,%20I%20saw%20your%20profile%20on%20Lokator"
+            <a href="https://wa.me/2348012345678?text=Hello%20Adebayo,%20I%20saw%20your%20profile%20on%20PadiFix"
               target="_blank" rel="noopener" class="action-btn wa-btn sm">💬 WhatsApp</a>
             <a href="profile.html?id=1" class="action-btn profile-btn sm">View Profile</a>
           </div>
@@ -958,7 +973,7 @@
           <span class="tp-loc">📍 Lekki, Lagos · 1.2 km</span>
           <div class="tp-actions">
             <a href="tel:+2348098765432" class="action-btn call-btn sm">📞 Call</a>
-            <a href="https://wa.me/2348098765432?text=Hello%20Chidinma,%20I%20saw%20your%20profile%20on%20Lokator"
+            <a href="https://wa.me/2348098765432?text=Hello%20Chidinma,%20I%20saw%20your%20profile%20on%20PadiFix"
               target="_blank" rel="noopener" class="action-btn wa-btn sm">💬 WhatsApp</a>
             <a href="profile.html?id=2" class="action-btn profile-btn sm">View Profile</a>
           </div>
@@ -981,7 +996,7 @@
           <span class="tp-loc">📍 Wuse, Abuja · 1.5 km</span>
           <div class="tp-actions">
             <a href="tel:+2348055667788" class="action-btn call-btn sm">📞 Call</a>
-            <a href="https://wa.me/2348055667788?text=Hello%20Fatima,%20I%20saw%20your%20profile%20on%20Lokator"
+            <a href="https://wa.me/2348055667788?text=Hello%20Fatima,%20I%20saw%20your%20profile%20on%20PadiFix"
               target="_blank" rel="noopener" class="action-btn wa-btn sm">💬 WhatsApp</a>
             <a href="profile.html?id=4" class="action-btn profile-btn sm">View Profile</a>
           </div>
@@ -1008,7 +1023,7 @@
         <div class="testi-group">
           <div class="testi-card" id="testi-1">
             <div class="testi-stars">★★★★★</div>
-            <p>"My pipe burst at 11pm. I searched 'plumber' on Lokator and called someone 0.5km from my house. He was there in 10 minutes. This app is a lifesaver!"</p>
+            <p>"My pipe burst at 11pm. I searched 'plumber' on PadiFix and called someone 0.5km from my house. He was there in 10 minutes. This app is a lifesaver!"</p>
             <div class="testi-author">
               <div class="testi-av tav1">TN</div>
               <div><strong>Taiwo Nwachukwu</strong><span>Surulere, Lagos</span></div>
@@ -1016,7 +1031,7 @@
           </div>
           <div class="testi-card testi-hl" id="testi-2">
             <div class="testi-stars">★★★★★</div>
-            <p>"I registered as a nail tech on Lokator and in my first week I got 7 new customers — all from my area. I didn't pay one naira. My business is booming!"</p>
+            <p>"I registered as a nail tech on PadiFix and in my first week I got 7 new customers — all from my area. I didn't pay one naira. My business is booming!"</p>
             <div class="testi-author">
               <div class="testi-av tav2">AB</div>
               <div><strong>Amaka Bello</strong><span>Wuse, Abuja</span></div>
@@ -1024,7 +1039,7 @@
           </div>
           <div class="testi-card" id="testi-3">
             <div class="testi-stars">★★★★★</div>
-            <p>"No more asking neighbours 'you know any good mechanic?' Lokator shows me verified people near me with ratings. Best thing since WhatsApp in Nigeria!"</p>
+            <p>"No more asking neighbours 'you know any good mechanic?' PadiFix shows me verified people near me with ratings. Best thing since WhatsApp in Nigeria!"</p>
             <div class="testi-author">
               <div class="testi-av tav3">SK</div>
               <div><strong>Sani Kabiru</strong><span>Kano</span></div>
@@ -1032,7 +1047,7 @@
           </div>
           <div class="testi-card" id="testi-4">
             <div class="testi-stars">★★★★★</div>
-            <p>"Needed an emergency electrician for our office in Ikeja when the phase dropped. Found Adebayo on Lokator, arrived in 15 mins with his multimeter. Flawless work!"</p>
+            <p>"Needed an emergency electrician for our office in Ikeja when the phase dropped. Found Adebayo on PadiFix, arrived in 15 mins with his multimeter. Flawless work!"</p>
             <div class="testi-author">
               <div class="testi-av tav1">FO</div>
               <div><strong>Femi Olatunji</strong><span>Ikeja, Lagos</span></div>
@@ -1060,7 +1075,7 @@
         <div class="testi-group" aria-hidden="true">
           <div class="testi-card">
             <div class="testi-stars">★★★★★</div>
-            <p>"My pipe burst at 11pm. I searched 'plumber' on Lokator and called someone 0.5km from my house. He was there in 10 minutes. This app is a lifesaver!"</p>
+            <p>"My pipe burst at 11pm. I searched 'plumber' on PadiFix and called someone 0.5km from my house. He was there in 10 minutes. This app is a lifesaver!"</p>
             <div class="testi-author">
               <div class="testi-av tav1">TN</div>
               <div><strong>Taiwo Nwachukwu</strong><span>Surulere, Lagos</span></div>
@@ -1068,7 +1083,7 @@
           </div>
           <div class="testi-card testi-hl">
             <div class="testi-stars">★★★★★</div>
-            <p>"I registered as a nail tech on Lokator and in my first week I got 7 new customers — all from my area. I didn't pay one naira. My business is booming!"</p>
+            <p>"I registered as a nail tech on PadiFix and in my first week I got 7 new customers — all from my area. I didn't pay one naira. My business is booming!"</p>
             <div class="testi-author">
               <div class="testi-av tav2">AB</div>
               <div><strong>Amaka Bello</strong><span>Wuse, Abuja</span></div>
@@ -1076,7 +1091,7 @@
           </div>
           <div class="testi-card">
             <div class="testi-stars">★★★★★</div>
-            <p>"No more asking neighbours 'you know any good mechanic?' Lokator shows me verified people near me with ratings. Best thing since WhatsApp in Nigeria!"</p>
+            <p>"No more asking neighbours 'you know any good mechanic?' PadiFix shows me verified people near me with ratings. Best thing since WhatsApp in Nigeria!"</p>
             <div class="testi-author">
               <div class="testi-av tav3">SK</div>
               <div><strong>Sani Kabiru</strong><span>Kano</span></div>
@@ -1084,7 +1099,7 @@
           </div>
           <div class="testi-card">
             <div class="testi-stars">★★★★★</div>
-            <p>"Needed an emergency electrician for our office in Ikeja when the phase dropped. Found Adebayo on Lokator, arrived in 15 mins with his multimeter. Flawless work!"</p>
+            <p>"Needed an emergency electrician for our office in Ikeja when the phase dropped. Found Adebayo on PadiFix, arrived in 15 mins with his multimeter. Flawless work!"</p>
             <div class="testi-author">
               <div class="testi-av tav1">FO</div>
               <div><strong>Femi Olatunji</strong><span>Ikeja, Lagos</span></div>
@@ -1117,15 +1132,15 @@
     <div class="container cta-inner">
       <div class="cta-text">
         <h2>Got a Skill? Get Found.</h2>
-        <p>Join 18,000+ providers on Lokator. List your skill for FREE and start getting customers near you — today.</p>
+        <p>Join 18,000+ providers on PadiFix. List your skill for FREE and start getting customers near you — today.</p>
         <ul class="cta-list">
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="3">
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00A859" stroke-width="3">
               <polyline points="20 6 9 17 4 12" />
             </svg> Free to register</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="3">
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00A859" stroke-width="3">
               <polyline points="20 6 9 17 4 12" />
             </svg> Get customers near your location</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="3">
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00A859" stroke-width="3">
               <polyline points="20 6 9 17 4 12" />
             </svg> Upgrade for verified badge</li>
         </ul>
@@ -1141,27 +1156,30 @@
   <footer class="footer" id="footer">
     <div class="container footer-inner">
       <div class="footer-brand">
-        <a href="index.html" class="logo" aria-label="Lokator home">
-          <div class="logo-mark"><svg width="24" height="24" viewBox="0 0 30 30" fill="none">
-              <path d="M15 2C10.03 2 6 6.03 6 11c0 6.75 9 17 9 17s9-10.25 9-17c0-4.97-4.03-9-9-9z" fill="#006B3F" />
-              <circle cx="15" cy="11" r="4" fill="#D4AF37" />
-              <circle cx="15" cy="11" r="2" fill="#fff" />
+        <a href="index.html" class="logo" aria-label="PadiFix home">
+          <div class="logo-mark"><svg width="28" height="28" viewBox="0 0 100 100" fill="none">
+              <path d="M63 67 L80 84 C82 86 85 86 87 84 C89 82 89 79 87 77 L70 60" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+              <circle cx="48" cy="46" r="32" stroke="#FFFFFF" stroke-width="7" />
+              <circle cx="28" cy="28" r="6" fill="#00A859" />
+              <circle cx="68" cy="28" r="6" fill="#00A859" />
+              <path d="M22 46 C22 36 29 34 38 34 C43 34 46 38 46 44 L44 48 L37 54 L32 50 C30 48 26 49 26 52 C26 55 30 57 33 57 L40 59 L45 53" fill="#00A859" />
+              <path d="M37 52 L43 47 C45 45 48 45 50 47 L53 50 L75 28 C78 25 83 27 82 31 L58 60 C56 62 53 62 51 60 L44 54 Z" fill="#00A859" />
             </svg></div>
-          <span class="logo-text">Lokator</span>
+          <span class="logo-text">Padi<span style="color: #00A859;">Fix</span></span>
         </a>
-        <p>Locate skilled hands near you. Nigeria's #1 service provider discovery platform.</p>
+        <p>Find Skills. Get Things Done. Nigeria's local-services marketplace connecting you with verified professionals.</p>
         <div class="social-row">
-          <a href="https://twitter.com/lokator_ng" target="_blank" rel="noopener noreferrer" class="soc-link" aria-label="Twitter"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+          <a href="https://twitter.com/padifix_ng" target="_blank" rel="noopener noreferrer" class="soc-link" aria-label="Twitter"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" stroke-width="2">
               <path
                 d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5" />
             </svg></a>
-          <a href="https://instagram.com/lokatorng" target="_blank" rel="noopener noreferrer" class="soc-link" aria-label="Instagram"><svg width="16" height="16" viewBox="0 0 24 24"
+          <a href="https://instagram.com/padifix_ng" target="_blank" rel="noopener noreferrer" class="soc-link" aria-label="Instagram"><svg width="16" height="16" viewBox="0 0 24 24"
               fill="none" stroke="currentColor" stroke-width="2">
               <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
               <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
             </svg></a>
-          <a href="https://linkedin.com/company/lokator-ng" target="_blank" rel="noopener noreferrer" class="soc-link" aria-label="LinkedIn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+          <a href="https://linkedin.com/company/padifix" target="_blank" rel="noopener noreferrer" class="soc-link" aria-label="LinkedIn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" stroke-width="2">
               <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z" />
               <rect x="2" y="9" width="4" height="12" />
@@ -1187,7 +1205,7 @@
         </div>
         <div class="fcol">
           <h4>Company</h4>
-          <a href="about.html">About</a>
+          <a href="about.html">About PadiFix</a>
           <a href="how-it-works.html">How It Works</a>
           <a href="about.html#mission">Our Mission</a>
           <a href="how-it-works.html#contact">Contact Support</a>
@@ -1203,7 +1221,7 @@
     </div>
     <div class="footer-bottom">
       <div class="container fb-inner">
-        <p>© 2026 Lokator. All rights reserved. Made with ❤️ in Nigeria 🇳🇬</p>
+        <p>© 2026 PadiFix. All rights reserved. Nigeria's Local-Services Marketplace. Made with ❤️ in Nigeria 🇳🇬</p>
       </div>
     </div>
   </footer>
@@ -1213,8 +1231,15 @@
   <aside class="mobile-nav-drawer" id="mobile-nav-drawer" aria-label="Mobile Navigation Menu" aria-hidden="true">
     <div class="drawer-header">
       <a href="index.html" class="drawer-brand">
-        <svg width="24" height="24" viewBox="0 0 30 30" fill="none"><path d="M15 2C10.03 2 6 6.03 6 11c0 6.75 9 17 9 17s9-10.25 9-17c0-4.97-4.03-9-9-9z" fill="#006B3F"/><circle cx="15" cy="11" r="4" fill="#D4AF37"/><circle cx="15" cy="11" r="2" fill="#FFFFFF"/></svg>
-        <span>Lokator<span style="color: #D4AF37;">.NG</span></span>
+        <svg width="24" height="24" viewBox="0 0 100 100" fill="none">
+          <path d="M63 67 L80 84 C82 86 85 86 87 84 C89 82 89 79 87 77 L70 60" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+          <circle cx="48" cy="46" r="32" stroke="#FFFFFF" stroke-width="7" />
+          <circle cx="28" cy="28" r="6" fill="#00A859" />
+          <circle cx="68" cy="28" r="6" fill="#00A859" />
+          <path d="M22 46 C22 36 29 34 38 34 C43 34 46 38 46 44 L44 48 L37 54 L32 50 C30 48 26 49 26 52 C26 55 30 57 33 57 L40 59 L45 53" fill="#00A859" />
+          <path d="M37 52 L43 47 C45 45 48 45 50 47 L53 50 L75 28 C78 25 83 27 82 31 L58 60 C56 62 53 62 51 60 L44 54 Z" fill="#00A859" />
+        </svg>
+        <span>Padi<span style="color: #00A859;">Fix</span></span>
       </a>
       <button type="button" class="drawer-close-btn" id="mobile-nav-close-btn" aria-label="Close navigation menu">✕</button>
     </div>
@@ -1225,7 +1250,7 @@
       <a href="dashboard.html" class="drawer-link" id="drawer-link-dash"><span class="drawer-icon">🎛️</span> <span>Dashboard</span></a>
       <a href="profile.html" class="drawer-link" id="drawer-link-profile"><span class="drawer-icon">👤</span> <span>My Profile</span></a>
       <a href="profile.html#reviews-section" class="drawer-link"><span class="drawer-icon">⭐</span> <span>Reviews & Ratings</span></a>
-      <a href="index.html#why-lokator" class="drawer-link"><span class="drawer-icon">🛡️</span> <span>Trust & Safety</span></a>
+      <a href="index.html#why-padifix" class="drawer-link"><span class="drawer-icon">🛡️</span> <span>Trust & Safety</span></a>
       <a href="index.html#faq" class="drawer-link"><span class="drawer-icon">❓</span> <span>Help Center</span></a>
       <a href="login.html" class="drawer-link" id="drawer-link-login"><span class="drawer-icon">🔑</span> <span>Provider Login</span></a>
       <a href="#logout" class="drawer-link drawer-logout" id="drawer-link-logout" style="display: none;"><span class="drawer-icon">🚪</span> <span>Logout</span></a>

@@ -103,7 +103,7 @@ const SCENES = [
     key: 'finale',
     title: '18,000+ Verified Network',
     icon: '🇳🇬',
-    proName: 'Lokator Verified Network',
+    proName: 'PadiFix Verified Network',
     proSub: '📍 Across All 36 Nigerian States',
     badgeText: '09 / 09',
     glow: 'radial-gradient(circle, rgba(34, 197, 94, 0.32) 0%, rgba(212, 175, 55, 0.32) 45%, transparent 70%)',
@@ -583,6 +583,7 @@ class ScrollDiscoveryEngine {
 // Initialize Discovery Engine on DOM Ready
 document.addEventListener('DOMContentLoaded', () => {
   window.lokatorDiscovery = new ScrollDiscoveryEngine();
+  window.padiFixDiscovery = window.lokatorDiscovery;
 });
 
 // ===== NAVBAR SCROLL EFFECT =====

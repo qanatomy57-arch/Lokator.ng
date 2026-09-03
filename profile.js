@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function showNotFound() {
-    document.title = 'Provider Not Found — Lokator.NG';
+    document.title = 'Provider Not Found — PadiFix';
     const main = document.querySelector('.profile-page-main');
     if (main) {
       main.innerHTML = `
@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // Update Page Title & Meta
-  document.title = `${provider.name || 'Artisan'} — ${provider.trade || 'Service'} | Lokator`;
+  document.title = `${provider.name || 'Artisan'} — ${provider.trade || 'Service'} | PadiFix`;
 
   // 3. Populate Breadcrumbs & Hero Header with Phase 10.9 & Phase 10.21 Discovery Context
   const queryParam = params.get('q') || '';
@@ -308,8 +308,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     btnShare.addEventListener('click', () => {
       if (navigator.share) {
         navigator.share({
-          title: `${provider.name} on Lokator`,
-          text: `Check out ${provider.name} (${provider.trade}) on Lokator.NG!`,
+          title: `${provider.name} on PadiFix`,
+          text: `Check out ${provider.name} (${provider.trade}) on PadiFix!`,
           url: window.location.href
         }).catch(() => {});
       } else {
@@ -350,7 +350,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const skillsContainer = document.getElementById('skills-container');
   if (skillsContainer && provider.skills) {
     skillsContainer.innerHTML = provider.skills.map(s => `
-      <a href="search.html?q=${encodeURIComponent(s)}" class="skill-tag-pill" title="Discover ${escapeHtml(s)} specialists on Lokator">
+      <a href="search.html?q=${encodeURIComponent(s)}" class="skill-tag-pill" title="Discover ${escapeHtml(s)} specialists on PadiFix">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
         <span>${escapeHtml(s)}</span>
       </a>
@@ -1242,7 +1242,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Fallback if AI Service is unavailable
     if (!formattedMessage) {
       const detailsLine = noteVal ? `\n📝 *Job Notes:* ${noteVal}` : '';
-      formattedMessage = `🛠️ *JOB INQUIRY VIA LOKATOR.NG*\n━━━━━━━━━━━━━━━━━━━━\n👋 *Hello ${provider.name}*,\nI found your verified profile on Lokator.NG.\n\n📋 *Service:* ${serviceVal}\n🎯 *Job Scope:* ${selectedJobScope}\n📍 *Location:* ${locVal}\n⏰ *Preferred Time:* ${urgVal}\n📦 *Materials:* ${matVal}${detailsLine}\n\n━━━━━━━━━━━━━━━━━━━━\nAre you available to take on this job? Please let me know your availability. Thank you!`;
+      formattedMessage = `🛠️ *JOB INQUIRY VIA PADIFIX*\n━━━━━━━━━━━━━━━━━━━━\n👋 *Hello ${provider.name}*,\nI found your verified profile on PadiFix.\n\n📋 *Service:* ${serviceVal}\n🎯 *Job Scope:* ${selectedJobScope}\n📍 *Location:* ${locVal}\n⏰ *Preferred Time:* ${urgVal}\n📦 *Materials:* ${matVal}${detailsLine}\n\n━━━━━━━━━━━━━━━━━━━━\nAre you available to take on this job? Please let me know your availability. Thank you!`;
     }
 
     if (waPreviewText) waPreviewText.textContent = formattedMessage;

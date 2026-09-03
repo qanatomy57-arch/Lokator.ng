@@ -3,23 +3,24 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Provider Management Dashboard — Lokator</title>
-  <meta name="description" content="Manage your artisan profile, customer leads, pricing guide, availability, and portfolio on Lokator Nigeria." />
-  <meta name="theme-color" content="#006B3F" />
+  <title>Provider Management Dashboard — PadiFix</title>
+  <meta name="description" content="Manage your artisan profile, customer leads, pricing guide, availability, and portfolio on PadiFix Nigeria." />
+  <meta name="theme-color" content="#00A859" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Lokator" />
+  <meta name="apple-mobile-web-app-title" content="PadiFix" />
   <link rel="manifest" href="manifest.json" />
-  <link rel="icon" type="image/svg+xml" href="icons/icon.svg" />
-  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="icon" type="image/png" sizes="64x64" href="favicon.png" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="style.css" />
-  <link rel="stylesheet" href="dashboard.css" />
-  <link rel="stylesheet" href="pwa.css" />
+  <link rel="stylesheet" href="style.css?v=11.00" />
+  <link rel="stylesheet" href="dashboard.css?v=11.00" />
+  <link rel="stylesheet" href="pwa.css?v=11.00" />
   <style>
     html, body { background-color: #0A0E17; color: #F9FAFB; margin: 0; padding: 0; }
   </style>
@@ -31,14 +32,17 @@
     <div class="splash-logo-wrap">
       <div class="splash-logo-ring"></div>
       <div class="splash-logo-mark">
-        <svg width="32" height="32" viewBox="0 0 30 30" fill="none">
-          <path d="M15 2C10.03 2 6 6.03 6 11c0 6.75 9 17 9 17s9-10.25 9-17c0-4.97-4.03-9-9-9z" fill="#FFFFFF"/>
-          <circle cx="15" cy="11" r="4" fill="#D4AF37"/>
-          <circle cx="15" cy="11" r="2" fill="#006B3F"/>
+        <svg width="36" height="36" viewBox="0 0 100 100" fill="none">
+          <path d="M63 67 L80 84 C82 86 85 86 87 84 C89 82 89 79 87 77 L70 60" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+          <circle cx="48" cy="46" r="32" stroke="#FFFFFF" stroke-width="7" />
+          <circle cx="28" cy="28" r="6" fill="#00A859" />
+          <circle cx="68" cy="28" r="6" fill="#00A859" />
+          <path d="M22 46 C22 36 29 34 38 34 C43 34 46 38 46 44 L44 48 L37 54 L32 50 C30 48 26 49 26 52 C26 55 30 57 33 57 L40 59 L45 53" fill="#00A859" />
+          <path d="M37 52 L43 47 C45 45 48 45 50 47 L53 50 L75 28 C78 25 83 27 82 31 L58 60 C56 62 53 62 51 60 L44 54 Z" fill="#00A859" />
         </svg>
       </div>
     </div>
-    <h2 class="splash-brand-title">Lokator<span class="splash-brand-accent">.NG</span></h2>
+    <h2 class="splash-brand-title">Padi<span class="splash-brand-accent">Fix</span></h2>
     <p class="splash-brand-subtitle">Provider Dashboard</p>
   </div>
 
@@ -46,15 +50,18 @@
   <header class="dash-topbar" id="dash-topbar">
     <div class="dash-topbar-inner">
       <div class="dash-brand-wrap">
-        <a href="index.html" class="logo dash-logo-link">
+        <a href="index.html" class="logo dash-logo-link" aria-label="PadiFix home">
           <div class="logo-mark">
-            <svg width="26" height="26" viewBox="0 0 30 30" fill="none">
-              <path d="M15 2C10.03 2 6 6.03 6 11c0 6.75 9 17 9 17s9-10.25 9-17c0-4.97-4.03-9-9-9z" fill="#006B3F"/>
-              <circle cx="15" cy="11" r="4" fill="#D4AF37"/>
-              <circle cx="15" cy="11" r="2" fill="#FFFFFF"/>
+            <svg width="26" height="26" viewBox="0 0 100 100" fill="none">
+              <path d="M63 67 L80 84 C82 86 85 86 87 84 C89 82 89 79 87 77 L70 60" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+              <circle cx="48" cy="46" r="32" stroke="#FFFFFF" stroke-width="7" />
+              <circle cx="28" cy="28" r="6" fill="#00A859" />
+              <circle cx="68" cy="28" r="6" fill="#00A859" />
+              <path d="M22 46 C22 36 29 34 38 34 C43 34 46 38 46 44 L44 48 L37 54 L32 50 C30 48 26 49 26 52 C26 55 30 57 33 57 L40 59 L45 53" fill="#00A859" />
+              <path d="M37 52 L43 47 C45 45 48 45 50 47 L53 50 L75 28 C78 25 83 27 82 31 L58 60 C56 62 53 62 51 60 L44 54 Z" fill="#00A859" />
             </svg>
           </div>
-          <span class="logo-text dash-logo-text">Lokator</span>
+          <span class="logo-text dash-logo-text">Padi<span style="color: #00A859;">Fix</span></span>
         </a>
         <span class="dash-portal-badge">Provider Portal</span>
       </div>
@@ -279,7 +286,7 @@
             <div style="flex: 1; min-width: 240px;">
               <div style="display: flex; align-items: center; gap: 8px;">
                 <span style="font-size: 1.2rem;">🤝</span>
-                <h2 style="margin: 0; font-size: 1.1rem; color: #FFFFFF;">Invite Fellow Artisans to Lokator</h2>
+                <h2 style="margin: 0; font-size: 1.1rem; color: #FFFFFF;">Invite Fellow Artisans to PadiFix</h2>
               </div>
               <p style="margin: 6px 0 0 0; color: #94A3B8; font-size: 0.85rem; line-height: 1.5;">
                 Help expand verified artisan supply in your state. Share your personal invite link with plumbers, electricians, solar installers, and skilled craftsmen.
@@ -356,7 +363,7 @@
 
             <div class="form-group">
               <label for="edit-email">Email Address</label>
-              <input type="email" id="edit-email" placeholder="dickson@lokator.ng" />
+              <input type="email" id="edit-email" placeholder="dickson@padifix.ng" />
             </div>
 
             <div class="form-group">
@@ -644,7 +651,7 @@
               <div style="background: #111827; padding: 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06);">
                 <div style="font-size: 12px; font-weight: 700; color: var(--dash-muted); text-transform: uppercase; margin-bottom: 4px;">Platform-Verified Status</div>
                 <div style="font-size: 13.5px; color: var(--dash-green); font-weight: 600;" id="dash-ver-status-text">Unverified</div>
-                <p style="font-size: 12px; color: var(--dash-muted); margin-top: 4px;">Official document/NIN review by Lokator moderation team.</p>
+                <p style="font-size: 12px; color: var(--dash-muted); margin-top: 4px;">Official document/NIN review by PadiFix moderation team.</p>
               </div>
               <div style="background: #111827; padding: 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06);">
                 <div style="font-size: 12px; font-weight: 700; color: var(--dash-muted); text-transform: uppercase; margin-bottom: 4px;">Customer Feedback</div>
@@ -655,13 +662,13 @@
           </div>
 
           <!-- Request Verification Card -->
-          <div style="background: rgba(0, 107, 63, 0.06); border: 1px solid rgba(0, 107, 63, 0.25); border-radius: 12px; padding: 22px;">
+          <div style="background: rgba(0, 168, 89, 0.06); border: 1px solid rgba(0, 168, 89, 0.25); border-radius: 12px; padding: 22px;">
             <h3 style="font-size: 16px; margin-bottom: 8px; color: #fff; display: flex; align-items: center; gap: 8px;">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#006B3F" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00A859" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
               Request Credential Verification
             </h3>
             <p style="font-size: 13px; color: var(--dash-muted); margin-bottom: 16px;">
-              Get an official verified trust badge on your public profile. Submit your identification details for review by Lokator compliance officers.
+              Get an official verified trust badge on your public profile. Submit your identification details for review by PadiFix compliance officers.
             </p>
             <form id="form-request-verification">
               <div class="dash-form-grid" style="grid-template-columns: 1fr 1fr; gap: 16px;">
@@ -701,10 +708,10 @@
             </div>
 
             <!-- Free Forever Guarantee Banner -->
-            <div style="background: rgba(0, 107, 63, 0.12); border: 1px solid rgba(0, 107, 63, 0.3); border-radius: 8px; padding: 12px 16px; margin-bottom: 18px; font-size: 12.5px; color: #E2E8F0; display: flex; align-items: center; gap: 10px;">
+            <div style="background: rgba(0, 168, 89, 0.12); border: 1px solid rgba(0, 168, 89, 0.3); border-radius: 8px; padding: 12px 16px; margin-bottom: 18px; font-size: 12.5px; color: #E2E8F0; display: flex; align-items: center; gap: 10px;">
               <span style="font-size: 18px;">✅</span>
               <div>
-                <strong>Lokator.NG Free Marketplace Guarantee:</strong> Listing, public profile, direct phone calls, direct WhatsApp chats, and client reviews will always remain 100% free with <strong>0% commission</strong>.
+                <strong>PadiFix Free Marketplace Guarantee:</strong> Listing, public profile, direct phone calls, direct WhatsApp chats, and client reviews will always remain 100% free with <strong>0% commission</strong>.
               </div>
             </div>
 
@@ -869,7 +876,7 @@
                 <span style="font-size: 1.5rem;">🌟</span>
                 <h2 style="margin: 0;">Artisan Peer Referral Center</h2>
               </div>
-              <p>Invite fellow trusted artisans to Lokator.NG. Unlock the <strong>Community Builder</strong> badge (+5% organic visibility boost).</p>
+              <p>Invite fellow trusted artisans to PadiFix. Unlock the <strong>Community Builder</strong> badge (+5% organic visibility boost).</p>
             </div>
             <span class="status-tag status-notice" id="community-builder-badge-status" style="font-size: 11px; font-weight: 700;">
               0 / 3 Referrals

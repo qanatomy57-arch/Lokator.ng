@@ -1,11 +1,11 @@
 // ============================================================================
-// LOKATOR.NG — SERVICE WORKER (sw.js)
+// PADIFIX — SERVICE WORKER (sw.js)
 // Progressive Web App Offline Shell & Resilient Runtime Caching Engine
 // ============================================================================
 
-const CACHE_VERSION = 'lokator-v10.29';
-const STATIC_CACHE = `lokator-static-${CACHE_VERSION}`;
-const RUNTIME_CACHE = `lokator-runtime-${CACHE_VERSION}`;
+const CACHE_VERSION = 'padifix-v11.00';
+const STATIC_CACHE = `padifix-static-${CACHE_VERSION}`;
+const RUNTIME_CACHE = `padifix-runtime-${CACHE_VERSION}`;
 
 // 1. APPLICATION SHELL ASSETS (Essential static bundle)
 const SHELL_ASSETS = [
@@ -135,7 +135,7 @@ self.addEventListener('fetch', (event) => {
           const cached = await caches.match(request);
           if (cached) return cached;
           const offlinePage = await caches.match('/offline.html');
-          return offlinePage || new Response('You are offline. Please reconnect to continue using Lokator.NG.', {
+          return offlinePage || new Response('You are offline. Please reconnect to continue using PadiFix.', {
             headers: { 'Content-Type': 'text/plain' }
           });
         })

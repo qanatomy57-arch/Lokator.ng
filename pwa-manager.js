@@ -191,11 +191,11 @@
           <div class="pwa-sheet-drag-handle"></div>
           <div class="pwa-sheet-header">
             <div class="pwa-sheet-icon">
-              <img src="icons/icon-192.png" alt="Lokator.NG Icon" width="56" height="56">
+              <img src="icons/icon-192.png" alt="PadiFix Icon" width="56" height="56">
             </div>
             <div class="pwa-sheet-title-group">
-              <h3 id="pwa-sheet-title">Install Lokator.NG</h3>
-              <p id="pwa-sheet-desc">Install Lokator.NG on your phone for faster access and an app-like experience.</p>
+              <h3 id="pwa-sheet-title">Install PadiFix</h3>
+              <p id="pwa-sheet-desc">Install PadiFix on your phone for faster access and an app-like experience.</p>
             </div>
           </div>
           <div class="pwa-sheet-perks">
@@ -226,10 +226,10 @@
           <div class="pwa-sheet-drag-handle"></div>
           <div class="pwa-sheet-header">
             <div class="pwa-sheet-icon">
-              <img src="icons/icon-192.png" alt="Lokator.NG Icon" width="56" height="56">
+              <img src="icons/icon-192.png" alt="PadiFix Icon" width="56" height="56">
             </div>
             <div class="pwa-sheet-title-group">
-              <h3 id="pwa-ios-title">Install Lokator.NG</h3>
+              <h3 id="pwa-ios-title">Install PadiFix</h3>
               <p>Add to your iPhone Home Screen for instant access</p>
             </div>
           </div>
@@ -606,7 +606,8 @@
     }
   };
 
-  // Expose globally under both names & auto-init on DOMContentLoaded
+  // Expose globally under all compatible names & auto-init on DOMContentLoaded
+  global.PadiFixPWA = LokatorPWA;
   global.LokatorPWA = LokatorPWA;
   global.PWAManager = LokatorPWA;
 

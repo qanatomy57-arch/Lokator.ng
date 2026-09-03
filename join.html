@@ -3,20 +3,21 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Join as a Verified Service Provider — Lokator.NG</title>
+  <title>Join as a Verified Service Provider — PadiFix</title>
   <meta name="description" content="Get discovered by customers searching for verified artisans and skilled trades across Nigeria. Free registration with direct phone & WhatsApp connections." />
-  <meta name="theme-color" content="#006B3F" />
+  <meta name="theme-color" content="#00A859" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Lokator" />
+  <meta name="apple-mobile-web-app-title" content="PadiFix" />
   <link rel="manifest" href="manifest.json" />
-  <link rel="icon" type="image/svg+xml" href="icons/icon.svg" />
-  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="icon" type="image/png" sizes="64x64" href="favicon.png" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css" />
-  <link rel="stylesheet" href="pwa.css" />
+  <link rel="stylesheet" href="style.css?v=11.00" />
+  <link rel="stylesheet" href="pwa.css?v=11.00" />
   <style>
     body {
       background-color: #0A0E17;
@@ -52,7 +53,7 @@
       transform: translateX(-50%);
       width: 400px;
       height: 250px;
-      background: radial-gradient(circle, rgba(0, 107, 63, 0.25), transparent 70%);
+      background: radial-gradient(circle, rgba(0, 168, 89, 0.25), transparent 70%);
       pointer-events: none;
     }
     .join-badge {
@@ -60,8 +61,8 @@
       align-items: center;
       gap: 6px;
       padding: 6px 14px;
-      background: rgba(0, 107, 63, 0.2);
-      border: 1px solid rgba(0, 107, 63, 0.4);
+      background: rgba(0, 168, 89, 0.2);
+      border: 1px solid rgba(0, 168, 89, 0.4);
       color: #34D399;
       border-radius: 9999px;
       font-size: 0.8rem;
@@ -103,14 +104,14 @@
       align-items: center;
       justify-content: center;
       gap: 10px;
-      background: linear-gradient(135deg, #006B3F, #059669);
+      background: linear-gradient(135deg, #00A859, #059669);
       color: #FFFFFF;
       font-weight: 800;
       font-size: 1.1rem;
       padding: 16px 36px;
       border-radius: 12px;
       text-decoration: none;
-      box-shadow: 0 8px 24px rgba(0, 107, 63, 0.4);
+      box-shadow: 0 8px 24px rgba(0, 168, 89, 0.4);
       transition: transform 0.15s ease, box-shadow 0.15s ease;
       min-height: 52px;
       border: none;
@@ -118,7 +119,7 @@
     }
     .join-cta-btn:hover {
       transform: translateY(-2px);
-      box-shadow: 0 12px 28px rgba(0, 107, 63, 0.6);
+      box-shadow: 0 12px 28px rgba(0, 168, 89, 0.6);
     }
     .join-value-grid {
       display: grid;
@@ -154,9 +155,18 @@
   <!-- Global Header -->
   <header class="header" role="banner">
     <div class="header-inner container">
-      <a href="index.html" class="logo" aria-label="Lokator Home">
-        <span class="logo-icon" aria-hidden="true">📍</span>
-        <span class="logo-text">Lokator<span class="logo-dot">.ng</span></span>
+      <a href="index.html" class="logo" aria-label="PadiFix Home">
+        <div class="logo-mark">
+          <svg width="24" height="24" viewBox="0 0 100 100" fill="none">
+            <path d="M63 67 L80 84 C82 86 85 86 87 84 C89 82 89 79 87 77 L70 60" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+            <circle cx="48" cy="46" r="32" stroke="#FFFFFF" stroke-width="7" />
+            <circle cx="28" cy="28" r="6" fill="#00A859" />
+            <circle cx="68" cy="28" r="6" fill="#00A859" />
+            <path d="M22 46 C22 36 29 34 38 34 C43 34 46 38 46 44 L44 48 L37 54 L32 50 C30 48 26 49 26 52 C26 55 30 57 33 57 L40 59 L45 53" fill="#00A859" />
+            <path d="M37 52 L43 47 C45 45 48 45 50 47 L53 50 L75 28 C78 25 83 27 82 31 L58 60 C56 62 53 62 51 60 L44 54 Z" fill="#00A859" />
+          </svg>
+        </div>
+        <span class="logo-text">Padi<span style="color: #00A859;">Fix</span></span>
       </a>
       <nav class="nav" id="main-nav" aria-label="Main Navigation">
         <a href="search.html" class="nav-link">Find Artisans</a>
@@ -170,7 +180,7 @@
   <main class="join-container" role="main">
     <div class="join-hero-card">
       <div class="join-badge">
-        <span>🇳🇬 Nigeria's Artisan Discovery Directory</span>
+        <span>🇳🇬 Nigeria's Local-Services Marketplace</span>
       </div>
 
       <h1 class="join-title">Expand Your Reach. Get Discovered Locally.</h1>
@@ -189,8 +199,8 @@
       <!-- Action Button -->
       <div>
         <a href="register.html" id="join-primary-cta" class="join-cta-btn">
-          <span>Create Your Free Listing</span>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          <span>Start Free Registration</span>
+          <span>→</span>
         </a>
       </div>
       <div style="font-size: 0.8rem; color: #64748B; margin-top: 12px;">
@@ -201,18 +211,18 @@
     <!-- Value Propositions Grid -->
     <div class="join-value-grid">
       <div class="join-value-card">
-        <div class="join-value-icon">💬</div>
-        <div class="join-value-title">Direct WhatsApp & Calls</div>
+        <div class="join-value-icon">💰</div>
+        <div class="join-value-title">100% Free & Zero Commission</div>
         <div class="join-value-desc">
-          Customers in your LGA tap to message or call you directly. No bidding tokens, escrow delays, or platform deductions.
+          Keep every Naira you earn. Customers contact you directly via call or WhatsApp. No commission deductions ever.
         </div>
       </div>
 
       <div class="join-value-card">
         <div class="join-value-icon">📍</div>
-        <div class="join-value-title">Hyper-Local Discovery</div>
+        <div class="join-value-title">LGA & State Geospatial Reach</div>
         <div class="join-value-desc">
-          Appear in searches across your specific State, Local Government Area, and surrounding neighborhoods.
+          Get discovered by clients in your exact LGA, town, and local vicinity across all 36 states and the FCT.
         </div>
       </div>
 
@@ -235,7 +245,7 @@
   </main>
 
   <footer class="footer" style="margin-top: 40px; text-align: center; padding: 24px 0; border-top: 1px solid rgba(255,255,255,0.06); font-size: 0.8rem; color: #64748B;">
-    © 2026 Lokator.NG. Nigeria's verified skills marketplace.
+    © 2026 PadiFix. Nigeria's local-services marketplace.
   </footer>
 
   <!-- Scripts -->
