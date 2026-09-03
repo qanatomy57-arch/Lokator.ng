@@ -270,12 +270,14 @@ class ScrollDiscoveryEngine {
     for (let i = 0; i < totalSlides; i++) {
       const slide = this.slides[i];
       const card = slide.querySelector('.story-card');
+      const isDominant = i === dominantIdx;
 
       if (i === baseIdx) {
         const op = nextIdx === baseIdx ? 1 : 1 - blend;
         slide.style.opacity = op.toFixed(3);
         slide.style.visibility = op > 0.002 ? 'visible' : 'hidden';
-        slide.style.pointerEvents = blend < 0.5 ? 'auto' : 'none';
+        slide.style.zIndex = isDominant ? '10' : '5';
+        slide.style.pointerEvents = isDominant ? 'auto' : 'none';
         if (!this.prefersReducedMotion) {
           slide.style.transform = `scale(${(1 + 0.02 * blend).toFixed(4)}) translate3d(0, 0, 0)`;
         } else {
@@ -283,17 +285,19 @@ class ScrollDiscoveryEngine {
         }
         if (card) {
           if (!this.prefersReducedMotion) {
-            card.style.transform = `translate3d(0, ${(-22 * blend).toFixed(1)}px, 0)`;
+            card.style.transform = `translate3d(0, ${(-16 * blend).toFixed(1)}px, 0)`;
           } else {
             card.style.transform = 'none';
           }
-          card.style.opacity = nextIdx === baseIdx ? '1' : Math.max(0, 1 - blend * 2.8).toFixed(3);
+          card.style.opacity = op.toFixed(3);
+          card.style.pointerEvents = isDominant ? 'auto' : 'none';
         }
       } else if (i === nextIdx && nextIdx !== baseIdx) {
         const op = blend;
         slide.style.opacity = op.toFixed(3);
         slide.style.visibility = op > 0.002 ? 'visible' : 'hidden';
-        slide.style.pointerEvents = blend >= 0.5 ? 'auto' : 'none';
+        slide.style.zIndex = isDominant ? '10' : '5';
+        slide.style.pointerEvents = isDominant ? 'auto' : 'none';
         if (!this.prefersReducedMotion) {
           slide.style.transform = `scale(${(0.98 + 0.02 * blend).toFixed(4)}) translate3d(0, 0, 0)`;
         } else {
@@ -301,20 +305,23 @@ class ScrollDiscoveryEngine {
         }
         if (card) {
           if (!this.prefersReducedMotion) {
-            card.style.transform = `translate3d(0, ${(22 * (1 - blend)).toFixed(1)}px, 0)`;
+            card.style.transform = `translate3d(0, ${(16 * (1 - blend)).toFixed(1)}px, 0)`;
           } else {
             card.style.transform = 'none';
           }
-          card.style.opacity = Math.max(0, (blend - 0.65) / 0.35).toFixed(3);
+          card.style.opacity = op.toFixed(3);
+          card.style.pointerEvents = isDominant ? 'auto' : 'none';
         }
       } else {
         slide.style.opacity = '0';
         slide.style.visibility = 'hidden';
+        slide.style.zIndex = '1';
         slide.style.pointerEvents = 'none';
         slide.style.transform = 'none';
         if (card) {
           card.style.transform = 'translate3d(0, 0, 0)';
           card.style.opacity = '0';
+          card.style.pointerEvents = 'none';
         }
       }
     }
@@ -450,19 +457,17 @@ class ScrollDiscoveryEngine {
     }
 
     this.videos.forEach((vid, idx) => {
-      if (Math.abs(idx - centerIdx) > 2) {
-        vid.pause();
-        vid.preload = 'none';
-      } else if (Math.abs(idx - centerIdx) <= 1) {
-        if (vid.preload === 'none') {
-          vid.preload = 'metadata';
+      if (Math.abs(idx - centerIdx) <= 2) {
+        if (vid.preload !== 'auto') {
+          vid.preload = 'auto';
         }
+      } else {
+        vid.pause();
       }
     });
   }
 
   playVideo(idx) {
-    if (this.prefersReducedMotion) return;
     if (idx < 0 || idx >= this.videos.length) return;
     const vid = this.videos[idx];
     if (!vid) return;

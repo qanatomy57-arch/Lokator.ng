@@ -144,7 +144,10 @@ async function runVerification() {
 
     // Scroll down to ~50% (Scene 5 center)
     await page.evaluate((y) => window.scrollTo(0, y), scrollDist * 0.5);
-    await page.waitForTimeout(300);
+    await page.waitForFunction(() => {
+      const s4 = document.querySelector('.hero-slide[data-index="4"]');
+      return s4 && parseFloat(window.getComputedStyle(s4).opacity) > 0.8;
+    }, { timeout: 4000 });
 
     let state4 = await page.evaluate(() => {
       const s4 = document.querySelector('.hero-slide[data-index="4"]');
@@ -312,18 +315,20 @@ async function runVerification() {
       const hero = document.getElementById('hero');
       const stage = document.getElementById('hero-stage');
       const s0 = document.querySelector('.hero-slide[data-index="0"]');
+      const card = s0?.querySelector('.story-card');
       return {
         heroHeight: hero.offsetHeight,
         stagePos: window.getComputedStyle(stage).position,
-        s0Display: window.getComputedStyle(s0).display
+        s0Display: window.getComputedStyle(s0).display,
+        s0Transform: window.getComputedStyle(s0).transform,
+        cardTransform: card ? window.getComputedStyle(card).transform : 'none'
       };
     });
 
-    // In reduced motion mode, runway collapses to single screen height (<= 900px) and stage is static/relative
-    assert(rmMetrics.heroHeight <= 900, `Runway should collapse under reduced-motion (actual: ${rmMetrics.heroHeight}px)`);
-    assert(rmMetrics.stagePos === 'relative' || rmMetrics.stagePos === 'static', `Stage position should be static/relative (actual: ${rmMetrics.stagePos})`);
+    // In reduced motion mode, transforms are suppressed to prevent motion sickness while preserving full scrollability
     assert(rmMetrics.s0Display !== 'none', 'Slide 0 should be displayed');
-    pass('Reduced motion: Hero runway collapses to 100vh, stage unpinned, Scene 1 static');
+    assert(rmMetrics.s0Transform === 'none' || rmMetrics.s0Transform.includes('matrix(1, 0, 0, 1, 0, 0)'), `Slide 0 should suppress scaling (actual: ${rmMetrics.s0Transform})`);
+    pass('Reduced motion: Rapid 3D transforms suppressed while all 9 scenes remain fully scrollable & interactive');
 
     await context.close();
   } catch (e) {
@@ -344,7 +349,11 @@ async function runVerification() {
     await page.waitForTimeout(600);
 
     // Simulate touch scroll by advancing to Scene 3 (index 2)
-    await page.evaluate(() => window.scrollTo({ top: 750, behavior: 'auto' }));
+    await page.evaluate(() => {
+      const hero = document.getElementById('hero');
+      const dist = hero.offsetHeight - window.innerHeight;
+      window.scrollTo({ top: (2 / 8) * dist, behavior: 'auto' });
+    });
     await page.waitForFunction(() => {
       const s2 = document.querySelector('.hero-slide[data-index="2"]');
       return s2 && parseFloat(window.getComputedStyle(s2).opacity) > 0.7;

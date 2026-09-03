@@ -333,13 +333,13 @@ body {
 
 @media (max-width: 768px) {
   .hero-scroll-wrapper {
-    height: 450vh;
-    height: 450svh; /* Ergonomic mobile runway (~43svh per scene = 1 comfortable thumb scroll per scene) */
+    height: 550vh;
+    height: 550svh; /* 550svh provides comfortable ~50svh per scene so all 9 scenes are cleanly explored without jumping */
     scroll-snap-type: y proximity;
   }
 
   .hero-snap-anchor {
-    height: 43.75svh;
+    height: 50svh;
   }
 }
 
@@ -2719,31 +2719,10 @@ body {
     scroll-snap-align: start;
   }
 
-  /* Hero Pinned Stage Reduced Motion: Clean static presentation without scroll trap */
-  .hero-scroll-wrapper {
-    height: auto !important;
-    min-height: 100vh !important;
-  }
-
-  .hero-stage {
-    position: relative !important;
-    height: auto !important;
-    min-height: 100vh !important;
-  }
-
+  /* Hero Pinned Stage Reduced Motion: Suppress rapid 3D transforms while keeping all 9 scenes fully scrollable & interactive */
   .hero-slide {
-    position: absolute !important;
-    inset: 0 !important;
-    display: none !important;
-    transition: none !important;
     transform: none !important;
-  }
-
-  .hero-slide.is-active {
-    display: flex !important;
-    opacity: 1 !important;
-    visibility: visible !important;
-    pointer-events: auto !important;
+    transition: opacity 0.15s ease-out !important;
   }
 
   .hero-slide > .hero-video {
@@ -2754,10 +2733,6 @@ body {
   .story-card {
     transition: none !important;
     transform: none !important;
-  }
-
-  .hero-timeline-sticky {
-    display: none !important;
   }
 }
 
