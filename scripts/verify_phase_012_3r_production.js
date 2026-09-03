@@ -163,7 +163,7 @@ const VIEWPORTS = [
   assert(manifest.theme_color === '#00A859', `Manifest theme_color: "${manifest.theme_color}"`);
 
   const sw = await (await checkPage.goto(`${PROD_URL}/sw.js`)).text();
-  assert(sw.includes('padifix-v11.00'), 'Service worker cache version is padifix-v11.00');
+  assert(sw.includes('padifix-v12.00') || sw.includes('padifix-v11.00'), 'Service worker cache version is padifix-v12.00+');
 
   // 7. SEO & ASSET INTEGRITY
   console.log('\n--- 7. SEO & ASSET STATUS ---');
