@@ -486,7 +486,7 @@ body {
   padding: 84px 0 24px;
 }
 
-/* Glassmorphism story card with 5% opacity background, crisp blur, and reinforced contrast */
+/* Glassmorphism story card with 1% opacity background, ultra-clear visibility to see videos clearly */
 .story-card {
   position: relative;
   display: flex;
@@ -495,17 +495,17 @@ body {
   gap: 12px;
   width: 100%;
   max-width: 490px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.01);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-top-color: rgba(82, 229, 140, 0.45);
   border-radius: 20px;
   padding: 24px 26px;
   touch-action: pan-y;
-  -webkit-backdrop-filter: blur(16px);
-  backdrop-filter: blur(16px);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45),
-    0 0 24px rgba(0, 107, 63, 0.12),
-    inset 0 1px 1px rgba(255, 255, 255, 0.15);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35),
+    0 0 24px rgba(0, 107, 63, 0.08),
+    inset 0 1px 1px rgba(255, 255, 255, 0.12);
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.85);
   opacity: 1;
   transform: translate3d(0, 0, 0);
@@ -2772,12 +2772,12 @@ body {
     max-width: 100%;
     padding: 18px 16px;
     border-radius: 18px;
-    background: rgba(255, 255, 255, 0.05);
-    -webkit-backdrop-filter: blur(16px);
-    backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.01);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     border-top-color: rgba(82, 229, 140, 0.45);
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), 0 0 24px rgba(0, 107, 63, 0.15);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35), 0 0 24px rgba(0, 107, 63, 0.08);
     gap: 10px;
     touch-action: pan-y;
   }

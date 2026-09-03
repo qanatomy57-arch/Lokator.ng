@@ -28,8 +28,8 @@ async function verifyLive() {
 
   while (retries > 0) {
     const swRes = await fetchUrl(`${VERCEL_URL}/sw.js?_nocache=${Date.now()}`);
-    if (swRes.body.includes('lokator-v10.23')) {
-      console.log('  ✅ [PASS] Live sw.js is updated with CACHE_VERSION: lokator-v10.23');
+    if (swRes.body.includes('lokator-v10.29')) {
+      console.log('  ✅ [PASS] Live sw.js is updated with CACHE_VERSION: lokator-v10.29');
       swVerified = true;
       break;
     }
