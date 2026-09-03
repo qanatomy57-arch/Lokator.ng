@@ -603,10 +603,10 @@
 
       // Compose structured WhatsApp message
       const lines = [
-        '🛠️ *JOB INQUIRY VIA LOKATOR.NG*',
+        '🛠️ *JOB INQUIRY VIA PADIFIX*',
         '━━━━━━━━━━━━━━━━━━━━',
         `👋 *Hello ${provName}*,`,
-        `I found your verified profile on Lokator.NG and would like to request your service.`,
+        `I found your verified profile on PadiFix and would like to request your service.`,
         '',
         `📋 *Service:* ${serviceNeeded}`,
         `🎯 *Job Scope:* ${scope}`,

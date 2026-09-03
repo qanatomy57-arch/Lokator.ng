@@ -328,7 +328,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     const btnShareProfileWa = document.getElementById('btn-share-profile-wa');
     if (btnShareProfileWa) {
-      const waProfileText = encodeURIComponent(`Hello! Check out my verified artisan profile on Lokator.NG:\n${profileUrl}`);
+      const waProfileText = encodeURIComponent(`Hello! Check out my verified artisan profile on PadiFix:\n${profileUrl}`);
       btnShareProfileWa.href = `https://api.whatsapp.com/send?text=${waProfileText}`;
     }
 
@@ -352,7 +352,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     const btnShareRefWa = document.getElementById('btn-share-ref-wa');
     if (btnShareRefWa) {
-      const waRefText = encodeURIComponent(`Join me on Lokator.NG! List your skilled craft free and get direct customer calls with zero commission:\n${refUrl}`);
+      const waRefText = encodeURIComponent(`Join me on PadiFix! List your skilled craft free and get direct customer calls with zero commission:\n${refUrl}`);
       btnShareRefWa.href = `https://api.whatsapp.com/send?text=${waRefText}`;
     }
 
@@ -1563,7 +1563,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
           // Test Mode Simulator: Automatically verify test transaction
           const confirmPayment = confirm(
-            `🚀 LOKATOR.NG PAYSTACK PILOT (TEST MODE)\n\n` +
+            `🚀 PADIFIX PAYSTACK PILOT (TEST MODE)\n\n` +
             `Product: Promoted Category Placement\n` +
             `Duration: 14 Days\n` +
             `Amount: ₦2,000.00 (200,000 kobo)\n` +

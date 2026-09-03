@@ -573,7 +573,7 @@ class ScrollDiscoveryEngine {
 
   // Smooth hero scroll release helper for downstream sections after scene 9
   releaseToDownstream() {
-    const downstreamSection = document.getElementById('browse-skills') || document.getElementById('how-it-works') || document.querySelector('.why-lokator');
+    const downstreamSection = document.getElementById('browse-skills') || document.getElementById('how-it-works') || document.querySelector('.why-padifix') || document.querySelector('.why-lokator');
     if (downstreamSection) {
       downstreamSection.scrollIntoView({ behavior: 'smooth' });
     }

@@ -621,7 +621,7 @@
           if (regex.test(lower)) {
             return {
               valid: false,
-              error: `Disallowed service keyword detected ("${word}"). Lokator only lists verified, legal artisan and trade services.`,
+              error: `Disallowed service keyword detected ("${word}"). PadiFix only lists verified, legal artisan and trade services.`,
               blockedWord: word
             };
           }
@@ -1257,7 +1257,7 @@
 
       recs.suggestions.push({
         type: 'BECOME_PROVIDER',
-        label: 'Are you an artisan? List your skill on Lokator free',
+        label: 'Are you an artisan? List your skill on PadiFix free',
         url: 'register.html'
       });
 
