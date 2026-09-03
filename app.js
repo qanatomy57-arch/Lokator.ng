@@ -151,18 +151,35 @@ class ScrollDiscoveryEngine {
     // 3. Viewport observer for hero section (pause all videos when scrolled down page)
     this.setupHeroViewportObserver();
 
-    // 4. User interaction listener to ensure mobile media autoplay permission
-    const unlockAutoplay = () => {
-      if (this.isHeroInViewport && !this.prefersReducedMotion) {
-        this.transitionVideoState(this.currentIndex, this.SCENE_STATE.ACTIVE);
-        this.bufferAdjacentVideos(this.currentIndex);
-        this.bindVideoProgress(this.currentIndex);
-      }
-      window.removeEventListener('touchstart', unlockAutoplay);
-      window.removeEventListener('click', unlockAutoplay);
+    // 4. Mobile user interaction listener to ensure mobile media autoplay permission on ALL 9 videos
+    const unlockAllVideos = () => {
+      this.videos.forEach((vid, idx) => {
+        vid.muted = true;
+        vid.defaultMuted = true;
+        vid.playsInline = true;
+        vid.loop = true;
+        if (idx === this.currentIndex) {
+          this.playVideo(idx);
+        } else {
+          const p = vid.play();
+          if (p !== undefined) {
+            p.then(() => {
+              if (idx !== this.currentIndex) {
+                vid.pause();
+              }
+            }).catch(() => {});
+          }
+        }
+      });
+      this.bufferAdjacentVideos(this.currentIndex);
+      this.bindVideoProgress(this.currentIndex);
+      window.removeEventListener('touchstart', unlockAllVideos);
+      window.removeEventListener('pointerdown', unlockAllVideos);
+      window.removeEventListener('scroll', unlockAllVideos);
     };
-    window.addEventListener('touchstart', unlockAutoplay, { passive: true, once: true });
-    window.addEventListener('click', unlockAutoplay, { passive: true, once: true });
+    window.addEventListener('touchstart', unlockAllVideos, { passive: true, once: true });
+    window.addEventListener('pointerdown', unlockAllVideos, { passive: true, once: true });
+    window.addEventListener('scroll', unlockAllVideos, { passive: true, once: true });
 
     // 5. Interactive timeline step clicks
     this.timelineSteps.forEach((btn) => {
@@ -289,7 +306,7 @@ class ScrollDiscoveryEngine {
           } else {
             card.style.transform = 'none';
           }
-          card.style.opacity = op.toFixed(3);
+          card.style.opacity = '1';
           card.style.pointerEvents = isDominant ? 'auto' : 'none';
         }
       } else if (i === nextIdx && nextIdx !== baseIdx) {
@@ -309,7 +326,7 @@ class ScrollDiscoveryEngine {
           } else {
             card.style.transform = 'none';
           }
-          card.style.opacity = op.toFixed(3);
+          card.style.opacity = '1';
           card.style.pointerEvents = isDominant ? 'auto' : 'none';
         }
       } else {
@@ -357,18 +374,15 @@ class ScrollDiscoveryEngine {
     this.videoStates[idx] = targetState;
 
     if (targetState === this.SCENE_STATE.ACTIVE) {
-      if (this.isHeroInViewport && !this.prefersReducedMotion) {
+      if (this.isHeroInViewport) {
         this.playVideo(idx);
       }
     } else if (targetState === this.SCENE_STATE.READY) {
-      this.pauseVideo(idx);
-      if (!this.isSlowConnection && !this.saveData && vid.preload === 'none') {
-        vid.preload = 'metadata';
+      if (vid.preload !== 'auto') {
+        vid.preload = 'auto';
       }
     } else if (targetState === this.SCENE_STATE.DISTANT) {
       this.pauseVideo(idx);
-      // Release decoder channels and memory for distant videos
-      vid.preload = 'none';
     }
   }
 
@@ -379,6 +393,12 @@ class ScrollDiscoveryEngine {
       slide.classList.toggle('is-active', i === newIndex);
     });
 
+    // Immediately play the active video and replay on continuous loop
+    if (this.isHeroInViewport) {
+      this.playVideo(newIndex);
+      this.pauseAllVideosExcept(newIndex);
+    }
+
     this.bufferAdjacentVideos(newIndex);
     this.bindVideoProgress(newIndex);
   }
@@ -388,23 +408,33 @@ class ScrollDiscoveryEngine {
       vid.muted = true;
       vid.defaultMuted = true;
       vid.playsInline = true;
+      vid.loop = true;
+      vid.preload = 'auto';
       vid.setAttribute('playsinline', '');
       vid.setAttribute('webkit-playsinline', '');
       vid.setAttribute('muted', '');
       vid.setAttribute('loop', '');
+      vid.setAttribute('preload', 'auto');
+
+      // Continuous loop replay handler
+      vid.addEventListener('ended', () => {
+        vid.currentTime = 0;
+        vid.play().catch(() => {});
+      });
 
       // Error handler for graceful poster image fallback
       vid.addEventListener('error', () => {
         vid.style.opacity = '0';
       }, { once: true });
 
-      // Adaptive preloading: slide 0 and 1 get auto; rest get metadata
-      if (i <= 1) {
-        vid.preload = 'auto';
-      } else {
-        vid.preload = 'none';
+      // Pause non-initial videos at boot
+      if (i !== 0) {
+        vid.pause();
       }
     });
+
+    // Start video 0 immediately
+    this.playVideo(0);
   }
 
   setupHeroViewportObserver() {
@@ -418,9 +448,7 @@ class ScrollDiscoveryEngine {
             this.activeProgressVideo.removeEventListener('timeupdate', this.activeProgressHandler);
           }
         } else {
-          if (!this.prefersReducedMotion) {
-            this.playVideo(this.currentIndex);
-          }
+          this.playVideo(this.currentIndex);
           this.bindVideoProgress(this.currentIndex);
         }
       });
@@ -475,25 +503,31 @@ class ScrollDiscoveryEngine {
     vid.muted = true;
     vid.defaultMuted = true;
     vid.playsInline = true;
+    vid.loop = true;
     vid.setAttribute('playsinline', '');
     vid.setAttribute('webkit-playsinline', '');
     vid.setAttribute('muted', '');
+    vid.setAttribute('loop', '');
 
     if (vid.preload !== 'auto') {
       vid.preload = 'auto';
     }
 
-    if (vid.paused) {
-      const playPromise = vid.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(() => {
-          vid.addEventListener('canplay', () => {
-            if (this.videoStates[idx] === this.SCENE_STATE.ACTIVE) {
-              vid.play().catch(() => {});
-            }
-          }, { once: true });
-        });
-      }
+    if (vid.ended) {
+      vid.currentTime = 0;
+    }
+
+    const playPromise = vid.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(() => {
+        const retryPlay = () => {
+          if (this.currentIndex === idx || this.videoStates[idx] === this.SCENE_STATE.ACTIVE) {
+            vid.play().catch(() => {});
+          }
+        };
+        vid.addEventListener('canplay', retryPlay, { once: true });
+        vid.addEventListener('loadeddata', retryPlay, { once: true });
+      });
     }
   }
 

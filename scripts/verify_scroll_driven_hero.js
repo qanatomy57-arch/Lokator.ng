@@ -157,14 +157,14 @@ async function runVerification() {
       return {
         s4Opacity: parseFloat(window.getComputedStyle(s4).opacity),
         s0Opacity: parseFloat(window.getComputedStyle(s0).opacity),
-        v0Preload: v0.preload,
+        v0Paused: v0.paused,
         dot4Active: tStep4.classList.contains('active')
       };
     });
     assert(state4.s4Opacity > 0.8, `Slide 4 opacity should be high at p=0.5 (actual: ${state4.s4Opacity})`);
     assert(state4.s0Opacity < 0.05, `Distant slide 0 should have 0 opacity (actual: ${state4.s0Opacity})`);
-    assert.strictEqual(state4.v0Preload, 'none', 'Distant video 0 should release preload to "none"');
-    pass('Downward scroll to p=0.500: Scene 5 active, distant Scene 1 released (preload="none")');
+    assert.strictEqual(state4.v0Paused, true, 'Distant video 0 should be paused to preserve GPU battery');
+    pass('Downward scroll to p=0.500: Scene 5 active, distant Scene 1 paused gracefully');
 
     // Scroll down to 100% (Scene 9 center)
     await page.evaluate((y) => window.scrollTo(0, y), scrollDist);
