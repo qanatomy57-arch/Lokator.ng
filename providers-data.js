@@ -102,7 +102,7 @@
           date: "02 Aug 2026",
           rating: 5,
           serviceType: "Emergency Breaker Repair",
-          comment: "My clinic's main breaker tripped on a Sunday morning. Called Adebayo via Lokator and he resolved the issue before our first appointment. Highly recommended!",
+          comment: "My clinic's main breaker tripped on a Sunday morning. Called Adebayo via PadiFix and he resolved the issue before our first appointment. Highly recommended!",
           isVerifiedCustomer: true,
           helpfulCount: 19
         },

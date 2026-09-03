@@ -387,7 +387,7 @@
     'installer', 'installers', 'services', 'service', 'man', 'lady', 'woman',
     'fix', 'fixer', 'doctor', 'expert', 'pro', 'professional', 'master',
     'hello', 'hi', 'hey', 'help', 'something', 'somebody', 'someone',
-    'what', 'who', 'how', 'lokator', 'lokatorng', 'good morning', 'good afternoon'
+    'what', 'who', 'how', 'padifix', 'padifixng', 'lokator', 'lokatorng', 'good morning', 'good afternoon'
   ]);
 
   const STOP_WORDS = new Set([
@@ -749,7 +749,7 @@
       // 4. CONFIDENCE CLASSIFICATION
       let confidence = 'UNKNOWN';
       const cleanLower = cleaned.toLowerCase();
-      const isQuestionOrGreeting = /^(?:what is|who is|who are|how to|where is|tell me about|good morning|good evening|good afternoon|hello|hi|hey|lokator|something|help)\b/i.test(normalizedQuery);
+      const isQuestionOrGreeting = /^(?:what is|who is|who are|how to|where is|tell me about|good morning|good evening|good afternoon|hello|hi|hey|padifix|lokator|something|help)\b/i.test(normalizedQuery);
 
       if (AMBIGUOUS_STANDALONE_WORDS.has(cleanLower) || cleanLower === '' || isQuestionOrGreeting || cleanLower === 'something' || cleanLower === 'help') {
         confidence = 'LOW';

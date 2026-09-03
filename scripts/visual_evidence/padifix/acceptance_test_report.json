@@ -1,0 +1,135 @@
+{
+  "results": {
+    "desktop": [
+      {
+        "viewport": "Desktop 1280x720",
+        "pass": true,
+        "title": "PadiFix — Find Skills. Get Things Done. | Nigeria's Local-Services Marketplace",
+        "overflow": false
+      },
+      {
+        "viewport": "Desktop 1440x900",
+        "pass": true,
+        "title": "PadiFix — Find Skills. Get Things Done. | Nigeria's Local-Services Marketplace",
+        "overflow": false
+      },
+      {
+        "viewport": "Desktop 1920x1080",
+        "pass": true,
+        "title": "PadiFix — Find Skills. Get Things Done. | Nigeria's Local-Services Marketplace",
+        "overflow": false
+      }
+    ],
+    "mobile": [
+      {
+        "viewport": "Mobile 320x844",
+        "pass": true,
+        "overflow": false
+      },
+      {
+        "viewport": "Mobile 360x800",
+        "pass": true,
+        "overflow": false
+      },
+      {
+        "viewport": "Mobile 390x844",
+        "pass": true,
+        "overflow": false
+      },
+      {
+        "viewport": "Mobile 412x915",
+        "pass": true,
+        "overflow": false
+      }
+    ],
+    "pages": [
+      {
+        "url": "index.html",
+        "pass": true,
+        "title": "PadiFix — Find Skills. Get Things Done. | Nigeria's Local-Services Marketplace"
+      },
+      {
+        "url": "search.html",
+        "pass": true,
+        "title": "Explore Providers — PadiFix"
+      },
+      {
+        "url": "profile.html?id=1",
+        "pass": true,
+        "title": "Provider Profile — PadiFix"
+      },
+      {
+        "url": "register.html",
+        "pass": true,
+        "title": "Register as Provider — PadiFix"
+      },
+      {
+        "url": "login.html",
+        "pass": true,
+        "title": "Provider Login — PadiFix"
+      },
+      {
+        "url": "dashboard.html",
+        "pass": true,
+        "title": "Provider Management Dashboard — PadiFix"
+      },
+      {
+        "url": "about.html",
+        "pass": true,
+        "title": "About PadiFix — Nigeria's Local-Services Marketplace"
+      },
+      {
+        "url": "how-it-works.html",
+        "pass": true,
+        "title": "How It Works — PadiFix"
+      },
+      {
+        "url": "join.html",
+        "pass": true,
+        "title": "Join as a Verified Service Provider — PadiFix"
+      },
+      {
+        "url": "privacy.html",
+        "pass": true,
+        "title": "Privacy Policy — PadiFix"
+      },
+      {
+        "url": "terms.html",
+        "pass": true,
+        "title": "Terms of Service — PadiFix"
+      },
+      {
+        "url": "offline.html",
+        "pass": true,
+        "title": "Offline — PadiFix"
+      },
+      {
+        "url": "admin.html",
+        "pass": true,
+        "title": "Trust & Safety Compliance Desk | PadiFix"
+      },
+      {
+        "url": "analytics.html",
+        "pass": true,
+        "title": "Internal Analytics & Platform Observability — PadiFix"
+      }
+    ],
+    "pwa": [
+      {
+        "check": "PWA Install Sheet Title",
+        "pass": true,
+        "value": "Install PadiFix"
+      }
+    ],
+    "evidenceScreenshots": [
+      "padifix_desktop_homepage.png",
+      "padifix_mobile_homepage.png",
+      "padifix_search.png",
+      "padifix_provider_profile.png",
+      "padifix_registration.png",
+      "padifix_login.png",
+      "padifix_pwa_install_surface.png"
+    ]
+  },
+  "consoleErrors": []
+}

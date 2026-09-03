@@ -1183,7 +1183,7 @@
 
         const mockUser = {
           id: `usr_demo_${provider.id}`,
-          email: `${provider.firstName.toLowerCase()}.${provider.lastName.toLowerCase()}@lokator.ng`.replace(/\s+/g, ''),
+          email: `${provider.firstName.toLowerCase()}.${provider.lastName.toLowerCase()}@padifix.ng`.replace(/\s+/g, ''),
           app_metadata: { provider: 'demo', role: 'provider' },
           user_metadata: {
             first_name: provider.firstName,
@@ -1653,7 +1653,7 @@
       return providers.map(p => {
         const copy = { ...p };
         copy.id = Number(p.id);
-        copy.name = p.name || `${p.first_name || ''} ${p.last_name || ''}`.trim() || 'Lokator Provider';
+        copy.name = p.name || `${p.first_name || ''} ${p.last_name || ''}`.trim() || 'PadiFix Provider';
         copy.trade = p.trade || p.trade_title || p.service || p.category || 'Professional Artisan';
         copy.rating = Number(p.rating != null ? p.rating : 5.0);
         copy.reviewsCount = Number(p.reviewsCount != null ? p.reviewsCount : (p.reviews_count || 0));
@@ -1914,20 +1914,20 @@
         if (rawCategory && rawCategory !== 'other') {
           const catVal = global.ServiceModerator.validateSkill(rawCategory);
           if (!catVal.valid) {
-            throw new Error(catVal.error || 'This service category is not permitted on Lokator.');
+            throw new Error(catVal.error || 'This service category is not permitted on PadiFix.');
           }
         }
         for (const sk of skillsArray) {
           const skVal = global.ServiceModerator.validateSkill(sk);
           if (!skVal.valid) {
-            throw new Error(skVal.error || 'This service category is not permitted on Lokator.');
+            throw new Error(skVal.error || 'This service category is not permitted on PadiFix.');
           }
         }
         if (formData.trade) {
           const cleanTrade = cleanSkillText(formData.trade);
           const tradeVal = global.ServiceModerator.validateSkill(cleanTrade);
           if (!tradeVal.valid) {
-            throw new Error(tradeVal.error || 'This service category is not permitted on Lokator.');
+            throw new Error(tradeVal.error || 'This service category is not permitted on PadiFix.');
           }
         }
       }
@@ -2456,14 +2456,14 @@
         if (updateData.trade || updateData.trade_title) {
           const tVal = global.ServiceModerator.validateSkill(cleanStr(updateData.trade || updateData.trade_title));
           if (!tVal.valid) {
-            throw new Error(tVal.error || 'This service category is not permitted on Lokator.');
+            throw new Error(tVal.error || 'This service category is not permitted on PadiFix.');
           }
         }
         if (Array.isArray(updateData.skills)) {
           for (const s of updateData.skills) {
             const sVal = global.ServiceModerator.validateSkill(cleanStr(s));
             if (!sVal.valid) {
-              throw new Error(sVal.error || 'This service category is not permitted on Lokator.');
+              throw new Error(sVal.error || 'This service category is not permitted on PadiFix.');
             }
           }
         }
@@ -2595,7 +2595,7 @@
         for (const s of skillsArray) {
           const val = global.ServiceModerator.validateSkill(s);
           if (!val.valid) {
-            throw new Error(val.error || 'This service category is not permitted on Lokator.');
+            throw new Error(val.error || 'This service category is not permitted on PadiFix.');
           }
         }
       }
@@ -2940,7 +2940,7 @@
         } else if (p.verification_status === 'pending' || p.verification_requested) {
           p.badge_title = 'Pending Verification';
         } else {
-          p.badge_title = newPlan === 'premium' ? 'Lokator Premium Partner' : (newPlan === 'verified' ? 'Featured Artisan' : 'Self-Reported Profile');
+          p.badge_title = newPlan === 'premium' ? 'PadiFix Premium Partner' : (newPlan === 'verified' ? 'Featured Artisan' : 'Self-Reported Profile');
         }
         setLocalStore(DB_STORE_KEY, providers);
       }
@@ -9006,7 +9006,7 @@
         const tradeTitle = primaryArtisan.trade_title || primaryArtisan.category || category.toUpperCase();
         const locDetail = neighborhood ? `${neighborhood}, ${lga}, ${state}` : `${lga}, ${state}`;
 
-        const msg = `Hello ${artisanName}! 🛠️\nI found your verified profile on Lokator.NG.\n\n📋 Job Request: ${tradeTitle}\n📍 Location: ${locDetail}\n⏰ Urgency: ${urgencyText}\n📝 Task: ${description}\n\nAre you available for a quick inspection or estimate?`;
+        const msg = `Hello ${artisanName}! 🛠️\nI found your verified profile on PadiFix.\n\n📋 Job Request: ${tradeTitle}\n📍 Location: ${locDetail}\n⏰ Urgency: ${urgencyText}\n📝 Task: ${description}\n\nAre you available for a quick inspection or estimate?`;
         whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`;
       }
 
@@ -9148,7 +9148,7 @@
 
       const baseUrl = (typeof window !== 'undefined' && window.location && window.location.origin ? window.location.origin : 'https://lokator-ng.vercel.app');
       const inviteUrl = `${baseUrl}/register.html?ref=${refCode}`;
-      const inviteMessage = `Join me on Lokator.NG! List your artisan services for free and get direct customer calls and WhatsApp bookings in our neighborhood.\n\nRegister free here: ${inviteUrl}`;
+      const inviteMessage = `Join me on PadiFix! List your artisan services for free and get direct customer calls and WhatsApp bookings in our neighborhood.\n\nRegister free here: ${inviteUrl}`;
 
       return {
         referral_code: refCode,

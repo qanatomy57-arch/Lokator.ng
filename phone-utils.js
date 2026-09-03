@@ -198,9 +198,9 @@
       const hasValidLocation = location && !/^(undefined|null|all|your area|nigeria)$/i.test(location);
 
       if (hasValidLocation) {
-        return `${greetingName}, I found your verified profile on Lokator.NG. Are you available for ${cleanService} around ${location}?`;
+        return `${greetingName}, I found your verified profile on PadiFix. Are you available for ${cleanService} around ${location}?`;
       } else {
-        return `${greetingName}, I found your verified profile on Lokator.NG. Are you available for ${cleanService}?`;
+        return `${greetingName}, I found your verified profile on PadiFix. Are you available for ${cleanService}?`;
       }
     },
 

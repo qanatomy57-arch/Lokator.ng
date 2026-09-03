@@ -269,6 +269,7 @@
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = LokatorDiscoveryOrchestrator;
   } else {
+    global.PadiFixDiscoveryOrchestrator = LokatorDiscoveryOrchestrator;
     global.LokatorDiscoveryOrchestrator = LokatorDiscoveryOrchestrator;
   }
 })(typeof window !== 'undefined' ? window : global);
