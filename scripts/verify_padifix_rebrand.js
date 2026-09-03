@@ -31,6 +31,18 @@ const fs = require('fs');
     }
   }
 
+  async function safeGoto(url) {
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 12000 });
+        return;
+      } catch (err) {
+        if (attempt === 3) throw err;
+        await page.waitForTimeout(400);
+      }
+    }
+  }
+
   // 1. MANIFEST.JSON VALIDATION
   console.log('--- 1. WEB APP MANIFEST VALIDATION ---');
   try {
@@ -46,7 +58,7 @@ const fs = require('fs');
 
   // 2. INDEX.HTML VERIFICATION (DESKTOP)
   console.log('\n--- 2. INDEX.HTML (DESKTOP 1280x800) ---');
-  await page.goto(`${baseUrl}/index.html`, { waitUntil: 'domcontentloaded' });
+  await safeGoto(`${baseUrl}/index.html`);
   const indexTitle = await page.title();
   assert(indexTitle.includes('PadiFix'), `Title contains PadiFix: "${indexTitle}"`);
   assert(indexTitle.includes('Find Skills. Get Things Done.'), `Title contains tagline: "${indexTitle}"`);
@@ -71,8 +83,8 @@ const fs = require('fs');
   // 3. INDEX.HTML (MOBILE 390x844 iPhone 14)
   console.log('\n--- 3. INDEX.HTML (MOBILE 390x844) ---');
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto(`${baseUrl}/index.html`, { waitUntil: 'domcontentloaded' });
-  await page.waitForTimeout(500);
+  await safeGoto(`${baseUrl}/index.html`);
+  await page.waitForTimeout(400);
 
   const heroTitle = await page.locator('.hero-title').first().innerText();
   assert(heroTitle.includes('Professionals') || heroTitle.includes('Find Trusted') || heroTitle.includes('PadiFix'), `Hero title active: "${heroTitle}"`);
@@ -83,7 +95,7 @@ const fs = require('fs');
   // 4. SEARCH.HTML VERIFICATION
   console.log('\n--- 4. SEARCH.HTML VERIFICATION ---');
   await page.setViewportSize({ width: 1280, height: 800 });
-  await page.goto(`${baseUrl}/search.html`, { waitUntil: 'domcontentloaded' });
+  await safeGoto(`${baseUrl}/search.html`);
   const searchTitle = await page.title();
   assert(searchTitle.includes('PadiFix'), `Search title contains PadiFix: "${searchTitle}"`);
   await page.screenshot({ path: path.join(__dirname, 'padifix_search_page.png') });
@@ -91,8 +103,8 @@ const fs = require('fs');
 
   // 5. PROFILE.HTML VERIFICATION
   console.log('\n--- 5. PROFILE.HTML VERIFICATION ---');
-  await page.goto(`${baseUrl}/profile.html?id=1`, { waitUntil: 'domcontentloaded' });
-  await page.waitForTimeout(600);
+  await safeGoto(`${baseUrl}/profile.html?id=1`);
+  await page.waitForTimeout(400);
   const profileTitle = await page.title();
   assert(profileTitle.includes('PadiFix'), `Profile title contains PadiFix: "${profileTitle}"`);
   await page.screenshot({ path: path.join(__dirname, 'padifix_provider_profile.png') });
@@ -100,7 +112,7 @@ const fs = require('fs');
 
   // 6. REGISTER.HTML VERIFICATION
   console.log('\n--- 6. REGISTER.HTML VERIFICATION ---');
-  await page.goto(`${baseUrl}/register.html`, { waitUntil: 'domcontentloaded' });
+  await safeGoto(`${baseUrl}/register.html`);
   const regTitle = await page.title();
   assert(regTitle.includes('PadiFix'), `Register title contains PadiFix: "${regTitle}"`);
   const regHeroSub = await page.locator('.reg-hero-text p').first().innerText();
@@ -132,7 +144,7 @@ const fs = require('fs');
         }));
       });
     }
-    await page.goto(`${baseUrl}/${item.url}`, { waitUntil: 'domcontentloaded' });
+    await safeGoto(`${baseUrl}/${item.url}`);
     await page.waitForTimeout(300);
     const title = await page.title();
     assert(title.includes(item.expected), `${item.url} title contains "${item.expected}": "${title}"`);

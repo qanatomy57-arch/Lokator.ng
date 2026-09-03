@@ -155,9 +155,22 @@ if (occurrences.PUBLIC.length > 0) {
   console.log('✅ ZERO UNINTENDED PUBLIC LOKATOR REFERENCES FOUND!');
 }
 
+const summary = {
+  counts: {
+    PUBLIC: occurrences.PUBLIC.length,
+    TECHNICAL: occurrences.TECHNICAL.length,
+    HISTORICAL: occurrences.HISTORICAL.length,
+    INFRASTRUCTURE: occurrences.INFRASTRUCTURE.length,
+    INTENTIONAL: occurrences.INTENTIONAL.length
+  },
+  publicOccurrences: occurrences.PUBLIC,
+  infrastructureOccurrences: occurrences.INFRASTRUCTURE
+};
+
 fs.writeFileSync(
   path.join(__dirname, 'brand_audit_summary.json'),
-  JSON.stringify(occurrences, null, 2),
+  JSON.stringify(summary, null, 2),
   'utf8'
 );
 console.log('Saved machine-readable audit to scripts/brand_audit_summary.json');
+process.exit(occurrences.PUBLIC.length === 0 ? 0 : 1);
