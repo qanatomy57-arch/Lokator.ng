@@ -15,7 +15,9 @@ const assert = require('assert');
     serviceWorkers: 'block'
   });
   const page = await context.newPage();
-  await page.goto('http://localhost:8080', { waitUntil: 'domcontentloaded' });
+  const targetUrl = process.env.TEST_URL || 'http://localhost:8080';
+  console.log(`Testing target URL: ${targetUrl}`);
+  await page.goto(targetUrl, { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(600);
 
   const scrollDistance = await page.evaluate(() => document.getElementById('hero').offsetHeight - window.innerHeight);
