@@ -3,7 +3,7 @@
 // Progressive Web App Offline Shell & Resilient Runtime Caching Engine
 // ============================================================================
 
-const CACHE_VERSION = 'lokator-v10.25';
+const CACHE_VERSION = 'lokator-v10.26';
 const STATIC_CACHE = `lokator-static-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `lokator-runtime-${CACHE_VERSION}`;
 

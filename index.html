@@ -19,7 +19,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
     rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=10.25" />
+  <link rel="stylesheet" href="style.css?v=10.26" />
   <link rel="stylesheet" href="pwa.css" />
   <style>
     html, body { background-color: #0A0E17; color: #F9FAFB; margin: 0; padding: 0; }
@@ -114,13 +114,6 @@
       </div>
     </nav>
   </div>
-
-  <!-- Mobile Hero Scene Indicator Pill & Quick Step Controls -->
-  <nav class="hero-mobile-nav" id="hero-mobile-nav" aria-label="Mobile scene controls">
-    <button type="button" class="hero-mobile-nav-btn" id="hero-mobile-prev" aria-label="Previous scene" title="Previous scene">&#8592;</button>
-    <span class="hero-mobile-counter" id="hero-mobile-counter"><span class="current-num">1</span> / 9</span>
-    <button type="button" class="hero-mobile-nav-btn" id="hero-mobile-next" aria-label="Next scene" title="Next scene">&#8594;</button>
-  </nav>
 
     <!-- SLIDE 0: MASTER MARKETPLACE -->
     <div class="hero-slide is-active" data-index="0">
@@ -591,6 +584,19 @@
     </div>
 
     </div><!-- /#hero-stage -->
+
+    <!-- 9 Vertical Snap Anchors for Native Momentum Detents -->
+    <div class="hero-scroll-anchors" aria-hidden="true">
+      <div class="hero-snap-anchor" data-step="0"></div>
+      <div class="hero-snap-anchor" data-step="1"></div>
+      <div class="hero-snap-anchor" data-step="2"></div>
+      <div class="hero-snap-anchor" data-step="3"></div>
+      <div class="hero-snap-anchor" data-step="4"></div>
+      <div class="hero-snap-anchor" data-step="5"></div>
+      <div class="hero-snap-anchor" data-step="6"></div>
+      <div class="hero-snap-anchor" data-step="7"></div>
+      <div class="hero-snap-anchor" data-step="8"></div>
+    </div>
   </section>
 
   <!-- ===== PHASE 10.8 BROWSE-FIRST NIGERIA SKILLS MARKETPLACE ===== -->
@@ -1236,7 +1242,7 @@
   <script src="categories.js"></script>
   <script src="providers-data.js"></script>
   <script src="supabase-client.js"></script>
-  <script src="app.js?v=10.25"></script>
+  <script src="app.js?v=10.26"></script>
   <script src="pwa-manager.js"></script>
   <script>
     if ('serviceWorker' in navigator) {

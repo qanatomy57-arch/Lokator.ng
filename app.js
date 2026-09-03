@@ -182,10 +182,7 @@ class ScrollDiscoveryEngine {
       });
     }
 
-    // 7. Mobile direct touch swipe & quick pill navigation
-    this.setupMobileTouchEngine();
-
-    // 8. Initial render pass & active state on slide 0
+    // 7. Initial render pass & active state on slide 0
     this.renderProgress(0);
     this.bindVideoProgress(0);
     if (!this.prefersReducedMotion) {
@@ -375,11 +372,6 @@ class ScrollDiscoveryEngine {
       slide.classList.toggle('is-active', i === newIndex);
     });
 
-    const mobileCounter = document.getElementById('hero-mobile-counter');
-    if (mobileCounter) {
-      mobileCounter.innerHTML = `<span class="current-num">${newIndex + 1}</span> / ${this.slides.length}`;
-    }
-
     this.bufferAdjacentVideos(newIndex);
     this.bindVideoProgress(newIndex);
   }
@@ -538,105 +530,6 @@ class ScrollDiscoveryEngine {
       top: targetScroll,
       behavior: 'smooth'
     });
-  }
-
-  setupMobileTouchEngine() {
-    let touchStartY = 0;
-    let touchStartX = 0;
-    let touchStartTime = 0;
-    let isSwiping = false;
-    let hasMoved = false;
-
-    const heroStage = document.getElementById('hero-stage');
-    if (!heroStage) return;
-
-    heroStage.addEventListener('touchstart', (e) => {
-      if (e.touches.length === 1) {
-        touchStartY = e.touches[0].clientY;
-        touchStartX = e.touches[0].clientX;
-        touchStartTime = Date.now();
-        isSwiping = true;
-        hasMoved = false;
-      }
-    }, { passive: true });
-
-    heroStage.addEventListener('touchmove', (e) => {
-      if (isSwiping && e.touches.length === 1) {
-        const dY = Math.abs(e.touches[0].clientY - touchStartY);
-        if (dY > 10) {
-          hasMoved = true;
-        }
-      }
-    }, { passive: true });
-
-    heroStage.addEventListener('click', (e) => {
-      if (hasMoved) {
-        e.preventDefault();
-        e.stopPropagation();
-        hasMoved = false;
-      }
-    }, true);
-
-    heroStage.addEventListener('touchend', (e) => {
-      if (!isSwiping || e.changedTouches.length === 0) return;
-      isSwiping = false;
-
-      const touchEndY = e.changedTouches[0].clientY;
-      const touchEndX = e.changedTouches[0].clientX;
-      const deltaY = touchStartY - touchEndY;
-      const deltaX = touchStartX - touchEndX;
-      const deltaTime = Date.now() - touchStartTime;
-
-      // Only handle intentional vertical flicks (swipe threshold: 40px, time < 550ms)
-      if (Math.abs(deltaX) > Math.abs(deltaY) || Math.abs(deltaY) < 40 || deltaTime > 550) {
-        return;
-      }
-
-      if (deltaY > 0) {
-        // Swiped UP -> Advance to next video
-        if (this.currentIndex < this.slides.length - 1) {
-          this.scrollToStep(this.currentIndex + 1);
-        } else {
-          // At Scene 9 -> Release naturally into downstream
-          this.releaseToDownstream();
-        }
-      } else {
-        // Swiped DOWN -> Go back to previous video
-        if (this.currentIndex > 0) {
-          this.scrollToStep(this.currentIndex - 1);
-        } else {
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-      }
-    }, { passive: true });
-
-    // Mobile Navigation Pill Previous/Next buttons
-    const prevBtn = document.getElementById('hero-mobile-prev');
-    const nextBtn = document.getElementById('hero-mobile-next');
-
-    if (prevBtn) {
-      prevBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (this.currentIndex > 0) {
-          this.scrollToStep(this.currentIndex - 1);
-        } else {
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-      });
-    }
-
-    if (nextBtn) {
-      nextBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (this.currentIndex < this.slides.length - 1) {
-          this.scrollToStep(this.currentIndex + 1);
-        } else {
-          this.releaseToDownstream();
-        }
-      });
-    }
   }
 
   // Smooth hero scroll release helper for downstream sections after scene 9
