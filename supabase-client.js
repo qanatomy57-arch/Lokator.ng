@@ -9146,7 +9146,7 @@
       const isCommunityBuilder = totalRefs >= 3;
       const toNextTier = Math.max(0, 3 - totalRefs);
 
-      const baseUrl = (typeof window !== 'undefined' && window.location && window.location.origin ? window.location.origin : 'https://lokator-ng.vercel.app');
+      const baseUrl = (typeof window !== 'undefined' && window.location && window.location.origin ? window.location.origin : 'https://padifix.vercel.app');
       const inviteUrl = `${baseUrl}/register.html?ref=${refCode}`;
       const inviteMessage = `Join me on PadiFix! List your artisan services for free and get direct customer calls and WhatsApp bookings in our neighborhood.\n\nRegister free here: ${inviteUrl}`;
 

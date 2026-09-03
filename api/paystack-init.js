@@ -119,7 +119,7 @@ module.exports = async (req, res) => {
     // If Paystack Secret Key is configured, call Paystack API
     if (secretKey) {
       const providerEmail = email || `artisan_${provider_id}@padifix.ng`;
-      const origin = req.headers.origin || 'https://lokator-ng.vercel.app';
+      const origin = req.headers.origin || 'https://padifix.vercel.app';
       const callbackUrl = `${origin}/dashboard.html?payment_ref=${reference}&payment_status=callback`;
 
       const paystackRes = await postJson('https://api.paystack.co/transaction/initialize', {

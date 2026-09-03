@@ -1,0 +1,13 @@
+# ==============================================================================
+# PadiFix — Nigeria's Local-Services Marketplace
+# https://padifix.vercel.app
+# ==============================================================================
+
+User-agent: *
+Allow: /
+Disallow: /admin.html
+Disallow: /dashboard.html
+Disallow: /analytics.html
+
+# XML Sitemap
+Sitemap: https://padifix.vercel.app/sitemap.xml
