@@ -101,7 +101,8 @@ async function run() {
       deviceScaleFactor: 1
     });
     const p = await ctx.newPage();
-    await p.goto(`${BASE_URL}/index.html`, { waitUntil: 'networkidle' });
+    await p.goto(`${BASE_URL}/index.html`, { waitUntil: 'load', timeout: 30000 });
+    await p.waitForTimeout(1000);
 
     // Header logo verification
     const headerLogo = p.locator('#logo-link img.brand-logo-img').first();
@@ -131,7 +132,8 @@ async function run() {
 
   for (const target of PAGES_TO_TEST) {
     const p = await desktopCtx.newPage();
-    const res = await p.goto(`${BASE_URL}${target.path}`, { waitUntil: 'networkidle' });
+    const res = await p.goto(`${BASE_URL}${target.path}`, { waitUntil: 'load', timeout: 30000 });
+    await p.waitForTimeout(1000);
     assert(res.status() === 200, `${target.name}: HTTP 200 OK`);
 
     // Verify logo link
