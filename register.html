@@ -421,14 +421,14 @@
                 <div class="preview-meta-wrap">
                   <div class="preview-provider-name">
                     <span id="prev-name">Adebayo Okafor</span>
-                    <span class="profile-verified-pill" style="font-size: 10px; padding: 2px 6px;">✓ Verified Pro</span>
+                    <span class="profile-verified-pill unverified" id="prev-badge" style="font-size: 10px; padding: 2px 6px;">ℹ️ Self-Reported Profile</span>
                   </div>
                   <div class="preview-trade-title" id="prev-trade">Electrician & Solar Installer</div>
                   <div class="preview-loc-pill">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
                     <span id="prev-location">Surulere, Lagos</span>
                     <span>•</span>
-                    <span style="color: #D4AF37; font-weight: 700;">★ 5.0 (New Listing)</span>
+                    <span id="prev-rating" style="color: #94A3B8; font-weight: 600;">★ New Listing (0 reviews)</span>
                   </div>
                 </div>
               </div>
@@ -605,6 +605,7 @@
     // Track provider onboarding funnel initiation
     if (typeof LokatorTelemetry !== 'undefined') {
       LokatorTelemetry.trackEvent('provider_onboarding_started', { step: 1, total_steps: totalSteps });
+      LokatorTelemetry.trackEvent('provider_join_started', { step: 1, source: 'registration_wizard' });
     }
 
     function getPhoneEngine() {
@@ -1921,6 +1922,12 @@
               trade_slug: serviceSlug,
               has_location: Boolean(userCoords),
               referred_by: refParam || null
+            });
+            LokatorTelemetry.trackEvent('provider_registration_completed', {
+              trade_slug: serviceSlug,
+              provider_id: registered ? registered.id : null,
+              has_location: Boolean(userCoords),
+              source: acquisitionAttribution ? acquisitionAttribution.source : 'organic'
             });
           }
 

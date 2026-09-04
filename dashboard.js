@@ -283,32 +283,93 @@ document.addEventListener('DOMContentLoaded', async () => {
     const ratingEl = document.getElementById('kpi-rating');
     const ratingBadge = document.getElementById('ov-rating-badge');
 
-    if (viewsEl) viewsEl.textContent = `${currentMetrics.profileViewsThisMonth || 24}`;
-    if (leadsEl) leadsEl.textContent = `${currentMetrics.leadsThisMonth || 8}`;
-    if (jobsEl) jobsEl.textContent = `${currentMetrics.completedJobs}+`;
-    if (ratingEl) ratingEl.textContent = currentMetrics.rating ? currentMetrics.rating.toFixed(1) : '4.8';
-    if (ratingBadge) ratingBadge.textContent = `★ ${currentMetrics.rating ? currentMetrics.rating.toFixed(1) : '4.8'}`;
+    const profileViews = currentMetrics.profileViewsThisMonth != null ? currentMetrics.profileViewsThisMonth : 0;
+    const directLeads = currentMetrics.leadsThisMonth != null ? currentMetrics.leadsThisMonth : 0;
+    const completedJobs = currentMetrics.completedJobs != null ? currentMetrics.completedJobs : 0;
+    const hasReviews = currentMetrics.reviewsCount > 0;
+
+    if (viewsEl) viewsEl.textContent = `${profileViews}`;
+    if (leadsEl) leadsEl.textContent = `${directLeads}`;
+    if (jobsEl) jobsEl.textContent = `${completedJobs}+`;
+    if (ratingEl) ratingEl.textContent = hasReviews && currentMetrics.rating ? Number(currentMetrics.rating).toFixed(1) : 'New';
+    if (ratingBadge) ratingBadge.textContent = hasReviews && currentMetrics.rating ? `★ ${Number(currentMetrics.rating).toFixed(1)}` : '★ New Listing';
+
+    // Render Progressive Profile Completeness Widget
+    const compData = currentMetrics.completenessData || ((typeof PadiFixMonetization !== 'undefined' && PadiFixMonetization.calculateProfileCompleteness)
+      ? PadiFixMonetization.calculateProfileCompleteness(currentProvider)
+      : { score: 80, percentage: '80%', missingItems: [], isComplete: true });
+
+    const compBadge = document.getElementById('dash-completeness-badge');
+    const compFill = document.getElementById('dash-completeness-fill');
+    const compStatus = document.getElementById('dash-completeness-status-pill');
+    const missingGrid = document.getElementById('dash-missing-items-grid');
+
+    if (compBadge) compBadge.textContent = compData.percentage;
+    if (compFill) compFill.style.width = compData.percentage;
+    if (compStatus) {
+      compStatus.textContent = compData.isComplete ? '✓ Ready for High Discovery' : 'Action Recommended';
+      compStatus.style.color = compData.isComplete ? '#34D399' : '#F59E0B';
+    }
+
+    if (missingGrid) {
+      if (compData.missingItems.length === 0) {
+        missingGrid.innerHTML = `
+          <div style="font-size: 0.85rem; color: #34D399; display: flex; align-items: center; gap: 6px;">
+            <span>✨</span> All core profile attributes completed. Your listing is fully optimized for local discovery!
+          </div>
+        `;
+      } else {
+        missingGrid.innerHTML = compData.missingItems.map(item => `
+          <button type="button" class="btn btn-outline btn-sm dash-missing-item-btn" data-target-tab="${escapeHtml(item.actionTab)}" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.8rem; padding: 6px 12px; border-radius: 8px; border-color: rgba(255,255,255,0.15); color: #F1F5F9; cursor: pointer; background: rgba(255,255,255,0.03);">
+            <span>+</span> <span>${escapeHtml(item.label)}</span>
+          </button>
+        `).join('');
+
+        missingGrid.querySelectorAll('.dash-missing-item-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const tab = btn.getAttribute('data-target-tab');
+            if (tab && typeof switchTab === 'function') {
+              switchTab(tab);
+            }
+          });
+        });
+      }
+    }
+
+    // Telemetry for provider analytics review
+    if (typeof LokatorTelemetry !== 'undefined') {
+      LokatorTelemetry.trackEvent('provider_analytics_viewed', {
+        providerId: currentProvider.id,
+        views: profileViews,
+        leads: directLeads,
+        completeness: compData.score
+      });
+    }
 
     renderRecentLeads();
 
     // Render Rating Bars
     const ratingBarsEl = document.getElementById('ov-rating-bars');
     if (ratingBarsEl) {
-      const dist = currentMetrics.ratingDistribution || { 5: 120, 4: 8, 3: 0, 2: 0, 1: 0 };
-      const totalReviews = currentMetrics.reviewsCount || 128;
+      const dist = currentMetrics.ratingDistribution || { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+      const totalReviews = currentMetrics.reviewsCount || 0;
       let barsHtml = '';
-      for (let star = 5; star >= 1; star--) {
-        const count = dist[star] || (star === 5 ? 120 : (star === 4 ? 8 : 0));
-        const pct = Math.round((count / (totalReviews || 1)) * 100);
-        barsHtml += `
-          <div class="rating-bar-row">
-            <span class="star-label">${star} Stars</span>
-            <div class="bar-track">
-              <div class="bar-fill" style="width: ${pct}%;"></div>
+      if (totalReviews === 0) {
+        barsHtml = '<div style="font-size: 0.85rem; color: #94A3B8; padding: 12px 0;">No customer reviews received yet. Share your profile link with past clients to collect authentic verified reviews.</div>';
+      } else {
+        for (let star = 5; star >= 1; star--) {
+          const count = dist[star] || 0;
+          const pct = Math.round((count / (totalReviews || 1)) * 100);
+          barsHtml += `
+            <div class="rating-bar-row">
+              <span class="star-label">${star} Stars</span>
+              <div class="bar-track">
+                <div class="bar-fill" style="width: ${pct}%;"></div>
+              </div>
+              <span class="count-label">${count}</span>
             </div>
-            <span class="count-label">${count}</span>
-          </div>
-        `;
+          `;
+        }
       }
       ratingBarsEl.innerHTML = barsHtml;
     }
@@ -324,12 +385,26 @@ document.addEventListener('DOMContentLoaded', async () => {
       btnCopy.onclick = (e) => {
         e.preventDefault();
         copyToClipboard(profileUrl, 'Profile share link copied to clipboard!');
+        if (typeof LokatorTelemetry !== 'undefined') {
+          LokatorTelemetry.trackEvent('provider_share_clicked', {
+            providerId: currentProvider.id,
+            channel: 'copy_link'
+          });
+        }
       };
     }
     const btnShareProfileWa = document.getElementById('btn-share-profile-wa');
     if (btnShareProfileWa) {
       const waProfileText = encodeURIComponent(`Hello! Check out my verified artisan profile on PadiFix:\n${profileUrl}`);
       btnShareProfileWa.href = `https://api.whatsapp.com/send?text=${waProfileText}`;
+      btnShareProfileWa.onclick = () => {
+        if (typeof LokatorTelemetry !== 'undefined') {
+          LokatorTelemetry.trackEvent('provider_share_clicked', {
+            providerId: currentProvider.id,
+            channel: 'whatsapp'
+          });
+        }
+      };
     }
 
     // Community Referral Link & WhatsApp sharing

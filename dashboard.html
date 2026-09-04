@@ -157,6 +157,26 @@
           <p class="dash-welcome-sub">Here's what's happening with your business.</p>
         </div>
 
+        <!-- PHASE 005: PROGRESSIVE PROFILE COMPLETION & QUALITY ENGINE -->
+        <div class="dash-card-section dash-section-spaced" id="dash-completeness-card" style="border-left: 4px solid #00A859; margin-bottom: 20px;">
+          <div class="dash-section-header" style="margin-bottom: 10px;">
+            <div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <h2 style="margin: 0; font-size: 1.05rem;">Profile Completeness & Quality</h2>
+                <span class="completeness-score-badge" id="dash-completeness-badge" style="background: rgba(0, 168, 89, 0.18); color: #34D399; font-weight: 800; padding: 2px 10px; border-radius: 9999px; font-size: 0.8rem;">--%</span>
+              </div>
+              <p style="margin: 4px 0 0; font-size: 0.85rem; color: #94A3B8;">Complete profiles get up to 4× more customer calls & WhatsApp messages.</p>
+            </div>
+            <div id="dash-completeness-status-pill" style="font-size: 0.8rem; font-weight: 700; color: #34D399;"></div>
+          </div>
+          <div class="completeness-bar-track" style="background: rgba(255,255,255,0.08); height: 8px; border-radius: 9999px; overflow: hidden; margin-bottom: 12px;">
+            <div class="completeness-bar-fill" id="dash-completeness-fill" style="width: 0%; height: 100%; background: linear-gradient(90deg, #00A859, #34D399); transition: width 0.4s ease;"></div>
+          </div>
+          <div class="dash-missing-items-grid" id="dash-missing-items-grid" style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <!-- Actionable missing attributes rendered dynamically -->
+          </div>
+        </div>
+
         <!-- KPI Ribbon -->
         <div class="kpi-grid">
           <div class="kpi-card">

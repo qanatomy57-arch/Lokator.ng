@@ -302,19 +302,39 @@ document.addEventListener('DOMContentLoaded', async () => {
     }).catch(() => {});
   }
 
-  // Share profile
+  // Share profile (Phase 005 Enhanced Shareability)
   const btnShare = document.getElementById('btn-share-profile');
   if (btnShare) {
     btnShare.addEventListener('click', () => {
+      const shareData = {
+        title: `${provider.name} — ${provider.trade} on PadiFix`,
+        text: `Check out ${provider.name} (${provider.trade}) on PadiFix!`,
+        url: window.location.href
+      };
+
+      if (typeof LokatorTelemetry !== 'undefined') {
+        LokatorTelemetry.trackEvent('provider_share_clicked', {
+          providerId: provider.id,
+          trade: provider.trade,
+          channel: navigator.share ? 'native_share' : 'clipboard'
+        });
+      }
+
       if (navigator.share) {
-        navigator.share({
-          title: `${provider.name} on PadiFix`,
-          text: `Check out ${provider.name} (${provider.trade}) on PadiFix!`,
-          url: window.location.href
-        }).catch(() => {});
+        navigator.share(shareData).catch(() => {});
       } else {
-        navigator.clipboard.writeText(window.location.href);
-        alert('Profile link copied to clipboard!');
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(window.location.href);
+        }
+        const toast = document.createElement('div');
+        toast.className = 'share-copied-toast';
+        toast.textContent = '✓ Profile link copied to clipboard!';
+        toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#006B3F;color:#FFF;padding:10px 20px;border-radius:8px;font-size:14px;font-weight:700;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,0.4);transition:opacity 0.3s ease;';
+        document.body.appendChild(toast);
+        setTimeout(() => {
+          toast.style.opacity = '0';
+          setTimeout(() => toast.remove(), 300);
+        }, 2500);
       }
     });
   }

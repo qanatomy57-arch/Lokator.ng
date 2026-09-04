@@ -32,7 +32,14 @@
     monetizationAnalyticsEnabled: true,
 
     // Payment Processing Mode: Strictly false for test sandbox mode
-    paymentLiveMode: false
+    paymentLiveMode: false,
+
+    // Phase 005: Provider Growth & Liquidity Engine Flags
+    providerProfileCompletionEnabled: true,
+    providerAnalyticsEnabled: true,
+    providerRecruitmentCtaEnabled: true,
+    providerReferralEnabled: true,
+    providerVerificationEnabled: true
   };
 
   // 2. MARKETPLACE RULES & PRIVACY CONFIGURATION
@@ -112,7 +119,16 @@
     CHECKOUT_INIT: 'pilot_checkout_initiated',
     PAYMENT_SUCCESS: 'pilot_payment_success',
     CAPACITY_REACHED: 'monetization_capacity_reached',
-    FEEDBACK_SUBMITTED: 'monetization_feedback_submitted'
+    FEEDBACK_SUBMITTED: 'monetization_feedback_submitted',
+
+    // Phase 005 Provider Growth & Trust Events
+    PROVIDER_JOIN_STARTED: 'provider_join_started',
+    PROVIDER_REGISTRATION_COMPLETED: 'provider_registration_completed',
+    PROVIDER_PROFILE_COMPLETED: 'provider_profile_completed',
+    PROVIDER_SHARE_CLICKED: 'provider_share_clicked',
+    PROVIDER_RECRUITMENT_CTA_CLICKED: 'provider_recruitment_cta_clicked',
+    PROVIDER_ANALYTICS_VIEWED: 'provider_analytics_viewed',
+    PROVIDER_VERIFICATION_STARTED: 'provider_verification_started'
   };
 
   // 5. ADMIN CONTROLS & ROLE-BASED ACCESS
@@ -175,7 +191,137 @@
     };
   }
 
-  // 9. PUBLIC MONETIZATION API
+  // 9. PHASE 005: PROVIDER VERIFICATION LIFECYCLE STATES
+  const PROVIDER_VERIFICATION_STATES = {
+    UNVERIFIED: 'Self-Reported Profile',
+    AVAILABLE: 'Verification Available',
+    PENDING: 'Pending Compliance Review',
+    VERIFIED_PLATFORM: 'Platform Reviewed',
+    VERIFIED_NIN: 'National NIN Verified'
+  };
+
+  // 10. PHASE 005: DETERMINISTIC PROFILE COMPLETENESS MODEL (100-point system)
+  const PROFILE_COMPLETENESS_WEIGHTS = {
+    identity: 15,       // Name & trade name
+    contact: 15,        // Direct phone & WhatsApp
+    trade_and_skills: 20, // Trade category + >= 1 verified skill
+    location: 20,       // State + LGA / Operating area
+    photo: 10,          // Avatar / Profile photo uploaded
+    bio: 10,            // Factual craftsmanship biography
+    pricing: 5,         // Benchmark starting price or pricing guide
+    hours: 5            // Operating hours / weekday availability
+  };
+
+  /**
+   * Deterministically calculates provider profile completeness score (0 - 100%)
+   * and returns actionable missing items for progressive completion.
+   */
+  function calculateProfileCompleteness(provider) {
+    if (!provider || typeof provider !== 'object') {
+      return {
+        score: 0,
+        percentage: '0%',
+        missingItems: [
+          { key: 'identity', label: 'Add full name and trade title', actionTab: 'profile' },
+          { key: 'contact', label: 'Add WhatsApp or direct phone number', actionTab: 'profile' },
+          { key: 'trade_and_skills', label: 'Select trade and add specialized skills', actionTab: 'services' },
+          { key: 'location', label: 'Set your Nigerian State and operating LGA', actionTab: 'profile' }
+        ],
+        isComplete: false
+      };
+    }
+
+    let score = 0;
+    const missing = [];
+
+    // 1. Identity (15 pts)
+    const hasName = Boolean((provider.name && provider.name.trim().length > 2) || 
+                            (provider.firstName && provider.lastName));
+    const hasTrade = Boolean(provider.trade && provider.trade.trim().length > 2);
+    if (hasName && hasTrade) {
+      score += PROFILE_COMPLETENESS_WEIGHTS.identity;
+    } else {
+      missing.push({ key: 'identity', label: 'Complete name and craft title', actionTab: 'profile' });
+    }
+
+    // 2. Direct Contact (15 pts)
+    const hasPhone = Boolean(provider.phone && String(provider.phone).replace(/\D/g, '').length >= 10);
+    const hasWa = Boolean(provider.whatsapp || provider.whatsapp_number || hasPhone);
+    if (hasPhone || hasWa) {
+      score += PROFILE_COMPLETENESS_WEIGHTS.contact;
+    } else {
+      missing.push({ key: 'contact', label: 'Add WhatsApp phone number', actionTab: 'profile' });
+    }
+
+    // 3. Trade & Skills (20 pts)
+    const skillsList = Array.isArray(provider.skills) ? provider.skills : [];
+    const hasCategory = Boolean(provider.category || provider.slug || provider.primary_category_slug);
+    if (hasCategory && skillsList.length >= 1) {
+      score += PROFILE_COMPLETENESS_WEIGHTS.trade_and_skills;
+    } else {
+      missing.push({ key: 'trade_and_skills', label: 'Add at least one specialized skill', actionTab: 'services' });
+    }
+
+    // 4. Location (20 pts)
+    const hasState = Boolean(provider.state || (provider.city && provider.city.length > 2));
+    const hasArea = Boolean(provider.lga || provider.area || provider.address);
+    if (hasState && hasArea) {
+      score += PROFILE_COMPLETENESS_WEIGHTS.location;
+    } else {
+      missing.push({ key: 'location', label: 'Specify your State and LGA area', actionTab: 'profile' });
+    }
+
+    // 5. Photo (10 pts)
+    const hasPhoto = Boolean(provider.avatarUrl || provider.avatar_url || (provider.avatarBg && provider.avatarBg.includes('url')));
+    if (hasPhoto) {
+      score += PROFILE_COMPLETENESS_WEIGHTS.photo;
+    } else {
+      missing.push({ key: 'photo', label: 'Upload a clear profile photo', actionTab: 'profile' });
+    }
+
+    // 6. Bio (10 pts)
+    const hasBio = Boolean(provider.bio && provider.bio.trim().length >= 20);
+    if (hasBio) {
+      score += PROFILE_COMPLETENESS_WEIGHTS.bio;
+    } else {
+      missing.push({ key: 'bio', label: 'Add a helpful craftsmanship bio', actionTab: 'profile' });
+    }
+
+    // 7. Pricing Guide (5 pts)
+    const hasPricing = Boolean(
+      (provider.startingPrice && provider.startingPrice.trim().length > 0) ||
+      (provider.starting_price && provider.starting_price.trim().length > 0) ||
+      (Array.isArray(provider.pricingGuide) && provider.pricingGuide.length > 0) ||
+      (Array.isArray(provider.pricing_guide) && provider.pricing_guide.length > 0)
+    );
+    if (hasPricing) {
+      score += PROFILE_COMPLETENESS_WEIGHTS.pricing;
+    } else {
+      missing.push({ key: 'pricing', label: 'Set starting price / quote estimate', actionTab: 'pricing' });
+    }
+
+    // 8. Working Hours (5 pts)
+    const hasHours = Boolean(
+      provider.workingHours || 
+      provider.working_hours || 
+      provider.weekdayHours || 
+      provider.weekday_hours
+    );
+    if (hasHours) {
+      score += PROFILE_COMPLETENESS_WEIGHTS.hours;
+    } else {
+      missing.push({ key: 'hours', label: 'Set weekly working hours', actionTab: 'hours' });
+    }
+
+    return {
+      score,
+      percentage: `${Math.round(score)}%`,
+      missingItems: missing,
+      isComplete: score >= 80
+    };
+  }
+
+  // 11. PUBLIC MONETIZATION & PROVIDER GROWTH API
   const PadiFixMonetization = {
     NAME,
     VERSION,
@@ -185,9 +331,12 @@
     PRODUCTS,
     EVENTS: MONETIZATION_EVENTS,
     ADMIN_CONTROLS,
+    VERIFICATION_STATES: PROVIDER_VERIFICATION_STATES,
+    PROFILE_COMPLETENESS_WEIGHTS,
     formatNaira,
     sanitizeTelemetryPayload,
     checkClusterCapacity,
+    calculateProfileCompleteness,
 
     isFeatureEnabled(flagName) {
       return Boolean(FEATURE_FLAGS[flagName]);
@@ -214,3 +363,4 @@
     global.PadiFixMonetization = PadiFixMonetization;
   }
 })(typeof window !== 'undefined' ? window : (typeof global !== 'undefined' ? global : this));
+

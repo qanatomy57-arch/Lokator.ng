@@ -783,10 +783,50 @@ document.addEventListener("DOMContentLoaded", () => {
             }
           }
 
+          // Phase 005 Contextual Provider Recruitment CTA
+          const recruitmentEnabled = typeof PadiFixMonetization !== 'undefined'
+            ? PadiFixMonetization.isFeatureEnabled('providerRecruitmentCtaEnabled')
+            : true;
+          
+          let recruitmentHtml = '';
+          if (recruitmentEnabled) {
+            const rawTrade = state.category !== 'all' ? state.category : (state.keyword || 'artisan');
+            const targetTradeName = rawTrade.charAt(0).toUpperCase() + rawTrade.slice(1).replace(/[-_]/g, ' ');
+            const targetLocationName = state.lga !== 'all' ? `${state.lga}, ${state.state !== 'all' ? state.state : 'Nigeria'}` : (state.state !== 'all' ? `${state.state} State` : (state.city !== 'all' ? state.city : 'this area'));
+            
+            const joinParams = new URLSearchParams();
+            if (state.category !== 'all') joinParams.set('category', state.category);
+            else if (state.keyword) joinParams.set('category', state.keyword);
+            if (state.state !== 'all') joinParams.set('state', state.state);
+            if (state.lga !== 'all') joinParams.set('lga', state.lga);
+            joinParams.set('source', 'search_zero_results');
+            
+            const joinUrl = `join.html?${joinParams.toString()}`;
+            
+            recruitmentHtml = `
+              <div class="search-recruitment-box">
+                <div class="search-recruitment-badge">
+                  <span>📢</span> High Customer Demand Area
+                </div>
+                <h4 class="search-recruitment-title">Are you a ${escapeHtml(targetTradeName)} in ${escapeHtml(targetLocationName)}?</h4>
+                <p class="search-recruitment-desc">
+                  Customers in this area are actively searching for your craft right now. List your trade on PadiFix for free, receive direct WhatsApp & phone inquiries, and pay 0% commission.
+                </p>
+                <div class="search-recruitment-actions">
+                  <a href="${escapeHtml(joinUrl)}" class="btn btn-primary search-recruitment-btn" id="zero-state-recruitment-cta">
+                    <span>List Your Skill for Free</span>
+                    <span>→</span>
+                  </a>
+                </div>
+              </div>
+            `;
+          }
+
           emptyState.innerHTML = `
             <div class="empty-icon">🔍</div>
             <h3>${currentQuery ? `No verified providers found for "${escapeHtml(currentQuery)}" in this area yet` : 'No providers match your exact search filters'}</h3>
             <p>We are actively verifying skilled hands across all 36 Nigerian states. Try exploring nearby locations or related trades below:</p>
+            ${recruitmentHtml}
             ${recsHtml}
             <div class="empty-actions-row" style="margin-top: 20px;">
               <button class="btn btn-outline" id="clear-all-empty-btn">Reset All Filters</button>
@@ -796,6 +836,19 @@ document.addEventListener("DOMContentLoaded", () => {
           if (resetBtn) {
             resetBtn.addEventListener("click", () => {
               if (resetFiltersBtn) resetFiltersBtn.click();
+            });
+          }
+          const recruitCta = document.getElementById("zero-state-recruitment-cta");
+          if (recruitCta) {
+            recruitCta.addEventListener("click", () => {
+              if (typeof LokatorTelemetry !== 'undefined') {
+                LokatorTelemetry.trackEvent('provider_recruitment_cta_clicked', {
+                  category: state.category !== 'all' ? state.category : (state.keyword || ''),
+                  state: state.state !== 'all' ? state.state : '',
+                  lga: state.lga !== 'all' ? state.lga : '',
+                  source: 'search_zero_results'
+                });
+              }
             });
           }
         }

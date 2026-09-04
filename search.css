@@ -1842,3 +1842,77 @@ body.modal-open .mobile-map-toggle-pill {
   background: #25D366;
   color: #FFF;
 }
+
+/* ===== PHASE 005: ZERO-RESULT CONTEXTUAL PROVIDER RECRUITMENT ===== */
+.search-recruitment-box {
+  background: linear-gradient(145deg, rgba(0, 168, 89, 0.08), rgba(5, 150, 105, 0.04));
+  border: 1px dashed rgba(0, 168, 89, 0.35);
+  border-radius: 16px;
+  padding: 24px 20px;
+  max-width: 580px;
+  width: 100%;
+  margin: 16px auto 0;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.search-recruitment-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  background: rgba(0, 168, 89, 0.15);
+  border: 1px solid rgba(0, 168, 89, 0.35);
+  color: #34D399;
+  border-radius: 9999px;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+}
+
+.search-recruitment-title {
+  font-size: clamp(16px, 2.5vw, 19px);
+  font-weight: 800;
+  color: #F8FAFC;
+  margin: 0 0 8px;
+  line-height: 1.35;
+}
+
+.search-recruitment-desc {
+  font-size: 13.5px;
+  color: #94A3B8;
+  line-height: 1.55;
+  margin: 0 auto 16px;
+  max-width: 480px;
+}
+
+.search-recruitment-actions {
+  display: flex;
+  justify-content: center;
+}
+
+.search-recruitment-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #00A859, #059669);
+  color: #FFFFFF !important;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 12px 24px;
+  border-radius: 10px;
+  text-decoration: none;
+  box-shadow: 0 4px 14px rgba(0, 168, 89, 0.35);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  min-height: 44px;
+  box-sizing: border-box;
+}
+
+.search-recruitment-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 168, 89, 0.5);
+}
+

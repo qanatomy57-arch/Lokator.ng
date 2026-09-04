@@ -17,6 +17,7 @@ const SHELL_ASSETS = [
   '/login.html',
   '/dashboard.html',
   '/offline.html',
+  '/join.html',
   '/manifest.json',
   '/favicon.png',
   '/apple-touch-icon.png',
