@@ -168,32 +168,119 @@ document.addEventListener('DOMContentLoaded', async () => {
     heroLocationText.textContent = displayLoc;
   }
 
+  const revCount = parseInt(provider.reviewsCount != null ? provider.reviewsCount : (provider.reviews ? provider.reviews.length : 0), 10);
   const heroRatingVal = document.getElementById('hero-rating-val');
-  if (heroRatingVal) heroRatingVal.textContent = Number(provider.rating != null ? provider.rating : 5).toFixed(1);
+  if (heroRatingVal) heroRatingVal.textContent = revCount > 0 ? Number(provider.rating != null ? provider.rating : 5).toFixed(1) : 'New';
 
   const heroReviewsCount = document.getElementById('hero-reviews-count');
-  if (heroReviewsCount) heroReviewsCount.textContent = String(provider.reviewsCount != null ? provider.reviewsCount : 0);
+  if (heroReviewsCount) heroReviewsCount.textContent = String(revCount);
 
-  // 3.1 Dynamic Verification & Trust Badge
+  // 3.1 Dynamic Verification & Trust Badge (Phase 006 Canonical Engine)
   const heroVerifiedBadge = document.getElementById('hero-verified-badge');
   if (heroVerifiedBadge) {
-    if (provider.ninVerified || provider.nin_verified) {
-      heroVerifiedBadge.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> National NIN Verified`;
-      heroVerifiedBadge.className = 'profile-verified-pill verified';
-      heroVerifiedBadge.style.display = 'inline-flex';
-    } else if (provider.isVerified || provider.is_verified) {
-      heroVerifiedBadge.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Platform Reviewed`;
-      heroVerifiedBadge.className = 'profile-verified-pill verified';
-      heroVerifiedBadge.style.display = 'inline-flex';
-    } else if (provider.verificationStatus === 'pending' || provider.verification_requested) {
-      heroVerifiedBadge.innerHTML = `⏳ Pending Verification`;
-      heroVerifiedBadge.className = 'profile-verified-pill pending';
-      heroVerifiedBadge.style.display = 'inline-flex';
+    const Monetization = (typeof PadiFixMonetization !== 'undefined') ? PadiFixMonetization : null;
+    const verState = Monetization && typeof Monetization.resolveVerificationState === 'function'
+      ? Monetization.resolveVerificationState(provider)
+      : {
+          key: (provider.ninVerified || provider.nin_verified) ? 'VERIFIED_NIN' :
+               (provider.isVerified || provider.is_verified) ? 'VERIFIED_PLATFORM' :
+               (provider.verificationStatus === 'pending' || provider.verification_requested) ? 'PENDING' : 'UNVERIFIED',
+          publicBadgeText: (provider.ninVerified || provider.nin_verified) ? 'National NIN Verified' :
+                           (provider.isVerified || provider.is_verified) ? 'Platform Reviewed' :
+                           (provider.verificationStatus === 'pending' || provider.verification_requested) ? 'Pending Verification' : 'Self-Reported Profile',
+          badgeClass: (provider.ninVerified || provider.nin_verified || provider.isVerified || provider.is_verified) ? 'profile-verified-pill verified' :
+                      (provider.verificationStatus === 'pending' || provider.verification_requested) ? 'profile-verified-pill pending' : 'profile-verified-pill unverified',
+          icon: (provider.ninVerified || provider.nin_verified) ? '🛡️' :
+                (provider.isVerified || provider.is_verified) ? '✓' :
+                (provider.verificationStatus === 'pending' || provider.verification_requested) ? '⏳' : 'ℹ️',
+          description: (provider.ninVerified || provider.nin_verified) ? 'National identity validated via Virtual NIN tokenization.' :
+                       (provider.isVerified || provider.is_verified) ? 'Trade credentials vetted by PadiFix compliance.' :
+                       'Self-reported listing details supplied by provider.'
+        };
+
+    heroVerifiedBadge.className = verState.badgeClass;
+    if (verState.icon === '🛡️') {
+      heroVerifiedBadge.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> ${escapeHtml(verState.publicBadgeText)}`;
+    } else if (verState.icon === '✓') {
+      heroVerifiedBadge.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> ${escapeHtml(verState.publicBadgeText)}`;
     } else {
-      heroVerifiedBadge.innerHTML = `ℹ️ Self-Reported Profile`;
-      heroVerifiedBadge.className = 'profile-verified-pill unverified';
-      heroVerifiedBadge.style.display = 'inline-flex';
+      heroVerifiedBadge.innerHTML = `${verState.icon} ${escapeHtml(verState.publicBadgeText)}`;
     }
+    heroVerifiedBadge.style.display = 'inline-flex';
+    heroVerifiedBadge.setAttribute('title', verState.description || 'View trust details');
+    heroVerifiedBadge.setAttribute('role', 'button');
+    heroVerifiedBadge.setAttribute('tabindex', '0');
+    heroVerifiedBadge.setAttribute('aria-label', `${verState.publicBadgeText}. Click to view verification details.`);
+    heroVerifiedBadge.style.cursor = 'pointer';
+
+    // Interactive Trust Badge Explainer Trigger
+    heroVerifiedBadge.onclick = () => showTrustBadgeExplainer(verState, provider);
+    heroVerifiedBadge.onkeydown = (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        showTrustBadgeExplainer(verState, provider);
+      }
+    };
+  }
+
+  function showTrustBadgeExplainer(verState, prov) {
+    const modal = document.getElementById('modal-trust-explainer');
+    if (!modal) return;
+
+    const modalIcon = document.getElementById('trust-modal-icon');
+    const modalHeading = document.getElementById('trust-modal-heading');
+    const modalDesc = document.getElementById('trust-modal-description');
+    const modalPillars = document.getElementById('trust-modal-pillars');
+    const btnClose = document.getElementById('btn-close-trust-modal');
+    const btnDismiss = document.getElementById('btn-dismiss-trust-modal');
+
+    if (modalIcon) modalIcon.textContent = verState.icon || '🛡️';
+    if (modalHeading) modalHeading.textContent = verState.publicBadgeText || 'Trust Details';
+    if (modalDesc) modalDesc.textContent = verState.description || 'PadiFix distinguishes self-reported information from official compliance verification.';
+
+    if (modalPillars) {
+      const Monetization = (typeof PadiFixMonetization !== 'undefined') ? PadiFixMonetization : null;
+      const signals = Monetization && typeof Monetization.getTrustSignals === 'function'
+        ? Monetization.getTrustSignals(prov)
+        : { trustPillars: [] };
+
+      if (signals.trustPillars && signals.trustPillars.length > 0) {
+        modalPillars.innerHTML = signals.trustPillars.map(pillar => `
+          <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px 14px; display: flex; align-items: flex-start; gap: 10px;">
+            <span style="font-size: 16px; line-height: 1.2;">${pillar.icon}</span>
+            <div>
+              <div style="font-weight: 600; font-size: 13px; color: #fff;">${escapeHtml(pillar.title)}</div>
+              <div style="font-size: 12px; color: #94a3b8; margin-top: 2px;">${escapeHtml(pillar.text)}</div>
+            </div>
+          </div>
+        `).join('');
+      } else {
+        modalPillars.innerHTML = `
+          <div style="background: rgba(255,255,255,0.04); border-radius: 8px; padding: 10px 14px; font-size: 12.5px; color: #cbd5e1;">
+            ${escapeHtml(verState.description)}
+          </div>
+        `;
+      }
+    }
+
+    modal.style.display = 'flex';
+
+    const closeModal = () => {
+      modal.style.display = 'none';
+      if (heroVerifiedBadge) heroVerifiedBadge.focus();
+    };
+
+    if (btnClose) btnClose.onclick = closeModal;
+    if (btnDismiss) btnDismiss.onclick = closeModal;
+    modal.onclick = (e) => {
+      if (e.target === modal) closeModal();
+    };
+    document.addEventListener('keydown', function escHandler(e) {
+      if (e.key === 'Escape' && modal.style.display === 'flex') {
+        closeModal();
+        document.removeEventListener('keydown', escHandler);
+      }
+    });
   }
 
   // 4. Populate Metric Badges

@@ -672,27 +672,62 @@
             <p style="font-size: 13px; color: var(--dash-muted); margin-bottom: 16px;">
               Get an official verified trust badge on your public profile. Submit your identification details for review by PadiFix compliance officers.
             </p>
+
+            <!-- Zero Raw NIN / vNIN Privacy Guarantee Banner -->
+            <div style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.25); border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; font-size: 12.5px; color: #E2E8F0; display: flex; align-items: flex-start; gap: 10px;">
+              <span style="font-size: 18px; line-height: 1;">🛡️</span>
+              <div>
+                <strong>Privacy Guarantee — Zero Raw NIN Storage:</strong> In compliance with NIMC and NDPR regulations, PadiFix never collects or stores raw 11-digit NINs. For NIN validation, please generate a secure 16-character <strong>Virtual NIN (vNIN)</strong> by dialing <code style="background: #1e293b; padding: 2px 6px; border-radius: 4px; color: #38bdf8;">*346*3*NIN*AgentCode#</code> on your registered SIM.
+              </div>
+            </div>
+
+            <!-- Status Notice Banners -->
+            <div id="dash-ver-pending-notice" style="display: none; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 14px 18px; margin-bottom: 16px;">
+              <div style="font-weight: 700; color: #FBBF24; font-size: 14px; margin-bottom: 4px;">⏳ Verification Request Pending Review</div>
+              <p style="font-size: 12.5px; color: #E2E8F0; margin: 0;" id="dash-ver-pending-text">
+                Your credential verification request was submitted and is currently being audited by PadiFix compliance officers. You will receive confirmation once reviewed.
+              </p>
+            </div>
+
+            <div id="dash-ver-approved-notice" style="display: none; background: rgba(0, 168, 89, 0.1); border: 1px solid rgba(0, 168, 89, 0.3); border-radius: 8px; padding: 14px 18px; margin-bottom: 16px;">
+              <div style="font-weight: 700; color: #34D399; font-size: 14px; margin-bottom: 4px;">🛡️ Profile Verified & Approved</div>
+              <p style="font-size: 12.5px; color: #E2E8F0; margin: 0;" id="dash-ver-approved-text">
+                Your credentials have been successfully reviewed and verified. Your public profile displays the verified trust badge.
+              </p>
+            </div>
+
             <form id="form-request-verification">
               <div class="dash-form-grid" style="grid-template-columns: 1fr 1fr; gap: 16px;">
                 <div class="form-group">
                   <label for="ver-doc-type">Identification Type *</label>
                   <select id="ver-doc-type" class="filter-select" required style="width: 100%; background: #111827; border: 1px solid var(--dash-border); color: #fff; padding: 10px; border-radius: 8px;">
-                    <option value="nin">National Identity Number (NIN)</option>
-                    <option value="voters_card">INEC Voter's Card</option>
+                    <option value="vnin" selected>Virtual NIN (vNIN - 16 characters)</option>
+                    <option value="cac_cert">CAC Business Registration (RC / BN)</option>
                     <option value="drivers_license">FRSC Driver's License</option>
-                    <option value="cac_cert">CAC Business Registration</option>
+                    <option value="voters_card">INEC Voter's Card</option>
                   </select>
                 </div>
                 <div class="form-group">
-                  <label for="ver-doc-ref">Document Number / ID Ref *</label>
-                  <input type="text" id="ver-doc-ref" required placeholder="e.g. 11-digit NIN or Reg Number" style="width: 100%; background: #111827; border: 1px solid var(--dash-border); color: #fff; padding: 10px; border-radius: 8px;" />
+                  <label for="ver-doc-ref" id="ver-doc-ref-label">16-Character Virtual NIN (vNIN) *</label>
+                  <input type="text" id="ver-doc-ref" required placeholder="e.g. AB12345678901234" style="width: 100%; background: #111827; border: 1px solid var(--dash-border); color: #fff; padding: 10px; border-radius: 8px;" />
+                  <div id="ver-doc-ref-preview" style="font-size: 11.5px; color: #94A3B8; margin-top: 4px;">Masked Storage: <code id="ver-preview-code">vNIN: ****</code></div>
                 </div>
               </div>
               <div style="margin-top: 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
-                <span style="font-size: 12px; color: var(--dash-muted);">🔒 Encrypted & processed in accordance with NDPR privacy guidelines.</span>
+                <span style="font-size: 12px; color: var(--dash-muted);">🔒 Encrypted with one-way SHA-256 in accordance with NDPR privacy guidelines.</span>
                 <button type="submit" class="btn btn-primary" id="btn-submit-verification">Submit for Review</button>
               </div>
             </form>
+
+            <!-- Verification History Section -->
+            <div id="dash-ver-history-section" style="margin-top: 20px; border-top: 1px solid var(--dash-border); padding-top: 16px;">
+              <h4 style="font-size: 14px; color: #fff; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+                <span>📋</span> Verification Request History
+              </h4>
+              <div id="ver-history-list" style="font-size: 12.5px; color: var(--dash-muted);">
+                No previous verification requests on record.
+              </div>
+            </div>
           </div>
 
           <!-- Phase 10.13B: Monetization Architecture & Provider Willingness-to-Pay Research -->
@@ -1055,6 +1090,7 @@
   <script src="categories.js"></script>
   <script src="providers-data.js"></script>
   <script src="monetization-config.js"></script>
+  <script src="verification-providers.js"></script>
   <script src="supabase-client.js"></script>
   <script src="dashboard.js"></script>
   <script src="pwa-manager.js"></script>

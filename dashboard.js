@@ -189,6 +189,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (tabKey === 'reviews') {
       renderDashboardReviews();
     }
+    if (tabKey === 'subscription') {
+      renderTrustCenter();
+    }
     if (tabKey === 'profile') {
       setTimeout(() => {
         try {
@@ -1255,53 +1258,178 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // 11. Trust & Verification Center Controller
-  function renderTrustCenter() {
+  // 11. Trust & Verification Center Controller (Phase 006 Canonical Engine)
+  async function renderTrustCenter() {
+    if (!currentProvider) return;
+
     const chip = document.getElementById('dash-ver-status-chip');
     const text = document.getElementById('dash-ver-status-text');
     const feedback = document.getElementById('dash-feedback-summary');
+    const pendingNotice = document.getElementById('dash-ver-pending-notice');
+    const approvedNotice = document.getElementById('dash-ver-approved-notice');
+    const formReqVer = document.getElementById('form-request-verification');
+    const submitBtn = document.getElementById('btn-submit-verification');
+    const historyContainer = document.getElementById('ver-history-list');
 
-    const isNin = Boolean(currentProvider.ninVerified || currentProvider.nin_verified);
-    const isPlat = Boolean(currentProvider.isVerified || currentProvider.is_verified);
-    const verStatus = currentProvider.verificationStatus || currentProvider.verification_status || (isNin || isPlat ? 'verified' : (currentProvider.verification_requested ? 'pending' : 'unverified'));
+    // Canonical State Resolution
+    const Monetization = (typeof PadiFixMonetization !== 'undefined') ? PadiFixMonetization : null;
+    const verState = Monetization && typeof Monetization.resolveVerificationState === 'function'
+      ? Monetization.resolveVerificationState(currentProvider)
+      : {
+          key: (currentProvider.ninVerified || currentProvider.nin_verified) ? 'VERIFIED_NIN' :
+               (currentProvider.isVerified || currentProvider.is_verified) ? 'VERIFIED_PLATFORM' :
+               (currentProvider.verification_status === 'pending' || currentProvider.verification_requested) ? 'PENDING' : 'UNVERIFIED',
+          label: (currentProvider.ninVerified || currentProvider.nin_verified) ? 'National NIN Verified' :
+                 (currentProvider.isVerified || currentProvider.is_verified) ? 'Platform Reviewed' :
+                 (currentProvider.verification_status === 'pending' || currentProvider.verification_requested) ? 'Pending Compliance Review' : 'Self-Reported Profile',
+          badgeClass: (currentProvider.ninVerified || currentProvider.nin_verified || currentProvider.isVerified || currentProvider.is_verified) ? 'profile-verified-pill verified' :
+                      (currentProvider.verification_status === 'pending' || currentProvider.verification_requested) ? 'profile-verified-pill pending' : 'profile-verified-pill unverified',
+          icon: (currentProvider.ninVerified || currentProvider.nin_verified) ? '🛡️' :
+                (currentProvider.isVerified || currentProvider.is_verified) ? '✓' :
+                (currentProvider.verification_status === 'pending' || currentProvider.verification_requested) ? '⏳' : 'ℹ️',
+          color: (currentProvider.ninVerified || currentProvider.nin_verified || currentProvider.isVerified || currentProvider.is_verified) ? 'var(--dash-green)' :
+                 (currentProvider.verification_status === 'pending' || currentProvider.verification_requested) ? 'var(--gold)' : 'var(--dash-muted)',
+          isVerified: Boolean(currentProvider.ninVerified || currentProvider.nin_verified || currentProvider.isVerified || currentProvider.is_verified),
+          isPending: Boolean(currentProvider.verification_status === 'pending' || currentProvider.verification_requested)
+        };
 
+    // Update Status Pill
     if (chip) {
-      if (isNin) {
-        chip.className = 'profile-verified-pill verified';
-        chip.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> National NIN Verified`;
-      } else if (isPlat) {
-        chip.className = 'profile-verified-pill verified';
-        chip.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Platform Reviewed`;
-      } else if (verStatus === 'pending' || currentProvider.verification_requested) {
-        chip.className = 'profile-verified-pill pending';
-        chip.innerHTML = `⏳ Verification Pending Review`;
-      } else {
-        chip.className = 'profile-verified-pill unverified';
-        chip.innerHTML = `ℹ️ Self-Reported (Unverified)`;
-      }
+      chip.className = verState.badgeClass;
+      chip.innerHTML = `${verState.icon} ${escapeHtml(verState.label)}`;
     }
 
+    // Update Trust Status Description Text
     if (text) {
-      if (isNin) {
-        text.textContent = 'National Identity Verified (NIN)';
-        text.style.color = 'var(--dash-green)';
-      } else if (isPlat) {
-        text.textContent = 'Platform Reviewed & Approved';
-        text.style.color = 'var(--dash-green)';
-      } else if (verStatus === 'pending' || currentProvider.verification_requested) {
-        text.textContent = 'Pending Platform Review (In Progress)';
-        text.style.color = 'var(--gold)';
-      } else {
-        text.textContent = 'Unverified (Self-Reported)';
-        text.style.color = 'var(--dash-muted)';
-      }
+      text.textContent = verState.label;
+      text.style.color = verState.color;
     }
 
+    // Update Customer Feedback Summary
     if (feedback) {
       const cnt = currentProvider.reviewsCount || (currentProvider.reviews ? currentProvider.reviews.length : 0);
       const rating = Number(currentProvider.rating || 5.0).toFixed(1);
-      feedback.textContent = `${cnt} Customer Reviews (★ ${rating})`;
+      feedback.textContent = cnt > 0 ? `${cnt} Customer Reviews (★ ${rating})` : '0 Customer Reviews (★ New Listing)';
     }
+
+    // Manage Status Notice Banners & Form Usability
+    if (verState.isPending) {
+      if (pendingNotice) pendingNotice.style.display = 'block';
+      if (approvedNotice) approvedNotice.style.display = 'none';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Request Under Review';
+      }
+      if (formReqVer) {
+        formReqVer.querySelectorAll('input, select').forEach(el => el.disabled = true);
+      }
+    } else if (verState.isVerified) {
+      if (pendingNotice) pendingNotice.style.display = 'none';
+      if (approvedNotice) approvedNotice.style.display = 'block';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Profile Verified';
+      }
+      if (formReqVer) {
+        formReqVer.querySelectorAll('input, select').forEach(el => el.disabled = true);
+      }
+    } else {
+      if (pendingNotice) pendingNotice.style.display = 'none';
+      if (approvedNotice) approvedNotice.style.display = 'none';
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit for Review';
+      }
+      if (formReqVer) {
+        formReqVer.querySelectorAll('input, select').forEach(el => el.disabled = false);
+      }
+    }
+
+    // Render Verification History
+    if (historyContainer && typeof LokatorDB !== 'undefined' && typeof LokatorDB.getProviderVerificationHistory === 'function') {
+      try {
+        const history = await LokatorDB.getProviderVerificationHistory(currentProvider.id);
+        if (!history || history.length === 0) {
+          historyContainer.innerHTML = '<p style="color: var(--dash-muted); margin: 0; font-size: 12.5px;">No previous verification requests on record.</p>';
+        } else {
+          historyContainer.innerHTML = history.map(item => {
+            const dateStr = item.submitted_at ? new Date(item.submitted_at).toLocaleDateString('en-NG', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recent';
+            const statusClass = item.status === 'approved' ? 'status-good' : (item.status === 'pending' ? 'status-notice' : 'status-bad');
+            const statusLabel = item.status === 'approved' ? 'Approved' : (item.status === 'pending' ? 'In Review' : 'Rejected');
+            return `
+              <div style="display: flex; justify-content: space-between; align-items: center; background: #111827; border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 10px 14px; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+                <div>
+                  <div style="font-weight: 600; color: #fff; font-size: 13px;">${escapeHtml(item.document_masked_ref || item.doc_type || 'Identity Document')}</div>
+                  <div style="font-size: 11.5px; color: var(--dash-muted);">${dateStr} • Submitted for Platform Review</div>
+                </div>
+                <span class="status-tag ${statusClass}" style="font-size: 11px; padding: 3px 8px; border-radius: 4px;">${statusLabel}</span>
+              </div>
+            `;
+          }).join('');
+        }
+      } catch (e) {
+        historyContainer.innerHTML = '<p style="color: var(--dash-muted); font-size: 12px;">Unable to load request history.</p>';
+      }
+    }
+
+    // Telemetry: verification_status_viewed
+    if (typeof LokatorTelemetry !== 'undefined') {
+      LokatorTelemetry.trackEvent('verification_status_viewed', {
+        provider_id: currentProvider.id,
+        verification_state: verState.key
+      });
+    }
+  }
+
+  // Dynamic Verification Input Masking & Labels
+  const docTypeSelect = document.getElementById('ver-doc-type');
+  const docRefInput = document.getElementById('ver-doc-ref');
+  const docRefLabel = document.getElementById('ver-doc-ref-label');
+  const previewCode = document.getElementById('ver-preview-code');
+
+  function updateVerificationInputUI() {
+    if (!docTypeSelect || !docRefInput) return;
+    const type = docTypeSelect.value;
+    if (type === 'vnin') {
+      if (docRefLabel) docRefLabel.textContent = '16-Character Virtual NIN (vNIN) *';
+      docRefInput.placeholder = 'e.g. AB12345678901234';
+      docRefInput.maxLength = 16;
+    } else if (type === 'cac_cert') {
+      if (docRefLabel) docRefLabel.textContent = 'CAC Registration Number (RC / BN) *';
+      docRefInput.placeholder = 'e.g. RC 1928374 or BN 284729';
+      docRefInput.removeAttribute('maxLength');
+    } else if (type === 'drivers_license') {
+      if (docRefLabel) docRefLabel.textContent = 'FRSC Driver\'s License Number *';
+      docRefInput.placeholder = 'e.g. ABC123456789';
+      docRefInput.removeAttribute('maxLength');
+    } else if (type === 'voters_card') {
+      if (docRefLabel) docRefLabel.textContent = 'INEC Voter\'s Identification Number (VIN) *';
+      docRefInput.placeholder = 'e.g. 90F5B1234567890';
+      docRefInput.removeAttribute('maxLength');
+    }
+    updatePreviewCode();
+  }
+
+  function updatePreviewCode() {
+    if (!previewCode || !docRefInput || !docTypeSelect) return;
+    const type = docTypeSelect.value;
+    const val = docRefInput.value.trim();
+    if (!val) {
+      previewCode.textContent = `${type.toUpperCase()}: ****`;
+      return;
+    }
+    if (typeof PadiFixVerification !== 'undefined') {
+      previewCode.textContent = PadiFixVerification.maskDocumentReference(type, val);
+    } else {
+      previewCode.textContent = val.length >= 6 ? `${type.toUpperCase()}: ${val.slice(0, 3)}****${val.slice(-3)}` : `${type.toUpperCase()}: ****`;
+    }
+  }
+
+  if (docTypeSelect) {
+    docTypeSelect.addEventListener('change', updateVerificationInputUI);
+  }
+  if (docRefInput) {
+    docRefInput.addEventListener('input', updatePreviewCode);
   }
 
   const formReqVer = document.getElementById('form-request-verification');
@@ -1313,8 +1441,17 @@ document.addEventListener('DOMContentLoaded', async () => {
       const btn = document.getElementById('btn-submit-verification');
 
       if (!docRef) {
-        alert('Please enter your document or identification reference number.');
+        showToast('Please enter your document or identification reference number.', 'error');
         return;
+      }
+
+      // Check vNIN length constraint if submitting vNIN
+      if (docType === 'vnin') {
+        const cleanVnin = docRef.replace(/[^a-zA-Z0-9]/g, '');
+        if (cleanVnin.length !== 16) {
+          showToast('Virtual NIN must be exactly 16 characters. Dial *346*3*NIN*AgentCode# to generate your secure token.', 'error');
+          return;
+        }
       }
 
       if (btn) {
@@ -1327,13 +1464,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         currentProvider.verificationStatus = 'pending';
         currentProvider.verification_status = 'pending';
         currentProvider.verification_requested = true;
-        renderTrustCenter();
+        await renderTrustCenter();
         showToast(res.message || 'Verification request submitted for compliance review.');
         formReqVer.reset();
+        updatePreviewCode();
       } catch (err) {
         showToast('Error requesting verification: ' + err.message, 'error');
       } finally {
-        if (btn) {
+        if (btn && currentProvider.verification_status !== 'pending') {
           btn.disabled = false;
           btn.textContent = 'Submit for Review';
         }

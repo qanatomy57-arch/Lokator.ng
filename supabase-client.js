@@ -97,6 +97,7 @@
   const DB_USERS_KEY = 'lokator_supabase_users_db';
   const DB_REPORTS_KEY = 'lokator_supabase_reports_db';
   const DB_VERIFICATIONS_KEY = 'lokator_supabase_verifications_db';
+  const DB_VERIFICATION_AUDITS_KEY = 'lokator_supabase_verification_audits_db';
 
   // 3.0 CENTRAL WRITE RESULT MODEL (Phase 4.5 Standard)
   function createWriteResult({
@@ -2382,6 +2383,7 @@
 
     /**
      * Submit provider request for platform credential verification
+     * Adheres to Phase 006 privacy principles: zero raw NIN stored, SHA-256 reference hash, display-safe masked ref
      */
     async requestProviderVerification(providerId, verificationData = {}) {
       const numId = Number(providerId);
@@ -2391,27 +2393,74 @@
         throw new Error('Provider not found');
       }
 
+      const docType = (verificationData.docType || 'vnin').toLowerCase();
+      const rawRef = String(verificationData.docRef || '').trim();
+
+      // Masking & Hashing via PadiFixVerification if available or inline fallbacks
+      let maskedRef = 'REF: ****';
+      let refHash = '';
+      if (typeof PadiFixVerification !== 'undefined') {
+        maskedRef = PadiFixVerification.maskDocumentReference(docType, rawRef);
+        refHash = PadiFixVerification.hashDocumentReference(rawRef);
+      } else {
+        if (docType === 'vnin') {
+          const s = rawRef.replace(/[^a-zA-Z0-9]/g, '');
+          maskedRef = s.length >= 8 ? `vNIN: ${s.slice(0, 4)}-****-****-${s.slice(-4)}` : 'vNIN: ****';
+        } else {
+          maskedRef = rawRef.length > 5 ? `${docType.toUpperCase()}: ${rawRef.slice(0, 3)}****${rawRef.slice(-3)}` : `${docType.toUpperCase()}: ****`;
+        }
+        refHash = 'hash_' + Math.random().toString(36).substring(2, 15);
+      }
+
+      const prevStatus = p.verification_status || (p.nin_verified ? 'verified_nin' : (p.is_verified ? 'verified_platform' : 'unverified'));
+
       p.verification_status = 'pending';
       p.verification_requested = true;
       p.verification_requested_at = new Date().toISOString();
-      p.verification_doc_type = verificationData.docType || 'nin';
+      p.verification_doc_type = docType;
+      p.document_masked_ref = maskedRef;
       setLocalStore(DB_STORE_KEY, providers);
 
       const verReq = {
         id: 'vreq_' + Date.now(),
         provider_id: numId,
-        doc_type: verificationData.docType || 'nin',
+        doc_type: docType,
         status: 'pending',
+        document_reference_hash: refHash,
+        document_masked_ref: maskedRef,
         submitted_at: new Date().toISOString()
       };
       const verRequests = getLocalStore(DB_VERIFICATIONS_KEY, []);
       verRequests.unshift(verReq);
       setLocalStore(DB_VERIFICATIONS_KEY, verRequests);
 
+      // Append-Only Audit Trail
+      const verAudit = {
+        id: 'vaudit_' + Date.now(),
+        request_id: verReq.id,
+        provider_id: numId,
+        previous_state: prevStatus,
+        new_state: 'pending',
+        actor_type: 'provider',
+        actor_id: String(numId),
+        action: 'submit_verification_request',
+        reason: 'Provider requested credential verification for ' + docType,
+        created_at: new Date().toISOString()
+      };
+      const verAudits = getLocalStore(DB_VERIFICATION_AUDITS_KEY, []);
+      verAudits.unshift(verAudit);
+      setLocalStore(DB_VERIFICATION_AUDITS_KEY, verAudits);
+
+      // Telemetry (Non-PII only)
       if (typeof LokatorTelemetry !== 'undefined') {
         LokatorTelemetry.trackEvent('provider_verification_requested', {
           provider_id: numId,
           doc_type: verReq.doc_type
+        });
+        LokatorTelemetry.trackEvent('verification_request_created', {
+          provider_id: numId,
+          doc_type: verReq.doc_type,
+          masked_ref: maskedRef
         });
       }
 
@@ -2420,8 +2469,87 @@
         entity: 'verification_request',
         entityId: verReq.id,
         remoteConfirmed: true,
-        data: { id: verReq.id, status: 'pending' },
+        data: { id: verReq.id, status: 'pending', masked_ref: maskedRef },
         message: 'Your verification request has been submitted for platform review. Our team will verify your credentials shortly.'
+      });
+    },
+
+    /**
+     * Get verification request history for a provider (Display-safe, zero raw credentials)
+     */
+    async getProviderVerificationHistory(providerId) {
+      const numId = Number(providerId);
+      const verRequests = getLocalStore(DB_VERIFICATIONS_KEY, []);
+      return verRequests.filter(r => r.provider_id === numId);
+    },
+
+    /**
+     * Get append-only verification audits for a provider
+     */
+    async getProviderVerificationAudits(providerId) {
+      const numId = Number(providerId);
+      const verAudits = getLocalStore(DB_VERIFICATION_AUDITS_KEY, []);
+      return verAudits.filter(a => a.provider_id === numId);
+    },
+
+    /**
+     * Process verification review (Admin / Compliance Officer action)
+     */
+    async processProviderVerificationReview(requestId, { status = 'approved', reviewerId = 'admin_compliance', reason = '', isNin = false } = {}) {
+      const verRequests = getLocalStore(DB_VERIFICATIONS_KEY, []);
+      const req = verRequests.find(r => r.id === requestId);
+      if (!req) throw new Error('Verification request not found');
+
+      const prevState = req.status;
+      req.status = status;
+      req.reviewed_at = new Date().toISOString();
+      req.reviewed_by = reviewerId;
+      if (reason) req.rejection_reason = reason;
+      setLocalStore(DB_VERIFICATIONS_KEY, verRequests);
+
+      const providers = getLocalStore(DB_STORE_KEY, []);
+      const p = providers.find(item => item.id === req.provider_id);
+      if (p) {
+        if (status === 'approved') {
+          p.is_verified = true;
+          p.verification_status = isNin || req.doc_type === 'vnin' ? 'verified_nin' : 'verified_platform';
+          if (isNin || req.doc_type === 'vnin') {
+            p.nin_verified = true;
+            p.badge_title = 'National NIN Verified';
+          } else {
+            p.badge_title = 'Platform Reviewed';
+          }
+        } else {
+          p.verification_status = 'rejected';
+          p.rejection_reason = reason || 'Verification review did not meet compliance criteria';
+        }
+        p.verification_requested = false;
+        setLocalStore(DB_STORE_KEY, providers);
+      }
+
+      const verAudit = {
+        id: 'vaudit_' + Date.now(),
+        request_id: req.id,
+        provider_id: req.provider_id,
+        previous_state: prevState,
+        new_state: status,
+        actor_type: 'compliance_officer',
+        actor_id: String(reviewerId),
+        action: status === 'approved' ? 'approve_verification' : 'reject_verification',
+        reason: reason || (status === 'approved' ? 'Credentials confirmed valid' : 'Verification criteria not met'),
+        created_at: new Date().toISOString()
+      };
+      const verAudits = getLocalStore(DB_VERIFICATION_AUDITS_KEY, []);
+      verAudits.unshift(verAudit);
+      setLocalStore(DB_VERIFICATION_AUDITS_KEY, verAudits);
+
+      return createWriteResult({
+        status: 'REMOTE_SUCCESS',
+        entity: 'verification_review',
+        entityId: req.id,
+        remoteConfirmed: true,
+        data: { id: req.id, status, provider_id: req.provider_id },
+        message: `Verification request ${status}.`
       });
     },
 
@@ -9831,5 +9959,8 @@
 
   // Expose
   global.LokatorDB = LokatorDB;
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = LokatorDB;
+  }
 
 })(typeof window !== 'undefined' ? window : this);

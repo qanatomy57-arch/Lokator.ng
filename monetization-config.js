@@ -39,7 +39,10 @@
     providerAnalyticsEnabled: true,
     providerRecruitmentCtaEnabled: true,
     providerReferralEnabled: true,
-    providerVerificationEnabled: true
+    providerVerificationEnabled: true,
+
+    // Phase 006: Provider Verification & Trust Infrastructure Flags
+    liveKycGatewayEnabled: false // Strictly false: external KYC vendor network calls gated
   };
 
   // 2. MARKETPLACE RULES & PRIVACY CONFIGURATION
@@ -128,7 +131,14 @@
     PROVIDER_SHARE_CLICKED: 'provider_share_clicked',
     PROVIDER_RECRUITMENT_CTA_CLICKED: 'provider_recruitment_cta_clicked',
     PROVIDER_ANALYTICS_VIEWED: 'provider_analytics_viewed',
-    PROVIDER_VERIFICATION_STARTED: 'provider_verification_started'
+    PROVIDER_VERIFICATION_STARTED: 'provider_verification_started',
+
+    // Phase 006 Verification Lifecycle Events
+    VERIFICATION_STARTED: 'verification_started',
+    VERIFICATION_REQUEST_CREATED: 'verification_request_created',
+    VERIFICATION_COMPLETED: 'verification_completed',
+    VERIFICATION_FAILED: 'verification_failed',
+    VERIFICATION_STATUS_VIEWED: 'verification_status_viewed'
   };
 
   // 5. ADMIN CONTROLS & ROLE-BASED ACCESS
@@ -191,7 +201,7 @@
     };
   }
 
-  // 9. PHASE 005: PROVIDER VERIFICATION LIFECYCLE STATES
+  // 9. AUTHORITATIVE PROVIDER VERIFICATION LIFECYCLE & STATE RESOLVER
   const PROVIDER_VERIFICATION_STATES = {
     UNVERIFIED: 'Self-Reported Profile',
     AVAILABLE: 'Verification Available',
@@ -199,6 +209,179 @@
     VERIFIED_PLATFORM: 'Platform Reviewed',
     VERIFIED_NIN: 'National NIN Verified'
   };
+
+  const VERIFICATION_STATE_DETAILS = {
+    UNVERIFIED: {
+      key: 'UNVERIFIED',
+      label: 'Self-Reported Profile',
+      publicBadgeText: 'Self-Reported Profile',
+      badgeClass: 'profile-verified-pill unverified',
+      icon: 'ℹ️',
+      color: '#94A3B8',
+      description: 'Provider registered details independently. Information has not yet undergone official platform document review.',
+      isVerified: false,
+      isNinVerified: false,
+      isPending: false,
+      canRequestVerification: true
+    },
+    AVAILABLE: {
+      key: 'AVAILABLE',
+      label: 'Verification Available',
+      publicBadgeText: 'Self-Reported Profile',
+      badgeClass: 'profile-verified-pill unverified',
+      icon: 'ℹ️',
+      color: '#3B82F6',
+      description: 'Profile has met foundational completeness requirements (>= 80%) and is eligible to submit credentials for official verification.',
+      isVerified: false,
+      isNinVerified: false,
+      isPending: false,
+      canRequestVerification: true
+    },
+    PENDING: {
+      key: 'PENDING',
+      label: 'Pending Compliance Review',
+      publicBadgeText: 'Pending Verification',
+      badgeClass: 'profile-verified-pill pending',
+      icon: '⏳',
+      color: '#F59E0B',
+      description: 'Verification documents submitted and currently undergoing review by PadiFix compliance officers.',
+      isVerified: false,
+      isNinVerified: false,
+      isPending: true,
+      canRequestVerification: false
+    },
+    VERIFIED_PLATFORM: {
+      key: 'VERIFIED_PLATFORM',
+      label: 'Platform Reviewed',
+      publicBadgeText: 'Platform Reviewed',
+      badgeClass: 'profile-verified-pill verified',
+      icon: '✓',
+      color: '#00A859',
+      description: 'Business registration, contact authenticity, and trade competence reviewed and confirmed by PadiFix compliance.',
+      isVerified: true,
+      isNinVerified: false,
+      isPending: false,
+      canRequestVerification: false
+    },
+    VERIFIED_NIN: {
+      key: 'VERIFIED_NIN',
+      label: 'National NIN Verified',
+      publicBadgeText: 'National NIN Verified',
+      badgeClass: 'profile-verified-pill verified',
+      icon: '🛡️',
+      color: '#00A859',
+      description: 'Artisan identity validated against Nigeria National Identity Management Commission standards via Virtual NIN (vNIN).',
+      isVerified: true,
+      isNinVerified: true,
+      isPending: false,
+      canRequestVerification: false
+    }
+  };
+
+  /**
+   * Centrally resolves the authoritative verification state for any provider.
+   * Eliminates ad-hoc or contradictory verification logic across pages.
+   */
+  function resolveVerificationState(provider) {
+    if (!provider || typeof provider !== 'object') {
+      return Object.assign({}, VERIFICATION_STATE_DETAILS.UNVERIFIED);
+    }
+
+    const isNin = Boolean(
+      provider.nin_verified === true ||
+      provider.ninVerified === true ||
+      (provider.verification_type === 'vnin' && (provider.is_verified || provider.isVerified || provider.verification_status === 'approved'))
+    );
+    if (isNin) {
+      return Object.assign({}, VERIFICATION_STATE_DETAILS.VERIFIED_NIN);
+    }
+
+    const isPlat = Boolean(
+      provider.is_verified === true ||
+      provider.isVerified === true ||
+      provider.verification_status === 'verified_platform' ||
+      provider.verification_status === 'approved'
+    );
+    if (isPlat) {
+      return Object.assign({}, VERIFICATION_STATE_DETAILS.VERIFIED_PLATFORM);
+    }
+
+    const isPending = Boolean(
+      provider.verification_status === 'pending' ||
+      provider.verificationStatus === 'pending' ||
+      provider.verification_requested === true
+    );
+    if (isPending) {
+      return Object.assign({}, VERIFICATION_STATE_DETAILS.PENDING);
+    }
+
+    const completeness = calculateProfileCompleteness(provider);
+    if (completeness.isComplete || completeness.score >= 80) {
+      return Object.assign({}, VERIFICATION_STATE_DETAILS.AVAILABLE);
+    }
+
+    return Object.assign({}, VERIFICATION_STATE_DETAILS.UNVERIFIED);
+  }
+
+  /**
+   * Returns transparent, explainable trust signals for a provider without opaque/fake scores.
+   */
+  function getTrustSignals(provider, reviews = []) {
+    if (!provider || typeof provider !== 'object') {
+      return {
+        verificationState: 'UNVERIFIED',
+        verificationDetails: VERIFICATION_STATE_DETAILS.UNVERIFIED,
+        completenessScore: 0,
+        isComplete: false,
+        reviewCount: 0,
+        rating: 0,
+        tenureYears: 0,
+        trustPillars: []
+      };
+    }
+
+    const verDetails = resolveVerificationState(provider);
+    const completeness = calculateProfileCompleteness(provider);
+    const revCount = (Array.isArray(reviews) && reviews.length > 0) 
+      ? reviews.length 
+      : (provider.reviewsCount || provider.reviews_count || (Array.isArray(provider.reviews) ? provider.reviews.length : 0));
+    const avgRating = Number(provider.rating != null ? provider.rating : 0);
+    const tenure = Number(provider.experience_years || provider.experienceYrs || 1);
+
+    const pillars = [];
+    if (verDetails.isNinVerified) {
+      pillars.push({ key: 'nin', icon: '🛡️', title: 'National NIN Verified', text: 'Identity validated via Virtual NIN tokenization.' });
+    } else if (verDetails.isVerified) {
+      pillars.push({ key: 'platform', icon: '✓', title: 'Platform Reviewed', text: 'Trade credentials and identity vetted by PadiFix compliance.' });
+    } else {
+      pillars.push({ key: 'self_reported', icon: 'ℹ️', title: 'Self-Reported Profile', text: 'Listing details supplied directly by the artisan.' });
+    }
+
+    if (provider.phone || provider.whatsapp_number) {
+      pillars.push({ key: 'contact', icon: '📞', title: 'Direct Contact Ready', text: 'Direct WhatsApp and phone calling verified on Nigerian telecom networks.' });
+    }
+
+    if (provider.state && (provider.lga || provider.city)) {
+      pillars.push({ key: 'location', icon: '📍', title: 'Local Presence', text: `Operating in ${provider.lga || provider.city}, ${provider.state}.` });
+    }
+
+    if (revCount > 0) {
+      pillars.push({ key: 'reviews', icon: '⭐', title: 'Customer Feedback', text: `${revCount} customer review${revCount === 1 ? '' : 's'} (★ ${avgRating.toFixed(1)}).` });
+    } else {
+      pillars.push({ key: 'new_listing', icon: '🌱', title: 'New Marketplace Listing', text: 'Recently joined PadiFix; eager for initial verified reviews.' });
+    }
+
+    return {
+      verificationState: verDetails.key,
+      verificationDetails: verDetails,
+      completenessScore: completeness.score,
+      isComplete: completeness.isComplete,
+      reviewCount: revCount,
+      rating: avgRating,
+      tenureYears: tenure,
+      trustPillars: pillars
+    };
+  }
 
   // 10. PHASE 005: DETERMINISTIC PROFILE COMPLETENESS MODEL (100-point system)
   const PROFILE_COMPLETENESS_WEIGHTS = {
@@ -332,11 +515,14 @@
     EVENTS: MONETIZATION_EVENTS,
     ADMIN_CONTROLS,
     VERIFICATION_STATES: PROVIDER_VERIFICATION_STATES,
+    VERIFICATION_STATE_DETAILS,
     PROFILE_COMPLETENESS_WEIGHTS,
     formatNaira,
     sanitizeTelemetryPayload,
     checkClusterCapacity,
     calculateProfileCompleteness,
+    resolveVerificationState,
+    getTrustSignals,
 
     isFeatureEnabled(flagName) {
       return Boolean(FEATURE_FLAGS[flagName]);

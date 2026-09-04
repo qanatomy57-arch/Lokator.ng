@@ -39,6 +39,7 @@ const SHELL_ASSETS = [
   '/categories.js',
   '/providers-data.js',
   '/monetization-config.js',
+  '/verification-providers.js',
   '/supabase-client.js',
   '/telemetry.js',
   '/pwa-manager.js',
