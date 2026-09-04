@@ -646,14 +646,21 @@
             <div>
               <div style="display: flex; align-items: center; gap: 8px;">
                 <span style="font-size: 1.4rem;">💳</span>
-                <h2 style="margin: 0;">Provider Subscription & Billing</h2>
-              </div>
-              <p style="margin: 4px 0 0 0; color: var(--dash-muted); font-size: 13px;">Manage your PadiFix platform subscription, monthly customer contact allowance, and billing history.</p>
-            </div>
-            <div id="sub-status-pill-wrap">
+              <div id="sub-status-pill-wrap">
               <span id="sub-current-status-badge" class="status-tag" style="background: rgba(0, 168, 89, 0.15); color: #34D399; font-weight: 700; padding: 6px 12px; border-radius: 20px; font-size: 12px; border: 1px solid rgba(0, 168, 89, 0.3);">
                 Active Plan
               </span>
+            </div>
+          </div>
+
+          <!-- Grace Period Warning Banner (Phase 011) -->
+          <div id="sub-grace-banner" style="display: none; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.35); border-radius: 8px; padding: 14px 16px; margin: 12px 0 16px 0; color: #FCA5A5; font-size: 13px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+              <div>
+                <strong style="color: #F87171; font-size: 14px; display: block; margin-bottom: 2px;">⚠️ Renewal Payment Issue — Grace Period Active</strong>
+                <span>We couldn't process your monthly subscription renewal. You have <strong id="grace-days-count" style="color: #FFF;">3 days</strong> remaining in your grace period before your account reverts to Free Starter.</span>
+              </div>
+              <button type="button" id="btn-resolve-payment" class="btn btn-primary btn-sm" style="background: #EF4444; border-color: #EF4444; font-weight: 700; padding: 8px 16px; font-size: 12px;">Update Payment Method</button>
             </div>
           </div>
 
@@ -667,22 +674,26 @@
                   <span id="sub-plan-pill" style="font-size: 11px; font-weight: 800; background: #00A859; color: #FFF; padding: 3px 8px; border-radius: 6px; letter-spacing: 0.5px;">PRO</span>
                 </div>
                 <div style="display: flex; align-items: baseline; gap: 8px; margin-bottom: 12px;">
-                  <h3 id="sub-plan-price" style="font-size: 1.8rem; font-weight: 800; color: #FFF; margin: 0;">₦5,000</h3>
+                  <h3 id="sub-plan-price" style="font-size: 1.8rem; font-weight: 800; color: #FFF; margin: 0;">₦8,000</h3>
                   <span style="color: var(--dash-muted); font-size: 13px;">/ month</span>
                 </div>
                 <div style="font-size: 12.5px; color: #94A3B8; display: flex; flex-direction: column; gap: 6px;">
                   <div>📅 <span style="color: #E2E8F0;">Billing Period:</span> <strong id="sub-period-dates">Current Month (Africa/Lagos)</strong></div>
                   <div>🔄 <span style="color: #E2E8F0;">Renewal Date:</span> <strong id="sub-renewal-date" style="color: #34D399;">Active</strong></div>
+                  <div id="sub-cancel-notice" style="display: none; color: #F59E0B; font-size: 11.5px; font-weight: 600;">⚠️ Auto-renewal cancelled. Entitlement active until period end.</div>
+                  <div id="sub-non-renewing-notice" style="display: none; color: #F59E0B; font-size: 11.5px; font-weight: 600;">⚠️ Auto-renewal cancelled. Entitlement active until period end.</div>
                 </div>
               </div>
-              <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.06); display: flex; gap: 10px;">
+              <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.06); display: flex; gap: 10px; flex-wrap: wrap;">
                 <a href="#plans-comparison-grid" class="btn btn-primary btn-sm" style="flex: 1; text-align: center; text-decoration: none; padding: 8px 12px; font-size: 12.5px;">Change Plan ⚡</a>
-                <button type="button" id="btn-cancel-subscription" class="btn btn-outline btn-sm" style="display: none; padding: 8px 12px; font-size: 12px; border-color: rgba(239, 68, 68, 0.4); color: #F87171;">Cancel</button>
+                <button type="button" id="btn-cancel-subscription" class="btn btn-outline btn-sm" style="display: none; padding: 8px 12px; font-size: 12px; border-color: rgba(239, 68, 68, 0.4); color: #F87171;">Cancel Auto-Renewal</button>
+                <button type="button" id="sub-btn-cancel-renewal" class="btn btn-outline btn-sm" style="display: none; padding: 8px 12px; font-size: 12px; border-color: rgba(239, 68, 68, 0.4); color: #F87171;">Cancel Auto-Renewal</button>
+                <button type="button" id="sub-btn-resume-renewal" class="btn btn-outline btn-sm" style="display: none; padding: 8px 12px; font-size: 12px; border-color: rgba(0, 168, 89, 0.4); color: #34D399;">Resume Auto-Renewal</button>
               </div>
             </div>
 
             <!-- Contact Meter / Lead Usage Card -->
-            <div style="background: #111827; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between;">
+            <div id="contact-meter-card" style="background: #111827; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between;">
               <div>
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                   <span style="font-size: 12px; font-weight: 700; color: var(--dash-muted); text-transform: uppercase; letter-spacing: 0.5px;">Customer Contact Meter</span>
@@ -724,19 +735,31 @@
             </div>
           </div>
 
+          <!-- Provider Growth & Lead Conversion Banner (Phase 011) -->
+          <div id="provider-growth-banner" style="background: linear-gradient(90deg, rgba(0, 168, 89, 0.15) 0%, rgba(56, 189, 248, 0.1) 100%); border: 1px solid rgba(0, 168, 89, 0.3); border-radius: 10px; padding: 14px 18px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+            <div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 1.2rem;">📈</span>
+                <strong style="color: #FFF; font-size: 13.5px;">Grow Your Artisan Business with Elevated Visibility</strong>
+              </div>
+              <p style="margin: 4px 0 0 0; color: #94A3B8; font-size: 12.5px;">Artisans on Pro and Premium receive up to <strong>15%–25% search ranking prominence</strong> and up to 100+ monthly customer inquiry allowances.</p>
+            </div>
+            <a href="#plans-comparison-grid" class="btn btn-primary btn-sm" style="background: #00A859; border-color: #00A859; font-weight: 700; font-size: 12px; padding: 6px 14px; text-decoration: none;">Unlock 100 Leads</a>
+          </div>
+
           <!-- Canonical 4-Plan Upgrade / Comparison Grid -->
           <div id="plans-comparison-grid" style="margin-bottom: 24px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
               <div>
-                <h3 style="font-size: 16px; margin: 0; color: #FFF;">Select Your Provider Plan</h3>
-                <p style="font-size: 12.5px; color: var(--dash-muted); margin: 3px 0 0 0;">Transparent monthly subscription. Powered securely by Paystack.</p>
+                <h3 style="margin: 0; font-size: 15px; color: #FFF;">Select Your Platform Subscription Plan</h3>
+                <p style="margin: 3px 0 0 0; font-size: 12px; color: var(--dash-muted);">Choose the plan that matches your monthly client inquiry capacity. Cancel or change anytime.</p>
               </div>
-              <span style="font-size: 11.5px; color: #34D399; background: rgba(0, 168, 89, 0.12); padding: 4px 10px; border-radius: 12px; border: 1px solid rgba(0, 168, 89, 0.3);">
-                ⚡ Cancel or upgrade anytime
+              <span style="font-size: 11px; background: rgba(0, 168, 89, 0.15); color: #34D399; padding: 3px 10px; border-radius: 12px; font-weight: 700; border: 1px solid rgba(0, 168, 89, 0.3);">
+                Recurring Monthly Billing
               </span>
             </div>
 
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px;">
               <!-- FREE PLAN -->
               <div class="dash-sub-plan-card" id="plan-card-FREE" style="background: #111827; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 18px; display: flex; flex-direction: column; justify-content: space-between;">
                 <div>
@@ -774,7 +797,7 @@
                     <li>✓ Up to 10 skills/services</li>
                     <li>✓ Up to 15 photos + 1 video</li>
                     <li>✓ Availability status badge</li>
-                    <li>✓ Improved search visibility</li>
+                    <li>✓ Improved search visibility (+5%)</li>
                     <li>✓ Lead / contact history</li>
                     <li>✓ Basic analytics</li>
                   </ul>
@@ -794,13 +817,13 @@
                     <strong style="color: #34D399; font-size: 15px;">PRO</strong>
                     <span style="font-size: 10.5px; background: rgba(0, 168, 89, 0.2); color: #34D399; padding: 2px 6px; border-radius: 4px;">Recommended</span>
                   </div>
-                  <div style="font-size: 1.4rem; font-weight: 800; color: #FFF; margin-bottom: 12px;">₦5,000 <span style="font-size: 11px; font-weight: 400; color: var(--dash-muted);">/ month</span></div>
+                  <div style="font-size: 1.4rem; font-weight: 800; color: #FFF; margin-bottom: 12px;">₦8,000 <span style="font-size: 11px; font-weight: 400; color: var(--dash-muted);">/ month</span></div>
                   <div style="font-size: 12px; color: #34D399; font-weight: 700; margin-bottom: 10px;">100 customer contacts / month</div>
                   <ul style="list-style: none; padding: 0; margin: 0 0 16px 0; font-size: 12px; color: #CBD5E1; display: flex; flex-direction: column; gap: 6px;">
                     <li>✓ Everything in Basic</li>
                     <li>✓ Up to 25 skills/services</li>
                     <li>✓ Up to 30 photos + 3 videos</li>
-                    <li>✓ Priority search visibility</li>
+                    <li>✓ Priority search visibility (+15%)</li>
                     <li>✓ Featured provider profile</li>
                     <li>✓ Advanced lead analytics</li>
                     <li>✓ Priority support</li>
@@ -818,14 +841,14 @@
                     <strong style="color: #FBBF24; font-size: 15px;">PREMIUM</strong>
                     <span style="font-size: 10.5px; background: rgba(245, 158, 11, 0.15); color: #FBBF24; padding: 2px 6px; border-radius: 4px;">VIP</span>
                   </div>
-                  <div style="font-size: 1.4rem; font-weight: 800; color: #FFF; margin-bottom: 12px;">₦10,000 <span style="font-size: 11px; font-weight: 400; color: var(--dash-muted);">/ month</span></div>
+                  <div style="font-size: 1.4rem; font-weight: 800; color: #FFF; margin-bottom: 12px;">₦15,000 <span style="font-size: 11px; font-weight: 400; color: var(--dash-muted);">/ month</span></div>
                   <div style="font-size: 12px; color: #FBBF24; font-weight: 700; margin-bottom: 10px;">Unlimited contacts (fair use)</div>
                   <ul style="list-style: none; padding: 0; margin: 0 0 16px 0; font-size: 12px; color: #94A3B8; display: flex; flex-direction: column; gap: 6px;">
                     <li>✓ Everything in Pro</li>
                     <li>✓ Unlimited skills/services</li>
                     <li>✓ Unlimited photos</li>
                     <li>✓ Up to 5 provider videos</li>
-                    <li>✓ Highest search visibility</li>
+                    <li>✓ Highest search visibility (+25%)</li>
                     <li>✓ Featured placement & promo</li>
                     <li>✓ Dedicated VIP support</li>
                   </ul>

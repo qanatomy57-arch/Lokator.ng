@@ -1268,14 +1268,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const plans = Monetization && Monetization.PROVIDER_PLANS ? Monetization.PROVIDER_PLANS : {
       FREE: { id: 'FREE', name: 'Free', price_ngn: 0, contact_allowance: 5 },
       BASIC: { id: 'BASIC', name: 'Basic', price_ngn: 3500, contact_allowance: 30 },
-      PRO: { id: 'PRO', name: 'Pro', price_ngn: 5000, contact_allowance: 100 },
-      PREMIUM: { id: 'PREMIUM', name: 'Premium', price_ngn: 10000, contact_allowance: Infinity }
+      PRO: { id: 'PRO', name: 'Pro', price_ngn: 8000, contact_allowance: 100 },
+      PREMIUM: { id: 'PREMIUM', name: 'Premium', price_ngn: 15000, contact_allowance: Infinity }
     };
 
     // Retrieve active subscription
     const sub = (typeof LokatorDB !== 'undefined' && LokatorDB.subscriptions)
       ? LokatorDB.subscriptions.getSubscription(providerId)
-      : { plan_id: 'FREE', status: 'active' };
+      : { plan_id: 'FREE', status: 'active', lifecycle_status: 'active' };
 
     const planInfo = plans[sub.plan_id] || plans.FREE;
 
@@ -1284,14 +1284,62 @@ document.addEventListener('DOMContentLoaded', async () => {
       ? LokatorDB.contactMeter.getUsage(providerId)
       : { total_contacts: 0, whatsapp_contacts: 0, phone_contacts: 0, remaining_contacts: planInfo.contact_allowance, limit_reached: false };
 
+    // Grace Period Banner Management (Phase 011)
+    const graceBanner = document.getElementById('sub-grace-banner');
+    const isGrace = sub.lifecycle_status === 'grace' || sub.status === 'past_due' || sub.status === 'grace' || sub.lifecycle_status === 'past_due';
+    if (graceBanner) {
+      graceBanner.style.display = isGrace ? 'block' : 'none';
+      if (isGrace) {
+        const graceCount = document.getElementById('grace-days-count');
+        if (graceCount) {
+          let days = 3;
+          if (sub.grace_period_ends_at) {
+            const diffMs = new Date(sub.grace_period_ends_at) - new Date();
+            days = Math.max(1, Math.ceil(diffMs / (24 * 60 * 60 * 1000)));
+          }
+          graceCount.textContent = `${days} day${days > 1 ? 's' : ''}`;
+        }
+        const btnResolve = document.getElementById('btn-resolve-payment');
+        if (btnResolve) {
+          btnResolve.onclick = () => {
+            const planCardBtn = document.querySelector(`.btn-select-plan[data-plan="${sub.plan_id}"]`) || document.querySelector('.btn-select-plan[data-plan="PRO"]');
+            if (planCardBtn) planCardBtn.click();
+          };
+        }
+      }
+    }
+
     // Update Status Pill
     const statusBadge = document.getElementById('sub-current-status-badge');
     if (statusBadge) {
-      const isAct = sub.status === 'active';
-      statusBadge.textContent = isAct ? `${planInfo.name} Plan (Active)` : `Status: ${sub.status.toUpperCase()}`;
-      statusBadge.style.background = isAct ? 'rgba(0, 168, 89, 0.15)' : 'rgba(239, 68, 68, 0.15)';
-      statusBadge.style.color = isAct ? '#34D399' : '#F87171';
-      statusBadge.style.borderColor = isAct ? 'rgba(0, 168, 89, 0.3)' : 'rgba(239, 68, 68, 0.3)';
+      if (isGrace) {
+        statusBadge.textContent = 'Grace Period (Payment Pending)';
+        statusBadge.style.background = 'rgba(239, 68, 68, 0.2)';
+        statusBadge.style.color = '#F87171';
+        statusBadge.style.borderColor = 'rgba(239, 68, 68, 0.4)';
+      } else if (sub.cancel_at_period_end || sub.lifecycle_status === 'non_renewing') {
+        statusBadge.textContent = `${planInfo.name} (Non-Renewing)`;
+        statusBadge.style.background = 'rgba(245, 158, 11, 0.15)';
+        statusBadge.style.color = '#FBBF24';
+        statusBadge.style.borderColor = 'rgba(245, 158, 11, 0.3)';
+      } else {
+        const isAct = sub.status === 'active';
+        statusBadge.textContent = isAct ? `${planInfo.name} Plan (Active)` : `Status: ${sub.status.toUpperCase()}`;
+        statusBadge.style.background = isAct ? 'rgba(0, 168, 89, 0.15)' : 'rgba(239, 68, 68, 0.15)';
+        statusBadge.style.color = isAct ? '#34D399' : '#F87171';
+        statusBadge.style.borderColor = isAct ? 'rgba(0, 168, 89, 0.3)' : 'rgba(239, 68, 68, 0.3)';
+      }
+    }
+
+    // Cancellation Notice
+    const cancelNotice = document.getElementById('sub-cancel-notice');
+    const nonRenewingNotice = document.getElementById('sub-non-renewing-notice');
+    const isNonRenewing = sub.cancel_at_period_end || sub.lifecycle_status === 'non_renewing';
+    if (cancelNotice) {
+      cancelNotice.style.display = isNonRenewing ? 'block' : 'none';
+    }
+    if (nonRenewingNotice) {
+      nonRenewingNotice.style.display = isNonRenewing ? 'block' : 'none';
     }
 
     // Update Current Plan Card
@@ -1331,6 +1379,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (sub.plan_id === 'FREE') {
         renewalDate.textContent = 'Free Forever (Resets Monthly)';
         renewalDate.style.color = '#94A3B8';
+      } else if (sub.cancel_at_period_end || sub.lifecycle_status === 'non_renewing') {
+        const endDateStr = sub.current_period_end ? new Date(sub.current_period_end).toLocaleDateString('en-NG', { month: 'short', day: 'numeric', year: 'numeric' }) : 'End of Cycle';
+        renewalDate.textContent = `Ends on ${endDateStr} (No Renewal)`;
+        renewalDate.style.color = '#F59E0B';
       } else if (sub.current_period_end) {
         const renDateStr = new Date(sub.current_period_end).toLocaleDateString('en-NG', { month: 'short', day: 'numeric', year: 'numeric' });
         renewalDate.textContent = renDateStr;
@@ -1342,17 +1394,47 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     const btnCancel = document.getElementById('btn-cancel-subscription');
-    if (btnCancel) {
-      btnCancel.style.display = (sub.plan_id !== 'FREE' && sub.status === 'active') ? 'inline-block' : 'none';
-      btnCancel.onclick = () => {
-        if (confirm(`Are you sure you want to cancel your ${planInfo.name} subscription?\n\nYou will keep your benefits until the end of your billing cycle, then revert to the Free tier (5 contacts/mo).`)) {
+    const btnCancelSub = document.getElementById('sub-btn-cancel-renewal');
+    const btnResumeSub = document.getElementById('sub-btn-resume-renewal');
+    const isPaid = sub.plan_id !== 'FREE';
+
+    const handleToggleRenewal = () => {
+      if (isNonRenewing) {
+        if (typeof LokatorDB !== 'undefined' && LokatorDB.subscriptions) {
+          sub.cancel_at_period_end = false;
+          sub.lifecycle_status = 'active';
+          sub.auto_renew = true;
+          const store = JSON.parse(localStorage.getItem('padifix_subscriptions_store') || '{}');
+          store[providerId] = sub;
+          localStorage.setItem('padifix_subscriptions_store', JSON.stringify(store));
+        }
+        showToast('Auto-renewal resumed successfully.');
+        renderSubscriptionDashboard();
+      } else {
+        if (confirm(`Are you sure you want to cancel auto-renewal for your ${planInfo.name} subscription?\n\nYou will keep your full benefits until the end of your billing cycle, then revert to Free Starter (5 contacts/mo).`)) {
           if (typeof LokatorDB !== 'undefined' && LokatorDB.subscriptions) {
             LokatorDB.subscriptions.cancelSubscription(providerId);
           }
-          showToast('Subscription set to cancel at period end.');
+          showToast('Auto-renewal cancelled. You keep access until period end.');
           renderSubscriptionDashboard();
         }
-      };
+      }
+    };
+
+    if (btnCancel) {
+      btnCancel.style.display = isPaid ? 'inline-block' : 'none';
+      btnCancel.textContent = isNonRenewing ? 'Resume Auto-Renewal' : 'Cancel Auto-Renewal';
+      btnCancel.style.color = isNonRenewing ? '#34D399' : '#F87171';
+      btnCancel.style.borderColor = isNonRenewing ? 'rgba(0, 168, 89, 0.4)' : 'rgba(239, 68, 68, 0.4)';
+      btnCancel.onclick = handleToggleRenewal;
+    }
+    if (btnCancelSub) {
+      btnCancelSub.style.display = (isPaid && !isNonRenewing) ? 'inline-block' : 'none';
+      btnCancelSub.onclick = handleToggleRenewal;
+    }
+    if (btnResumeSub) {
+      btnResumeSub.style.display = (isPaid && isNonRenewing) ? 'inline-block' : 'none';
+      btnResumeSub.onclick = handleToggleRenewal;
     }
 
     // Lead Meter
@@ -1542,6 +1624,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
   }
+  window.renderSubscriptionDashboard = renderSubscriptionDashboard;
+  window.renderSubscriptionTab = renderSubscriptionDashboard;
 
   // 11. Trust & Verification Center Controller (Phase 006 Canonical Engine)
   async function renderTrustCenter() {

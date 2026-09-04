@@ -149,6 +149,8 @@
       priceKobo: 0,
       priceDisplay: '₦0/month',
       billingInterval: 'monthly',
+      paystackPlanCode: null,
+      paystack_plan_code: null,
       contactAllowance: 5,
       contact_allowance: 5,
       maxSkills: 3,
@@ -185,6 +187,8 @@
       priceKobo: 350000,
       priceDisplay: '₦3,500/month',
       billingInterval: 'monthly',
+      paystackPlanCode: 'PLN_padifix_basic',
+      paystack_plan_code: 'PLN_padifix_basic',
       contactAllowance: 30,
       contact_allowance: 30,
       maxSkills: 10,
@@ -219,11 +223,13 @@
       id: 'PRO',
       name: 'Pro',
       displayName: 'Pro',
-      priceAmount: 5000,
-      price_ngn: 5000,
-      priceKobo: 500000,
-      priceDisplay: '₦5,000/month',
+      priceAmount: 8000,
+      price_ngn: 8000,
+      priceKobo: 800000,
+      priceDisplay: '₦8,000/month',
       billingInterval: 'monthly',
+      paystackPlanCode: 'PLN_padifix_pro',
+      paystack_plan_code: 'PLN_padifix_pro',
       contactAllowance: 100,
       contact_allowance: 100,
       maxSkills: 25,
@@ -259,11 +265,13 @@
       id: 'PREMIUM',
       name: 'Premium',
       displayName: 'Premium',
-      priceAmount: 10000,
-      price_ngn: 10000,
-      priceKobo: 1000000,
-      priceDisplay: '₦10,000/month',
+      priceAmount: 15000,
+      price_ngn: 15000,
+      priceKobo: 1500000,
+      priceDisplay: '₦15,000/month',
       billingInterval: 'monthly',
+      paystackPlanCode: 'PLN_padifix_premium',
+      paystack_plan_code: 'PLN_padifix_premium',
       contactAllowance: 'unlimited',
       contact_allowance: Infinity,
       fairUseLimit: 500, // Anti-abuse soft-cap to protect infrastructure
@@ -298,11 +306,26 @@
     }
   };
 
-  // 3.2 PROVIDER SUBSCRIPTION STATE MACHINE
-  const SUBSCRIPTION_STATES = ['active', 'trialing', 'past_due', 'cancelled', 'expired', 'pending', 'payment_failed'];
+  // 3.2 PROVIDER SUBSCRIPTION STATE MACHINE & RECURRING LIFECYCLE (PHASE 011)
+  const SUBSCRIPTION_STATES = [
+    'free',
+    'active',
+    'trialing',
+    'past_due',
+    'grace',
+    'non_renewing',
+    'cancelled',
+    'expired',
+    'pending',
+    'payment_failed'
+  ];
+  SUBSCRIPTION_STATES.FREE = 'free';
   SUBSCRIPTION_STATES.ACTIVE = 'active';
   SUBSCRIPTION_STATES.TRIALING = 'trialing';
   SUBSCRIPTION_STATES.PAST_DUE = 'past_due';
+  SUBSCRIPTION_STATES.GRACE = 'grace';
+  SUBSCRIPTION_STATES.NON_RENEWING = 'non_renewing';
+  SUBSCRIPTION_STATES.CANCEL_AT_PERIOD_END = 'non_renewing';
   SUBSCRIPTION_STATES.CANCELLED = 'cancelled';
   SUBSCRIPTION_STATES.EXPIRED = 'expired';
   SUBSCRIPTION_STATES.PENDING = 'pending';
@@ -310,12 +333,58 @@
 
   const SUBSCRIPTION_TRANSITIONS = {
     pending: ['active', 'payment_failed', 'cancelled'],
-    active: ['active', 'past_due', 'cancelled', 'expired'],
+    active: ['active', 'past_due', 'grace', 'non_renewing', 'cancelled', 'expired'],
     trialing: ['active', 'cancelled', 'expired'],
-    past_due: ['active', 'expired', 'payment_failed'],
-    cancelled: ['active', 'expired'],
+    past_due: ['active', 'grace', 'expired', 'payment_failed'],
+    grace: ['active', 'expired', 'cancelled'],
+    non_renewing: ['active', 'expired', 'cancelled'],
+    cancelled: ['active', 'expired', 'pending'],
     expired: ['pending', 'active'],
     payment_failed: ['pending', 'active']
+  };
+
+  // Phase 011 Recurring Paystack and Grace Period Settings
+  const PAYSTACK_RECURRING = {
+    DEFAULT_GRACE_PERIOD_DAYS: 3,
+    CURRENCY: 'NGN',
+    PLANS: {
+      BASIC: {
+        plan_code: 'PLN_padifix_basic',
+        name: 'PadiFix Basic',
+        amount_kobo: 350000,
+        amount_ngn: 3500,
+        interval: 'monthly'
+      },
+      PRO: {
+        plan_code: 'PLN_padifix_pro',
+        name: 'PadiFix Pro',
+        amount_kobo: 800000,
+        amount_ngn: 8000,
+        interval: 'monthly'
+      },
+      PREMIUM: {
+        plan_code: 'PLN_padifix_premium',
+        name: 'PadiFix Premium',
+        amount_kobo: 1500000,
+        amount_ngn: 15000,
+        interval: 'monthly'
+      }
+    }
+  };
+
+  // Phase 011 Resend Transactional Email Configuration
+  const RESEND_EMAIL_CONFIG = {
+    DEFAULT_FROM_EMAIL: 'PadiFix <notifications@padifix.ng>',
+    FALLBACK_FROM_EMAIL: 'PadiFix <onboarding@resend.dev>',
+    EVENTS: {
+      SUBSCRIPTION_ACTIVATED: 'subscription_activated',
+      PAYMENT_SUCCESSFUL: 'payment_successful',
+      PAYMENT_FAILED: 'payment_failed',
+      GRACE_PERIOD_WARNING: 'grace_period_warning',
+      SUBSCRIPTION_CANCELLED: 'subscription_cancelled',
+      SUBSCRIPTION_EXPIRED: 'subscription_expired',
+      PLAN_CHANGED: 'plan_changed'
+    }
   };
 
   // 3.3 CONTACT METERING CONFIGURATION
@@ -359,8 +428,11 @@
 
   const TRUST_MONETIZATION_SEPARATION = {
     paid_plans_alter_ratings: false,
+    paid_plan_can_boost_star_rating: false,
     paid_plans_remove_negative_reviews: false,
+    paid_plan_can_remove_negative_reviews: false,
     paid_plans_grant_verified_badge: false,
+    paid_plan_grants_verified_badge: false,
     paid_plans_bypass_compliance_vetting: false,
     allow_paid_review_placement: false
   };
@@ -889,6 +961,10 @@
     phase: PHASE,
     PHASE_010_VERSION,
     PHASE_010_ACTIVE,
+    PHASE_011_VERSION: '6.0.0',
+    PHASE_011_ACTIVE: true,
+    PAYSTACK_RECURRING,
+    RESEND_EMAIL_CONFIG,
     FEATURE_FLAGS,
     FLAGS: FEATURE_FLAGS,
     CONFIG,

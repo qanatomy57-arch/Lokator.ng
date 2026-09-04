@@ -57,12 +57,12 @@ function postJson(urlStr, data, headers = {}) {
   });
 }
 
-// Canonical Provider Subscription Plans (Phase 010)
+// Canonical Provider Subscription Plans (Phase 011 Canonical Pricing)
 const CANONICAL_PLANS = {
-  FREE: { id: 'FREE', name: 'Free', amount_kobo: 0, amount_display: '₦0', contacts: 5 },
-  BASIC: { id: 'BASIC', name: 'Basic', amount_kobo: 350000, amount_display: '₦3,500', contacts: 30 },
-  PRO: { id: 'PRO', name: 'Pro', amount_kobo: 500000, amount_display: '₦5,000', contacts: 100 },
-  PREMIUM: { id: 'PREMIUM', name: 'Premium', amount_kobo: 1000000, amount_display: '₦10,000', contacts: 'unlimited' }
+  FREE: { id: 'FREE', name: 'Free', amount_kobo: 0, amount_display: '₦0', contacts: 5, paystack_plan_code: null },
+  BASIC: { id: 'BASIC', name: 'Basic', amount_kobo: 350000, amount_display: '₦3,500', contacts: 30, paystack_plan_code: 'PLN_padifix_basic' },
+  PRO: { id: 'PRO', name: 'Pro', amount_kobo: 800000, amount_display: '₦8,000', contacts: 100, paystack_plan_code: 'PLN_padifix_pro' },
+  PREMIUM: { id: 'PREMIUM', name: 'Premium', amount_kobo: 1500000, amount_display: '₦15,000', contacts: 'unlimited', paystack_plan_code: 'PLN_padifix_premium' }
 };
 
 module.exports = async (req, res) => {
@@ -135,6 +135,7 @@ module.exports = async (req, res) => {
         currency: 'NGN',
         billing_interval: 'monthly',
         duration_days: 30,
+        paystack_plan_code: targetPlan.paystack_plan_code,
         reference: reference,
         action: 'subscription_upgrade',
         status: 'payment_pending',
@@ -147,7 +148,7 @@ module.exports = async (req, res) => {
       const callbackUrl = `${origin}/dashboard.html?payment_ref=${reference}&payment_status=callback&action=subscription`;
 
       if (secretKey) {
-        const paystackRes = await postJson('https://api.paystack.co/transaction/initialize', {
+        const initPayload = {
           email: providerEmail,
           amount: targetPlan.amount_kobo,
           reference: reference,
@@ -158,11 +159,19 @@ module.exports = async (req, res) => {
             provider_id: Number(provider_id),
             plan_id: targetPlan.id,
             plan_name: targetPlan.name,
+            paystack_plan_code: targetPlan.paystack_plan_code,
             action: 'subscription_upgrade',
             billing_interval: 'monthly',
             duration_days: 30
           }
-        }, {
+        };
+
+        // Attach Paystack Recurring Plan Code if applicable
+        if (targetPlan.paystack_plan_code) {
+          initPayload.plan = targetPlan.paystack_plan_code;
+        }
+
+        const paystackRes = await postJson('https://api.paystack.co/transaction/initialize', initPayload, {
           'Authorization': `Bearer ${secretKey}`
         });
 
@@ -173,6 +182,7 @@ module.exports = async (req, res) => {
             access_code: paystackRes.data.data.access_code,
             reference: reference,
             plan: targetPlan,
+            paystack_plan_code: targetPlan.paystack_plan_code,
             order: order
           });
         } else {
@@ -191,6 +201,7 @@ module.exports = async (req, res) => {
         authorization_url: mockAuthUrl,
         reference: reference,
         plan: targetPlan,
+        paystack_plan_code: targetPlan.paystack_plan_code,
         order: order
       });
     }

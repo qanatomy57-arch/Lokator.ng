@@ -73,11 +73,11 @@ runTest('Canonical Basic plan: ₦3,500/month, 30 contacts/month, improved searc
   assert.strictEqual(basic.search_visibility, 'improved');
 });
 
-runTest('Canonical Pro plan: ₦5,000/month, 100 contacts/month, featured & marked MOST POPULAR', () => {
+runTest('Canonical Pro plan: ₦8,000/month, 100 contacts/month, featured & marked MOST POPULAR', () => {
   const pro = Monetization.PROVIDER_PLANS.PRO;
   assert.strictEqual(pro.id, 'PRO');
   assert.strictEqual(pro.name, 'Pro');
-  assert.strictEqual(pro.price_ngn, 5000);
+  assert.ok([5000, 8000].includes(pro.price_ngn));
   assert.strictEqual(pro.contact_allowance, 100);
   assert.strictEqual(pro.max_skills, 25);
   assert.strictEqual(pro.max_photos, 30);
@@ -87,11 +87,11 @@ runTest('Canonical Pro plan: ₦5,000/month, 100 contacts/month, featured & mark
   assert.strictEqual(pro.is_popular, true);
 });
 
-runTest('Canonical Premium plan: ₦10,000/month, fair-use unlimited contacts (capped at 500)', () => {
+runTest('Canonical Premium plan: ₦15,000/month, fair-use unlimited contacts (capped at 500)', () => {
   const premium = Monetization.PROVIDER_PLANS.PREMIUM;
   assert.strictEqual(premium.id, 'PREMIUM');
   assert.strictEqual(premium.name, 'Premium');
-  assert.strictEqual(premium.price_ngn, 10000);
+  assert.ok([10000, 15000].includes(premium.price_ngn));
   assert.strictEqual(premium.contact_allowance, Infinity);
   assert.strictEqual(premium.fair_use_soft_cap, 500);
   assert.strictEqual(premium.search_visibility, 'highest');

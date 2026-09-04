@@ -41,9 +41,9 @@ function getJson(urlStr, headers = {}) {
 }
 
 const CANONICAL_PLANS = {
-  BASIC: { id: 'BASIC', name: 'Basic', amount_kobo: 350000, amount_display: '₦3,500', contacts: 30, search_boost: 5 },
-  PRO: { id: 'PRO', name: 'Pro', amount_kobo: 500000, amount_display: '₦5,000', contacts: 100, search_boost: 15 },
-  PREMIUM: { id: 'PREMIUM', name: 'Premium', amount_kobo: 1000000, amount_display: '₦10,000', contacts: 'unlimited', search_boost: 25 }
+  BASIC: { id: 'BASIC', name: 'Basic', amount_kobo: 350000, amount_display: '₦3,500', contacts: 30, search_boost: 5, paystack_plan_code: 'PLN_padifix_basic' },
+  PRO: { id: 'PRO', name: 'Pro', amount_kobo: 800000, amount_display: '₦8,000', contacts: 100, search_boost: 15, paystack_plan_code: 'PLN_padifix_pro' },
+  PREMIUM: { id: 'PREMIUM', name: 'Premium', amount_kobo: 1500000, amount_display: '₦15,000', contacts: 'unlimited', search_boost: 25, paystack_plan_code: 'PLN_padifix_premium' }
 };
 
 module.exports = async (req, res) => {
@@ -157,6 +157,7 @@ module.exports = async (req, res) => {
             status: 'active',
             plan_id: targetPlan.id,
             plan_name: targetPlan.name,
+            paystack_plan_code: targetPlan.paystack_plan_code,
             effective_from: new Date(now).toISOString(),
             effective_until: subExpiresAt,
             contacts_allowance: targetPlan.contacts,

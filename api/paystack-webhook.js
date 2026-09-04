@@ -7,15 +7,22 @@
  */
 
 const crypto = require('crypto');
+const ResendEmailService = require('../lib/resend-email-service');
 
 // In-memory processed webhook event ID cache with payload hash for replay/tamper detection
 const processedEvents = new Map();
 
-// Canonical Plan Map for verification
+// Canonical Plan Map for verification (Phase 011 Canonical Pricing)
 const WEBHOOK_PLANS = {
-  350000: { id: 'BASIC', name: 'Basic', contacts: 30 },
-  500000: { id: 'PRO', name: 'Pro', contacts: 100 },
-  1000000: { id: 'PREMIUM', name: 'Premium', contacts: 'unlimited' }
+  350000: { id: 'BASIC', name: 'Basic', contacts: 30, amount_display: '₦3,500', paystack_plan_code: 'PLN_padifix_basic' },
+  800000: { id: 'PRO', name: 'Pro', contacts: 100, amount_display: '₦8,000', paystack_plan_code: 'PLN_padifix_pro' },
+  1500000: { id: 'PREMIUM', name: 'Premium', contacts: 'unlimited', amount_display: '₦15,000', paystack_plan_code: 'PLN_padifix_premium' }
+};
+
+const WEBHOOK_PLAN_CODES = {
+  'PLN_padifix_basic': { id: 'BASIC', name: 'Basic', contacts: 30, amount: 350000, amount_display: '₦3,500' },
+  'PLN_padifix_pro': { id: 'PRO', name: 'Pro', contacts: 100, amount: 800000, amount_display: '₦8,000' },
+  'PLN_padifix_premium': { id: 'PREMIUM', name: 'Premium', contacts: 'unlimited', amount: 1500000, amount_display: '₦15,000' }
 };
 
 module.exports = async (req, res) => {
@@ -105,14 +112,36 @@ module.exports = async (req, res) => {
       // Branch A: Subscription Plan Charge
       const isSub = (reference && reference.startsWith('lok_sub_')) || 
                     metadata.action === 'subscription_upgrade' || 
-                    Boolean(metadata.plan_id);
+                    Boolean(metadata.plan_id) ||
+                    Boolean(data.plan) ||
+                    Boolean(data.subscription_code) ||
+                    Boolean(WEBHOOK_PLANS[amount]);
 
-      if (isSub || WEBHOOK_PLANS[amount]) {
-        const plan = WEBHOOK_PLANS[amount] || {
-          id: String(metadata.plan_id || 'PRO').toUpperCase(),
-          name: metadata.plan_name || 'Pro',
-          contacts: 100
-        };
+      if (isSub) {
+        let plan = WEBHOOK_PLANS[amount];
+        if (!plan && data.plan && data.plan.plan_code) {
+          plan = WEBHOOK_PLAN_CODES[data.plan.plan_code];
+        }
+        if (!plan) {
+          const planKey = String(metadata.plan_id || 'PRO').toUpperCase();
+          plan = Object.values(WEBHOOK_PLANS).find(p => p.id === planKey) || WEBHOOK_PLANS[800000];
+        }
+
+        const isRenewal = Boolean(data.subscription_code || data.subscription || metadata.is_renewal);
+        const recipientEmail = (data.customer && data.customer.email) || metadata.email;
+
+        // Asynchronously dispatch Resend receipt email without blocking webhook response
+        if (recipientEmail && typeof ResendEmailService.sendPaymentSuccessfulEmail === 'function') {
+          ResendEmailService.sendPaymentSuccessfulEmail({
+            to: recipientEmail,
+            providerName: metadata.provider_name || 'Artisan',
+            amount: plan.amount_display || `₦${(amount / 100).toLocaleString()}`,
+            plan: plan.name,
+            reference: reference,
+            nextRenewal: '30 days from today',
+            isRenewal
+          }).catch(err => console.error('[Webhook:EmailError]', err.message));
+        }
 
         return res.status(200).json({
           status: 'success',
@@ -123,7 +152,10 @@ module.exports = async (req, res) => {
           entitlement: 'SUBSCRIPTION',
           plan_id: plan.id,
           plan_name: plan.name,
+          paystack_plan_code: plan.paystack_plan_code,
           contacts_allowance: plan.contacts,
+          is_renewal: isRenewal,
+          subscription_code: data.subscription_code || (data.subscription && data.subscription.subscription_code) || null,
           duration_days: 30
         });
       }
@@ -144,34 +176,94 @@ module.exports = async (req, res) => {
 
     // 2. Handle Subscription Creation (subscription.create)
     if (eventType === 'subscription.create') {
+      const planCode = data.plan && data.plan.plan_code;
+      const resolvedPlan = WEBHOOK_PLAN_CODES[planCode] || WEBHOOK_PLANS[data.amount] || { id: 'PRO', name: 'Pro' };
+      const recipientEmail = data.customer && data.customer.email;
+
+      if (recipientEmail && typeof ResendEmailService.sendSubscriptionActivatedEmail === 'function') {
+        ResendEmailService.sendSubscriptionActivatedEmail({
+          to: recipientEmail,
+          providerName: (data.customer && data.customer.first_name) || 'Artisan',
+          plan: resolvedPlan.name,
+          price: resolvedPlan.amount_display || '₦8,000/month',
+          nextRenewalDate: data.next_payment_date ? new Date(data.next_payment_date).toLocaleDateString('en-GB') : 'Next Month',
+          contactAllowance: resolvedPlan.contacts || 100
+        }).catch(err => console.error('[Webhook:EmailError]', err.message));
+      }
+
       return res.status(200).json({
         status: 'success',
         event: 'subscription.create',
         subscription_code: data.subscription_code,
-        customer_email: data.customer && data.customer.email,
+        customer_email: recipientEmail,
+        plan_id: resolvedPlan.id,
+        plan_code: planCode,
+        next_payment_date: data.next_payment_date,
         status_applied: 'active'
       });
     }
 
     // 3. Handle Renewal Payment Failure (invoice.payment_failed)
     if (eventType === 'invoice.payment_failed') {
+      const graceDays = 3;
+      const gracePeriodEndsAt = new Date(Date.now() + graceDays * 24 * 60 * 60 * 1000).toISOString();
+      const recipientEmail = data.customer && data.customer.email;
+
+      if (recipientEmail && typeof ResendEmailService.sendPaymentFailedEmail === 'function') {
+        ResendEmailService.sendPaymentFailedEmail({
+          to: recipientEmail,
+          providerName: (data.customer && data.customer.first_name) || 'Artisan',
+          plan: (data.plan && data.plan.name) || 'Pro',
+          reason: (data.description || 'Card payment declined'),
+          graceDaysRemaining: graceDays
+        }).catch(err => console.error('[Webhook:EmailError]', err.message));
+      }
+
       return res.status(200).json({
         status: 'success',
         event: 'invoice.payment_failed',
         subscription_code: data.subscription_code,
         status_applied: 'past_due',
-        notice: 'Provider subscription marked past_due; entering grace period.'
+        lifecycle_status: 'grace',
+        grace_period_days: graceDays,
+        grace_period_ends_at: gracePeriodEndsAt,
+        notice: `Provider subscription entered ${graceDays}-day grace period. Profile remains visible and searchable.`
       });
     }
 
     // 4. Handle Subscription Disable / Cancellation (subscription.disable)
     if (eventType === 'subscription.disable') {
+      const recipientEmail = data.customer && data.customer.email;
+
+      if (recipientEmail && typeof ResendEmailService.sendSubscriptionCancelledEmail === 'function') {
+        ResendEmailService.sendSubscriptionCancelledEmail({
+          to: recipientEmail,
+          providerName: (data.customer && data.customer.first_name) || 'Artisan',
+          plan: (data.plan && data.plan.name) || 'Pro',
+          effectiveUntil: 'Current billing period end'
+        }).catch(err => console.error('[Webhook:EmailError]', err.message));
+      }
+
       return res.status(200).json({
         status: 'success',
         event: 'subscription.disable',
         subscription_code: data.subscription_code,
         status_applied: 'cancelled',
-        notice: 'Provider subscription cancelled.'
+        lifecycle_status: 'non_renewing',
+        notice: 'Provider subscription auto-renewal cancelled. Entitlement remains valid through paid period.'
+      });
+    }
+
+    // 5. Handle Upcoming Invoice Notification (invoice.create)
+    if (eventType === 'invoice.create') {
+      return res.status(200).json({
+        status: 'success',
+        event: 'invoice.create',
+        subscription_code: data.subscription_code,
+        amount: data.amount,
+        period_start: data.period_start,
+        period_end: data.period_end,
+        notice: 'Upcoming renewal invoice acknowledged.'
       });
     }
 

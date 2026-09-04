@@ -1294,6 +1294,16 @@
        * Resolve the full provider record linked to the current logged-in user
        */
       async getCurrentProvider() {
+        if (typeof localStorage !== 'undefined') {
+          try {
+            const cachedProvider = localStorage.getItem('lokator_current_provider');
+            if (cachedProvider) {
+              const p = JSON.parse(cachedProvider);
+              if (p && p.id) return p;
+            }
+          } catch (e) {}
+        }
+
         const userRes = await this.getUser();
         const user = userRes && userRes.data ? userRes.data.user : null;
         if (!user) return null;
@@ -10195,17 +10205,22 @@
         provider_id: pId,
         plan_id: plan.id,
         plan_name: plan.name,
-        status: 'active',
+        status: details.status || 'active',
         price_amount: plan.priceAmount,
         price_display: plan.priceDisplay,
         contact_allowance: plan.contactAllowance,
         fair_use_limit: plan.fairUseLimit || null,
         search_boost_percent: plan.searchBoostPercent,
-        current_period_start: new Date(now).toISOString(),
-        current_period_end: new Date(now + 30 * 24 * 60 * 60 * 1000).toISOString(),
-        cancel_at_period_end: false,
+        current_period_start: details.current_period_start || new Date(now).toISOString(),
+        current_period_end: details.current_period_end || new Date(now + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        cancel_at_period_end: details.cancel_at_period_end !== undefined ? details.cancel_at_period_end : (details.auto_renew === false),
+        paystack_plan_code: details.paystack_plan_code || plan.paystackPlanCode || plan.paystack_plan_code || null,
+        lifecycle_status: details.lifecycle_status || details.status || 'active',
+        grace_period_ends_at: details.grace_period_ends_at || details.grace_period_end || null,
+        failed_payment_count: details.failed_payment_count || 0,
         reference: details.reference || `lok_sub_${now}`,
-        updated_at: new Date(now).toISOString()
+        updated_at: new Date(now).toISOString(),
+        ...details
       };
 
       subStore[pId] = sub;
@@ -10229,7 +10244,9 @@
           reference: sub.reference,
           plan_id: plan.id,
           plan_name: plan.name,
+          paystack_plan_code: plan.paystackPlanCode || plan.paystack_plan_code || null,
           amount_ngn: plan.priceAmount,
+          transaction_type: details.is_renewal ? 'renewal' : (details.is_upgrade ? 'upgrade' : 'initial'),
           currency: 'NGN',
           status: 'success',
           date: new Date(now).toISOString()
@@ -10248,12 +10265,16 @@
       return { success: true, subscription: sub };
     },
 
-    cancelSubscription(providerId) {
+    cancelSubscription(providerId, immediate = false) {
       const pId = Number(providerId);
       const subStore = getLocalStore('padifix_subscriptions_store', {});
       const sub = subStore[pId] || this.getSubscription(pId);
       sub.cancel_at_period_end = true;
-      sub.status = 'cancelled';
+      sub.lifecycle_status = 'non_renewing';
+      if (immediate) {
+        sub.status = 'cancelled';
+        sub.lifecycle_status = 'cancelled';
+      }
       subStore[pId] = sub;
       setLocalStore('padifix_subscriptions_store', subStore);
 
@@ -10261,6 +10282,44 @@
         LokatorTelemetry.trackEvent('subscription_cancelled', { provider_id: pId });
       }
 
+      return { success: true, subscription: sub };
+    },
+
+    enterGracePeriod(providerId, days = 3) {
+      const pId = Number(providerId);
+      const subStore = getLocalStore('padifix_subscriptions_store', {});
+      const sub = subStore[pId] || this.getSubscription(pId);
+      const now = Date.now();
+      sub.status = 'past_due';
+      sub.lifecycle_status = 'grace';
+      sub.grace_period_ends_at = new Date(now + days * 24 * 60 * 60 * 1000).toISOString();
+      sub.failed_payment_count = (sub.failed_payment_count || 0) + 1;
+      sub.last_payment_failed_at = new Date(now).toISOString();
+      subStore[pId] = sub;
+      setLocalStore('padifix_subscriptions_store', subStore);
+      return { success: true, subscription: sub };
+    },
+
+    expireSubscription(providerId) {
+      const pId = Number(providerId);
+      const subStore = getLocalStore('padifix_subscriptions_store', {});
+      const sub = {
+        provider_id: pId,
+        plan_id: 'FREE',
+        plan_name: 'Free Starter',
+        status: 'active',
+        lifecycle_status: 'active',
+        price_amount: 0,
+        price_display: '₦0/month',
+        contact_allowance: 5,
+        current_period_start: new Date().toISOString(),
+        current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        cancel_at_period_end: false,
+        grace_period_ends_at: null,
+        failed_payment_count: 0
+      };
+      subStore[pId] = sub;
+      setLocalStore('padifix_subscriptions_store', subStore);
       return { success: true, subscription: sub };
     },
 
