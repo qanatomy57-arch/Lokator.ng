@@ -277,6 +277,7 @@ module.exports = async (req, res) => {
       normalizedOutcome,
       safeResultCode,
       targetState,
+      state: targetState,
       processedAt: nowIso
     });
 

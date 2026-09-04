@@ -53,7 +53,14 @@
     kycProviderMode: 'sandbox', // 'sandbox' | 'live'
     kycLiveEnabled: false, // Strictly false: live KYC fails closed unless authorized server-side
     kycWebhookVerificationEnabled: true,
-    kycReconciliationEnabled: true
+    kycReconciliationEnabled: true,
+
+    // Phase 009: KYC Vendor Selection, Production Readiness & Spending Guard Flags
+    kycPrimaryProvider: 'prembly',
+    kycSecondaryProvider: 'dojah',
+    kycDailyVerificationCap: 50,
+    kycMonthlyVerificationCap: 500,
+    kycMaxCostPerVerificationNgn: 250
   };
 
   // 2. MARKETPLACE RULES & PRIVACY CONFIGURATION
@@ -161,10 +168,15 @@
     // Phase 008 Real KYC & Webhook Reconciliation Events
     VERIFICATION_ATTEMPT_CREATED: 'verification_attempt_created',
     WEBHOOK_RECEIVED: 'webhook_received',
-    RECONCILIATION_COMPLETED: 'reconciliation_completed'
+    RECONCILIATION_COMPLETED: 'reconciliation_completed',
+
+    // Phase 009 Vendor Activation & Spending Guard Events
+    KYC_SPEND_CAP_REACHED: 'kyc_spend_cap_reached',
+    KYC_FAILOVER_TRIGGERED: 'kyc_failover_triggered',
+    VENDOR_LATENCY_RECORDED: 'vendor_latency_recorded'
   };
 
-  // Phase 008: Standardized Machine-Readable Compliance Decision Codes
+  // Phase 008 & 009: Standardized Machine-Readable Compliance Decision Codes
   const COMPLIANCE_DECISION_CODES = {
     VERIFICATION_SUCCESS: 'VERIFICATION_SUCCESS',
     IDENTITY_MISMATCH: 'IDENTITY_MISMATCH',
@@ -178,7 +190,10 @@
     POLICY_REJECTION: 'POLICY_REJECTION',
     PENDING_REVIEW: 'PENDING_REVIEW',
     APPROVED: 'APPROVED',
-    REJECTED: 'REJECTED'
+    REJECTED: 'REJECTED',
+    SPEND_CAP_EXCEEDED: 'SPEND_CAP_EXCEEDED',
+    LIVE_KYC_DISABLED: 'LIVE_KYC_DISABLED',
+    INVALID_VNIN_FORMAT: 'INVALID_VNIN_FORMAT'
   };
 
   // 5. ADMIN CONTROLS & ROLE-BASED ACCESS
@@ -550,6 +565,7 @@
     VERSION,
     PHASE,
     FEATURE_FLAGS,
+    FLAGS: FEATURE_FLAGS,
     CONFIG,
     PRODUCTS,
     EVENTS: MONETIZATION_EVENTS,

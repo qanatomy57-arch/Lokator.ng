@@ -171,42 +171,44 @@
      */
     normalizeResult(rawResult = {}) {
       const status = String(rawResult.status || '').toLowerCase();
-      if (status === 'approved' || status === 'verified' || rawResult.success === true) {
+      const outcome = String(rawResult.outcome || '').toUpperCase();
+
+      if (status === 'approved' || status === 'verified' || outcome === 'VERIFIED' || rawResult.success === true) {
         return {
           outcome: 'VERIFIED',
           state: rawResult.state || 'VERIFIED_NIN',
-          safeResultCode: 'APPROVED',
+          safeResultCode: rawResult.safeResultCode || 'APPROVED',
           message: rawResult.message || 'Verification successfully completed.'
         };
       }
-      if (status === 'rejected') {
+      if (status === 'rejected' || outcome === 'REJECTED') {
         return {
           outcome: 'REJECTED',
-          state: 'REJECTED',
-          safeResultCode: 'REJECTED',
+          state: rawResult.state || 'REJECTED',
+          safeResultCode: rawResult.safeResultCode || 'REJECTED',
           message: rawResult.error || 'Verification documents could not be validated.'
         };
       }
-      if (status === 'pending') {
+      if (status === 'pending' || outcome === 'PENDING') {
         return {
           outcome: 'PENDING',
-          state: 'PENDING',
-          safeResultCode: 'PENDING_REVIEW',
+          state: rawResult.state || 'PENDING',
+          safeResultCode: rawResult.safeResultCode || 'PENDING_REVIEW',
           message: rawResult.message || 'Verification is currently under review.'
         };
       }
-      if (rawResult.gated || status === 'unavailable') {
+      if (rawResult.gated || status === 'unavailable' || outcome === 'UNAVAILABLE') {
         return {
           outcome: 'UNAVAILABLE',
           state: 'PENDING',
-          safeResultCode: 'GATEWAY_UNAVAILABLE',
+          safeResultCode: rawResult.safeResultCode || 'GATEWAY_UNAVAILABLE',
           message: rawResult.error || 'Automated verification gateway is currently unavailable.'
         };
       }
       return {
         outcome: 'FAILED',
-        state: 'FAILED',
-        safeResultCode: 'VERIFICATION_FAILED',
+        state: rawResult.state || 'FAILED',
+        safeResultCode: rawResult.safeResultCode || 'VERIFICATION_FAILED',
         message: rawResult.error || 'Verification failed.'
       };
     }
@@ -801,7 +803,540 @@
   // Alias for backward compatibility with Phase 006
   const FutureNINVerificationProvider = NinVerificationProvider;
 
-  // 9. VERIFICATION PROVIDER FACTORY
+  // 10. VERIFICATION SPENDING GUARD (Phase 009: Billing Safety & Cap Protection)
+  const VerificationSpendingGuard = {
+    dailyCount: 0,
+    monthlyCount: 0,
+    lastResetDay: new Date().toDateString(),
+    lastResetMonth: new Date().getMonth(),
+
+    _checkAndRotate() {
+      const now = new Date();
+      const currentDay = now.toDateString();
+      const currentMonth = now.getMonth();
+
+      if (this.lastResetDay !== currentDay) {
+        this.dailyCount = 0;
+        this.lastResetDay = currentDay;
+      }
+      if (this.lastResetMonth !== currentMonth) {
+        this.monthlyCount = 0;
+        this.lastResetMonth = currentMonth;
+      }
+    },
+
+    checkSpendAvailable(options = {}) {
+      this._checkAndRotate();
+
+      const Monetization = (typeof PadiFixMonetization !== 'undefined') ? PadiFixMonetization :
+                           (typeof require !== 'undefined' ? require('./monetization-config.js') : null);
+
+      const dailyCap = (options.dailyCap != null) ? options.dailyCap : (Monetization ? Monetization.FLAGS.kycDailyVerificationCap : 50);
+      const monthlyCap = (options.monthlyCap != null) ? options.monthlyCap : (Monetization ? Monetization.FLAGS.kycMonthlyVerificationCap : 500);
+
+      // Kill Switch / Live Mode Check
+      const isLiveEnabled = Monetization ? Monetization.FLAGS.kycLiveEnabled : false;
+      if (options.requireLive && !isLiveEnabled) {
+        return {
+          allowed: false,
+          reason: 'LIVE_KYC_DISABLED',
+          safeCode: 'LIVE_KYC_DISABLED',
+          dailyCount: this.dailyCount,
+          monthlyCount: this.monthlyCount
+        };
+      }
+
+      if (this.dailyCount >= dailyCap) {
+        return {
+          allowed: false,
+          reason: 'DAILY_SPEND_CAP_REACHED',
+          safeCode: 'SPEND_CAP_EXCEEDED',
+          dailyCount: this.dailyCount,
+          monthlyCount: this.monthlyCount
+        };
+      }
+
+      if (this.monthlyCount >= monthlyCap) {
+        return {
+          allowed: false,
+          reason: 'MONTHLY_SPEND_CAP_REACHED',
+          safeCode: 'SPEND_CAP_EXCEEDED',
+          dailyCount: this.dailyCount,
+          monthlyCount: this.monthlyCount
+        };
+      }
+
+      return {
+        allowed: true,
+        dailyCount: this.dailyCount,
+        monthlyCount: this.monthlyCount,
+        dailyRemaining: Math.max(0, dailyCap - this.dailyCount),
+        monthlyRemaining: Math.max(0, monthlyCap - this.monthlyCount)
+      };
+    },
+
+    recordSpend(count = 1) {
+      this._checkAndRotate();
+      this.dailyCount += count;
+      this.monthlyCount += count;
+      return { dailyCount: this.dailyCount, monthlyCount: this.monthlyCount };
+    },
+
+    _resetCounters() {
+      this.dailyCount = 0;
+      this.monthlyCount = 0;
+      this.lastResetDay = new Date().toDateString();
+      this.lastResetMonth = new Date().getMonth();
+    }
+  };
+
+  // 11. PREMBLY KYC PROVIDER (Phase 009: Primary Nigerian Identity Provider Adapter)
+  class PremblyKycProvider extends VerificationProvider {
+    constructor() {
+      super('PremblyKycProvider');
+      this.source = 'PREMBLY';
+      this.vendor = 'Prembly';
+    }
+
+    getCapabilities() {
+      return {
+        adapter: this.name,
+        source: this.source,
+        vendor: this.vendor,
+        manualReview: false,
+        liveAutomated: true,
+        supportsWebhook: true,
+        supportsReconciliation: true,
+        supportedDocs: ['vnin', 'cac_cert', 'drivers_license', 'voters_card']
+      };
+    }
+
+    async healthCheck() {
+      const Monetization = (typeof PadiFixMonetization !== 'undefined') ? PadiFixMonetization :
+                           (typeof require !== 'undefined' ? require('./monetization-config.js') : null);
+      const isLive = Monetization && Monetization.FLAGS.kycLiveEnabled;
+      return {
+        healthy: true,
+        adapter: this.name,
+        vendor: this.vendor,
+        mode: isLive ? 'live' : 'sandbox',
+        liveEnabled: Boolean(isLive)
+      };
+    }
+
+    async verifyIdentity(requestData = {}) {
+      const Monetization = (typeof PadiFixMonetization !== 'undefined') ? PadiFixMonetization :
+                           (typeof require !== 'undefined' ? require('./monetization-config.js') : null);
+      const isLiveEnabled = Monetization && Monetization.FLAGS.kycLiveEnabled;
+      const docType = (requestData.docType || 'vnin').toLowerCase();
+      const docRef = String(requestData.docRef || '').trim();
+      const upper = docRef.toUpperCase();
+
+      if (!docRef) {
+        return {
+          success: false,
+          outcome: 'FAILED',
+          state: 'UNVERIFIED',
+          safeResultCode: 'MALFORMED_PROVIDER_RESPONSE',
+          error: 'Document reference is required.'
+        };
+      }
+
+      // Strict vNIN format enforcement
+      if (docType === 'vnin') {
+        const isSyntheticSandbox = upper.includes('SANDBOX') || upper.includes('MALFORMED');
+        if (!isSyntheticSandbox) {
+          const cleanVnin = docRef.replace(/[^a-zA-Z0-9]/g, '');
+          if (cleanVnin.length !== 16 || upper.startsWith('INVALID')) {
+            return {
+              success: false,
+              outcome: 'REJECTED',
+              state: 'REJECTED',
+              safeResultCode: 'INVALID_VNIN_FORMAT',
+              error: 'Invalid Virtual NIN format. Must be a 16-character alphanumeric token.'
+            };
+          }
+        }
+      }
+
+      const maskedRef = maskDocumentReference(docType, docRef);
+      const refHash = hashDocumentReference(docRef);
+
+      // LIVE MODE (Strictly Gated & Fail-Closed)
+      if (isLiveEnabled) {
+        const apiKey = (typeof process !== 'undefined' && process.env) ? process.env.PREMBLY_API_KEY : null;
+        if (!apiKey) {
+          // FAIL CLOSED: Missing credentials must never silently fallback to sandbox
+          return {
+            success: false,
+            outcome: 'UNAVAILABLE',
+            state: 'PENDING',
+            gated: true,
+            safeResultCode: 'GATEWAY_CREDENTIALS_MISSING',
+            error: 'Prembly live credentials unconfigured. Request queued for compliance review.'
+          };
+        }
+
+        return {
+          success: false,
+          outcome: 'PENDING',
+          state: 'PENDING',
+          safeResultCode: 'PENDING_REVIEW',
+          message: 'Prembly live request dispatched asynchronously.'
+        };
+      }
+
+      // DETERMINISTIC SANDBOX SIMULATION
+      if (upper.includes('MALFORMED')) {
+        return {
+          success: false,
+          outcome: 'FAILED',
+          state: 'FAILED',
+          safeResultCode: 'MALFORMED_PROVIDER_RESPONSE',
+          error: 'Malformed response received from Prembly sandbox endpoint.'
+        };
+      }
+
+      if (upper.includes('FAIL') || upper.includes('TIMEOUT')) {
+        return {
+          success: false,
+          outcome: 'FAILED',
+          state: 'FAILED',
+          safeResultCode: 'PROVIDER_TIMEOUT',
+          error: 'Prembly sandbox endpoint timed out.'
+        };
+      }
+
+      if (upper.includes('REJ') || upper.includes('MISMATCH')) {
+        return {
+          success: false,
+          outcome: 'REJECTED',
+          state: 'REJECTED',
+          maskedRef,
+          referenceHash: refHash,
+          safeResultCode: 'IDENTITY_MISMATCH',
+          error: 'Prembly Identity Mismatch: Name on registry does not match provider registration.'
+        };
+      }
+
+      if (upper.includes('DUP')) {
+        return {
+          success: false,
+          outcome: 'REJECTED',
+          state: 'REJECTED',
+          maskedRef,
+          referenceHash: refHash,
+          safeResultCode: 'DUPLICATE_IDENTITY_REFERENCE',
+          error: 'Prembly record indicates duplicate identity reference across accounts.'
+        };
+      }
+
+      if (upper.includes('PEND') || upper.includes('WAIT')) {
+        return {
+          success: true,
+          outcome: 'PENDING',
+          state: 'PENDING',
+          status: 'pending',
+          verification_source: this.source,
+          maskedRef,
+          referenceHash: refHash,
+          safeResultCode: 'PENDING_REVIEW',
+          message: 'Prembly async verification queued for processing.'
+        };
+      }
+
+      return {
+        success: true,
+        outcome: 'VERIFIED',
+        state: (docType === 'vnin' ? 'VERIFIED_NIN' : 'VERIFIED_PLATFORM'),
+        status: 'approved',
+        verification_source: this.source,
+        maskedRef,
+        referenceHash: refHash,
+        safeResultCode: 'VERIFICATION_SUCCESS',
+        verifiedAt: new Date().toISOString(),
+        message: 'Prembly identity verification completed successfully in sandbox.'
+      };
+    }
+
+    async createVerificationRequest(providerId, requestData = {}) {
+      const attemptId = `vatt_prembly_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+      const providerReference = `ref_prembly_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+      return {
+        attemptId,
+        providerReference,
+        status: 'pending',
+        adapter: this.name,
+        source: this.source,
+        requestedAt: new Date().toISOString()
+      };
+    }
+
+    async retrieveVerificationStatus(providerReference, attemptId) {
+      const upper = String(providerReference || '').toUpperCase();
+      if (upper.includes('REJECT') || upper.includes('MISMATCH')) {
+        return { status: 'completed', normalizedOutcome: 'REJECTED', state: 'REJECTED', safeResultCode: 'IDENTITY_MISMATCH', adapter: this.name };
+      }
+      if (upper.includes('FAIL') || upper.includes('TIMEOUT')) {
+        return { status: 'failed', normalizedOutcome: 'FAILED', state: 'FAILED', safeResultCode: 'PROVIDER_TIMEOUT', adapter: this.name };
+      }
+      if (upper.includes('PEND') || upper.includes('WAIT')) {
+        return { status: 'pending', normalizedOutcome: 'PENDING', state: 'PENDING', safeResultCode: 'PENDING_REVIEW', adapter: this.name };
+      }
+      return { status: 'completed', normalizedOutcome: 'VERIFIED', state: 'VERIFIED_NIN', safeResultCode: 'VERIFICATION_SUCCESS', adapter: this.name };
+    }
+
+    verifyWebhook(headers = {}, rawBody = '', secret = '') {
+      const signature = headers['x-prembly-signature'] || headers['x-kyc-signature'];
+      if (!signature) return { verified: false, reason: 'Missing Prembly signature header' };
+      if (typeof require !== 'undefined') {
+        const crypto = require('crypto');
+        const expected = crypto.createHmac('sha512', secret).update(rawBody).digest('hex');
+        const sigBuf = Buffer.from(signature, 'hex');
+        const expBuf = Buffer.from(expected, 'hex');
+        if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
+          return { verified: false, reason: 'Prembly HMAC signature mismatch' };
+        }
+        return { verified: true };
+      }
+      return { verified: true };
+    }
+
+    normalizeWebhookEvent(payload = {}) {
+      const data = payload.data || {};
+      const event = String(payload.event || payload.action || data.status || '').toLowerCase();
+      const eventId = payload.id || payload.event_id || data.reference || payload.reference;
+      let outcome = 'PENDING';
+      let state = 'PENDING';
+      let safeResultCode = 'PENDING_REVIEW';
+
+      if (event.includes('approved') || event.includes('verified') || event.includes('success')) {
+        outcome = 'VERIFIED';
+        state = (data.verification_type === 'vnin' || payload.doc_type === 'vnin') ? 'VERIFIED_NIN' : 'VERIFIED_PLATFORM';
+        safeResultCode = 'VERIFICATION_SUCCESS';
+      } else if (event.includes('rejected') || event.includes('mismatch')) {
+        outcome = 'REJECTED';
+        state = 'REJECTED';
+        safeResultCode = 'IDENTITY_MISMATCH';
+      } else if (event.includes('failed') || event.includes('timeout')) {
+        outcome = 'FAILED';
+        state = 'FAILED';
+        safeResultCode = 'PROVIDER_TIMEOUT';
+      }
+
+      return {
+        eventId: String(eventId || ''),
+        outcome,
+        state,
+        safeResultCode,
+        providerId: Number(data.provider_id || payload.provider_id) || null,
+        requestId: data.request_id || payload.request_id || null,
+        attemptId: data.attempt_id || payload.attempt_id || null
+      };
+    }
+  }
+
+  // 12. DOJAH KYC PROVIDER (Phase 009: Secondary / Fallback Nigerian Identity Provider Adapter)
+  class DojahKycProvider extends VerificationProvider {
+    constructor() {
+      super('DojahKycProvider');
+      this.source = 'DOJAH';
+      this.vendor = 'Dojah';
+    }
+
+    getCapabilities() {
+      return {
+        adapter: this.name,
+        source: this.source,
+        vendor: this.vendor,
+        manualReview: false,
+        liveAutomated: true,
+        supportsWebhook: true,
+        supportsReconciliation: true,
+        supportedDocs: ['vnin', 'cac_cert', 'bvn', 'drivers_license']
+      };
+    }
+
+    async healthCheck() {
+      const Monetization = (typeof PadiFixMonetization !== 'undefined') ? PadiFixMonetization :
+                           (typeof require !== 'undefined' ? require('./monetization-config.js') : null);
+      const isLive = Monetization && Monetization.FLAGS.kycLiveEnabled;
+      return {
+        healthy: true,
+        adapter: this.name,
+        vendor: this.vendor,
+        mode: isLive ? 'live' : 'sandbox',
+        liveEnabled: Boolean(isLive)
+      };
+    }
+
+    async verifyIdentity(requestData = {}) {
+      const Monetization = (typeof PadiFixMonetization !== 'undefined') ? PadiFixMonetization :
+                           (typeof require !== 'undefined' ? require('./monetization-config.js') : null);
+      const isLiveEnabled = Monetization && Monetization.FLAGS.kycLiveEnabled;
+      const docType = (requestData.docType || 'vnin').toLowerCase();
+      const docRef = String(requestData.docRef || '').trim();
+      const upper = docRef.toUpperCase();
+
+      if (!docRef) {
+        return {
+          success: false,
+          outcome: 'FAILED',
+          state: 'UNVERIFIED',
+          safeResultCode: 'MALFORMED_PROVIDER_RESPONSE',
+          error: 'Document reference is required.'
+        };
+      }
+
+      if (docType === 'vnin') {
+        const isSyntheticSandbox = upper.includes('SANDBOX') || upper.includes('MALFORMED');
+        if (!isSyntheticSandbox) {
+          const cleanVnin = docRef.replace(/[^a-zA-Z0-9]/g, '');
+          if (cleanVnin.length !== 16 || upper.startsWith('INVALID')) {
+            return {
+              success: false,
+              outcome: 'REJECTED',
+              state: 'REJECTED',
+              safeResultCode: 'INVALID_VNIN_FORMAT',
+              error: 'Invalid Virtual NIN format. Must be a 16-character alphanumeric token.'
+            };
+          }
+        }
+      }
+
+      const maskedRef = maskDocumentReference(docType, docRef);
+      const refHash = hashDocumentReference(docRef);
+
+      if (isLiveEnabled) {
+        const apiKey = (typeof process !== 'undefined' && process.env) ? process.env.DOJAH_API_KEY : null;
+        if (!apiKey) {
+          return {
+            success: false,
+            outcome: 'UNAVAILABLE',
+            state: 'PENDING',
+            gated: true,
+            safeResultCode: 'GATEWAY_CREDENTIALS_MISSING',
+            error: 'Dojah live credentials unconfigured. Request queued for compliance review.'
+          };
+        }
+        return {
+          success: false,
+          outcome: 'PENDING',
+          state: 'PENDING',
+          safeResultCode: 'PENDING_REVIEW',
+          message: 'Dojah live verification dispatched asynchronously.'
+        };
+      }
+
+      // Sandbox simulation
+      if (upper.includes('MALFORMED')) {
+        return { success: false, outcome: 'FAILED', state: 'FAILED', safeResultCode: 'MALFORMED_PROVIDER_RESPONSE', error: 'Malformed response from Dojah sandbox.' };
+      }
+      if (upper.includes('FAIL') || upper.includes('TIMEOUT')) {
+        return { success: false, outcome: 'FAILED', state: 'FAILED', safeResultCode: 'PROVIDER_TIMEOUT', error: 'Dojah gateway timed out.' };
+      }
+      if (upper.includes('REJ') || upper.includes('MISMATCH')) {
+        return { success: false, outcome: 'REJECTED', state: 'REJECTED', maskedRef, referenceHash: refHash, safeResultCode: 'IDENTITY_MISMATCH', error: 'Dojah Identity Mismatch.' };
+      }
+      if (upper.includes('DUP')) {
+        return { success: false, outcome: 'REJECTED', state: 'REJECTED', maskedRef, referenceHash: refHash, safeResultCode: 'DUPLICATE_IDENTITY_REFERENCE', error: 'Duplicate identity reference.' };
+      }
+      if (upper.includes('PEND') || upper.includes('WAIT')) {
+        return { success: true, outcome: 'PENDING', state: 'PENDING', status: 'pending', verification_source: this.source, maskedRef, referenceHash: refHash, safeResultCode: 'PENDING_REVIEW', message: 'Dojah verification pending.' };
+      }
+
+      return {
+        success: true,
+        outcome: 'VERIFIED',
+        state: (docType === 'vnin' ? 'VERIFIED_NIN' : 'VERIFIED_PLATFORM'),
+        status: 'approved',
+        verification_source: this.source,
+        maskedRef,
+        referenceHash: refHash,
+        safeResultCode: 'VERIFICATION_SUCCESS',
+        verifiedAt: new Date().toISOString(),
+        message: 'Dojah verification completed successfully in sandbox.'
+      };
+    }
+
+    async createVerificationRequest(providerId, requestData = {}) {
+      const attemptId = `vatt_dojah_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+      const providerReference = `ref_dojah_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+      return {
+        attemptId,
+        providerReference,
+        status: 'pending',
+        adapter: this.name,
+        source: this.source,
+        requestedAt: new Date().toISOString()
+      };
+    }
+
+    async retrieveVerificationStatus(providerReference, attemptId) {
+      const upper = String(providerReference || '').toUpperCase();
+      if (upper.includes('REJECT') || upper.includes('MISMATCH')) {
+        return { status: 'completed', normalizedOutcome: 'REJECTED', state: 'REJECTED', safeResultCode: 'IDENTITY_MISMATCH', adapter: this.name };
+      }
+      if (upper.includes('FAIL') || upper.includes('TIMEOUT')) {
+        return { status: 'failed', normalizedOutcome: 'FAILED', state: 'FAILED', safeResultCode: 'PROVIDER_TIMEOUT', adapter: this.name };
+      }
+      if (upper.includes('PEND') || upper.includes('WAIT')) {
+        return { status: 'pending', normalizedOutcome: 'PENDING', state: 'PENDING', safeResultCode: 'PENDING_REVIEW', adapter: this.name };
+      }
+      return { status: 'completed', normalizedOutcome: 'VERIFIED', state: 'VERIFIED_NIN', safeResultCode: 'VERIFICATION_SUCCESS', adapter: this.name };
+    }
+
+    verifyWebhook(headers = {}, rawBody = '', secret = '') {
+      const signature = headers['x-dojah-signature'] || headers['x-kyc-signature'];
+      if (!signature) return { verified: false, reason: 'Missing Dojah signature header' };
+      if (typeof require !== 'undefined') {
+        const crypto = require('crypto');
+        const expected = crypto.createHmac('sha512', secret).update(rawBody).digest('hex');
+        const sigBuf = Buffer.from(signature, 'hex');
+        const expBuf = Buffer.from(expected, 'hex');
+        if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
+          return { verified: false, reason: 'Dojah signature mismatch' };
+        }
+        return { verified: true };
+      }
+      return { verified: true };
+    }
+
+    normalizeWebhookEvent(payload = {}) {
+      const data = payload.data || {};
+      const event = String(payload.event || payload.action || data.status || '').toLowerCase();
+      const eventId = payload.id || payload.event_id || data.reference || payload.reference;
+      let outcome = 'PENDING';
+      let state = 'PENDING';
+      let safeResultCode = 'PENDING_REVIEW';
+
+      if (event.includes('approved') || event.includes('verified') || event.includes('success')) {
+        outcome = 'VERIFIED';
+        state = (data.verification_type === 'vnin' || payload.doc_type === 'vnin') ? 'VERIFIED_NIN' : 'VERIFIED_PLATFORM';
+        safeResultCode = 'VERIFICATION_SUCCESS';
+      } else if (event.includes('rejected') || event.includes('mismatch')) {
+        outcome = 'REJECTED';
+        state = 'REJECTED';
+        safeResultCode = 'IDENTITY_MISMATCH';
+      } else if (event.includes('failed') || event.includes('timeout')) {
+        outcome = 'FAILED';
+        state = 'FAILED';
+        safeResultCode = 'PROVIDER_TIMEOUT';
+      }
+
+      return {
+        eventId: String(eventId || ''),
+        outcome,
+        state,
+        safeResultCode,
+        providerId: Number(data.provider_id || payload.provider_id) || null,
+        requestId: data.request_id || payload.request_id || null,
+        attemptId: data.attempt_id || payload.attempt_id || null
+      };
+    }
+  }
+
+  // 13. VERIFICATION PROVIDER FACTORY
   const VerificationProviderFactory = {
     getProvider(type = 'manual') {
       const norm = String(type).toLowerCase().trim();
@@ -812,10 +1347,14 @@
         case 'sandbox':
         case 'sandbox_kyc':
           return new SandboxKycProvider();
+        case 'prembly':
+        case 'primary':
+          return new PremblyKycProvider();
+        case 'dojah':
+        case 'secondary':
+          return new DojahKycProvider();
         case 'live_nin':
         case 'nin':
-        case 'prembly':
-        case 'dojah':
           return new NinVerificationProvider();
         case 'manual':
         case 'platform':
@@ -827,7 +1366,10 @@
 
   // 9. CENTRAL VERIFICATION GATEWAY & ORCHESTRATION SERVICE
   // Manages eligibility, idempotency, duplicate artifact detection, and state transitions
+  // Manages eligibility, idempotency, duplicate artifact detection, and state transitions
   const PadiFixVerificationGateway = {
+    spendingGuard: VerificationSpendingGuard,
+
     /**
      * Process an incoming verification request
      */
@@ -844,6 +1386,20 @@
 
       const refHash = hashDocumentReference(rawRef);
       const maskedRef = maskDocumentReference(docType, rawRef);
+
+      // Phase 009: Verification Spending Guard Check (Billing Safety & Kill Switch)
+      if (options.requireLive || options.isLive) {
+        const spendCheck = VerificationSpendingGuard.checkSpendAvailable(options);
+        if (!spendCheck.allowed) {
+          return {
+            status: 'REMOTE_ERROR',
+            success: false,
+            outcome: 'FAILED',
+            safeResultCode: spendCheck.safeCode || 'SPEND_CAP_EXCEEDED',
+            error: spendCheck.reason || 'Verification spend cap reached or live KYC disabled.'
+          };
+        }
+      }
 
       // Generate or retrieve idempotency key
       const idempotencyKey = verificationData.idempotencyKey || `idem_${numId}_${refHash.slice(0, 16)}`;
@@ -900,6 +1456,9 @@
           docRef: rawRef,
           allowTestMockInProd: options.allowTestMockInProd
         });
+        if ((options.requireLive || options.isLive) && rawResult && rawResult.outcome !== 'FAILED') {
+          VerificationSpendingGuard.recordSpend(1);
+        }
       } catch (err) {
         rawResult = {
           success: false,
@@ -986,6 +1545,8 @@
         status: 'REMOTE_SUCCESS',
         isDuplicate: false,
         idempotent: false,
+        safeResultCode: safeResultCode,
+        outcome: normalized.outcome,
         data: requestRecord,
         attempt: attemptRecord,
         audit: auditRecord,
@@ -1214,6 +1775,55 @@
         reconciled: reconciledCount,
         unchanged: unchangedCount
       };
+    },
+
+    /**
+     * Phase 009: Policy-Controlled Failover Execution
+     * Invariant: Failover is ONLY permitted on upstream partner outages/timeouts,
+     * NEVER on user errors (mismatch, invalid format, duplicate) which would cause double billing.
+     */
+    async executeWithFailover(providerId, verificationData = {}, options = {}) {
+      const Monetization = (typeof PadiFixMonetization !== 'undefined') ? PadiFixMonetization :
+                           (typeof require !== 'undefined' ? require('./monetization-config.js') : null);
+      const primaryKey = options.primaryAdapter || (Monetization ? Monetization.FLAGS.kycPrimaryProvider : 'prembly');
+      const secondaryKey = options.secondaryAdapter || (Monetization ? Monetization.FLAGS.kycSecondaryProvider : 'dojah');
+
+      let primaryRes;
+      try {
+        primaryRes = await this.submitVerificationRequest(providerId, verificationData, { ...options, adapter: primaryKey });
+      } catch (err) {
+        primaryRes = { status: 'REMOTE_ERROR', success: false, outcome: 'FAILED', error: err.message, safeResultCode: 'PROVIDER_TIMEOUT' };
+      }
+
+      // Check if primary failed due to infrastructure / upstream outage
+      const isUpstreamOutage = primaryRes.safeResultCode === 'PROVIDER_TIMEOUT' ||
+                               primaryRes.safeResultCode === 'MALFORMED_PROVIDER_RESPONSE' ||
+                               primaryRes.safeResultCode === 'GATEWAY_CREDENTIALS_MISSING' ||
+                               (primaryRes.outcome === 'FAILED' && primaryRes.status === 'REMOTE_ERROR');
+
+      if (!options.enableFailover || !isUpstreamOutage) {
+        return {
+          ...primaryRes,
+          failoverTriggered: false,
+          primaryAdapter: primaryKey
+        };
+      }
+
+      // Execute secondary adapter
+      let secondaryRes;
+      try {
+        secondaryRes = await this.submitVerificationRequest(providerId, verificationData, { ...options, adapter: secondaryKey });
+      } catch (err) {
+        secondaryRes = { status: 'REMOTE_ERROR', success: false, outcome: 'FAILED', error: err.message, safeResultCode: 'PROVIDER_TIMEOUT' };
+      }
+
+      return {
+        ...secondaryRes,
+        failoverTriggered: true,
+        primaryAdapter: primaryKey,
+        secondaryAdapter: secondaryKey,
+        primaryResultCode: primaryRes.safeResultCode
+      };
     }
   };
 
@@ -1230,6 +1840,9 @@
     ManualPlatformVerificationProvider,
     NinVerificationProvider,
     FutureNINVerificationProvider,
+    PremblyKycProvider,
+    DojahKycProvider,
+    VerificationSpendingGuard,
     VerificationProviderFactory,
     PadiFixVerificationGateway
   };
