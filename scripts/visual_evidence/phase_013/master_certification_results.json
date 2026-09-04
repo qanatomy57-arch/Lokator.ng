@@ -1,0 +1,56 @@
+{
+  "timestamp": "2026-09-04T22:01:12.622Z",
+  "verdict": "GO",
+  "passedSuites": 8,
+  "failedSuites": 0,
+  "results": [
+    {
+      "domain": "DOMAIN A: Production Deployment & Assets",
+      "script": "scripts/probe_production_endpoints.js",
+      "status": "PASS",
+      "durationMs": 19137
+    },
+    {
+      "domain": "DOMAIN F & G & L: Security, Authorization & RLS",
+      "script": "scripts/verify_phase_013_security_authorization.js",
+      "status": "PASS",
+      "durationMs": 245
+    },
+    {
+      "domain": "DOMAIN J: PWA, Manifest & Offline Resilience",
+      "script": "scripts/verify_production_pwa.js",
+      "status": "PASS",
+      "durationMs": 146
+    },
+    {
+      "domain": "DOMAIN H & I: Monetization & Business Invariants",
+      "script": "scripts/verify_production_monetization.js",
+      "status": "PASS",
+      "durationMs": 165
+    },
+    {
+      "domain": "DOMAIN C & M: Mobile Ergonomics & Touch Targets",
+      "script": "scripts/verify_filter_trigger_height.js",
+      "status": "PASS",
+      "durationMs": 23771
+    },
+    {
+      "domain": "DOMAIN D & I: Nigerian LGA Constitutional Integrity",
+      "script": "scripts/verify_774_lgas_deterministic.js",
+      "status": "PASS",
+      "durationMs": 234
+    },
+    {
+      "domain": "DOMAIN O: Integration Hardening & Resilience",
+      "script": "scripts/verify_phase_011_3_hardening.js",
+      "status": "PASS",
+      "durationMs": 398
+    },
+    {
+      "domain": "DOMAIN E & H: Provider Subscriptions Lifecycle",
+      "script": "scripts/verify_phase_011_provider_subscriptions.js",
+      "status": "PASS",
+      "durationMs": 435
+    }
+  ]
+}

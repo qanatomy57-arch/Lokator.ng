@@ -1,0 +1,55 @@
+{
+  "timestamp": "2026-09-04T21:55:17.704Z",
+  "prodUrl": "https://padifix.vercel.app",
+  "consoleMessages": [],
+  "networkFailures": [],
+  "viewports": {
+    "mobile_320x568": {
+      "overflow": false,
+      "filterBtnRect": {
+        "width": 77.984375,
+        "height": 38,
+        "minHeight": "38px",
+        "display": "flex"
+      },
+      "shot": "C:\\All workspace\\PadiFix project\\lokator\\scripts\\visual_evidence\\phase_013\\prod_search_mobile_320x568.png"
+    },
+    "mobile_390x844": {
+      "overflow": false,
+      "filterBtnRect": {
+        "width": 77.984375,
+        "height": 38,
+        "minHeight": "38px",
+        "display": "flex"
+      },
+      "shot": "C:\\All workspace\\PadiFix project\\lokator\\scripts\\visual_evidence\\phase_013\\prod_search_mobile_390x844.png"
+    },
+    "mobile_412x915": {
+      "overflow": false,
+      "filterBtnRect": {
+        "width": 77.984375,
+        "height": 38,
+        "minHeight": "38px",
+        "display": "flex"
+      },
+      "shot": "C:\\All workspace\\PadiFix project\\lokator\\scripts\\visual_evidence\\phase_013\\prod_search_mobile_412x915.png"
+    },
+    "tablet_768x1024": {
+      "overflow": false,
+      "filterBtnRect": {
+        "width": 88.984375,
+        "height": 38,
+        "minHeight": "38px",
+        "display": "flex"
+      },
+      "shot": "C:\\All workspace\\PadiFix project\\lokator\\scripts\\visual_evidence\\phase_013\\prod_search_tablet_768x1024.png"
+    },
+    "desktop_1280x800": {
+      "overflow": false,
+      "filterBtnRect": null,
+      "shot": "C:\\All workspace\\PadiFix project\\lokator\\scripts\\visual_evidence\\phase_013\\prod_search_desktop_1280x800.png"
+    }
+  },
+  "customerJourney": {},
+  "performance": {}
+}
