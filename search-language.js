@@ -43,6 +43,7 @@
         'car body repair', 'car body work', 'auto body shop', 'body repairer',
         'car spray painter', 'car painter', 'auto painter', 'spray painter', 'oven bake painter',
         'mechanic', 'auto mechanic', 'car mechanic', 'car repairer', 'motor mechanic',
+        'mekanic', 'mecanic', 'mechanick',
         'engine repairer', 'brake repairer', 'gearbox specialist', 'suspension specialist',
         'vulcanizer', 'vulcaniser', 'tyre repairer', 'tire repairer', 'wheel balancing',
         'auto rewire', 'car rewire', 'auto electrician', 'car electrician', 'car fix', 'fix car'
@@ -59,6 +60,7 @@
         'generator service', 'gen technician', 'mikano repairer', 'fix generator',
         'generator person', 'gen person', 'generator', 'generators',
         'electrician', 'electricians', 'electrician guy', 'electrical', 'electrical engineer', 'wireman',
+        'electrishan', 'electrisian', 'electritian',
         'wire house', 'wire my house', 'house wiring', 'conduit wiring', 'fault tracing', 'distribution board',
         'changeover switch', 'prepaid meter', 'prepaid meter installation', 'electrical services',
         'electrical work', 'electric work', 'light problem', 'socket problem', 'wiring problem',
@@ -117,6 +119,7 @@
       primaryTrade: 'Plumber & Pipe Specialist',
       aliases: [
         'plumber', 'plumbers', 'plumbing', 'plumber man', 'plumberman', 'pipe fitter',
+        'plumba', 'plumbah',
         'pipe fitting', 'water leak', 'burst pipe', 'drainage cleaner', 'soakaway unblocker',
         'borehole specialist', 'borehole repairer', 'pumping machine', 'pumping machine repairer',
         'water heater installer', 'water heater repairer', 'plumbing services',
@@ -144,6 +147,7 @@
       primaryTrade: 'Carpenter & Furniture Maker',
       aliases: [
         'carpenter', 'carpenters', 'carpentry', 'furniture maker', 'wood worker',
+        'capenter', 'kapenta',
         'woodcrafter', 'cabinet maker', 'wardrobe maker', 'door installer',
         'roofing carpenter', 'kitchen cabinet', 'bed frame maker', 'woodwork',
         'fix door', 'fix chair', 'wood furniture'
