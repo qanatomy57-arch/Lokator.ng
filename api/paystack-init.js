@@ -60,9 +60,9 @@ function postJson(urlStr, data, headers = {}) {
 // Canonical Provider Subscription Plans (Phase 011 Canonical Pricing)
 const CANONICAL_PLANS = {
   FREE: { id: 'FREE', name: 'Free', amount_kobo: 0, amount_display: '₦0', contacts: 5, paystack_plan_code: null },
-  BASIC: { id: 'BASIC', name: 'Basic', amount_kobo: 350000, amount_display: '₦3,500', contacts: 30, paystack_plan_code: 'PLN_padifix_basic' },
-  PRO: { id: 'PRO', name: 'Pro', amount_kobo: 800000, amount_display: '₦8,000', contacts: 100, paystack_plan_code: 'PLN_padifix_pro' },
-  PREMIUM: { id: 'PREMIUM', name: 'Premium', amount_kobo: 1500000, amount_display: '₦15,000', contacts: 'unlimited', paystack_plan_code: 'PLN_padifix_premium' }
+  BASIC: { id: 'BASIC', name: 'Basic', amount_kobo: 350000, amount_display: '₦3,500', contacts: 30, paystack_plan_code: 'PLN_yf4tb6fpw2u8zj6' },
+  PRO: { id: 'PRO', name: 'Pro', amount_kobo: 800000, amount_display: '₦8,000', contacts: 100, paystack_plan_code: 'PLN_pqm1fg3b1o0wwf1' },
+  PREMIUM: { id: 'PREMIUM', name: 'Premium', amount_kobo: 1500000, amount_display: '₦15,000', contacts: 'unlimited', paystack_plan_code: 'PLN_e3nu8i62af9ypve' }
 };
 
 module.exports = async (req, res) => {

@@ -41,9 +41,9 @@ function getJson(urlStr, headers = {}) {
 }
 
 const CANONICAL_PLANS = {
-  BASIC: { id: 'BASIC', name: 'Basic', amount_kobo: 350000, amount_display: '₦3,500', contacts: 30, search_boost: 5, paystack_plan_code: 'PLN_padifix_basic' },
-  PRO: { id: 'PRO', name: 'Pro', amount_kobo: 800000, amount_display: '₦8,000', contacts: 100, search_boost: 15, paystack_plan_code: 'PLN_padifix_pro' },
-  PREMIUM: { id: 'PREMIUM', name: 'Premium', amount_kobo: 1500000, amount_display: '₦15,000', contacts: 'unlimited', search_boost: 25, paystack_plan_code: 'PLN_padifix_premium' }
+  BASIC: { id: 'BASIC', name: 'Basic', amount_kobo: 350000, amount_display: '₦3,500', contacts: 30, search_boost: 5, paystack_plan_code: 'PLN_yf4tb6fpw2u8zj6' },
+  PRO: { id: 'PRO', name: 'Pro', amount_kobo: 800000, amount_display: '₦8,000', contacts: 100, search_boost: 15, paystack_plan_code: 'PLN_pqm1fg3b1o0wwf1' },
+  PREMIUM: { id: 'PREMIUM', name: 'Premium', amount_kobo: 1500000, amount_display: '₦15,000', contacts: 'unlimited', search_boost: 25, paystack_plan_code: 'PLN_e3nu8i62af9ypve' }
 };
 
 module.exports = async (req, res) => {

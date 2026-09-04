@@ -16,7 +16,7 @@ UPDATE public.provider_plans
 SET 
   price_amount_ngn = 3500.00,
   price_kobo = 350000,
-  paystack_plan_code = 'PLN_padifix_basic',
+  paystack_plan_code = 'PLN_yf4tb6fpw2u8zj6',
   updated_at = NOW()
 WHERE id = 'BASIC';
 
@@ -24,7 +24,7 @@ UPDATE public.provider_plans
 SET 
   price_amount_ngn = 8000.00,
   price_kobo = 800000,
-  paystack_plan_code = 'PLN_padifix_pro',
+  paystack_plan_code = 'PLN_pqm1fg3b1o0wwf1',
   updated_at = NOW()
 WHERE id = 'PRO';
 
@@ -32,7 +32,7 @@ UPDATE public.provider_plans
 SET 
   price_amount_ngn = 15000.00,
   price_kobo = 1500000,
-  paystack_plan_code = 'PLN_padifix_premium',
+  paystack_plan_code = 'PLN_e3nu8i62af9ypve',
   updated_at = NOW()
 WHERE id = 'PREMIUM';
 

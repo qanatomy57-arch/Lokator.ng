@@ -104,31 +104,31 @@ async function runTest(name, fn) {
     assert.strictEqual(free.paystackPlanCode, null);
   });
 
-  await runTest('Canonical Basic plan: ₦3,500/month, 30 contacts, PLN_padifix_basic', () => {
+  await runTest('Canonical Basic plan: ₦3,500/month, 30 contacts, PLN_yf4tb6fpw2u8zj6', () => {
     const basic = PadiFixMonetization.PROVIDER_PLANS.BASIC;
     assert.strictEqual(basic.priceAmount, 3500);
     assert.strictEqual(basic.priceKobo, 350000);
     assert.strictEqual(basic.contactAllowance, 30);
-    assert.strictEqual(basic.paystackPlanCode, 'PLN_padifix_basic');
+    assert.strictEqual(basic.paystackPlanCode, 'PLN_yf4tb6fpw2u8zj6');
   });
 
-  await runTest('Canonical Pro plan: ₦8,000/month, 100 contacts, PLN_padifix_pro, MOST POPULAR', () => {
+  await runTest('Canonical Pro plan: ₦8,000/month, 100 contacts, PLN_pqm1fg3b1o0wwf1, MOST POPULAR', () => {
     const pro = PadiFixMonetization.PROVIDER_PLANS.PRO;
     assert.strictEqual(pro.priceAmount, 8000);
     assert.strictEqual(pro.priceKobo, 800000);
     assert.strictEqual(pro.contactAllowance, 100);
-    assert.strictEqual(pro.paystackPlanCode, 'PLN_padifix_pro');
+    assert.strictEqual(pro.paystackPlanCode, 'PLN_pqm1fg3b1o0wwf1');
     assert.strictEqual(pro.isPopular, true);
     assert.strictEqual(pro.badgeText, 'MOST POPULAR');
   });
 
-  await runTest('Canonical Premium plan: ₦15,000/month, fair-use unlimited (500 cap), PLN_padifix_premium', () => {
+  await runTest('Canonical Premium plan: ₦15,000/month, fair-use unlimited (500 cap), PLN_e3nu8i62af9ypve', () => {
     const prem = PadiFixMonetization.PROVIDER_PLANS.PREMIUM;
     assert.strictEqual(prem.priceAmount, 15000);
     assert.strictEqual(prem.priceKobo, 1500000);
     assert.strictEqual(prem.contactAllowance, 'unlimited');
     assert.strictEqual(prem.fairUseLimit, 500);
-    assert.strictEqual(prem.paystackPlanCode, 'PLN_padifix_premium');
+    assert.strictEqual(prem.paystackPlanCode, 'PLN_e3nu8i62af9ypve');
   });
 
   // -------------------------------------------------------------
@@ -149,8 +149,8 @@ async function runTest(name, fn) {
     const data = ctx.getData();
     assert.strictEqual(data.status, 'success');
     assert.strictEqual(data.order.amount, 800000);
-    assert.strictEqual(data.paystack_plan_code, 'PLN_padifix_pro');
-    assert.strictEqual(data.order.paystack_plan_code, 'PLN_padifix_pro');
+    assert.strictEqual(data.paystack_plan_code, 'PLN_pqm1fg3b1o0wwf1');
+    assert.strictEqual(data.order.paystack_plan_code, 'PLN_pqm1fg3b1o0wwf1');
     assert.ok(data.authorization_url);
   });
 
@@ -166,7 +166,7 @@ async function runTest(name, fn) {
     assert.strictEqual(ctx.getStatusCode(), 200);
     const data = ctx.getData();
     assert.strictEqual(data.order.amount, 1500000);
-    assert.strictEqual(data.paystack_plan_code, 'PLN_padifix_premium');
+    assert.strictEqual(data.paystack_plan_code, 'PLN_e3nu8i62af9ypve');
   });
 
   await runTest('paystack-init handles Free starter plan directly without billable checkout', async () => {

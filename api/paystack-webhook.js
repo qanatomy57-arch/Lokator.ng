@@ -14,12 +14,16 @@ const processedEvents = new Map();
 
 // Canonical Plan Map for verification (Phase 011 Canonical Pricing)
 const WEBHOOK_PLANS = {
-  350000: { id: 'BASIC', name: 'Basic', contacts: 30, amount_display: '₦3,500', paystack_plan_code: 'PLN_padifix_basic' },
-  800000: { id: 'PRO', name: 'Pro', contacts: 100, amount_display: '₦8,000', paystack_plan_code: 'PLN_padifix_pro' },
-  1500000: { id: 'PREMIUM', name: 'Premium', contacts: 'unlimited', amount_display: '₦15,000', paystack_plan_code: 'PLN_padifix_premium' }
+  350000: { id: 'BASIC', name: 'Basic', contacts: 30, amount_display: '₦3,500', paystack_plan_code: 'PLN_yf4tb6fpw2u8zj6' },
+  800000: { id: 'PRO', name: 'Pro', contacts: 100, amount_display: '₦8,000', paystack_plan_code: 'PLN_pqm1fg3b1o0wwf1' },
+  1500000: { id: 'PREMIUM', name: 'Premium', contacts: 'unlimited', amount_display: '₦15,000', paystack_plan_code: 'PLN_e3nu8i62af9ypve' }
 };
 
 const WEBHOOK_PLAN_CODES = {
+  'PLN_yf4tb6fpw2u8zj6': { id: 'BASIC', name: 'Basic', contacts: 30, amount: 350000, amount_display: '₦3,500' },
+  'PLN_pqm1fg3b1o0wwf1': { id: 'PRO', name: 'Pro', contacts: 100, amount: 800000, amount_display: '₦8,000' },
+  'PLN_e3nu8i62af9ypve': { id: 'PREMIUM', name: 'Premium', contacts: 'unlimited', amount: 1500000, amount_display: '₦15,000' },
+  // Backward compatibility aliases
   'PLN_padifix_basic': { id: 'BASIC', name: 'Basic', contacts: 30, amount: 350000, amount_display: '₦3,500' },
   'PLN_padifix_pro': { id: 'PRO', name: 'Pro', contacts: 100, amount: 800000, amount_display: '₦8,000' },
   'PLN_padifix_premium': { id: 'PREMIUM', name: 'Premium', contacts: 'unlimited', amount: 1500000, amount_display: '₦15,000' }

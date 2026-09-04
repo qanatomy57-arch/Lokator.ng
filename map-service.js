@@ -18,6 +18,9 @@
      */
     getGoogleMapsApiKey: function () {
       if (typeof window !== 'undefined') {
+        if (window.GOOGLE_MAPS_API_KEY && window.GOOGLE_MAPS_API_KEY !== 'undefined') {
+          return window.GOOGLE_MAPS_API_KEY;
+        }
         if (window.LOKATOR_GOOGLE_MAPS_API_KEY && window.LOKATOR_GOOGLE_MAPS_API_KEY !== 'undefined') {
           return window.LOKATOR_GOOGLE_MAPS_API_KEY;
         }
@@ -25,6 +28,28 @@
         if (metaTag && metaTag.content && metaTag.content !== 'undefined') {
           return metaTag.content;
         }
+      }
+      if (typeof process !== 'undefined' && process.env && process.env.GOOGLE_MAPS_API_KEY) {
+        return process.env.GOOGLE_MAPS_API_KEY;
+      }
+      return null;
+    },
+
+    /**
+     * Get Google Maps Map ID for vector / cloud-based styling
+     */
+    getGoogleMapsMapId: function () {
+      if (typeof window !== 'undefined') {
+        if (window.GOOGLE_MAPS_MAP_ID && window.GOOGLE_MAPS_MAP_ID !== 'undefined') {
+          return window.GOOGLE_MAPS_MAP_ID;
+        }
+        const metaTag = document.querySelector('meta[name="google-maps-map-id"]');
+        if (metaTag && metaTag.content && metaTag.content !== 'undefined') {
+          return metaTag.content;
+        }
+      }
+      if (typeof process !== 'undefined' && process.env && process.env.GOOGLE_MAPS_MAP_ID) {
+        return process.env.GOOGLE_MAPS_MAP_ID;
       }
       return null;
     },
@@ -45,14 +70,19 @@
 
       const apiKey = this.getGoogleMapsApiKey();
       if (!apiKey) {
-        // No API key configured — proceed with interactive Leaflet fallback
+        // No API key configured — proceed gracefully with interactive Leaflet fallback
         this._triggerCallbacks(false);
         return;
       }
 
       this._googleMapsLoading = true;
       const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&libraries=places,geometry`;
+      const mapId = this.getGoogleMapsMapId();
+      let src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&libraries=places,geometry`;
+      if (mapId) {
+        src += `&map_ids=${encodeURIComponent(mapId)}`;
+      }
+      script.src = src;
       script.async = true;
       script.defer = true;
       script.onload = () => {

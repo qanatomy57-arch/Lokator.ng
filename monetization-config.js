@@ -187,8 +187,8 @@
       priceKobo: 350000,
       priceDisplay: '₦3,500/month',
       billingInterval: 'monthly',
-      paystackPlanCode: 'PLN_padifix_basic',
-      paystack_plan_code: 'PLN_padifix_basic',
+      paystackPlanCode: 'PLN_yf4tb6fpw2u8zj6',
+      paystack_plan_code: 'PLN_yf4tb6fpw2u8zj6',
       contactAllowance: 30,
       contact_allowance: 30,
       maxSkills: 10,
@@ -228,8 +228,8 @@
       priceKobo: 800000,
       priceDisplay: '₦8,000/month',
       billingInterval: 'monthly',
-      paystackPlanCode: 'PLN_padifix_pro',
-      paystack_plan_code: 'PLN_padifix_pro',
+      paystackPlanCode: 'PLN_pqm1fg3b1o0wwf1',
+      paystack_plan_code: 'PLN_pqm1fg3b1o0wwf1',
       contactAllowance: 100,
       contact_allowance: 100,
       maxSkills: 25,
@@ -270,8 +270,8 @@
       priceKobo: 1500000,
       priceDisplay: '₦15,000/month',
       billingInterval: 'monthly',
-      paystackPlanCode: 'PLN_padifix_premium',
-      paystack_plan_code: 'PLN_padifix_premium',
+      paystackPlanCode: 'PLN_e3nu8i62af9ypve',
+      paystack_plan_code: 'PLN_e3nu8i62af9ypve',
       contactAllowance: 'unlimited',
       contact_allowance: Infinity,
       fairUseLimit: 500, // Anti-abuse soft-cap to protect infrastructure
@@ -349,21 +349,21 @@
     CURRENCY: 'NGN',
     PLANS: {
       BASIC: {
-        plan_code: 'PLN_padifix_basic',
+        plan_code: 'PLN_yf4tb6fpw2u8zj6',
         name: 'PadiFix Basic',
         amount_kobo: 350000,
         amount_ngn: 3500,
         interval: 'monthly'
       },
       PRO: {
-        plan_code: 'PLN_padifix_pro',
+        plan_code: 'PLN_pqm1fg3b1o0wwf1',
         name: 'PadiFix Pro',
         amount_kobo: 800000,
         amount_ngn: 8000,
         interval: 'monthly'
       },
       PREMIUM: {
-        plan_code: 'PLN_padifix_premium',
+        plan_code: 'PLN_e3nu8i62af9ypve',
         name: 'PadiFix Premium',
         amount_kobo: 1500000,
         amount_ngn: 15000,
