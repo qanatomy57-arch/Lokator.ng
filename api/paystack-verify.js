@@ -40,6 +40,12 @@ function getJson(urlStr, headers = {}) {
   });
 }
 
+const CANONICAL_PLANS = {
+  BASIC: { id: 'BASIC', name: 'Basic', amount_kobo: 350000, amount_display: '₦3,500', contacts: 30, search_boost: 5 },
+  PRO: { id: 'PRO', name: 'Pro', amount_kobo: 500000, amount_display: '₦5,000', contacts: 100, search_boost: 15 },
+  PREMIUM: { id: 'PREMIUM', name: 'Premium', amount_kobo: 1000000, amount_display: '₦10,000', contacts: 'unlimited', search_boost: 25 }
+};
+
 module.exports = async (req, res) => {
   // CORS Headers
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -55,7 +61,7 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const { reference, provider_id } = req.body || {};
+    const { reference, provider_id, plan_id } = req.body || {};
 
     if (!reference) {
       return res.status(400).json({ error: 'Missing required reference' });
@@ -75,8 +81,7 @@ module.exports = async (req, res) => {
     }
 
     const now = Date.now();
-    const durationMs = 14 * 24 * 60 * 60 * 1000; // 14 days
-    const expiresAt = new Date(now + durationMs).toISOString();
+    const isSubscription = reference.startsWith('lok_sub_') || Boolean(plan_id);
 
     if (secretKey) {
       const verifyRes = await getJson(`https://api.paystack.co/transaction/verify/${encodeURIComponent(reference)}`, {
@@ -101,15 +106,7 @@ module.exports = async (req, res) => {
         });
       }
 
-      // 2. Validate authoritative pilot amount (200000 kobo = ₦2,000)
-      if (tx.amount !== 200000) {
-        return res.status(400).json({
-          status: 'failed',
-          error: `Transaction amount mismatch: received ${tx.amount}, expected 200000 kobo`
-        });
-      }
-
-      // 3. Validate currency
+      // 2. Validate currency
       if (tx.currency !== 'NGN') {
         return res.status(400).json({
           status: 'failed',
@@ -117,9 +114,69 @@ module.exports = async (req, res) => {
         });
       }
 
-      // 4. Validate metadata / reference association
       const meta = tx.metadata || {};
       const targetProviderId = meta.provider_id || provider_id;
+
+      // Branch A: Subscription Transaction Verification
+      if (isSubscription || meta.action === 'subscription_upgrade' || meta.plan_id) {
+        const resolvedPlanKey = String(meta.plan_id || plan_id || '').toUpperCase();
+        let targetPlan = CANONICAL_PLANS[resolvedPlanKey];
+        if (!targetPlan) {
+          // Fallback resolution by exact amount
+          targetPlan = Object.values(CANONICAL_PLANS).find(p => p.amount_kobo === tx.amount);
+        }
+
+        if (!targetPlan) {
+          return res.status(400).json({
+            status: 'failed',
+            error: `Unrecognized subscription plan or amount: ${tx.amount} kobo`
+          });
+        }
+
+        // Authoritative amount validation
+        if (tx.amount !== targetPlan.amount_kobo) {
+          return res.status(400).json({
+            status: 'failed',
+            error: `Transaction amount mismatch: received ${tx.amount}, expected ${targetPlan.amount_kobo} kobo for ${targetPlan.name}`
+          });
+        }
+
+        const subDurationMs = 30 * 24 * 60 * 60 * 1000;
+        const subExpiresAt = new Date(now + subDurationMs).toISOString();
+
+        return res.status(200).json({
+          status: 'success',
+          verified: true,
+          reference: tx.reference,
+          amount: tx.amount,
+          currency: tx.currency,
+          provider_id: targetProviderId,
+          plan_id: targetPlan.id,
+          plan_name: targetPlan.name,
+          subscription: {
+            status: 'active',
+            plan_id: targetPlan.id,
+            plan_name: targetPlan.name,
+            effective_from: new Date(now).toISOString(),
+            effective_until: subExpiresAt,
+            contacts_allowance: targetPlan.contacts,
+            search_boost_percent: targetPlan.search_boost,
+            duration_days: 30
+          },
+          message: `Payment verified successfully. ${targetPlan.name} subscription is active.`
+        });
+      }
+
+      // Branch B: Pilot Promoted Listing Verification (₦2,000 / 200,000 kobo)
+      if (tx.amount !== 200000) {
+        return res.status(400).json({
+          status: 'failed',
+          error: `Transaction amount mismatch: received ${tx.amount}, expected 200000 kobo`
+        });
+      }
+
+      const durationMs = 14 * 24 * 60 * 60 * 1000;
+      const expiresAt = new Date(now + durationMs).toISOString();
 
       return res.status(200).json({
         status: 'success',
@@ -141,6 +198,39 @@ module.exports = async (req, res) => {
     }
 
     // Standard test sandbox verification response
+    if (isSubscription) {
+      const resolvedPlanKey = String(plan_id || 'PRO').toUpperCase();
+      const targetPlan = CANONICAL_PLANS[resolvedPlanKey] || CANONICAL_PLANS.PRO;
+      const subDurationMs = 30 * 24 * 60 * 60 * 1000;
+      const subExpiresAt = new Date(now + subDurationMs).toISOString();
+
+      return res.status(200).json({
+        status: 'success',
+        mode: 'TEST_SANDBOX',
+        verified: true,
+        reference: reference,
+        amount: targetPlan.amount_kobo,
+        currency: 'NGN',
+        provider_id: provider_id,
+        plan_id: targetPlan.id,
+        plan_name: targetPlan.name,
+        subscription: {
+          status: 'active',
+          plan_id: targetPlan.id,
+          plan_name: targetPlan.name,
+          effective_from: new Date(now).toISOString(),
+          effective_until: subExpiresAt,
+          contacts_allowance: targetPlan.contacts,
+          search_boost_percent: targetPlan.search_boost,
+          duration_days: 30
+        },
+        message: `Test sandbox payment verified. ${targetPlan.name} subscription is active.`
+      });
+    }
+
+    const durationMs = 14 * 24 * 60 * 60 * 1000; // 14 days
+    const expiresAt = new Date(now + durationMs).toISOString();
+
     return res.status(200).json({
       status: 'success',
       mode: 'TEST_SANDBOX',

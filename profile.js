@@ -303,11 +303,62 @@ document.addEventListener('DOMContentLoaded', async () => {
   const heroTelUrl = PhoneEngine ? PhoneEngine.buildTelUrl(provider) : (provider.phone ? `tel:${provider.phone}` : '');
   const heroWaUrl = PhoneEngine ? PhoneEngine.buildWhatsAppUrl(provider, { service: provider.trade, location: providerLocation }) : '';
 
+  // Phase 010: Server-side contact metering with idempotency and Free limit guard
+  function checkOrMeterContact(channel, e) {
+    if (typeof LokatorDB !== 'undefined' && LokatorDB.contactMeter) {
+      let visitorSession = sessionStorage.getItem('padifix_visitor_session');
+      if (!visitorSession) {
+        visitorSession = 'vis_' + Math.random().toString(36).substring(2, 9);
+        sessionStorage.setItem('padifix_visitor_session', visitorSession);
+      }
+
+      const meterRes = LokatorDB.contactMeter.meterContact(provider.id, channel, {
+        session_token: visitorSession
+      });
+
+      if (!meterRes.allowed && meterRes.limit_reached) {
+        if (e && e.preventDefault) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+        const limitModal = document.getElementById('contact-limit-modal');
+        if (limitModal) {
+          limitModal.classList.add('active');
+          limitModal.setAttribute('aria-hidden', 'false');
+          document.body.style.overflow = 'hidden';
+        } else {
+          showProfileToast("This artisan has reached their monthly customer inquiry limit. Please explore other artisans.", 4000);
+        }
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // Bind Contact Limit Modal Close Controls
+  const btnCloseContactLimit = document.getElementById('btn-close-contact-limit');
+  const contactLimitModal = document.getElementById('contact-limit-modal');
+  if (btnCloseContactLimit && contactLimitModal) {
+    btnCloseContactLimit.addEventListener('click', () => {
+      contactLimitModal.classList.remove('active');
+      contactLimitModal.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+    });
+    contactLimitModal.addEventListener('click', (e) => {
+      if (e.target === contactLimitModal) {
+        contactLimitModal.classList.remove('active');
+        contactLimitModal.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+      }
+    });
+  }
+
   const btnCallHero = document.getElementById('btn-call-hero');
   if (btnCallHero) {
     if (heroTelUrl) {
       btnCallHero.href = heroTelUrl;
-      btnCallHero.addEventListener('click', () => {
+      btnCallHero.addEventListener('click', (e) => {
+        if (!checkOrMeterContact('call', e)) return;
         if (typeof LokatorTelemetry !== 'undefined') {
           LokatorTelemetry.trackEvent('phone_clicked', {
             providerId: provider.id,
@@ -337,7 +388,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (btnWaHero) {
     if (heroWaUrl) {
       btnWaHero.href = heroWaUrl;
-      btnWaHero.addEventListener('click', () => {
+      btnWaHero.addEventListener('click', (e) => {
+        if (!checkOrMeterContact('whatsapp', e)) return;
         if (typeof LokatorTelemetry !== 'undefined') {
           LokatorTelemetry.trackEvent('whatsapp_clicked', {
             providerId: provider.id,
@@ -363,6 +415,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       btnWaHero.textContent = 'Call Provider';
       btnWaHero.className = btnWaHero.className.replace('btn-gold', 'btn-outline');
       btnWaHero.setAttribute('title', 'WhatsApp not available — tap to call');
+      btnWaHero.addEventListener('click', (e) => {
+        if (!checkOrMeterContact('call', e)) return;
+      });
     } else {
       btnWaHero.style.display = 'none';
     }
@@ -664,12 +719,15 @@ document.addEventListener('DOMContentLoaded', async () => {
               <div class="review-stars">${starsStr}</div>
             </div>
             ${jobType ? `<span class="review-service-tag">✓ ${escapeHtml(jobType)}</span>` : ''}
+            ${r.job_completed ? `<span style="background: rgba(0, 168, 89, 0.15); color: #34D399; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 12px; border: 1px solid rgba(0, 168, 89, 0.3); display: inline-flex; align-items: center; gap: 4px;">✓ Job Completed</span>` : ''}
             
             <!-- Sub-Ratings Breakdown -->
             <div style="display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0; font-size: 11px; color: var(--fg-muted);">
-              ${r.punctuality ? `<span style="background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 4px;">⏱️ Punctuality: ${r.punctuality}★</span>` : ''}
-              ${r.pricing ? `<span style="background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 4px;">💰 Pricing: ${r.pricing}★</span>` : ''}
               ${r.quality ? `<span style="background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 4px;">⭐ Quality: ${r.quality}★</span>` : ''}
+              ${r.professionalism ? `<span style="background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 4px;">🤝 Professionalism: ${r.professionalism}★</span>` : ''}
+              ${r.communication ? `<span style="background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 4px;">💬 Communication: ${r.communication}★</span>` : ''}
+              ${r.pricing ? `<span style="background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 4px;">💰 Value: ${r.pricing}★</span>` : ''}
+              ${r.punctuality ? `<span style="background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 4px;">⏱️ Punctuality: ${r.punctuality}★</span>` : ''}
             </div>
 
             <!-- Praise Tags -->
@@ -759,13 +817,48 @@ document.addEventListener('DOMContentLoaded', async () => {
   const livePreviewCard = document.getElementById('live-review-preview-card');
 
   let selectedOverallRating = 5;
+  let selectedHiredStatus = 'completed';
   let selectedSubRatings = {
-    punctuality: 5,
+    quality: 5,
+    professionalism: 5,
+    communication: 5,
     pricing: 5,
-    quality: 5
+    punctuality: 5
   };
   const selectedPraiseTags = new Set();
   const attachedPhotos = []; // Array of Data URLs
+
+  // Phase 010: Post-Service Hired Status Toggle
+  const hiredStatusButtons = document.querySelectorAll('.hired-status-btn');
+  const jobCompletedFields = document.getElementById('job-completed-fields');
+  const hiredFeedback = document.getElementById('hired-status-feedback');
+  if (hiredStatusButtons.length > 0) {
+    hiredStatusButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        hiredStatusButtons.forEach(b => {
+          b.classList.remove('active');
+          b.style.borderColor = 'rgba(255,255,255,0.15)';
+          b.style.color = '#E2E8F0';
+          b.style.background = 'transparent';
+        });
+        btn.classList.add('active');
+        btn.style.borderColor = '#00A859';
+        btn.style.color = '#34D399';
+        btn.style.background = 'rgba(0, 168, 89, 0.15)';
+        selectedHiredStatus = btn.dataset.status;
+        if (selectedHiredStatus === 'completed') {
+          if (jobCompletedFields) jobCompletedFields.style.display = 'block';
+          if (hiredFeedback) hiredFeedback.textContent = 'Verified customer post-service feedback helps maintain genuine marketplace reputation.';
+        } else if (selectedHiredStatus === 'in_progress') {
+          if (jobCompletedFields) jobCompletedFields.style.display = 'none';
+          if (hiredFeedback) hiredFeedback.textContent = 'Job in progress: You can submit your review once the artisan finishes the job.';
+        } else {
+          if (jobCompletedFields) jobCompletedFields.style.display = 'none';
+          if (hiredFeedback) hiredFeedback.textContent = 'Not hired: Thank you for letting us know! Reviews are reserved for completed jobs to protect authentic reputation.';
+        }
+      });
+    });
+  }
 
   const MOOD_MAP = {
     1: '😡 Disappointing (1.0)',
@@ -995,6 +1088,19 @@ document.addEventListener('DOMContentLoaded', async () => {
       const dateOption = document.getElementById('rev-date') ? document.getElementById('rev-date').value : 'This Week';
       const isVerifiedChecked = document.getElementById('rev-verified-check') ? document.getElementById('rev-verified-check').checked : true;
 
+      if (selectedHiredStatus !== 'completed') {
+        showProfileToast('Thank you for letting us know! Reviews can only be published for completed jobs to protect authentic marketplace trust.', 'info');
+        closeModalHandler();
+        return;
+      }
+
+      // Phase 010 Anti-Abuse: Prevent provider self-review
+      const currentProvider = (typeof LokatorDB !== 'undefined' && LokatorDB.getCurrentProvider) ? LokatorDB.getCurrentProvider() : null;
+      if (currentProvider && currentProvider.id === provider.id) {
+        showProfileToast('Artisans are not permitted to review their own profile.', 'error');
+        return;
+      }
+
       if (!author || !comment) {
         showProfileToast('Please enter your name and review comments.', 'error');
         return;
@@ -1012,9 +1118,13 @@ document.addEventListener('DOMContentLoaded', async () => {
           customer_name: author,
           location: location,
           rating: selectedOverallRating,
-          punctuality: selectedSubRatings.punctuality,
-          pricing: selectedSubRatings.pricing,
-          quality: selectedSubRatings.quality,
+          quality: selectedSubRatings.quality || 5,
+          professionalism: selectedSubRatings.professionalism || 5,
+          communication: selectedSubRatings.communication || 5,
+          pricing: selectedSubRatings.pricing || 5,
+          punctuality: selectedSubRatings.punctuality || 5,
+          job_completed: true,
+          hired_status: 'completed',
           praise_tags: Array.from(selectedPraiseTags),
           photos: [...attachedPhotos],
           comment: comment,
@@ -1033,9 +1143,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (typeof LokatorTelemetry !== 'undefined') {
           LokatorTelemetry.trackEvent('provider_review_submitted', {
             rating: selectedOverallRating,
-            punctuality: selectedSubRatings.punctuality,
-            pricing: selectedSubRatings.pricing,
             quality: selectedSubRatings.quality,
+            professionalism: selectedSubRatings.professionalism,
+            communication: selectedSubRatings.communication,
+            pricing: selectedSubRatings.pricing,
+            punctuality: selectedSubRatings.punctuality,
+            job_completed: true,
             has_photos: attachedPhotos.length > 0,
             praise_tags_count: selectedPraiseTags.size,
             provider_id: provider.id,
@@ -1047,7 +1160,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         renderReviews(currentReviewFilter);
         reviewForm.reset();
         selectedOverallRating = 5;
-        selectedSubRatings = { punctuality: 5, pricing: 5, quality: 5 };
+        selectedHiredStatus = 'completed';
+        selectedSubRatings = { quality: 5, professionalism: 5, communication: 5, pricing: 5, punctuality: 5 };
         selectedPraiseTags.clear();
         attachedPhotos.length = 0;
         document.querySelectorAll('.praise-pill').forEach(p => p.classList.remove('active'));
@@ -1179,6 +1293,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (sidebarCallBtn) {
     if (heroTelUrl) {
       sidebarCallBtn.href = heroTelUrl;
+      sidebarCallBtn.addEventListener('click', (e) => {
+        if (!checkOrMeterContact('call', e)) return;
+      });
     } else {
       sidebarCallBtn.style.display = 'none';
     }
@@ -1414,7 +1531,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (waCopyBriefBtn) waCopyBriefBtn.addEventListener('click', copyJobBriefHandler);
 
   if (waSendBtn) {
-    waSendBtn.addEventListener('click', () => {
+    waSendBtn.addEventListener('click', (e) => {
+      if (!checkOrMeterContact('whatsapp', e)) return;
       if (typeof LokatorTelemetry !== 'undefined') {
         LokatorTelemetry.trackEvent('whatsapp_brief_submitted', {
           providerId: provider.id,
@@ -1438,7 +1556,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (stickyCallBtn) {
     if (heroTelUrl) {
       stickyCallBtn.href = heroTelUrl;
-      stickyCallBtn.addEventListener('click', () => {
+      stickyCallBtn.addEventListener('click', (e) => {
+        if (!checkOrMeterContact('call', e)) return;
         if (typeof LokatorTelemetry !== 'undefined') {
           LokatorTelemetry.trackEvent('call_clicked', {
             providerId: provider.id,

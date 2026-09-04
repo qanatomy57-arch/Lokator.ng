@@ -57,6 +57,14 @@ function postJson(urlStr, data, headers = {}) {
   });
 }
 
+// Canonical Provider Subscription Plans (Phase 010)
+const CANONICAL_PLANS = {
+  FREE: { id: 'FREE', name: 'Free', amount_kobo: 0, amount_display: '₦0', contacts: 5 },
+  BASIC: { id: 'BASIC', name: 'Basic', amount_kobo: 350000, amount_display: '₦3,500', contacts: 30 },
+  PRO: { id: 'PRO', name: 'Pro', amount_kobo: 500000, amount_display: '₦5,000', contacts: 100 },
+  PREMIUM: { id: 'PREMIUM', name: 'Premium', amount_kobo: 1000000, amount_display: '₦10,000', contacts: 'unlimited' }
+};
+
 module.exports = async (req, res) => {
   // CORS Headers
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -72,7 +80,7 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const { provider_id, email, category, state, lga } = req.body || {};
+    const { provider_id, plan_id, product_id, email, category, state, lga } = req.body || {};
 
     if (!provider_id) {
       return res.status(400).json({ error: 'Missing required provider_id' });
@@ -91,7 +99,103 @@ module.exports = async (req, res) => {
       }
     }
 
-    // Generate unique, non-PII transaction reference
+    // Branch A: Subscription Plan Initialization (Phase 010)
+    if (plan_id) {
+      const normPlan = String(plan_id).toUpperCase();
+      const targetPlan = CANONICAL_PLANS[normPlan];
+      if (!targetPlan) {
+        return res.status(400).json({ error: `Invalid plan_id '${plan_id}'. Must be FREE, BASIC, PRO, or PREMIUM.` });
+      }
+
+      // Free plan requires no payment
+      if (targetPlan.id === 'FREE') {
+        return res.status(200).json({
+          status: 'success',
+          mode: 'DIRECT_ACTIVATION',
+          plan_id: 'FREE',
+          plan_name: targetPlan.name,
+          amount: 0,
+          contacts_allowance: targetPlan.contacts,
+          message: 'Free plan activated successfully.'
+        });
+      }
+
+      const timestamp = Date.now();
+      const randSuffix = Math.random().toString(36).substring(2, 7);
+      const reference = `lok_sub_${timestamp}_${randSuffix}`;
+      const orderId = `ord_sub_${timestamp}_${provider_id}`;
+
+      const order = {
+        order_id: orderId,
+        provider_id: Number(provider_id),
+        plan_id: targetPlan.id,
+        plan_name: targetPlan.name,
+        amount: targetPlan.amount_kobo,
+        amount_display: targetPlan.amount_display,
+        currency: 'NGN',
+        billing_interval: 'monthly',
+        duration_days: 30,
+        reference: reference,
+        action: 'subscription_upgrade',
+        status: 'payment_pending',
+        live_mode: isLiveMode,
+        created_at: new Date().toISOString()
+      };
+
+      const providerEmail = email || `artisan_${provider_id}@padifix.ng`;
+      const origin = req.headers.origin || 'https://padifix.vercel.app';
+      const callbackUrl = `${origin}/dashboard.html?payment_ref=${reference}&payment_status=callback&action=subscription`;
+
+      if (secretKey) {
+        const paystackRes = await postJson('https://api.paystack.co/transaction/initialize', {
+          email: providerEmail,
+          amount: targetPlan.amount_kobo,
+          reference: reference,
+          currency: 'NGN',
+          callback_url: callbackUrl,
+          metadata: {
+            order_id: orderId,
+            provider_id: Number(provider_id),
+            plan_id: targetPlan.id,
+            plan_name: targetPlan.name,
+            action: 'subscription_upgrade',
+            billing_interval: 'monthly',
+            duration_days: 30
+          }
+        }, {
+          'Authorization': `Bearer ${secretKey}`
+        });
+
+        if (paystackRes.status === 200 && paystackRes.data && paystackRes.data.status) {
+          return res.status(200).json({
+            status: 'success',
+            authorization_url: paystackRes.data.data.authorization_url,
+            access_code: paystackRes.data.data.access_code,
+            reference: reference,
+            plan: targetPlan,
+            order: order
+          });
+        } else {
+          return res.status(502).json({
+            error: 'Paystack subscription transaction initialization failed',
+            details: paystackRes.data ? paystackRes.data.message : 'Unknown gateway error'
+          });
+        }
+      }
+
+      // Test sandbox mode fallback
+      const mockAuthUrl = `https://checkout.paystack.com/test-mock-${reference}`;
+      return res.status(200).json({
+        status: 'success',
+        mode: 'TEST_SANDBOX',
+        authorization_url: mockAuthUrl,
+        reference: reference,
+        plan: targetPlan,
+        order: order
+      });
+    }
+
+    // Branch B: Promoted Category Placement Pilot (Backwards-Compatible)
     const timestamp = Date.now();
     const randSuffix = Math.random().toString(36).substring(2, 7);
     const reference = `lok_plt_${timestamp}_${randSuffix}`;

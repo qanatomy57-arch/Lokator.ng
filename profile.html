@@ -557,66 +557,117 @@
 
       <form id="review-form" class="review-drawer-form">
         
-        <!-- 1. Overall Rating & Mood Indicator -->
-        <div class="form-field-group review-overall-group">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-            <label style="font-size: 13.5px; font-weight: 700; color: #F8FAFC;">Overall Experience *</label>
-            <span class="rating-mood-badge" id="rating-mood-badge">🌟 Exceptional (5.0)</span>
+        <!-- Phase 010: Post-Service Verification Question -->
+        <div class="form-field-group" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 14px; margin-bottom: 16px;">
+          <label style="font-size: 13.5px; font-weight: 700; color: #FFFFFF; display: block; margin-bottom: 8px;">
+            💼 Did you hire this provider? *
+          </label>
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;" id="hired-status-options">
+            <button type="button" class="btn btn-outline hired-status-btn active" data-status="completed" style="padding: 8px 10px; font-size: 12px; font-weight: 700; border-color: #00A859; color: #34D399; background: rgba(0, 168, 89, 0.15);">
+              ✓ Yes, job completed
+            </button>
+            <button type="button" class="btn btn-outline hired-status-btn" data-status="in_progress" style="padding: 8px 10px; font-size: 12px; font-weight: 600; border-color: rgba(255,255,255,0.15); color: #E2E8F0;">
+              ⏳ Not yet / In progress
+            </button>
+            <button type="button" class="btn btn-outline hired-status-btn" data-status="not_hired" style="padding: 8px 10px; font-size: 12px; font-weight: 600; border-color: rgba(255,255,255,0.15); color: #E2E8F0;">
+              ✕ No, did not hire
+            </button>
           </div>
-          <div class="star-picker-row star-picker-lg" id="star-picker" role="radiogroup" aria-label="Overall Star Rating">
-            <button type="button" class="star-pick-btn active" data-val="1" aria-label="1 star">★</button>
-            <button type="button" class="star-pick-btn active" data-val="2" aria-label="2 stars">★</button>
-            <button type="button" class="star-pick-btn active" data-val="3" aria-label="3 stars">★</button>
-            <button type="button" class="star-pick-btn active" data-val="4" aria-label="4 stars">★</button>
-            <button type="button" class="star-pick-btn active" data-val="5" aria-label="5 stars">★</button>
+          <div id="hired-status-feedback" style="font-size: 11.5px; color: #94A3B8; margin-top: 8px;">
+            Verified customer post-service feedback helps maintain genuine marketplace reputation.
           </div>
         </div>
 
-        <!-- 2. Sub-Criteria Granular Ratings -->
-        <div class="sub-ratings-box">
-          <span style="font-size: 12px; font-weight: 700; color: #34D399; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">
-            ⭐ Rate Specific Categories
-          </span>
-
-          <div class="sub-rating-item">
-            <div class="sub-rating-label">
-              <span>⏱️ Punctuality & Arrival</span>
-              <strong id="val-punctuality" style="color: #F8FAFC; font-size: 12px;">5 ★</strong>
+        <div id="job-completed-fields">
+          <!-- 1. Overall Rating & Mood Indicator -->
+          <div class="form-field-group review-overall-group">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <label style="font-size: 13.5px; font-weight: 700; color: #F8FAFC;">Overall Experience *</label>
+              <span class="rating-mood-badge" id="rating-mood-badge">🌟 Exceptional (5.0)</span>
             </div>
-            <div class="star-picker-sub" id="star-picker-punctuality" data-field="punctuality">
-              <button type="button" class="star-sub-btn active" data-val="1">★</button>
-              <button type="button" class="star-sub-btn active" data-val="2">★</button>
-              <button type="button" class="star-sub-btn active" data-val="3">★</button>
-              <button type="button" class="star-sub-btn active" data-val="4">★</button>
-              <button type="button" class="star-sub-btn active" data-val="5">★</button>
+            <div class="star-picker-row star-picker-lg" id="star-picker" role="radiogroup" aria-label="Overall Star Rating">
+              <button type="button" class="star-pick-btn active" data-val="1" aria-label="1 star">★</button>
+              <button type="button" class="star-pick-btn active" data-val="2" aria-label="2 stars">★</button>
+              <button type="button" class="star-pick-btn active" data-val="3" aria-label="3 stars">★</button>
+              <button type="button" class="star-pick-btn active" data-val="4" aria-label="4 stars">★</button>
+              <button type="button" class="star-pick-btn active" data-val="5" aria-label="5 stars">★</button>
             </div>
           </div>
 
-          <div class="sub-rating-item">
-            <div class="sub-rating-label">
-              <span>💰 Pricing & Transparency</span>
-              <strong id="val-pricing" style="color: #F8FAFC; font-size: 12px;">5 ★</strong>
-            </div>
-            <div class="star-picker-sub" id="star-picker-pricing" data-field="pricing">
-              <button type="button" class="star-sub-btn active" data-val="1">★</button>
-              <button type="button" class="star-sub-btn active" data-val="2">★</button>
-              <button type="button" class="star-sub-btn active" data-val="3">★</button>
-              <button type="button" class="star-sub-btn active" data-val="4">★</button>
-              <button type="button" class="star-sub-btn active" data-val="5">★</button>
-            </div>
-          </div>
+          <!-- 2. Phase 010: 5 Category Granular Ratings -->
+          <div class="sub-ratings-box">
+            <span style="font-size: 12px; font-weight: 700; color: #34D399; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">
+              ⭐ Rate Specific Categories
+            </span>
 
-          <div class="sub-rating-item">
-            <div class="sub-rating-label">
-              <span>🛠️ Work Quality & Cleanliness</span>
-              <strong id="val-quality" style="color: #F8FAFC; font-size: 12px;">5 ★</strong>
+            <div class="sub-rating-item">
+              <div class="sub-rating-label">
+                <span>🛠️ Quality of Work</span>
+                <strong id="val-quality" style="color: #F8FAFC; font-size: 12px;">5 ★</strong>
+              </div>
+              <div class="star-picker-sub" id="star-picker-quality" data-field="quality">
+                <button type="button" class="star-sub-btn active" data-val="1">★</button>
+                <button type="button" class="star-sub-btn active" data-val="2">★</button>
+                <button type="button" class="star-sub-btn active" data-val="3">★</button>
+                <button type="button" class="star-sub-btn active" data-val="4">★</button>
+                <button type="button" class="star-sub-btn active" data-val="5">★</button>
+              </div>
             </div>
-            <div class="star-picker-sub" id="star-picker-quality" data-field="quality">
-              <button type="button" class="star-sub-btn active" data-val="1">★</button>
-              <button type="button" class="star-sub-btn active" data-val="2">★</button>
-              <button type="button" class="star-sub-btn active" data-val="3">★</button>
-              <button type="button" class="star-sub-btn active" data-val="4">★</button>
-              <button type="button" class="star-sub-btn active" data-val="5">★</button>
+
+            <div class="sub-rating-item">
+              <div class="sub-rating-label">
+                <span>🤝 Professionalism</span>
+                <strong id="val-professionalism" style="color: #F8FAFC; font-size: 12px;">5 ★</strong>
+              </div>
+              <div class="star-picker-sub" id="star-picker-professionalism" data-field="professionalism">
+                <button type="button" class="star-sub-btn active" data-val="1">★</button>
+                <button type="button" class="star-sub-btn active" data-val="2">★</button>
+                <button type="button" class="star-sub-btn active" data-val="3">★</button>
+                <button type="button" class="star-sub-btn active" data-val="4">★</button>
+                <button type="button" class="star-sub-btn active" data-val="5">★</button>
+              </div>
+            </div>
+
+            <div class="sub-rating-item">
+              <div class="sub-rating-label">
+                <span>💬 Communication</span>
+                <strong id="val-communication" style="color: #F8FAFC; font-size: 12px;">5 ★</strong>
+              </div>
+              <div class="star-picker-sub" id="star-picker-communication" data-field="communication">
+                <button type="button" class="star-sub-btn active" data-val="1">★</button>
+                <button type="button" class="star-sub-btn active" data-val="2">★</button>
+                <button type="button" class="star-sub-btn active" data-val="3">★</button>
+                <button type="button" class="star-sub-btn active" data-val="4">★</button>
+                <button type="button" class="star-sub-btn active" data-val="5">★</button>
+              </div>
+            </div>
+
+            <div class="sub-rating-item">
+              <div class="sub-rating-label">
+                <span>💰 Value for Money</span>
+                <strong id="val-pricing" style="color: #F8FAFC; font-size: 12px;">5 ★</strong>
+              </div>
+              <div class="star-picker-sub" id="star-picker-pricing" data-field="pricing">
+                <button type="button" class="star-sub-btn active" data-val="1">★</button>
+                <button type="button" class="star-sub-btn active" data-val="2">★</button>
+                <button type="button" class="star-sub-btn active" data-val="3">★</button>
+                <button type="button" class="star-sub-btn active" data-val="4">★</button>
+                <button type="button" class="star-sub-btn active" data-val="5">★</button>
+              </div>
+            </div>
+
+            <div class="sub-rating-item">
+              <div class="sub-rating-label">
+                <span>⏱️ Reliability & Punctuality</span>
+                <strong id="val-punctuality" style="color: #F8FAFC; font-size: 12px;">5 ★</strong>
+              </div>
+              <div class="star-picker-sub" id="star-picker-punctuality" data-field="punctuality">
+                <button type="button" class="star-sub-btn active" data-val="1">★</button>
+                <button type="button" class="star-sub-btn active" data-val="2">★</button>
+                <button type="button" class="star-sub-btn active" data-val="3">★</button>
+                <button type="button" class="star-sub-btn active" data-val="4">★</button>
+                <button type="button" class="star-sub-btn active" data-val="5">★</button>
+              </div>
             </div>
           </div>
         </div>
@@ -726,6 +777,28 @@
         </div>
 
       </form>
+    </div>
+  </div>
+
+  <!-- Phase 010: Provider Contact Limit Modal (Visitor Experience) -->
+  <div class="review-modal-overlay" id="contact-limit-modal" aria-hidden="true" role="dialog" aria-labelledby="contact-limit-title">
+    <div class="review-modal-dialog" style="max-width: 440px; text-align: center; padding: 28px 24px;">
+      <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(245, 158, 11, 0.15); color: #FBBF24; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 16px;">
+        ⏳
+      </div>
+      <h3 id="contact-limit-title" style="font-size: 1.25rem; font-weight: 800; color: #FFFFFF; margin: 0 0 8px;">
+        Monthly Contact Limit Reached
+      </h3>
+      <p style="font-size: 13.5px; color: #94A3B8; line-height: 1.5; margin: 0 0 20px;" id="contact-limit-message">
+        This artisan has reached their monthly customer inquiry allowance on their current plan. Their profile remains listed, and their allowance resets at the start of next month.
+      </p>
+      <div style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 12px; margin-bottom: 20px; font-size: 12px; color: #CBD5E1; text-align: left;">
+        💡 <strong>Tip for Homeowners:</strong> You can explore other active verified artisans in your LGA or check back again next month.
+      </div>
+      <div style="display: flex; gap: 10px; justify-content: center;">
+        <a href="search.html" class="btn btn-primary" style="flex: 1; padding: 10px; font-size: 13px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">Find Other Artisans</a>
+        <button type="button" class="btn btn-outline" id="btn-close-contact-limit" style="flex: 1; padding: 10px; font-size: 13px;">Close</button>
+      </div>
     </div>
   </div>
 

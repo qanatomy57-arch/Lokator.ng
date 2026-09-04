@@ -184,6 +184,7 @@ async function runAudit() {
 
         // Check drawer logo
         const drawerLogo = drawer.locator('img.brand-logo-img, .drawer-brand img, .drawer-logo img').first();
+        await drawerLogo.waitFor({ state: 'visible', timeout: 3000 }).catch(() => {});
         const drawerLogoVisible = await drawerLogo.isVisible().catch(() => false);
         assert(drawerLogoVisible, `${vpName}: Drawer brand logo is visible and active`);
 

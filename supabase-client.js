@@ -1568,16 +1568,37 @@
       // Calculate real distances if customer coords are present
       list = this._sanitizeProvidersList(list, userLat, userLng, services);
 
+      // Phase 010: Plan-based visibility boost (Relevance, location, and reputation remain predominant)
+      list.forEach(p => {
+        const planKey = String(p.subscription_plan || p.plan_id || 'FREE').toUpperCase();
+        let planBoost = 0;
+        if (planKey === 'PREMIUM') planBoost = 25;
+        else if (planKey === 'PRO') planBoost = 15;
+        else if (planKey === 'BASIC') planBoost = 5;
+        p._planBoost = planBoost;
+        p._effectiveScore = (p._searchScore || 0) * (1 + planBoost / 100) + planBoost;
+        if (planKey === 'PRO' || planKey === 'PREMIUM') {
+          p.is_featured_plan = true;
+        }
+      });
+
       // Sort by relevance score first (if keyword search active), then user sort preference
       list.sort((a, b) => {
-        if (searchIntent.cleanQuery && (a._searchScore || 0) !== (b._searchScore || 0)) {
-          return (b._searchScore || 0) - (a._searchScore || 0);
+        if (searchIntent.cleanQuery && (a._effectiveScore || 0) !== (b._effectiveScore || 0)) {
+          return (b._effectiveScore || 0) - (a._effectiveScore || 0);
         }
         if (sortBy === 'rating-desc') return b.rating - a.rating;
         if (sortBy === 'reviews-desc') return b.reviews_count - a.reviews_count;
         if (sortBy === 'experience-desc') return b.experience_years - a.experience_years;
         if (a.distanceKm != null && b.distanceKm != null) {
+          // If distances are virtually identical (< 1km) and plans differ, gently favor plan boost
+          if (Math.abs(a.distanceKm - b.distanceKm) < 1.0 && (b._planBoost || 0) !== (a._planBoost || 0)) {
+            return (b._planBoost || 0) - (a._planBoost || 0);
+          }
           return a.distanceKm - b.distanceKm;
+        }
+        if ((b._planBoost || 0) !== (a._planBoost || 0)) {
+          return (b._planBoost || 0) - (a._planBoost || 0);
         }
         return 0;
       });
@@ -10119,10 +10140,280 @@
       }
 
       return { success: true, review };
+    },
+
+    /**
+     * Strict Invariant: Providers cannot delete customer reviews
+     */
+    deleteReview(reviewId, providerId = null) {
+      throw new Error('Review Deletion Prohibited: Providers cannot delete or suppress legitimate customer reviews.');
+    }
+  };
+
+  // Phase 010: Provider Subscriptions Management Layer
+  const subscriptionsManager = {
+    getPlans() {
+      const M = (typeof PadiFixMonetization !== 'undefined' ? PadiFixMonetization : null) ||
+                (typeof global !== 'undefined' ? global.PadiFixMonetization : null) ||
+                (typeof window !== 'undefined' ? window.PadiFixMonetization : null);
+      if (M && M.getAllPlans) return M.getAllPlans();
+      return [];
+    },
+
+    getSubscription(providerId) {
+      const pId = Number(providerId);
+      const subStore = getLocalStore('padifix_subscriptions_store', {});
+      const existing = subStore[pId];
+      if (existing) return existing;
+
+      // Default to FREE plan
+      return {
+        provider_id: pId,
+        plan_id: 'FREE',
+        plan_name: 'Free Starter',
+        status: 'active',
+        price_amount: 0,
+        price_display: '₦0/month',
+        contact_allowance: 5,
+        current_period_start: new Date().toISOString(),
+        current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        cancel_at_period_end: false
+      };
+    },
+
+    activateSubscription(providerId, planId, details = {}) {
+      const pId = Number(providerId);
+      const M = (typeof PadiFixMonetization !== 'undefined' ? PadiFixMonetization : null) ||
+                (typeof global !== 'undefined' ? global.PadiFixMonetization : null) ||
+                (typeof window !== 'undefined' ? window.PadiFixMonetization : null);
+      const plan = (M && M.getPlan) ? M.getPlan(planId) : null;
+      if (!plan) throw new Error(`Invalid plan ID: ${planId}`);
+
+      const subStore = getLocalStore('padifix_subscriptions_store', {});
+      const now = Date.now();
+      const sub = {
+        provider_id: pId,
+        plan_id: plan.id,
+        plan_name: plan.name,
+        status: 'active',
+        price_amount: plan.priceAmount,
+        price_display: plan.priceDisplay,
+        contact_allowance: plan.contactAllowance,
+        fair_use_limit: plan.fairUseLimit || null,
+        search_boost_percent: plan.searchBoostPercent,
+        current_period_start: new Date(now).toISOString(),
+        current_period_end: new Date(now + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        cancel_at_period_end: false,
+        reference: details.reference || `lok_sub_${now}`,
+        updated_at: new Date(now).toISOString()
+      };
+
+      subStore[pId] = sub;
+      setLocalStore('padifix_subscriptions_store', subStore);
+
+      // Update provider record in providers store
+      const providers = getLocalStore(DB_STORE_KEY, []);
+      const idx = providers.findIndex(p => Number(p.id) === pId);
+      if (idx !== -1) {
+        providers[idx].subscription_plan = plan.id;
+        providers[idx].subscription_status = 'active';
+        setLocalStore(DB_STORE_KEY, providers);
+      }
+
+      // Add to billing transactions history
+      if (plan.priceAmount > 0) {
+        const txStore = getLocalStore('padifix_billing_history_store', []);
+        txStore.unshift({
+          id: `tx_${now}`,
+          provider_id: pId,
+          reference: sub.reference,
+          plan_id: plan.id,
+          plan_name: plan.name,
+          amount_ngn: plan.priceAmount,
+          currency: 'NGN',
+          status: 'success',
+          date: new Date(now).toISOString()
+        });
+        setLocalStore('padifix_billing_history_store', txStore);
+      }
+
+      if (typeof LokatorTelemetry !== 'undefined' && LokatorTelemetry.trackEvent) {
+        LokatorTelemetry.trackEvent('subscription_activated', {
+          provider_id: pId,
+          plan_id: plan.id,
+          amount: plan.priceAmount
+        });
+      }
+
+      return { success: true, subscription: sub };
+    },
+
+    cancelSubscription(providerId) {
+      const pId = Number(providerId);
+      const subStore = getLocalStore('padifix_subscriptions_store', {});
+      const sub = subStore[pId] || this.getSubscription(pId);
+      sub.cancel_at_period_end = true;
+      sub.status = 'cancelled';
+      subStore[pId] = sub;
+      setLocalStore('padifix_subscriptions_store', subStore);
+
+      if (typeof LokatorTelemetry !== 'undefined' && LokatorTelemetry.trackEvent) {
+        LokatorTelemetry.trackEvent('subscription_cancelled', { provider_id: pId });
+      }
+
+      return { success: true, subscription: sub };
+    },
+
+    getBillingHistory(providerId) {
+      const pId = Number(providerId);
+      const txStore = getLocalStore('padifix_billing_history_store', []);
+      return txStore.filter(tx => Number(tx.provider_id) === pId);
+    }
+  };
+
+  // Phase 010: Contact Metering Layer
+  const contactMeterManager = {
+    getUsage(providerId, period = null) {
+      const pId = Number(providerId);
+      const M = (typeof PadiFixMonetization !== 'undefined' ? PadiFixMonetization : null) ||
+                (typeof global !== 'undefined' ? global.PadiFixMonetization : null) ||
+                (typeof window !== 'undefined' ? window.PadiFixMonetization : null);
+      const activePeriod = period || (M && M.getCurrentBillingPeriod ? M.getCurrentBillingPeriod() : new Date().toISOString().substring(0, 7));
+      const usageStore = getLocalStore('padifix_contact_usage_store', {});
+      const key = `${pId}_${activePeriod}`;
+      const record = usageStore[key] || { used: 0, whatsapp: 0, call: 0 };
+      const sub = subscriptionsManager.getSubscription(pId);
+      const check = (M && M.checkContactAllowance) ? M.checkContactAllowance(sub.plan_id, record.used) : {
+        allowance: 5,
+        contactsUsed: record.used,
+        contactsRemaining: Math.max(0, 5 - record.used),
+        limitReached: record.used >= 5
+      };
+
+      return {
+        provider_id: pId,
+        billing_period: activePeriod,
+        plan_id: sub.plan_id,
+        plan_name: sub.plan_name,
+        allowance: check.allowance,
+        contacts_used: record.used,
+        whatsapp_contacts: record.whatsapp,
+        phone_contacts: record.call,
+        contacts_remaining: check.contactsRemaining,
+        limit_reached: check.limitReached,
+        upgrade_recommended: check.upgradeRecommended,
+        upgrade_message: check.upgradeMessage
+      };
+    },
+
+    meterContact(providerId, channel = 'whatsapp', options = {}) {
+      const pId = Number(providerId);
+      const normChannel = String(channel).toLowerCase() === 'call' ? 'call' : 'whatsapp';
+      const M = (typeof PadiFixMonetization !== 'undefined' ? PadiFixMonetization : null) ||
+                (typeof global !== 'undefined' ? global.PadiFixMonetization : null) ||
+                (typeof window !== 'undefined' ? window.PadiFixMonetization : null);
+      const activePeriod = M && M.getCurrentBillingPeriod ? M.getCurrentBillingPeriod() : new Date().toISOString().substring(0, 7);
+
+      // Idempotency check: 15-minute window
+      const timeBucket15m = Math.floor(Date.now() / (15 * 60 * 1000));
+      const idempotencyKey = options.idempotency_key || `idem_${pId}_${normChannel}_${options.session_token || 'anon'}_${timeBucket15m}`;
+      const idemStore = getLocalStore('padifix_contact_idempotency_store', {});
+      if (idemStore[idempotencyKey]) {
+        return {
+          ...idemStore[idempotencyKey],
+          is_duplicate: true,
+          idempotent: true
+        };
+      }
+
+      const usageStore = getLocalStore('padifix_contact_usage_store', {});
+      const key = `${pId}_${activePeriod}`;
+      const record = usageStore[key] || { used: 0, whatsapp: 0, call: 0 };
+      const sub = subscriptionsManager.getSubscription(pId);
+      const check = (M && M.checkContactAllowance) ? M.checkContactAllowance(sub.plan_id, record.used) : {
+        allowance: 5,
+        contactsUsed: record.used,
+        contactsRemaining: Math.max(0, 5 - record.used),
+        limitReached: record.used >= 5
+      };
+
+      if (check.limitReached) {
+        const deniedResult = {
+          allowed: false,
+          limit_reached: true,
+          provider_id: pId,
+          channel: normChannel,
+          billing_period: activePeriod,
+          plan_id: sub.plan_id,
+          plan_name: sub.plan_name,
+          contacts_used: record.used,
+          contacts_remaining: 0,
+          allowance: check.allowance,
+          upgrade_recommended: check.upgradeRecommended || 'BASIC',
+          upgrade_price_display: '₦3,500/month',
+          message: check.upgradeMessage || "You've reached your 5 customer contact limit for this month. Upgrade to Basic — ₦3,500/month."
+        };
+        idemStore[idempotencyKey] = deniedResult;
+        setLocalStore('padifix_contact_idempotency_store', idemStore);
+        return deniedResult;
+      }
+
+      // Increment
+      record.used += 1;
+      if (normChannel === 'whatsapp') {
+        record.whatsapp += 1;
+      } else {
+        record.call += 1;
+      }
+      usageStore[key] = record;
+      setLocalStore('padifix_contact_usage_store', usageStore);
+
+      const limit = typeof check.allowance === 'number' ? check.allowance : 500;
+      const successResult = {
+        allowed: true,
+        limit_reached: record.used >= limit,
+        provider_id: pId,
+        channel: normChannel,
+        billing_period: activePeriod,
+        plan_id: sub.plan_id,
+        plan_name: sub.plan_name,
+        contacts_used: record.used,
+        contacts_remaining: Math.max(0, limit - record.used),
+        allowance: check.allowance,
+        idempotency_key: idempotencyKey,
+        message: 'Contact initiated successfully.'
+      };
+
+      idemStore[idempotencyKey] = successResult;
+      setLocalStore('padifix_contact_idempotency_store', idemStore);
+
+      if (typeof LokatorTelemetry !== 'undefined' && LokatorTelemetry.trackEvent) {
+        LokatorTelemetry.trackEvent('contact_initiated', {
+          provider_id: pId,
+          channel: normChannel,
+          plan_id: sub.plan_id
+        });
+      }
+
+      return successResult;
+    },
+
+    resetUsage(providerId, period = null) {
+      const pId = Number(providerId);
+      const M = (typeof PadiFixMonetization !== 'undefined' ? PadiFixMonetization : null) ||
+                (typeof global !== 'undefined' ? global.PadiFixMonetization : null) ||
+                (typeof window !== 'undefined' ? window.PadiFixMonetization : null);
+      const activePeriod = period || (M && M.getCurrentBillingPeriod ? M.getCurrentBillingPeriod() : new Date().toISOString().substring(0, 7));
+      const usageStore = getLocalStore('padifix_contact_usage_store', {});
+      usageStore[`${pId}_${activePeriod}`] = { used: 0, whatsapp: 0, call: 0 };
+      setLocalStore('padifix_contact_usage_store', usageStore);
+      return { success: true };
     }
   };
 
   LokatorDB.reviews = reviewsManager;
+  LokatorDB.subscriptions = subscriptionsManager;
+  LokatorDB.contactMeter = contactMeterManager;
   LokatorDB.searchHistory = searchHistoryManager;
   LokatorDB.compliance = complianceManager;
   LokatorDB.offline = offlineManager;

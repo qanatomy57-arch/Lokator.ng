@@ -9,6 +9,8 @@
   const NAME = 'PadiFix Marketplace Growth & Monetization Architecture';
   const VERSION = '4.0.0';
   const PHASE = '004';
+  const PHASE_010_VERSION = '5.0.0';
+  const PHASE_010_ACTIVE = true;
 
   // 1. FEATURE FLAGS
   // Safely controls rollout of monetization layers without destructive code surgery
@@ -19,7 +21,7 @@
     // Provider Badging: Controls display of verified identity & reputation badges
     premiumProvidersEnabled: true,
 
-    // Recurring Subscriptions: Locked until marketplace reaches critical liquidity
+    // Recurring Subscriptions: Safe default false (enabled per provider session or deployment)
     providerSubscriptionsEnabled: false,
 
     // Third-Party Ad Networks: Strictly locked to protect page speed & conversion
@@ -60,7 +62,12 @@
     kycSecondaryProvider: 'dojah',
     kycDailyVerificationCap: 50,
     kycMonthlyVerificationCap: 500,
-    kycMaxCostPerVerificationNgn: 250
+    kycMaxCostPerVerificationNgn: 250,
+
+    // Phase 010: Provider Subscription Plans & Contact Metering Flags
+    contactMeteringEnabled: true,
+    postServiceReviewLoopEnabled: true,
+    paystackSubscriptionsEnabled: true
   };
 
   // 2. MARKETPLACE RULES & PRIVACY CONFIGURATION
@@ -130,6 +137,242 @@
     }
   };
 
+  // 3.1 CANONICAL PROVIDER SUBSCRIPTION PLANS (PHASE 010)
+  // Authoritative monthly subscription plans, prices, and entitlements
+  const PROVIDER_PLANS = {
+    FREE: {
+      id: 'FREE',
+      name: 'Free',
+      displayName: 'Free Starter',
+      priceAmount: 0,
+      price_ngn: 0,
+      priceKobo: 0,
+      priceDisplay: '₦0/month',
+      billingInterval: 'monthly',
+      contactAllowance: 5,
+      contact_allowance: 5,
+      maxSkills: 3,
+      max_skills: 3,
+      maxPhotos: 5,
+      max_photos: 5,
+      maxVideos: 0,
+      max_videos: 0,
+      searchPriority: 0,
+      searchBoostPercent: 0,
+      search_visibility: 'standard',
+      isPopular: false,
+      is_popular: false,
+      isFeatured: false,
+      featured_badge: false,
+      prioritySupport: false,
+      entitlements: [
+        'Basic provider profile',
+        'Standard search visibility',
+        'Maximum 3 skills/services',
+        'Maximum 5 photos',
+        'Customer reviews',
+        'Standard provider dashboard',
+        '5 customer contacts/month'
+      ]
+    },
+
+    BASIC: {
+      id: 'BASIC',
+      name: 'Basic',
+      displayName: 'Basic',
+      priceAmount: 3500,
+      price_ngn: 3500,
+      priceKobo: 350000,
+      priceDisplay: '₦3,500/month',
+      billingInterval: 'monthly',
+      contactAllowance: 30,
+      contact_allowance: 30,
+      maxSkills: 10,
+      max_skills: 10,
+      maxPhotos: 15,
+      max_photos: 15,
+      maxVideos: 1,
+      max_videos: 1,
+      searchPriority: 1,
+      searchBoostPercent: 5,
+      search_visibility: 'improved',
+      isPopular: false,
+      is_popular: false,
+      isFeatured: false,
+      featured_badge: false,
+      prioritySupport: false,
+      entitlements: [
+        'Everything in Free',
+        'Up to 10 skills/services',
+        'Up to 15 photos',
+        '1 provider video',
+        'Provider verification/trust presentation where eligible',
+        'Availability status',
+        'Improved search visibility',
+        'Lead/contact history',
+        'Basic analytics',
+        '30 customer contacts/month'
+      ]
+    },
+
+    PRO: {
+      id: 'PRO',
+      name: 'Pro',
+      displayName: 'Pro',
+      priceAmount: 5000,
+      price_ngn: 5000,
+      priceKobo: 500000,
+      priceDisplay: '₦5,000/month',
+      billingInterval: 'monthly',
+      contactAllowance: 100,
+      contact_allowance: 100,
+      maxSkills: 25,
+      max_skills: 25,
+      maxPhotos: 30,
+      max_photos: 30,
+      maxVideos: 3,
+      max_videos: 3,
+      searchPriority: 2,
+      searchBoostPercent: 15,
+      search_visibility: 'priority',
+      isPopular: true,
+      is_popular: true,
+      badgeText: 'MOST POPULAR',
+      isFeatured: true,
+      featured_badge: true,
+      prioritySupport: true,
+      entitlements: [
+        'Everything in Basic',
+        'Up to 25 skills/services',
+        'Up to 30 photos',
+        'Up to 3 provider videos',
+        'Priority search visibility',
+        'Featured provider profile',
+        'Advanced lead analytics',
+        'Contact history',
+        'Priority support',
+        '100 customer contacts/month'
+      ]
+    },
+
+    PREMIUM: {
+      id: 'PREMIUM',
+      name: 'Premium',
+      displayName: 'Premium',
+      priceAmount: 10000,
+      price_ngn: 10000,
+      priceKobo: 1000000,
+      priceDisplay: '₦10,000/month',
+      billingInterval: 'monthly',
+      contactAllowance: 'unlimited',
+      contact_allowance: Infinity,
+      fairUseLimit: 500, // Anti-abuse soft-cap to protect infrastructure
+      fair_use_soft_cap: 500,
+      maxSkills: 999, // Unlimited
+      max_skills: Infinity,
+      maxPhotos: 999, // Unlimited
+      max_photos: Infinity,
+      maxVideos: 5,
+      max_videos: 5,
+      searchPriority: 3,
+      searchBoostPercent: 25,
+      search_visibility: 'highest',
+      isPopular: false,
+      is_popular: false,
+      isFeatured: true,
+      featured_badge: true,
+      prioritySupport: true,
+      promotionalOpportunities: true,
+      entitlements: [
+        'Everything in Pro',
+        'Unlimited skills/services',
+        'Unlimited photos',
+        'Up to 5 provider videos',
+        'Highest search visibility',
+        'Featured placement',
+        'Advanced analytics',
+        'Promotional opportunities',
+        'Priority support',
+        'Unlimited customer contacts subject to fair-use policy'
+      ]
+    }
+  };
+
+  // 3.2 PROVIDER SUBSCRIPTION STATE MACHINE
+  const SUBSCRIPTION_STATES = ['active', 'trialing', 'past_due', 'cancelled', 'expired', 'pending', 'payment_failed'];
+  SUBSCRIPTION_STATES.ACTIVE = 'active';
+  SUBSCRIPTION_STATES.TRIALING = 'trialing';
+  SUBSCRIPTION_STATES.PAST_DUE = 'past_due';
+  SUBSCRIPTION_STATES.CANCELLED = 'cancelled';
+  SUBSCRIPTION_STATES.EXPIRED = 'expired';
+  SUBSCRIPTION_STATES.PENDING = 'pending';
+  SUBSCRIPTION_STATES.PAYMENT_FAILED = 'payment_failed';
+
+  const SUBSCRIPTION_TRANSITIONS = {
+    pending: ['active', 'payment_failed', 'cancelled'],
+    active: ['active', 'past_due', 'cancelled', 'expired'],
+    trialing: ['active', 'cancelled', 'expired'],
+    past_due: ['active', 'expired', 'payment_failed'],
+    cancelled: ['active', 'expired'],
+    expired: ['pending', 'active'],
+    payment_failed: ['pending', 'active']
+  };
+
+  // 3.3 CONTACT METERING CONFIGURATION
+  const CONTACT_METERING = {
+    DEFAULT_TIMEZONE: 'Africa/Lagos',
+    FAIR_USE_CEILING: 500,
+    CHANNELS: ['whatsapp', 'call'],
+    IDEMPOTENCY_WINDOW_SECONDS: 900, // 15 minutes window for identical interactions
+    whatsapp_initiation_units: 1,
+    call_initiation_units: 1,
+    inspect_conversations: false,
+    store_chat_contents: false,
+    record_call_audio: false,
+    count_individual_messages: false
+  };
+
+  // 3.4 POST-SERVICE REVIEWS TRUST CONFIGURATION
+  const POST_SERVICE_REVIEWS = {
+    HIRED_STATUSES: {
+      COMPLETED: 'completed',
+      IN_PROGRESS: 'in_progress',
+      NOT_HIRED: 'not_hired'
+    },
+    RATING_CATEGORIES: [
+      { key: 'quality', label: 'Quality of work' },
+      { key: 'professionalism', label: 'Professionalism' },
+      { key: 'communication', label: 'Communication' },
+      { key: 'value', label: 'Value for money' },
+      { key: 'reliability', label: 'Reliability' }
+    ]
+  };
+
+  // 3.5 STRICT INVARIANT ARCHITECTURES (ZERO ESCROW, ZERO COMMISSION, TRUST SEPARATION)
+  const SERVICE_PAYMENT_MODEL = {
+    marketplace_commission_pct: 0,
+    escrow_enabled: false,
+    holds_customer_funds: false,
+    payment_processor: 'DIRECT_CUSTOMER_TO_PROVIDER',
+    negotiated_outside_platform: true
+  };
+
+  const TRUST_MONETIZATION_SEPARATION = {
+    paid_plans_alter_ratings: false,
+    paid_plans_remove_negative_reviews: false,
+    paid_plans_grant_verified_badge: false,
+    paid_plans_bypass_compliance_vetting: false,
+    allow_paid_review_placement: false
+  };
+
+  const KYC_INTEGRATION_BOUNDARY = {
+    kyc_live_enabled: false,
+    kyc_depends_on_subscription: false,
+    premium_automatically_verified: false,
+    allow_pay_for_badge: false,
+    fail_closed_mode: true
+  };
+
   // 4. TELEMETRY EVENT SCHEMA FOR MONETIZATION
   // Strict Privacy: zero PII, zero card numbers, zero passwords, zero NIN/BVN
   const MONETIZATION_EVENTS = {
@@ -173,7 +416,20 @@
     // Phase 009 Vendor Activation & Spending Guard Events
     KYC_SPEND_CAP_REACHED: 'kyc_spend_cap_reached',
     KYC_FAILOVER_TRIGGERED: 'kyc_failover_triggered',
-    VENDOR_LATENCY_RECORDED: 'vendor_latency_recorded'
+    VENDOR_LATENCY_RECORDED: 'vendor_latency_recorded',
+
+    // Phase 010 Provider Subscription & Contact Metering Telemetry
+    PLAN_VIEW: 'plan_view',
+    UPGRADE_STARTED: 'upgrade_started',
+    PAYMENT_INITIALIZED: 'payment_initialized',
+    SUBSCRIPTION_PAYMENT_SUCCESS: 'payment_success',
+    PAYMENT_FAILED: 'payment_failed',
+    SUBSCRIPTION_ACTIVATED: 'subscription_activated',
+    SUBSCRIPTION_CANCELLED: 'subscription_cancelled',
+    CONTACT_INITIATED: 'contact_initiated',
+    CONTACT_LIMIT_REACHED: 'contact_limit_reached',
+    REVIEW_PROMPT_SHOWN: 'review_prompt_shown',
+    REVIEW_SUBMITTED: 'review_submitted'
   };
 
   // Phase 008 & 009: Standardized Machine-Readable Compliance Decision Codes
@@ -559,15 +815,93 @@
     };
   }
 
-  // 11. PUBLIC MONETIZATION & PROVIDER GROWTH API
+  // 11. PHASE 010 UTILITIES: CONTACT METERING, PERIOD RESOLUTION & STATE MACHINE
+  function getCurrentBillingPeriod(date = new Date()) {
+    const d = new Date(date);
+    const formatter = new Intl.DateTimeFormat('en-CA', {
+      timeZone: CONTACT_METERING.DEFAULT_TIMEZONE,
+      year: 'numeric',
+      month: '2-digit'
+    });
+    return formatter.format(d).substring(0, 7); // 'YYYY-MM'
+  }
+
+  function getBillingPeriodDates(periodString) {
+    const period = periodString || getCurrentBillingPeriod();
+    const parts = period.split('-');
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10);
+    const start = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0));
+    const end = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
+    return {
+      period,
+      timezone: 'Africa/Lagos',
+      start: start.toISOString(),
+      end: end.toISOString(),
+      startDate: start.toISOString(),
+      endDate: end.toISOString()
+    };
+  }
+
+  function checkContactAllowance(planId, contactsUsed) {
+    const normPlan = String(planId || 'FREE').toUpperCase();
+    const plan = PROVIDER_PLANS[normPlan] || PROVIDER_PLANS.FREE;
+    const used = Math.max(0, Number(contactsUsed) || 0);
+    const isUnlimited = plan.contactAllowance === 'unlimited' || plan.contact_allowance === Infinity;
+    const limit = isUnlimited ? (plan.fairUseLimit || 500) : (plan.contactAllowance || plan.contact_allowance || 5);
+    const remaining = isUnlimited ? Infinity : Math.max(0, limit - used);
+    const limitReached = used >= limit;
+    const allowed = isUnlimited ? true : (used < limit);
+
+    return {
+      planId: plan.id,
+      planName: plan.name,
+      allowance: plan.contactAllowance || plan.contact_allowance,
+      fairUseLimit: plan.fairUseLimit || plan.fair_use_soft_cap || null,
+      contactsUsed: used,
+      contactsRemaining: remaining,
+      remaining: remaining,
+      limitReached,
+      limit_reached: limitReached,
+      allowed,
+      isUnlimited,
+      is_unlimited: isUnlimited,
+      upgradeRecommended: limitReached && plan.id === 'FREE' ? 'BASIC' : null,
+      upgradeMessage: limitReached && plan.id === 'FREE'
+        ? "You've reached your 5 customer contact limit for this month. Upgrade to Basic — ₦3,500/month."
+        : null,
+      upgrade_prompt: "You've reached your 5 customer contact limit for this month. Upgrade to Basic — ₦3,500/month."
+    };
+  }
+
+  function canTransitionSubscription(fromState, toState) {
+    if (!fromState || !toState) return false;
+    const allowed = SUBSCRIPTION_TRANSITIONS[String(fromState).toLowerCase()] || [];
+    return allowed.includes(String(toState).toLowerCase());
+  }
+
+  // 12. PUBLIC MONETIZATION & PROVIDER GROWTH API
   const PadiFixMonetization = {
     NAME,
     VERSION,
+    version: VERSION,
     PHASE,
+    phase: PHASE,
+    PHASE_010_VERSION,
+    PHASE_010_ACTIVE,
     FEATURE_FLAGS,
     FLAGS: FEATURE_FLAGS,
     CONFIG,
     PRODUCTS,
+    PLANS: PROVIDER_PLANS,
+    PROVIDER_PLANS,
+    SUBSCRIPTION_STATES,
+    SUBSCRIPTION_TRANSITIONS,
+    CONTACT_METERING,
+    POST_SERVICE_REVIEWS,
+    SERVICE_PAYMENT_MODEL,
+    TRUST_MONETIZATION_SEPARATION,
+    KYC_INTEGRATION_BOUNDARY,
     EVENTS: MONETIZATION_EVENTS,
     DECISION_CODES: COMPLIANCE_DECISION_CODES,
     ADMIN_CONTROLS,
@@ -580,6 +914,10 @@
     calculateProfileCompleteness,
     resolveVerificationState,
     getTrustSignals,
+    getCurrentBillingPeriod,
+    getBillingPeriodDates,
+    checkContactAllowance,
+    canTransitionSubscription,
 
     isFeatureEnabled(flagName) {
       return Boolean(FEATURE_FLAGS[flagName]);
@@ -595,6 +933,15 @@
 
     getProduct(productId) {
       return PRODUCTS[productId] || null;
+    },
+
+    getPlan(planId) {
+      const norm = String(planId || 'FREE').toUpperCase();
+      return PROVIDER_PLANS[norm] || null;
+    },
+
+    getAllPlans() {
+      return Object.values(PROVIDER_PLANS);
     }
   };
 

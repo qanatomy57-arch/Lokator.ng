@@ -8,8 +8,15 @@
 
 const crypto = require('crypto');
 
-// In-memory processed webhook event ID cache for deduplication (per lambda instance)
-const processedEvents = new Set();
+// In-memory processed webhook event ID cache with payload hash for replay/tamper detection
+const processedEvents = new Map();
+
+// Canonical Plan Map for verification
+const WEBHOOK_PLANS = {
+  350000: { id: 'BASIC', name: 'Basic', contacts: 30 },
+  500000: { id: 'PRO', name: 'Pro', contacts: 100 },
+  1000000: { id: 'PREMIUM', name: 'Premium', contacts: 'unlimited' }
+};
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {
@@ -41,7 +48,7 @@ module.exports = async (req, res) => {
 
     if (secretKey) {
       if (!signature) {
-        return res.status(400).json({ error: 'Missing x-paystack-signature header' });
+        return res.status(401).json({ error: 'Missing x-paystack-signature header' });
       }
 
       const expectedSignature = crypto
@@ -54,29 +61,75 @@ module.exports = async (req, res) => {
       const expectedBuffer = Buffer.from(expectedSignature, 'hex');
 
       if (signatureBuffer.length !== expectedBuffer.length || !crypto.timingSafeEqual(signatureBuffer, expectedBuffer)) {
-        return res.status(400).json({ error: 'Invalid webhook signature' });
+        return res.status(401).json({ error: 'Invalid webhook signature' });
       }
     }
 
     const event = typeof rawBody === 'string' ? JSON.parse(rawBody) : rawBody;
-    const eventId = event && (event.id || (event.data && event.data.id) || (event.data && event.data.reference));
+    const eventId = String(event && (event.id || (event.data && event.data.id) || (event.data && event.data.reference) || ''));
 
-    // Idempotency check: Ignore duplicate events
+    // Compute payload hash for replay tamper detection
+    const payloadHash = crypto.createHash('sha256').update(rawBody || '').digest('hex');
+
+    // Replay attack and idempotency check
     if (eventId && processedEvents.has(eventId)) {
-      return res.status(200).json({ status: 'success', message: 'Event already processed (idempotent)' });
+      const priorHash = processedEvents.get(eventId);
+      if (priorHash !== payloadHash) {
+        return res.status(409).json({ error: 'Tampered payload replay with recycled event ID' });
+      }
+      return res.status(200).json({ status: 'success', message: 'Event already processed (idempotent)', idempotent: true });
     }
 
-    if (event && event.event === 'charge.success') {
-      const data = event.data || {};
-      const amount = data.amount;
-      const currency = data.currency;
-      const reference = data.reference;
-      const metadata = data.metadata || {};
+    if (eventId) {
+      processedEvents.set(eventId, payloadHash);
+      // Clean cache if too large (FIFO max 1000 items)
+      if (processedEvents.size > 1000) {
+        const oldestKey = processedEvents.keys().next().value;
+        processedEvents.delete(oldestKey);
+      }
+    }
 
-      // Validate pilot parameters: 200000 kobo (₦2,000) in NGN
-      if (amount === 200000 && currency === 'NGN') {
-        if (eventId) processedEvents.add(eventId);
+    const eventType = event ? event.event : '';
+    const data = (event && event.data) || {};
+    const reference = data.reference || '';
+    const amount = data.amount;
+    const currency = data.currency;
+    const metadata = data.metadata || {};
 
+    // 1. Handle Successful Payment (charge.success)
+    if (eventType === 'charge.success') {
+      if (currency !== 'NGN') {
+        return res.status(400).json({ error: 'Invalid currency' });
+      }
+
+      // Branch A: Subscription Plan Charge
+      const isSub = (reference && reference.startsWith('lok_sub_')) || 
+                    metadata.action === 'subscription_upgrade' || 
+                    Boolean(metadata.plan_id);
+
+      if (isSub || WEBHOOK_PLANS[amount]) {
+        const plan = WEBHOOK_PLANS[amount] || {
+          id: String(metadata.plan_id || 'PRO').toUpperCase(),
+          name: metadata.plan_name || 'Pro',
+          contacts: 100
+        };
+
+        return res.status(200).json({
+          status: 'success',
+          event: 'charge.success',
+          reference: reference,
+          provider_id: metadata.provider_id,
+          fulfilled: true,
+          entitlement: 'SUBSCRIPTION',
+          plan_id: plan.id,
+          plan_name: plan.name,
+          contacts_allowance: plan.contacts,
+          duration_days: 30
+        });
+      }
+
+      // Branch B: Promoted Category Placement Pilot (200000 kobo = ₦2,000)
+      if (amount === 200000) {
         return res.status(200).json({
           status: 'success',
           event: 'charge.success',
@@ -89,8 +142,41 @@ module.exports = async (req, res) => {
       }
     }
 
+    // 2. Handle Subscription Creation (subscription.create)
+    if (eventType === 'subscription.create') {
+      return res.status(200).json({
+        status: 'success',
+        event: 'subscription.create',
+        subscription_code: data.subscription_code,
+        customer_email: data.customer && data.customer.email,
+        status_applied: 'active'
+      });
+    }
+
+    // 3. Handle Renewal Payment Failure (invoice.payment_failed)
+    if (eventType === 'invoice.payment_failed') {
+      return res.status(200).json({
+        status: 'success',
+        event: 'invoice.payment_failed',
+        subscription_code: data.subscription_code,
+        status_applied: 'past_due',
+        notice: 'Provider subscription marked past_due; entering grace period.'
+      });
+    }
+
+    // 4. Handle Subscription Disable / Cancellation (subscription.disable)
+    if (eventType === 'subscription.disable') {
+      return res.status(200).json({
+        status: 'success',
+        event: 'subscription.disable',
+        subscription_code: data.subscription_code,
+        status_applied: 'cancelled',
+        notice: 'Provider subscription cancelled.'
+      });
+    }
+
     // Acknowledge other webhook events safely
-    return res.status(200).json({ status: 'success', message: 'Webhook acknowledged' });
+    return res.status(200).json({ status: 'success', message: 'Webhook acknowledged', event: eventType });
 
   } catch (err) {
     return res.status(500).json({ error: 'Webhook processing error', message: err.message });

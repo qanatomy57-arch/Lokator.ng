@@ -214,6 +214,15 @@
               <span class="dash-kpi-trend-pos">Excellent</span>
             </div>
           </div>
+
+          <div class="kpi-card" id="kpi-subscription-card" onclick="switchTab('subscription')" style="cursor: pointer;" title="Manage your PadiFix subscription">
+            <div class="kpi-icon-box" style="background: rgba(0, 168, 89, 0.15); color: #34D399;">💎</div>
+            <div class="kpi-info">
+              <h3>Subscription</h3>
+              <div class="kpi-val" id="kpi-sub-plan" style="font-size: 1.15rem; color: #34D399;">FREE</div>
+              <span class="dash-kpi-trend-pos" id="kpi-sub-remaining">5 contacts left</span>
+            </div>
+          </div>
         </div>
 
         <!-- Recent Leads Section -->
@@ -628,13 +637,241 @@
         </div>
       </div>
 
-      <!-- ===== TAB 8: TRUST & VERIFICATION CENTER ===== -->
+      <!-- ===== TAB 8: SUBSCRIPTION & TRUST CENTER ===== -->
       <div class="dash-tab-panel" id="tab-subscription">
-        <div class="dash-card-section">
+        
+        <!-- PHASE 010: CANONICAL PROVIDER SUBSCRIPTION & BILLING DASHBOARD -->
+        <div class="dash-card-section" id="dash-subscription-billing-section" style="margin-bottom: 28px; border-left: 4px solid #00A859;">
           <div class="dash-section-header">
             <div>
-              <h2>Trust & Credential Verification Center</h2>
-              <p>Understand your public verification status and request official platform vetting</p>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 1.4rem;">💳</span>
+                <h2 style="margin: 0;">Provider Subscription & Billing</h2>
+              </div>
+              <p style="margin: 4px 0 0 0; color: var(--dash-muted); font-size: 13px;">Manage your PadiFix platform subscription, monthly customer contact allowance, and billing history.</p>
+            </div>
+            <div id="sub-status-pill-wrap">
+              <span id="sub-current-status-badge" class="status-tag" style="background: rgba(0, 168, 89, 0.15); color: #34D399; font-weight: 700; padding: 6px 12px; border-radius: 20px; font-size: 12px; border: 1px solid rgba(0, 168, 89, 0.3);">
+                Active Plan
+              </span>
+            </div>
+          </div>
+
+          <!-- Hero: Current Plan Summary & Lead Meter -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin: 18px 0 24px 0;">
+            <!-- Current Plan Card -->
+            <div style="background: #111827; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between;">
+              <div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <span style="font-size: 12px; font-weight: 700; color: var(--dash-muted); text-transform: uppercase; letter-spacing: 0.5px;">Your PadiFix Plan</span>
+                  <span id="sub-plan-pill" style="font-size: 11px; font-weight: 800; background: #00A859; color: #FFF; padding: 3px 8px; border-radius: 6px; letter-spacing: 0.5px;">PRO</span>
+                </div>
+                <div style="display: flex; align-items: baseline; gap: 8px; margin-bottom: 12px;">
+                  <h3 id="sub-plan-price" style="font-size: 1.8rem; font-weight: 800; color: #FFF; margin: 0;">₦5,000</h3>
+                  <span style="color: var(--dash-muted); font-size: 13px;">/ month</span>
+                </div>
+                <div style="font-size: 12.5px; color: #94A3B8; display: flex; flex-direction: column; gap: 6px;">
+                  <div>📅 <span style="color: #E2E8F0;">Billing Period:</span> <strong id="sub-period-dates">Current Month (Africa/Lagos)</strong></div>
+                  <div>🔄 <span style="color: #E2E8F0;">Renewal Date:</span> <strong id="sub-renewal-date" style="color: #34D399;">Active</strong></div>
+                </div>
+              </div>
+              <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.06); display: flex; gap: 10px;">
+                <a href="#plans-comparison-grid" class="btn btn-primary btn-sm" style="flex: 1; text-align: center; text-decoration: none; padding: 8px 12px; font-size: 12.5px;">Change Plan ⚡</a>
+                <button type="button" id="btn-cancel-subscription" class="btn btn-outline btn-sm" style="display: none; padding: 8px 12px; font-size: 12px; border-color: rgba(239, 68, 68, 0.4); color: #F87171;">Cancel</button>
+              </div>
+            </div>
+
+            <!-- Contact Meter / Lead Usage Card -->
+            <div style="background: #111827; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between;">
+              <div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <span style="font-size: 12px; font-weight: 700; color: var(--dash-muted); text-transform: uppercase; letter-spacing: 0.5px;">Customer Contact Meter</span>
+                  <span id="sub-contacts-remaining" style="font-size: 12px; font-weight: 700; color: #34D399;">27 contacts remaining</span>
+                </div>
+                <div style="margin-bottom: 12px;">
+                  <div style="display: flex; align-items: baseline; gap: 6px; margin-bottom: 6px;">
+                    <span id="sub-contacts-used-number" style="font-size: 1.8rem; font-weight: 800; color: #FFF;">73</span>
+                    <span style="color: var(--dash-muted); font-size: 14px;">/ <strong id="sub-contacts-total-number" style="color: #FFF;">100</strong> contacts used</span>
+                  </div>
+                  <div style="background: rgba(255,255,255,0.08); height: 10px; border-radius: 6px; overflow: hidden;">
+                    <div id="sub-contacts-progress-bar" style="width: 73%; height: 100%; background: linear-gradient(90deg, #00A859, #34D399); border-radius: 6px; transition: width 0.4s ease;"></div>
+                  </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px; color: #94A3B8;">
+                  <div style="background: rgba(255,255,255,0.03); padding: 8px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">
+                    <span>💬 WhatsApp Inquiries:</span> <strong id="sub-count-wa" style="color: #34D399;">0</strong>
+                  </div>
+                  <div style="background: rgba(255,255,255,0.03); padding: 8px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">
+                    <span>📞 Phone Calls:</span> <strong id="sub-count-call" style="color: #38BDF8;">0</strong>
+                  </div>
+                </div>
+              </div>
+              <div style="margin-top: 14px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.06); font-size: 11px; color: #94A3B8; display: flex; align-items: center; gap: 6px;">
+                <span>🔒</span> <em>Zero-Inspection Privacy: PadiFix only meters contact initiation. Private chats & call audio are never stored or inspected.</em>
+              </div>
+            </div>
+          </div>
+
+          <!-- Non-Negotiable Marketplace Principles Banner -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin-bottom: 24px;">
+            <div style="background: rgba(0, 168, 89, 0.08); border: 1px solid rgba(0, 168, 89, 0.25); border-radius: 8px; padding: 12px 14px; font-size: 12.5px; color: #E2E8F0;">
+              <strong style="color: #34D399; display: block; margin-bottom: 4px;">🤝 0% Commission & Direct Service Payments</strong>
+              PadiFix does NOT hold escrow, take cuts from your job payments, or process customer service fees. Clients pay you 100% directly via bank transfer, cash, or POS.
+            </div>
+            <div style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 8px; padding: 12px 14px; font-size: 12.5px; color: #E2E8F0;">
+              <strong style="color: #FBBF24; display: block; margin-bottom: 4px;">🛡️ Trust & Reputation Separation</strong>
+              Subscriptions never increase your star rating, remove bad reviews, or buy verified badges. Reputation and compliance remain strictly independent of monetization.
+            </div>
+          </div>
+
+          <!-- Canonical 4-Plan Upgrade / Comparison Grid -->
+          <div id="plans-comparison-grid" style="margin-bottom: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
+              <div>
+                <h3 style="font-size: 16px; margin: 0; color: #FFF;">Select Your Provider Plan</h3>
+                <p style="font-size: 12.5px; color: var(--dash-muted); margin: 3px 0 0 0;">Transparent monthly subscription. Powered securely by Paystack.</p>
+              </div>
+              <span style="font-size: 11.5px; color: #34D399; background: rgba(0, 168, 89, 0.12); padding: 4px 10px; border-radius: 12px; border: 1px solid rgba(0, 168, 89, 0.3);">
+                ⚡ Cancel or upgrade anytime
+              </span>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px;">
+              <!-- FREE PLAN -->
+              <div class="dash-sub-plan-card" id="plan-card-FREE" style="background: #111827; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 18px; display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <strong style="color: #FFF; font-size: 15px;">FREE</strong>
+                    <span style="font-size: 10.5px; background: rgba(255,255,255,0.1); color: #94A3B8; padding: 2px 6px; border-radius: 4px;">Starter</span>
+                  </div>
+                  <div style="font-size: 1.4rem; font-weight: 800; color: #FFF; margin-bottom: 12px;">₦0 <span style="font-size: 11px; font-weight: 400; color: var(--dash-muted);">/ month</span></div>
+                  <div style="font-size: 12px; color: #34D399; font-weight: 700; margin-bottom: 10px;">5 customer contacts / month</div>
+                  <ul style="list-style: none; padding: 0; margin: 0 0 16px 0; font-size: 12px; color: #94A3B8; display: flex; flex-direction: column; gap: 6px;">
+                    <li>✓ Basic provider profile</li>
+                    <li>✓ Standard search visibility</li>
+                    <li>✓ Up to 3 skills/services</li>
+                    <li>✓ Up to 5 photos</li>
+                    <li>✓ Customer reviews</li>
+                    <li>✓ Standard dashboard</li>
+                  </ul>
+                </div>
+                <button type="button" class="btn btn-outline btn-sm btn-select-plan" data-plan="FREE" style="width: 100%; font-size: 12px; padding: 8px;">
+                  Current Plan
+                </button>
+              </div>
+
+              <!-- BASIC PLAN -->
+              <div class="dash-sub-plan-card" id="plan-card-BASIC" style="background: #111827; border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 10px; padding: 18px; display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <strong style="color: #38BDF8; font-size: 15px;">BASIC</strong>
+                    <span style="font-size: 10.5px; background: rgba(56, 189, 248, 0.15); color: #38BDF8; padding: 2px 6px; border-radius: 4px;">Growth</span>
+                  </div>
+                  <div style="font-size: 1.4rem; font-weight: 800; color: #FFF; margin-bottom: 12px;">₦3,500 <span style="font-size: 11px; font-weight: 400; color: var(--dash-muted);">/ month</span></div>
+                  <div style="font-size: 12px; color: #38BDF8; font-weight: 700; margin-bottom: 10px;">30 customer contacts / month</div>
+                  <ul style="list-style: none; padding: 0; margin: 0 0 16px 0; font-size: 12px; color: #94A3B8; display: flex; flex-direction: column; gap: 6px;">
+                    <li>✓ Everything in Free</li>
+                    <li>✓ Up to 10 skills/services</li>
+                    <li>✓ Up to 15 photos + 1 video</li>
+                    <li>✓ Availability status badge</li>
+                    <li>✓ Improved search visibility</li>
+                    <li>✓ Lead / contact history</li>
+                    <li>✓ Basic analytics</li>
+                  </ul>
+                </div>
+                <button type="button" class="btn btn-primary btn-sm btn-select-plan" data-plan="BASIC" style="width: 100%; font-size: 12px; padding: 8px; background: #0284C7; border-color: #0284C7;">
+                  Upgrade to Basic
+                </button>
+              </div>
+
+              <!-- PRO PLAN (MOST POPULAR) -->
+              <div class="dash-sub-plan-card" id="plan-card-PRO" style="background: linear-gradient(180deg, rgba(0, 168, 89, 0.1) 0%, #111827 100%); border: 2px solid #00A859; border-radius: 10px; padding: 18px; display: flex; flex-direction: column; justify-content: space-between; position: relative;">
+                <div style="position: absolute; top: -11px; right: 12px; background: #00A859; color: #FFF; font-size: 9.5px; font-weight: 800; padding: 2px 8px; border-radius: 12px; letter-spacing: 0.5px;">
+                  MOST POPULAR
+                </div>
+                <div>
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <strong style="color: #34D399; font-size: 15px;">PRO</strong>
+                    <span style="font-size: 10.5px; background: rgba(0, 168, 89, 0.2); color: #34D399; padding: 2px 6px; border-radius: 4px;">Recommended</span>
+                  </div>
+                  <div style="font-size: 1.4rem; font-weight: 800; color: #FFF; margin-bottom: 12px;">₦5,000 <span style="font-size: 11px; font-weight: 400; color: var(--dash-muted);">/ month</span></div>
+                  <div style="font-size: 12px; color: #34D399; font-weight: 700; margin-bottom: 10px;">100 customer contacts / month</div>
+                  <ul style="list-style: none; padding: 0; margin: 0 0 16px 0; font-size: 12px; color: #CBD5E1; display: flex; flex-direction: column; gap: 6px;">
+                    <li>✓ Everything in Basic</li>
+                    <li>✓ Up to 25 skills/services</li>
+                    <li>✓ Up to 30 photos + 3 videos</li>
+                    <li>✓ Priority search visibility</li>
+                    <li>✓ Featured provider profile</li>
+                    <li>✓ Advanced lead analytics</li>
+                    <li>✓ Priority support</li>
+                  </ul>
+                </div>
+                <button type="button" class="btn btn-primary btn-sm btn-select-plan" data-plan="PRO" style="width: 100%; font-size: 12px; padding: 8px; background: #00A859; border-color: #00A859; font-weight: 700;">
+                  Upgrade to Pro
+                </button>
+              </div>
+
+              <!-- PREMIUM PLAN -->
+              <div class="dash-sub-plan-card" id="plan-card-PREMIUM" style="background: #111827; border: 1px solid rgba(245, 158, 11, 0.4); border-radius: 10px; padding: 18px; display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <strong style="color: #FBBF24; font-size: 15px;">PREMIUM</strong>
+                    <span style="font-size: 10.5px; background: rgba(245, 158, 11, 0.15); color: #FBBF24; padding: 2px 6px; border-radius: 4px;">VIP</span>
+                  </div>
+                  <div style="font-size: 1.4rem; font-weight: 800; color: #FFF; margin-bottom: 12px;">₦10,000 <span style="font-size: 11px; font-weight: 400; color: var(--dash-muted);">/ month</span></div>
+                  <div style="font-size: 12px; color: #FBBF24; font-weight: 700; margin-bottom: 10px;">Unlimited contacts (fair use)</div>
+                  <ul style="list-style: none; padding: 0; margin: 0 0 16px 0; font-size: 12px; color: #94A3B8; display: flex; flex-direction: column; gap: 6px;">
+                    <li>✓ Everything in Pro</li>
+                    <li>✓ Unlimited skills/services</li>
+                    <li>✓ Unlimited photos</li>
+                    <li>✓ Up to 5 provider videos</li>
+                    <li>✓ Highest search visibility</li>
+                    <li>✓ Featured placement & promo</li>
+                    <li>✓ Dedicated VIP support</li>
+                  </ul>
+                </div>
+                <button type="button" class="btn btn-outline btn-sm btn-select-plan" data-plan="PREMIUM" style="width: 100%; font-size: 12px; padding: 8px; border-color: #F59E0B; color: #FBBF24;">
+                  Upgrade to Premium
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Billing History Table Section -->
+          <div style="margin-top: 20px; border-top: 1px solid var(--dash-border); padding-top: 16px;">
+            <h4 style="font-size: 14px; color: #FFF; margin: 0 0 10px 0; display: flex; align-items: center; gap: 6px;">
+              <span>🧾</span> Billing & Payment History
+            </h4>
+            <div style="overflow-x: auto;">
+              <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: left; color: #94A3B8;">
+                <thead>
+                  <tr style="border-bottom: 1px solid rgba(255,255,255,0.08); color: #E2E8F0;">
+                    <th style="padding: 8px 10px;">Date</th>
+                    <th style="padding: 8px 10px;">Description</th>
+                    <th style="padding: 8px 10px;">Amount</th>
+                    <th style="padding: 8px 10px;">Status</th>
+                    <th style="padding: 8px 10px;">Reference</th>
+                  </tr>
+                </thead>
+                <tbody id="sub-billing-history-tbody">
+                  <tr>
+                    <td colspan="5" style="padding: 16px 10px; text-align: center; color: var(--dash-muted);">No prior billing transactions on record.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TRUST & VERIFICATION CENTER (PHASE 006-009) -->
+        <div class="dash-card-section" style="border-left: 4px solid #3B82F6;">
+          <div class="dash-section-header">
+            <div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 1.4rem;">🛡️</span>
+                <h2 style="margin: 0;">Trust & Credential Verification Center</h2>
+              </div>
+              <p style="margin: 4px 0 0 0; color: var(--dash-muted); font-size: 13px;">Understand your public verification status and request official platform vetting (Strictly independent of subscription plans)</p>
             </div>
             <div id="dash-ver-status-chip" class="profile-verified-pill unverified" style="display: inline-flex;">
               <!-- Populated via dashboard.js -->
