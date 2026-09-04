@@ -58,6 +58,12 @@ const paystackWebhookHandler = async (req, res) => {
       rawBody = rawBody.toString('utf8');
     }
 
+    // Require secret key in production
+    const isProd = process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production';
+    if (!secretKey && isProd) {
+      return res.status(500).json({ error: 'Server Configuration Error: Missing PAYSTACK_SECRET_KEY in production.' });
+    }
+
     if (secretKey) {
       if (!signature) {
         return res.status(401).json({ error: 'Missing x-paystack-signature header' });
@@ -69,15 +75,34 @@ const paystackWebhookHandler = async (req, res) => {
         .digest('hex');
 
       // Constant-time signature comparison to prevent timing attacks
-      const signatureBuffer = Buffer.from(signature, 'hex');
-      const expectedBuffer = Buffer.from(expectedSignature, 'hex');
+      let isSigValid = false;
+      try {
+        const signatureBuffer = Buffer.from(signature, 'hex');
+        const expectedBuffer = Buffer.from(expectedSignature, 'hex');
+        if (signatureBuffer.length === expectedBuffer.length && crypto.timingSafeEqual(signatureBuffer, expectedBuffer)) {
+          isSigValid = true;
+        }
+      } catch (sigErr) {
+        return res.status(401).json({ error: 'Invalid webhook signature format' });
+      }
 
-      if (signatureBuffer.length !== expectedBuffer.length || !crypto.timingSafeEqual(signatureBuffer, expectedBuffer)) {
+      if (!isSigValid) {
         return res.status(401).json({ error: 'Invalid webhook signature' });
       }
     }
 
-    const event = typeof rawBody === 'string' ? JSON.parse(rawBody) : rawBody;
+    // Safely parse JSON payload with explicit bad request handling
+    let event = null;
+    try {
+      event = typeof rawBody === 'string' ? JSON.parse(rawBody) : rawBody;
+    } catch (parseErr) {
+      return res.status(400).json({ error: 'Malformed JSON payload in webhook request' });
+    }
+
+    if (!event || typeof event !== 'object') {
+      return res.status(400).json({ error: 'Invalid webhook payload structure' });
+    }
+
     const eventId = String(event && (event.id || (event.data && event.data.id) || (event.data && event.data.reference) || ''));
 
     // Compute payload hash for replay tamper detection

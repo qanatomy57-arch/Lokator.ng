@@ -11,6 +11,7 @@
   const LokatorMapService = {
     _googleMapsLoaded: false,
     _googleMapsLoading: false,
+    _googleMapsFailed: false,
     _loadingCallbacks: [],
 
     /**
@@ -64,6 +65,12 @@
         return;
       }
 
+      // If Google Maps previously failed or authentication was rejected, immediately fallback without retrying
+      if (this._googleMapsFailed) {
+        if (callback) callback(false);
+        return;
+      }
+
       if (callback) this._loadingCallbacks.push(callback);
 
       if (this._googleMapsLoading) return;
@@ -80,6 +87,10 @@
         window.gm_authFailure = () => {
           console.warn('LokatorMapService: Google Maps authentication or billing error detected. Operating via Leaflet/OpenStreetMap fallback.');
           this._googleMapsLoaded = false;
+          this._googleMapsFailed = true;
+          if (typeof window.PadiFixSentry !== 'undefined' && window.PadiFixSentry.captureMessage) {
+            window.PadiFixSentry.captureMessage('Google Maps authentication or billing gate active; Leaflet/OSM fallback engaged.', 'warning');
+          }
         };
       }
       const script = document.createElement('script');
@@ -98,7 +109,11 @@
       };
       script.onerror = () => {
         this._googleMapsLoading = false;
+        this._googleMapsFailed = true;
         console.warn('LokatorMapService: Google Maps failed to load. Falling back to interactive Leaflet map.');
+        if (typeof window !== 'undefined' && typeof window.PadiFixSentry !== 'undefined' && window.PadiFixSentry.captureMessage) {
+          window.PadiFixSentry.captureMessage('Google Maps script failed to load; Leaflet/OSM fallback engaged.', 'warning');
+        }
         this._triggerCallbacks(false);
       };
       document.head.appendChild(script);

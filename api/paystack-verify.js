@@ -71,6 +71,12 @@ const paystackVerifyHandler = async (req, res) => {
     const secretKey = process.env.PAYSTACK_SECRET_KEY;
     const isLiveMode = process.env.PAYMENT_LIVE_MODE === 'true';
 
+    // Require secret key in production
+    const isProd = process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production';
+    if (!secretKey && isProd) {
+      return res.status(500).json({ error: 'Server Configuration Error: Missing PAYSTACK_SECRET_KEY in production.' });
+    }
+
     // Environment consistency validation: Prevent test/live key mixing
     if (secretKey) {
       if (isLiveMode && secretKey.startsWith('sk_test_')) {

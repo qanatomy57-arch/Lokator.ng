@@ -25,7 +25,9 @@ const SUITES = [
   { phase: 'Phase 011', script: 'scripts/verify_phase_011_provider_subscriptions.js' },
   { phase: 'Phase 011.1 Real Integration', script: 'scripts/verify_phase_011_1_real_integration.js' },
   { phase: 'Phase 011.2 Infrastructure', script: 'scripts/verify_phase_011_2_infrastructure.js' },
-  { phase: 'Phase 011.2 Integration Wiring', script: 'scripts/verify_phase_011_2_integration_wiring.js' }
+  { phase: 'Phase 011.2 Integration Wiring', script: 'scripts/verify_phase_011_2_integration_wiring.js' },
+  { phase: 'Phase 011.3 Configuration Validator', script: 'scripts/validate_production_config.js' },
+  { phase: 'Phase 011.3 Integration Hardening', script: 'scripts/verify_phase_011_3_hardening.js' }
 ];
 
 function ensureServer() {
