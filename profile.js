@@ -539,6 +539,24 @@ document.addEventListener('DOMContentLoaded', async () => {
   const lightboxDesc = document.getElementById('lightbox-desc');
   const lightboxTag = document.getElementById('lightbox-tag');
 
+  let activePortfolioItems = [];
+  let currentLightboxIdx = -1;
+
+  function showLightboxItem(idx) {
+    if (!lightbox || !activePortfolioItems || activePortfolioItems.length === 0) return;
+    currentLightboxIdx = (idx + activePortfolioItems.length) % activePortfolioItems.length;
+    const item = activePortfolioItems[currentLightboxIdx];
+    if (!item) return;
+
+    lightboxBanner.textContent = item.icon || '🛠️';
+    lightboxBanner.style.background = `linear-gradient(135deg, ${item.accentColor || '#006B3F'}, #020D05)`;
+    lightboxTitle.textContent = item.title;
+    lightboxDesc.textContent = item.description;
+    lightboxTag.textContent = `${item.tag || 'Verified Work'} • ${currentLightboxIdx + 1}/${activePortfolioItems.length}`;
+    lightbox.classList.add('active');
+    lightbox.setAttribute('aria-hidden', 'false');
+  }
+
   function renderPortfolio(filter = 'all') {
     if (!portfolioGrid || !provider.portfolio) return;
 
@@ -548,6 +566,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     } else if (filter === 'completed') {
       items = items.filter(p => !p.isBeforeAfter);
     }
+
+    activePortfolioItems = items;
 
     if (items.length === 0) {
       portfolioGrid.innerHTML = `<p style="grid-column: 1/-1; color: var(--fg-muted); padding: 16px 0;">No items found in this category.</p>`;
@@ -572,17 +592,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }).join('');
 
     portfolioGrid.querySelectorAll('.portfolio-card').forEach(card => {
-      const idx = card.dataset.idx;
-      const item = items[idx];
+      const idx = parseInt(card.dataset.idx, 10);
       const openLb = () => {
-        if (!lightbox) return;
-        lightboxBanner.textContent = item.icon || '🛠️';
-        lightboxBanner.style.background = `linear-gradient(135deg, ${item.accentColor || '#006B3F'}, #020D05)`;
-        lightboxTitle.textContent = item.title;
-        lightboxDesc.textContent = item.description;
-        lightboxTag.textContent = item.tag || 'Verified Work';
-        lightbox.classList.add('active');
-        lightbox.setAttribute('aria-hidden', 'false');
+        showLightboxItem(idx);
       };
       card.addEventListener('click', openLb);
       card.addEventListener('keydown', (e) => {
@@ -612,10 +624,49 @@ document.addEventListener('DOMContentLoaded', async () => {
         lightbox.setAttribute('aria-hidden', 'true');
       }
     });
+
+    // Touch Swipe Gesture Navigation (Mobile Lightbox)
+    let touchStartX = 0;
+    let touchStartY = 0;
+
+    lightbox.addEventListener('touchstart', (e) => {
+      if (e.touches && e.touches.length > 0) {
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+      }
+    }, { passive: true });
+
+    lightbox.addEventListener('touchend', (e) => {
+      if (!lightbox.classList.contains('active') || currentLightboxIdx < 0) return;
+      if (e.changedTouches && e.changedTouches.length > 0) {
+        const touchEndX = e.changedTouches[0].clientX;
+        const touchEndY = e.changedTouches[0].clientY;
+        const deltaX = touchEndX - touchStartX;
+        const deltaY = touchEndY - touchStartY;
+
+        // Ensure horizontal intent with >= 40px threshold
+        if (Math.abs(deltaX) > 40 && Math.abs(deltaX) > Math.abs(deltaY) * 1.3) {
+          if (deltaX < 0) {
+            // Swiped left -> next
+            showLightboxItem(currentLightboxIdx + 1);
+          } else {
+            // Swiped right -> previous
+            showLightboxItem(currentLightboxIdx - 1);
+          }
+        }
+      }
+    }, { passive: true });
+
+    // Keyboard navigation (Escape to close, ArrowLeft/ArrowRight to navigate)
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && lightbox.classList.contains('active')) {
+      if (!lightbox.classList.contains('active')) return;
+      if (e.key === 'Escape') {
         lightbox.classList.remove('active');
         lightbox.setAttribute('aria-hidden', 'true');
+      } else if (e.key === 'ArrowRight') {
+        showLightboxItem(currentLightboxIdx + 1);
+      } else if (e.key === 'ArrowLeft') {
+        showLightboxItem(currentLightboxIdx - 1);
       }
     });
   }

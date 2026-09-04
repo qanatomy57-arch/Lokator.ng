@@ -67,11 +67,13 @@
   border: none;
   outline: none;
   font-family: var(--font, 'Plus Jakarta Sans', sans-serif);
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 15px;
+  font-weight: 500;
   color: #0F172A;
   background: transparent;
   width: 100%;
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
 .search-input-group input::placeholder {
@@ -533,34 +535,66 @@
   width: 100%;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 640px) {
   .results-toolbar {
     padding: 12px 14px;
+    gap: 10px;
   }
 
   .toolbar-controls {
-    gap: 6px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .view-mode-toggle {
+    display: inline-flex;
+    gap: 4px;
   }
 
   .btn-view-mode {
-    padding: 5px 8px !important;
-    font-size: 11.5px !important;
+    padding: 6px 10px !important;
+    font-size: 12px !important;
+    font-weight: 700;
   }
 
   .mobile-filter-trigger {
-    padding: 5px 10px !important;
-    font-size: 12px !important;
+    display: inline-flex !important;
+    min-height: 44px !important;
+    padding: 10px 14px !important;
+    font-size: 13px !important;
+    font-weight: 700;
+    box-sizing: border-box;
   }
 
   .sort-wrap {
-    font-size: 11.5px !important;
-    gap: 4px !important;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px !important;
+    padding-top: 8px;
+    border-top: 1px solid #F1F5F9;
+    font-size: 12.5px !important;
+  }
+
+  .sort-wrap label {
+    white-space: nowrap;
+    color: #64748B;
+    font-weight: 600;
   }
 
   .sort-select {
-    padding: 4px 6px !important;
-    font-size: 16px !important;
-    max-width: 120px !important;
+    flex: 1;
+    max-width: 100% !important;
+    padding: 6px 10px !important;
+    font-size: 13.5px !important;
+    border-radius: 8px;
+    border: 1px solid #CBD5E1;
+    background: #FFFFFF;
+    color: #0F172A;
   }
 }
 
@@ -597,7 +631,8 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 7px 14px;
+  min-height: 44px;
+  padding: 10px 14px;
   font-size: 13px;
   font-weight: 700;
   background: #FFFFFF;
@@ -607,6 +642,7 @@
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
+  box-sizing: border-box;
   transition: all 0.15s ease;
 }
 
@@ -1298,8 +1334,9 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    min-height: 38px;
-    padding: 6px 14px;
+    min-height: 44px;
+    padding: 10px 14px;
+    box-sizing: border-box;
   }
 
   .provider-item-card {
@@ -1357,49 +1394,213 @@
   font-weight: 800;
 }
 
-/* Marketplace Browse by Trade Section */
+/* Marketplace Browse by Trade Section (Harmonized Light Theme) */
 .marketplace-browse-section {
-  background: #111827;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: var(--radius-md);
-  padding: 16px 18px;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.04);
+  border-radius: 16px;
+  padding: 16px 20px;
   margin-bottom: 20px;
+  transition: all 0.25s ease;
 }
 
 .browse-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   margin-bottom: 12px;
+}
+
+.browse-header-text {
+  flex: 1;
 }
 
 .browse-badge {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 700;
-  color: #34D399;
+  color: #006B3F;
+  background: #ECFDF5;
+  border: 1px solid #A7F3D0;
+  padding: 3px 8px;
+  border-radius: 6px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .browse-title {
-  font-size: 16px;
-  font-weight: 700;
-  color: #F8FAFC;
+  font-size: 17px;
+  font-weight: 800;
+  color: #0F172A;
   margin: 4px 0 2px 0;
+  letter-spacing: -0.2px;
 }
 
 .browse-subtitle {
   font-size: 13px;
-  color: #94A3B8;
+  color: #64748B;
   margin: 0;
+}
+
+.btn-browse-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #F1F5F9;
+  border: 1px solid #CBD5E1;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.btn-browse-toggle:hover {
+  background: #E2E8F0;
+  color: #0F172A;
 }
 
 .industry-cards-grid {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   overflow-x: auto;
   padding-bottom: 6px;
   scrollbar-width: thin;
+}
+
+.marketplace-browse-section.is-collapsed .industry-cards-grid {
+  display: none;
+}
+
+.marketplace-browse-section.is-collapsed {
+  padding: 12px 18px;
+  margin-bottom: 14px;
+}
+
+.marketplace-browse-section.is-collapsed .browse-subtitle {
+  display: none;
+}
+
+/* Light Theme Industry Cards */
+.marketplace-browse-section .industry-browse-card {
+  display: flex;
+  flex-direction: column;
+  background: #F8FAFC !important;
+  border: 1px solid #E2E8F0 !important;
+  border-radius: 12px !important;
+  padding: 12px 14px !important;
+  color: #0F172A !important;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  min-width: 210px;
+  max-width: 260px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.marketplace-browse-section .industry-browse-card:hover {
+  background: #FFFFFF !important;
+  border-color: #006B3F !important;
+  box-shadow: 0 4px 14px rgba(0, 107, 63, 0.08) !important;
+  transform: translateY(-2px);
+}
+
+.marketplace-browse-section .industry-browse-card.is-selected {
+  background: #ECFDF5 !important;
+  border-color: #006B3F !important;
+  box-shadow: 0 0 0 1px #006B3F !important;
+}
+
+.marketplace-browse-section .industry-card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.marketplace-browse-section .industry-card-icon {
+  font-size: 18px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ECFDF5;
+  border: 1px solid #A7F3D0;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.marketplace-browse-section .industry-card-name {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #0F172A !important;
+  line-height: 1.2;
+}
+
+.marketplace-browse-section .industry-card-desc {
+  font-size: 11.5px;
+  color: #64748B !important;
+  line-height: 1.4;
+  margin: 0 0 8px 0;
+}
+
+.marketplace-browse-section .industry-popular-skills-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: auto;
+  padding-top: 6px;
+  border-top: 1px solid #E2E8F0;
+}
+
+.marketplace-browse-section .industry-skill-pill-tag {
+  font-size: 10.5px;
+  font-weight: 600;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  color: #475569;
+  padding: 2px 7px;
+  border-radius: 12px;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.marketplace-browse-section .industry-skill-pill-tag:hover {
+  background: #006B3F;
+  border-color: #006B3F;
+  color: #FFFFFF;
+}
+
+/* Hide Browse section when in Map view or Split view */
+.results-main.is-map-view .marketplace-browse-section,
+.results-main.is-split-view .marketplace-browse-section {
+  display: none !important;
+}
+
+@media (max-width: 768px) {
+  .marketplace-browse-section {
+    padding: 12px 14px;
+    margin-bottom: 14px;
+  }
+  .browse-title {
+    font-size: 15px;
+  }
+  .browse-subtitle {
+    display: none;
+  }
+  .marketplace-browse-section .industry-browse-card {
+    min-width: 190px;
+    max-width: 220px;
+    padding: 10px 12px !important;
+  }
 }
 
 /* Empty Search Results & Zero Recovery */
@@ -1677,16 +1878,16 @@
   color: #FFF;
 }
 
-/* Map Container & Layouts */
+/* Map Container & Layouts (Light Theme Harmonized) */
 .search-map-container {
   position: relative;
   width: 100%;
   height: 480px;
-  border-radius: 12px;
+  border-radius: 14px;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid #CBD5E1;
   margin-bottom: 24px;
-  background: #111827;
+  background: #E2E8F0;
 }
 .search-map {
   width: 100%;
@@ -1696,15 +1897,16 @@
   position: absolute;
   top: 14px;
   left: 14px;
-  background: rgba(10, 14, 23, 0.85);
+  background: rgba(255, 255, 255, 0.95);
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: #34D399;
+  border: 1px solid #CBD5E1;
+  color: #006B3F;
   font-size: 12px;
   font-weight: 700;
-  padding: 6px 12px;
+  padding: 6px 14px;
   border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   z-index: 1000;
 }
 
@@ -1727,7 +1929,8 @@
 }
 .results-main.is-map-view .search-map-container {
   display: block !important;
-  height: 70vh;
+  height: 75vh;
+  min-height: 520px;
 }
 
 /* Mobile Floating Map Toggle Pill */

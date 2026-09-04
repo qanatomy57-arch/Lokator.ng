@@ -156,11 +156,15 @@ body.pwa-mode select {
   padding: 24px 20px calc(24px + env(safe-area-inset-bottom, 0px));
   z-index: 9999;
   transform: translateY(100%);
-  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  visibility: hidden;
+  pointer-events: none;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.35s ease;
 }
 
 .pwa-install-sheet.active {
   transform: translateY(0);
+  visibility: visible;
+  pointer-events: auto;
 }
 
 .pwa-sheet-drag-handle {
@@ -299,11 +303,15 @@ body.pwa-mode select {
   padding: 24px 20px calc(24px + env(safe-area-inset-bottom, 0px));
   z-index: 9999;
   transform: translateY(100%);
-  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  visibility: hidden;
+  pointer-events: none;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.35s ease;
 }
 
 .pwa-ios-sheet.active {
   transform: translateY(0);
+  visibility: visible;
+  pointer-events: auto;
 }
 
 .pwa-ios-steps {

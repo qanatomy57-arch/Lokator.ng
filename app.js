@@ -134,6 +134,7 @@ class ScrollDiscoveryEngine {
     // Explicit Scene Lifecycle states: DISTANT (0), READY (1), ACTIVE (2)
     this.SCENE_STATE = { DISTANT: 0, READY: 1, ACTIVE: 2 };
     this.videoStates = new Array(this.videos.length).fill(this.SCENE_STATE.DISTANT);
+    this.loadedVideos = new Set([0]);
 
     this.init();
   }
@@ -151,35 +152,19 @@ class ScrollDiscoveryEngine {
     // 3. Viewport observer for hero section (pause all videos when scrolled down page)
     this.setupHeroViewportObserver();
 
-    // 4. Mobile user interaction listener to ensure mobile media autoplay permission on ALL 9 videos
-    const unlockAllVideos = () => {
-      this.videos.forEach((vid, idx) => {
-        vid.muted = true;
-        vid.defaultMuted = true;
-        vid.playsInline = true;
-        vid.loop = true;
-        if (idx === this.currentIndex) {
-          this.playVideo(idx);
-        } else {
-          const p = vid.play();
-          if (p !== undefined) {
-            p.then(() => {
-              if (idx !== this.currentIndex) {
-                vid.pause();
-              }
-            }).catch(() => {});
-          }
-        }
-      });
-      this.bufferAdjacentVideos(this.currentIndex);
+    // 4. Mobile user interaction listener to ensure mobile media autoplay permission on active video
+    const unlockActiveVideo = () => {
+      if (this.isHeroInViewport) {
+        this.playVideo(this.currentIndex);
+      }
       this.bindVideoProgress(this.currentIndex);
-      window.removeEventListener('touchstart', unlockAllVideos);
-      window.removeEventListener('pointerdown', unlockAllVideos);
-      window.removeEventListener('scroll', unlockAllVideos);
+      window.removeEventListener('touchstart', unlockActiveVideo);
+      window.removeEventListener('pointerdown', unlockActiveVideo);
+      window.removeEventListener('scroll', unlockActiveVideo);
     };
-    window.addEventListener('touchstart', unlockAllVideos, { passive: true, once: true });
-    window.addEventListener('pointerdown', unlockAllVideos, { passive: true, once: true });
-    window.addEventListener('scroll', unlockAllVideos, { passive: true, once: true });
+    window.addEventListener('touchstart', unlockActiveVideo, { passive: true, once: true });
+    window.addEventListener('pointerdown', unlockActiveVideo, { passive: true, once: true });
+    window.addEventListener('scroll', unlockActiveVideo, { passive: true, once: true });
 
     // 5. Interactive timeline step clicks
     this.timelineSteps.forEach((btn) => {
@@ -274,7 +259,7 @@ class ScrollDiscoveryEngine {
         targetState = this.SCENE_STATE.ACTIVE;
       } else if (i === nextIdx && blend > 0.15) {
         targetState = this.SCENE_STATE.ACTIVE;
-      } else if (Math.abs(i - dominantIdx) <= 1) {
+      } else if (progress > 0.005 && Math.abs(i - dominantIdx) <= 1) {
         targetState = this.SCENE_STATE.READY;
       } else {
         targetState = this.SCENE_STATE.DISTANT;
@@ -378,8 +363,10 @@ class ScrollDiscoveryEngine {
         this.playVideo(idx);
       }
     } else if (targetState === this.SCENE_STATE.READY) {
-      if (vid.preload !== 'auto') {
+      if (!this.loadedVideos.has(idx)) {
+        this.loadedVideos.add(idx);
         vid.preload = 'auto';
+        vid.setAttribute('preload', 'auto');
       }
     } else if (targetState === this.SCENE_STATE.DISTANT) {
       this.pauseVideo(idx);
@@ -409,12 +396,18 @@ class ScrollDiscoveryEngine {
       vid.defaultMuted = true;
       vid.playsInline = true;
       vid.loop = true;
-      vid.preload = 'auto';
       vid.setAttribute('playsinline', '');
       vid.setAttribute('webkit-playsinline', '');
       vid.setAttribute('muted', '');
       vid.setAttribute('loop', '');
-      vid.setAttribute('preload', 'auto');
+
+      if (i === 0) {
+        vid.preload = 'auto';
+        vid.setAttribute('preload', 'auto');
+      } else {
+        vid.preload = 'none';
+        vid.setAttribute('preload', 'none');
+      }
 
       // Continuous loop replay handler
       vid.addEventListener('ended', () => {
@@ -485,11 +478,13 @@ class ScrollDiscoveryEngine {
     }
 
     this.videos.forEach((vid, idx) => {
-      if (Math.abs(idx - centerIdx) <= 2) {
-        if (vid.preload !== 'auto') {
+      if (Math.abs(idx - centerIdx) <= 1) {
+        if (!this.loadedVideos.has(idx)) {
+          this.loadedVideos.add(idx);
           vid.preload = 'auto';
+          vid.setAttribute('preload', 'auto');
         }
-      } else {
+      } else if (idx !== centerIdx) {
         vid.pause();
       }
     });
@@ -509,8 +504,10 @@ class ScrollDiscoveryEngine {
     vid.setAttribute('muted', '');
     vid.setAttribute('loop', '');
 
-    if (vid.preload !== 'auto') {
+    if (!this.loadedVideos.has(idx)) {
+      this.loadedVideos.add(idx);
       vid.preload = 'auto';
+      vid.setAttribute('preload', 'auto');
     }
 
     if (vid.ended) {

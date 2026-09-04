@@ -1,0 +1,89 @@
+{
+  "timestamp": "2026-09-02T16:59:16.147Z",
+  "viewports": [
+    {
+      "viewport": "iPhone SE (320px)",
+      "dimensions": "320x568",
+      "scrollWidth": 320,
+      "clientWidth": 320,
+      "bioColor": "rgb(51, 65, 85)",
+      "submitHeight": "48px",
+      "status": "PASSED_100%"
+    },
+    {
+      "viewport": "iPhone 8/SE2 (375px)",
+      "dimensions": "375x667",
+      "scrollWidth": 375,
+      "clientWidth": 375,
+      "bioColor": "rgb(51, 65, 85)",
+      "submitHeight": "48px",
+      "status": "PASSED_100%"
+    },
+    {
+      "viewport": "iPhone 12/13/14 (390px)",
+      "dimensions": "390x844",
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "bioColor": "rgb(51, 65, 85)",
+      "submitHeight": "48px",
+      "status": "PASSED_100%"
+    },
+    {
+      "viewport": "iPhone 14/15 Pro (393px)",
+      "dimensions": "393x852",
+      "scrollWidth": 393,
+      "clientWidth": 393,
+      "bioColor": "rgb(51, 65, 85)",
+      "submitHeight": "48px",
+      "status": "PASSED_100%"
+    },
+    {
+      "viewport": "Pixel 7 (412px)",
+      "dimensions": "412x915",
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "bioColor": "rgb(51, 65, 85)",
+      "submitHeight": "48px",
+      "status": "PASSED_100%"
+    },
+    {
+      "viewport": "iPhone 14/15 Pro Max (430px)",
+      "dimensions": "430x932",
+      "scrollWidth": 430,
+      "clientWidth": 430,
+      "bioColor": "rgb(51, 65, 85)",
+      "submitHeight": "48px",
+      "status": "PASSED_100%"
+    },
+    {
+      "viewport": "Tablet (768px)",
+      "dimensions": "768x1024",
+      "scrollWidth": 768,
+      "clientWidth": 768,
+      "bioColor": "rgb(51, 65, 85)",
+      "submitHeight": "48px",
+      "status": "PASSED_100%"
+    },
+    {
+      "viewport": "Desktop Small (1024px)",
+      "dimensions": "1024x768",
+      "scrollWidth": 1024,
+      "clientWidth": 1024,
+      "bioColor": "rgb(51, 65, 85)",
+      "submitHeight": "48px",
+      "status": "PASSED_100%"
+    },
+    {
+      "viewport": "Desktop HD (1280px)",
+      "dimensions": "1280x800",
+      "scrollWidth": 1280,
+      "clientWidth": 1280,
+      "bioColor": "rgb(51, 65, 85)",
+      "submitHeight": "48px",
+      "status": "PASSED_100%"
+    }
+  ],
+  "mapInteractions": [],
+  "contrastMetrics": {},
+  "overflowMetrics": []
+}

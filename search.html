@@ -96,7 +96,7 @@
           <div class="search-input-divider"></div>
           <div class="search-input-group location-group search-suggest-wrap">
             <svg class="icon search-leading-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            <input type="text" id="location-search" placeholder="Your area, LGA or city (e.g. Okpe, Ikeja)..." aria-label="Location, area, or LGA" autocomplete="off" />
+            <input type="text" id="location-search" placeholder="Area, LGA, or city..." aria-label="Location, area, or LGA" autocomplete="off" />
             <div class="search-suggestions-dropdown" id="location-suggestions"></div>
             <button class="gps-inline-btn" id="gps-trigger" title="Use current GPS" aria-label="Detect current location via GPS">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="8"/></svg>
@@ -273,6 +273,9 @@
               <h3 class="browse-title">Browse Nigeria's Canonical Trades & Industries</h3>
               <p class="browse-subtitle">Select an industry to explore verified artisans and specialists near your location.</p>
             </div>
+            <button type="button" class="btn-browse-toggle" id="btn-browse-toggle" aria-expanded="true">
+              <span id="browse-toggle-text">Hide Trades</span> <span id="browse-toggle-arrow">▴</span>
+            </button>
           </div>
           <div class="industry-cards-grid" id="industry-cards-grid">
             <!-- Injected via JavaScript from MarketplaceTaxonomy.getIndustries() -->

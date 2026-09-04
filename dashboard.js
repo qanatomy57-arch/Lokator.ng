@@ -269,6 +269,48 @@ document.addEventListener('DOMContentLoaded', async () => {
         </div>
       </div>
     `).join('');
+
+    const exportBtn = document.getElementById('btn-export-leads-csv');
+    if (exportBtn && !exportBtn.dataset.bound) {
+      exportBtn.dataset.bound = 'true';
+      exportBtn.addEventListener('click', () => exportLeadsCsv(sampleLeads));
+    }
+  }
+
+  // 5.0 Privacy-Safe Lead History CSV Export (RFC 4180 with PII Masking)
+  function exportLeadsCsv(leads) {
+    if (!Array.isArray(leads) || leads.length === 0) {
+      showToast('No lead records available to export.', 'info');
+      return;
+    }
+
+    const headers = ['Lead Reference', 'Customer (Privacy-Masked)', 'Requested Service', 'Location / Area', 'Inquiry Channel', 'Commission Rate', 'Status', 'Date / Time'];
+    const rows = leads.map((l, idx) => {
+      const nameParts = (l.name || 'Customer').trim().split(/\s+/);
+      const maskedName = nameParts.length > 1 ? `${nameParts[0]} ${nameParts[nameParts.length - 1][0]}.` : nameParts[0];
+      const leadRef = `PFX-LEAD-${new Date().getFullYear()}-${String(idx + 1).padStart(4, '0')}`;
+      const service = l.service || 'Artisan Service';
+      const loc = l.location || 'Local Area';
+      const channel = 'WhatsApp / Phone Direct';
+      const commission = '0% (PadiFix Invariant)';
+      const status = 'Direct Lead';
+      const time = l.time || 'Recent';
+
+      return [leadRef, maskedName, service, loc, channel, commission, status, time].map(val => `"${String(val).replace(/"/g, '""')}"`).join(',');
+    });
+
+    const csvContent = [headers.join(','), ...rows].join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `padifix_leads_history_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    showToast('Lead history exported successfully (privacy-safe format).', 'success');
   }
 
   // 5.1 Load & Render Metrics for Overview

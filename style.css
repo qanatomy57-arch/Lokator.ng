@@ -1094,26 +1094,18 @@ body {
 
 /* ==================================================
    VERTICAL HERO VIDEO SIDE SCENE INDICATOR
+   (Removed from side viewport to ensure clean view without affecting scrolling experience)
    ================================================== */
-.hero-timeline-nav {
-  position: fixed;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  z-index: 60;
-  pointer-events: auto;
-  -webkit-user-select: none;
-  user-select: none;
-  transition: opacity 0.4s ease, transform 0.4s ease;
-}
-
-@media (max-width: 768px) {
-  .hero-timeline-nav {
-    right: 8px;
-  }
+.hero-timeline-nav,
+.hero-timeline-sticky {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  overflow: hidden !important;
+  position: absolute !important;
 }
 
 /* Vertical Steps Track Container */

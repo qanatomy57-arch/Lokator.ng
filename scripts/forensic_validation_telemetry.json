@@ -1,0 +1,740 @@
+{
+  "timestamp": "2026-09-04T21:10:39.688Z",
+  "environment": "http://localhost:8080",
+  "heroVideo": {
+    "totalDiskMp4Files": 27,
+    "totalDiskSizeBytes": 71021319,
+    "totalDiskSizeMB": "67.73",
+    "desktop": {
+      "totalRequests": 41,
+      "totalBytesTransferred": 26033940,
+      "totalBytesMB": "24.83",
+      "videoRequests": 9,
+      "videoBytesTransferred": 23673773,
+      "videoBytesMB": "22.58",
+      "loadTimeMs": 9236
+    },
+    "mobile": {
+      "totalRequests": 41,
+      "totalBytesTransferred": 26033864,
+      "totalBytesMB": "24.83",
+      "videoRequests": 9,
+      "videoBytesTransferred": 23673773,
+      "videoBytesMB": "22.58",
+      "loadTimeMs": 7341
+    }
+  },
+  "profileReview": {
+    "scenarioA_noParam": {
+      "url": "http://localhost:8080/profile.html",
+      "pageTitle": "Provider Not Found — PadiFix",
+      "notFoundVisible": true,
+      "reviewButtonRendered": false,
+      "verdict": "CLEAN_NOT_FOUND_HANDLING"
+    },
+    "scenarioB_validProvider": {
+      "url": "http://localhost:8080/profile.html?id=1",
+      "pageTitle": "Provider Profile — PadiFix",
+      "reviewButtonVisible": true,
+      "modalOpensSuccessfully": true,
+      "verdict": "FULLY_OPERATIONAL"
+    },
+    "scenarioC_invalidProvider": {
+      "url": "http://localhost:8080/profile.html?id=99999",
+      "notFoundVisible": true,
+      "verdict": "CLEAN_NOT_FOUND_HANDLING"
+    }
+  },
+  "touchTargets": {
+    "viewport_320px": {
+      "filterClearAllEmpty": {
+        "width": 0,
+        "height": 0,
+        "padding": "12px 24px",
+        "meetsWcagMin24": false,
+        "meetsWcagTarget44": false
+      },
+      "btnToggleBrowseMobile": {
+        "notFound": true
+      },
+      "nearMeBtn": {
+        "notFound": true
+      },
+      "searchSubmitBtn": {
+        "notFound": true
+      },
+      "btnOpenFiltersMobile": {
+        "width": 83,
+        "height": 38,
+        "padding": "6px 12px",
+        "meetsWcagMin24": true,
+        "meetsWcagTarget44": false
+      }
+    },
+    "viewport_390px": {
+      "filterClearAllEmpty": {
+        "width": 0,
+        "height": 0,
+        "padding": "12px 24px",
+        "meetsWcagMin24": false,
+        "meetsWcagTarget44": false
+      },
+      "btnToggleBrowseMobile": {
+        "notFound": true
+      },
+      "nearMeBtn": {
+        "notFound": true
+      },
+      "searchSubmitBtn": {
+        "notFound": true
+      },
+      "btnOpenFiltersMobile": {
+        "width": 82,
+        "height": 38,
+        "padding": "6px 12px",
+        "meetsWcagMin24": true,
+        "meetsWcagTarget44": false
+      }
+    },
+    "viewport_412px": {
+      "filterClearAllEmpty": {
+        "width": 0,
+        "height": 0,
+        "padding": "12px 24px",
+        "meetsWcagMin24": false,
+        "meetsWcagTarget44": false
+      },
+      "btnToggleBrowseMobile": {
+        "notFound": true
+      },
+      "nearMeBtn": {
+        "notFound": true
+      },
+      "searchSubmitBtn": {
+        "notFound": true
+      },
+      "btnOpenFiltersMobile": {
+        "width": 83,
+        "height": 38,
+        "padding": "6px 12px",
+        "meetsWcagMin24": true,
+        "meetsWcagTarget44": false
+      }
+    }
+  },
+  "mobileKeyboard": {
+    "viewport_320px": {
+      "windowInnerHeight": 500,
+      "inputVisible": true,
+      "toolbarVisible": false,
+      "toolbarTop": 533.375
+    },
+    "viewport_360px": {
+      "windowInnerHeight": 500,
+      "inputVisible": true,
+      "toolbarVisible": false,
+      "toolbarTop": 509.375
+    },
+    "viewport_390px": {
+      "windowInnerHeight": 500,
+      "inputVisible": true,
+      "toolbarVisible": false,
+      "toolbarTop": 491.78125
+    }
+  },
+  "searchBenchmark": {
+    "totalQueriesTested": 20,
+    "fastestMs": 0,
+    "medianMs": 0.1,
+    "slowestMs": 0.4,
+    "allResults": [
+      {
+        "query": "plumber",
+        "timeMs": 0.4000000022351742,
+        "cardsCount": 2
+      },
+      {
+        "query": "pipe fitter",
+        "timeMs": 0.30000000074505806,
+        "cardsCount": 2
+      },
+      {
+        "query": "electrician",
+        "timeMs": 0.09999999776482582,
+        "cardsCount": 20
+      },
+      {
+        "query": "wire man",
+        "timeMs": 0.30000000074505806,
+        "cardsCount": 20
+      },
+      {
+        "query": "rewire",
+        "timeMs": 0.10000000149011612,
+        "cardsCount": 20
+      },
+      {
+        "query": "tailor",
+        "timeMs": 0.19999999925494194,
+        "cardsCount": 20
+      },
+      {
+        "query": "fashion designer",
+        "timeMs": 0,
+        "cardsCount": 20
+      },
+      {
+        "query": "mechanic",
+        "timeMs": 0.10000000149011612,
+        "cardsCount": 20
+      },
+      {
+        "query": "auto repair",
+        "timeMs": 0.10000000149011612,
+        "cardsCount": 20
+      },
+      {
+        "query": "ac repair",
+        "timeMs": 0.30000000074505806,
+        "cardsCount": 20
+      },
+      {
+        "query": "generator",
+        "timeMs": 0.10000000149011612,
+        "cardsCount": 20
+      },
+      {
+        "query": "gen repair",
+        "timeMs": 0.10000000149011612,
+        "cardsCount": 20
+      },
+      {
+        "query": "carpenter",
+        "timeMs": 0.10000000149011612,
+        "cardsCount": 20
+      },
+      {
+        "query": "furniture maker",
+        "timeMs": 0.4000000022351742,
+        "cardsCount": 20
+      },
+      {
+        "query": "welder",
+        "timeMs": 0.10000000149011612,
+        "cardsCount": 20
+      },
+      {
+        "query": "iron bender",
+        "timeMs": 0.10000000149011612,
+        "cardsCount": 20
+      },
+      {
+        "query": "painter",
+        "timeMs": 0.19999999925494194,
+        "cardsCount": 20
+      },
+      {
+        "query": "cleaner",
+        "timeMs": 0.19999999925494194,
+        "cardsCount": 20
+      },
+      {
+        "query": "dry cleaner",
+        "timeMs": 0.19999999925494194,
+        "cardsCount": 20
+      },
+      {
+        "query": "catering",
+        "timeMs": 0.09999999776482582,
+        "cardsCount": 20
+      }
+    ]
+  },
+  "locationsDataset": {},
+  "paystackVerification": {},
+  "securityAudit": {
+    "auditedFiles": [
+      "supabase-client.js",
+      "app.js",
+      "search.js",
+      "profile.js",
+      "dashboard.js",
+      "auth.js",
+      "sw.js"
+    ],
+    "leakedSecretsCount": 0,
+    "findings": [],
+    "verdict": "ZERO_CLIENT_SECRETS_EXPOSED"
+  },
+  "pwaAudit": {},
+  "flowCoverageMatrix": [
+    {
+      "flowId": "FLOW-01",
+      "realInteraction": false,
+      "capturesScreenshot": true,
+      "mobileTested": true,
+      "desktopTested": true,
+      "automatedOnly": false,
+      "status": "PASS"
+    },
+    {
+      "flowId": "FLOW-02",
+      "realInteraction": false,
+      "capturesScreenshot": true,
+      "mobileTested": true,
+      "desktopTested": true,
+      "automatedOnly": false,
+      "status": "PASS"
+    },
+    {
+      "flowId": "FLOW-03",
+      "realInteraction": true,
+      "capturesScreenshot": true,
+      "mobileTested": false,
+      "desktopTested": true,
+      "automatedOnly": false,
+      "status": "PASS"
+    },
+    {
+      "flowId": "FLOW-04",
+      "realInteraction": true,
+      "capturesScreenshot": true,
+      "mobileTested": false,
+      "desktopTested": true,
+      "automatedOnly": false,
+      "status": "PASS"
+    },
+    {
+      "flowId": "FLOW-05",
+      "realInteraction": true,
+      "capturesScreenshot": true,
+      "mobileTested": false,
+      "desktopTested": true,
+      "automatedOnly": false,
+      "status": "PASS"
+    },
+    {
+      "flowId": "FLOW-06",
+      "realInteraction": false,
+      "capturesScreenshot": true,
+      "mobileTested": false,
+      "desktopTested": true,
+      "automatedOnly": false,
+      "status": "PASS"
+    },
+    {
+      "flowId": "FLOW-07",
+      "realInteraction": false,
+      "capturesScreenshot": true,
+      "mobileTested": false,
+      "desktopTested": true,
+      "automatedOnly": false,
+      "status": "PASS"
+    },
+    {
+      "flowId": "FLOW-08",
+      "realInteraction": true,
+      "capturesScreenshot": true,
+      "mobileTested": false,
+      "desktopTested": true,
+      "automatedOnly": false,
+      "status": "PASS"
+    },
+    {
+      "flowId": "FLOW-09",
+      "realInteraction": true,
+      "capturesScreenshot": true,
+      "mobileTested": false,
+      "desktopTested": true,
+      "automatedOnly": false,
+      "status": "PASS"
+    },
+    {
+      "flowId": "FLOW-10",
+      "realInteraction": true,
+      "capturesScreenshot": true,
+      "mobileTested": false,
+      "desktopTested": true,
+      "automatedOnly": false,
+      "status": "PASS"
+    },
+    {
+      "flowId": "FLOW-11",
+      "realInteraction": false,
+      "capturesScreenshot": false,
+      "mobileTested": false,
+      "desktopTested": true,
+      "automatedOnly": false,
+      "status": "PASS"
+    },
+    {
+      "flowId": "FLOW-12",
+      "realInteraction": false,
+      "capturesScreenshot": false,
+      "mobileTested": false,
+      "desktopTested": true,
+      "automatedOnly": false,
+      "status": "PASS"
+    },
+    {
+      "flowId": "FLOW-13",
+      "realInteraction": false,
+      "capturesScreenshot": false,
+      "mobileTested": false,
+      "desktopTested": true,
+      "automatedOnly": false,
+      "status": "PASS"
+    },
+    {
+      "flowId": "FLOW-14",
+      "realInteraction": false,
+      "capturesScreenshot": false,
+      "mobileTested": false,
+      "desktopTested": true,
+      "automatedOnly": false,
+      "status": "PASS"
+    },
+    {
+      "flowId": "FLOW-15",
+      "realInteraction": false,
+      "capturesScreenshot": false,
+      "mobileTested": false,
+      "desktopTested": true,
+      "automatedOnly": true,
+      "status": "PASS"
+    },
+    {
+      "flowId": "FLOW-16",
+      "realInteraction": false,
+      "capturesScreenshot": false,
+      "mobileTested": false,
+      "desktopTested": true,
+      "automatedOnly": true,
+      "status": "PASS"
+    },
+    {
+      "flowId": "FLOW-17",
+      "realInteraction": true,
+      "capturesScreenshot": true,
+      "mobileTested": false,
+      "desktopTested": true,
+      "automatedOnly": false,
+      "status": "PASS"
+    },
+    {
+      "flowId": "FLOW-18",
+      "realInteraction": false,
+      "capturesScreenshot": false,
+      "mobileTested": false,
+      "desktopTested": true,
+      "automatedOnly": true,
+      "status": "PASS"
+    },
+    {
+      "flowId": "FLOW-19",
+      "realInteraction": true,
+      "capturesScreenshot": true,
+      "mobileTested": false,
+      "desktopTested": true,
+      "automatedOnly": false,
+      "status": "PASS"
+    },
+    {
+      "flowId": "FLOW-20",
+      "realInteraction": true,
+      "capturesScreenshot": true,
+      "mobileTested": false,
+      "desktopTested": true,
+      "automatedOnly": false,
+      "status": "PASS"
+    },
+    {
+      "flowId": "FLOW-21",
+      "realInteraction": true,
+      "capturesScreenshot": true,
+      "mobileTested": false,
+      "desktopTested": true,
+      "automatedOnly": false,
+      "status": "PASS"
+    },
+    {
+      "flowId": "FLOW-22",
+      "realInteraction": true,
+      "capturesScreenshot": true,
+      "mobileTested": false,
+      "desktopTested": true,
+      "automatedOnly": false,
+      "status": "PASS"
+    },
+    {
+      "flowId": "FLOW-23",
+      "realInteraction": true,
+      "capturesScreenshot": true,
+      "mobileTested": false,
+      "desktopTested": true,
+      "automatedOnly": false,
+      "status": "PASS"
+    },
+    {
+      "flowId": "FLOW-24",
+      "realInteraction": false,
+      "capturesScreenshot": false,
+      "mobileTested": false,
+      "desktopTested": true,
+      "automatedOnly": true,
+      "status": "PASS"
+    },
+    {
+      "flowId": "FLOW-25",
+      "realInteraction": false,
+      "capturesScreenshot": false,
+      "mobileTested": false,
+      "desktopTested": true,
+      "automatedOnly": true,
+      "status": "PASS"
+    },
+    {
+      "flowId": "FLOW-26",
+      "realInteraction": false,
+      "capturesScreenshot": false,
+      "mobileTested": false,
+      "desktopTested": true,
+      "automatedOnly": true,
+      "status": "PASS"
+    },
+    {
+      "flowId": "FLOW-27",
+      "realInteraction": false,
+      "capturesScreenshot": false,
+      "mobileTested": false,
+      "desktopTested": true,
+      "automatedOnly": true,
+      "status": "PASS"
+    },
+    {
+      "flowId": "FLOW-28",
+      "realInteraction": false,
+      "capturesScreenshot": false,
+      "mobileTested": false,
+      "desktopTested": true,
+      "automatedOnly": true,
+      "status": "PASS"
+    },
+    {
+      "flowId": "FLOW-29",
+      "realInteraction": false,
+      "capturesScreenshot": false,
+      "mobileTested": false,
+      "desktopTested": true,
+      "automatedOnly": true,
+      "status": "PASS"
+    },
+    {
+      "flowId": "FLOW-30",
+      "realInteraction": false,
+      "capturesScreenshot": false,
+      "mobileTested": false,
+      "desktopTested": true,
+      "automatedOnly": true,
+      "status": "PASS"
+    },
+    {
+      "flowId": "FLOW-31",
+      "realInteraction": false,
+      "capturesScreenshot": false,
+      "mobileTested": false,
+      "desktopTested": true,
+      "automatedOnly": true,
+      "status": "PASS"
+    },
+    {
+      "flowId": "FLOW-32",
+      "realInteraction": false,
+      "capturesScreenshot": false,
+      "mobileTested": false,
+      "desktopTested": true,
+      "automatedOnly": true,
+      "status": "PASS"
+    },
+    {
+      "flowId": "FLOW-33",
+      "realInteraction": false,
+      "capturesScreenshot": false,
+      "mobileTested": false,
+      "desktopTested": true,
+      "automatedOnly": true,
+      "status": "PASS"
+    },
+    {
+      "flowId": "FLOW-34",
+      "realInteraction": false,
+      "capturesScreenshot": false,
+      "mobileTested": false,
+      "desktopTested": true,
+      "automatedOnly": true,
+      "status": "PASS"
+    },
+    {
+      "flowId": "FLOW-35",
+      "realInteraction": false,
+      "capturesScreenshot": false,
+      "mobileTested": false,
+      "desktopTested": true,
+      "automatedOnly": true,
+      "status": "PASS"
+    },
+    {
+      "flowId": "FLOW-36",
+      "realInteraction": false,
+      "capturesScreenshot": false,
+      "mobileTested": false,
+      "desktopTested": true,
+      "automatedOnly": true,
+      "status": "PASS"
+    },
+    {
+      "flowId": "FLOW-37",
+      "realInteraction": false,
+      "capturesScreenshot": false,
+      "mobileTested": false,
+      "desktopTested": true,
+      "automatedOnly": true,
+      "status": "PASS"
+    },
+    {
+      "flowId": "FLOW-38",
+      "realInteraction": false,
+      "capturesScreenshot": false,
+      "mobileTested": false,
+      "desktopTested": true,
+      "automatedOnly": true,
+      "status": "PASS"
+    },
+    {
+      "flowId": "FLOW-39",
+      "realInteraction": false,
+      "capturesScreenshot": false,
+      "mobileTested": false,
+      "desktopTested": true,
+      "automatedOnly": true,
+      "status": "PASS"
+    },
+    {
+      "flowId": "FLOW-40",
+      "realInteraction": false,
+      "capturesScreenshot": false,
+      "mobileTested": false,
+      "desktopTested": true,
+      "automatedOnly": true,
+      "status": "PASS"
+    },
+    {
+      "flowId": "FLOW-41",
+      "realInteraction": false,
+      "capturesScreenshot": false,
+      "mobileTested": false,
+      "desktopTested": true,
+      "automatedOnly": true,
+      "status": "PASS"
+    },
+    {
+      "flowId": "FLOW-42",
+      "realInteraction": true,
+      "capturesScreenshot": true,
+      "mobileTested": false,
+      "desktopTested": true,
+      "automatedOnly": false,
+      "status": "PASS"
+    },
+    {
+      "flowId": "FLOW-43",
+      "realInteraction": true,
+      "capturesScreenshot": true,
+      "mobileTested": false,
+      "desktopTested": true,
+      "automatedOnly": false,
+      "status": "PASS"
+    },
+    {
+      "flowId": "FLOW-44",
+      "realInteraction": false,
+      "capturesScreenshot": false,
+      "mobileTested": false,
+      "desktopTested": true,
+      "automatedOnly": true,
+      "status": "PASS"
+    },
+    {
+      "flowId": "FLOW-45",
+      "realInteraction": false,
+      "capturesScreenshot": false,
+      "mobileTested": false,
+      "desktopTested": true,
+      "automatedOnly": true,
+      "status": "PASS"
+    },
+    {
+      "flowId": "FLOW-46",
+      "realInteraction": false,
+      "capturesScreenshot": false,
+      "mobileTested": false,
+      "desktopTested": true,
+      "automatedOnly": true,
+      "status": "PASS"
+    },
+    {
+      "flowId": "FLOW-47",
+      "realInteraction": false,
+      "capturesScreenshot": false,
+      "mobileTested": false,
+      "desktopTested": true,
+      "automatedOnly": true,
+      "status": "PASS"
+    },
+    {
+      "flowId": "FLOW-48",
+      "realInteraction": true,
+      "capturesScreenshot": false,
+      "mobileTested": false,
+      "desktopTested": true,
+      "automatedOnly": false,
+      "status": "PASS"
+    },
+    {
+      "flowId": "FLOW-49",
+      "realInteraction": false,
+      "capturesScreenshot": false,
+      "mobileTested": false,
+      "desktopTested": true,
+      "automatedOnly": true,
+      "status": "PASS"
+    },
+    {
+      "flowId": "FLOW-50",
+      "realInteraction": false,
+      "capturesScreenshot": false,
+      "mobileTested": false,
+      "desktopTested": true,
+      "automatedOnly": true,
+      "status": "PASS"
+    },
+    {
+      "flowId": "FLOW-51",
+      "realInteraction": false,
+      "capturesScreenshot": false,
+      "mobileTested": false,
+      "desktopTested": true,
+      "automatedOnly": true,
+      "status": "PASS"
+    },
+    {
+      "flowId": "FLOW-52",
+      "realInteraction": false,
+      "capturesScreenshot": false,
+      "mobileTested": false,
+      "desktopTested": true,
+      "automatedOnly": true,
+      "status": "PASS"
+    }
+  ]
+}

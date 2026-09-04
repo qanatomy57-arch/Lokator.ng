@@ -237,7 +237,10 @@
               <h2>Recent Leads</h2>
               <p>Direct customer inquiries from your local area</p>
             </div>
-            <button type="button" class="btn btn-outline btn-view-all-revs" onclick="switchTab('reviews')">View All Leads</button>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <button type="button" class="btn btn-outline" id="btn-export-leads-csv" title="Export privacy-safe lead history as CSV">📥 Export CSV</button>
+              <button type="button" class="btn btn-outline btn-view-all-revs" onclick="switchTab('reviews')">View All Leads</button>
+            </div>
           </div>
           <div class="dash-leads-list" id="recent-leads-list">
             <!-- Rendered dynamically -->

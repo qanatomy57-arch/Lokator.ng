@@ -441,6 +441,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     browseSection.style.display = "block";
     browseSection.classList.remove('is-compact');
+    const isMobile = window.innerWidth <= 768;
+    const shouldCollapse = browseSection.classList.contains('is-collapsed') || (isMobile && !browseSection._userToggled);
+    if (shouldCollapse) {
+      browseSection.classList.add('is-collapsed');
+    }
+
     browseSection.innerHTML = `
       <div class="browse-section-header">
         <div class="browse-header-text">
@@ -448,11 +454,27 @@ document.addEventListener("DOMContentLoaded", () => {
           <h3 class="browse-title">Browse Nigeria's Canonical Trades & Industries</h3>
           <p class="browse-subtitle">Select an industry or popular trade to find verified artisans and specialists near you.</p>
         </div>
+        <button type="button" class="btn-browse-toggle" id="btn-browse-toggle" aria-expanded="${shouldCollapse ? 'false' : 'true'}">
+          <span id="browse-toggle-text">${shouldCollapse ? 'Show Trades' : 'Hide Trades'}</span> <span id="browse-toggle-arrow">${shouldCollapse ? '▾' : '▴'}</span>
+        </button>
       </div>
       <div class="industry-cards-grid" id="industry-cards-grid-inner">
         ${buildIndustryCardsHtml(industries)}
       </div>
     `;
+
+    const toggleBtn = browseSection.querySelector('#btn-browse-toggle');
+    if (toggleBtn) {
+      toggleBtn.addEventListener('click', () => {
+        browseSection._userToggled = true;
+        const isCollapsed = browseSection.classList.toggle('is-collapsed');
+        const textEl = document.getElementById('browse-toggle-text');
+        const arrowEl = document.getElementById('browse-toggle-arrow');
+        if (textEl) textEl.textContent = isCollapsed ? 'Show Trades' : 'Hide Trades';
+        if (arrowEl) arrowEl.textContent = isCollapsed ? '▾' : '▴';
+        toggleBtn.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
+      });
+    }
   }
 
   // Synchronize browser address bar with search state (shareable & refresh-safe)
@@ -822,10 +844,44 @@ document.addEventListener("DOMContentLoaded", () => {
             `;
           }
 
+          // Secondary UX: Explicit opt-in suggestions for nearby LGAs on zero results
+          let nearbyLgasHtml = '';
+          if (state.state !== 'all' && typeof NigeriaLocations !== 'undefined') {
+            const stateObj = NigeriaLocations.getState(state.state);
+            if (stateObj && Array.isArray(stateObj.lgas)) {
+              const otherLgas = stateObj.lgas.filter(l => l.name.toLowerCase() !== (state.lga || '').toLowerCase()).slice(0, 4);
+              if (otherLgas.length > 0) {
+                nearbyLgasHtml = `
+                  <div class="zero-nearby-suggestions-card" style="margin: 18px 0; padding: 16px; background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; text-align: left; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                    <div style="display: flex; align-items: center; gap: 8px; font-weight: 700; color: #0F172A; font-size: 14px; margin-bottom: 6px;">
+                      <span>📍</span>
+                      <span>Nearby Locations in ${escapeHtml(stateObj.name)} State</span>
+                    </div>
+                    <p style="font-size: 12.5px; color: #64748B; margin-bottom: 12px; line-height: 1.5;">
+                      No verified artisans found in ${state.lga !== 'all' ? `<strong>${escapeHtml(state.lga)}</strong>` : 'this specific query'}. Expand your search to nearby areas with one click (no auto-substitution):
+                    </p>
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                      ${otherLgas.map(ol => `
+                        <button type="button" class="btn-nearby-lga-optin" data-lga="${escapeHtml(ol.name)}" data-state="${escapeHtml(stateObj.name)}" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 8px; border: 1px solid #CBD5E1; background: #F8FAFC; color: #0F172A; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: all 0.15s ease;">
+                          <span>📍 ${escapeHtml(ol.name)}</span>
+                          <span style="font-size: 11px; color: #008751; font-weight: 700;">(Explore)</span>
+                        </button>
+                      `).join('')}
+                      <button type="button" class="btn-nearby-state-optin" data-state="${escapeHtml(stateObj.name)}" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 8px; border: 1px solid #00A859; background: #F0FDF4; color: #006B3F; font-size: 12.5px; font-weight: 700; cursor: pointer; transition: all 0.15s ease;">
+                        <span>🌐 Search All of ${escapeHtml(stateObj.name)} State</span>
+                      </button>
+                    </div>
+                  </div>
+                `;
+              }
+            }
+          }
+
           emptyState.innerHTML = `
             <div class="empty-icon">🔍</div>
             <h3>${currentQuery ? `No verified providers found for "${escapeHtml(currentQuery)}" in this area yet` : 'No providers match your exact search filters'}</h3>
             <p>We are actively verifying skilled hands across all 36 Nigerian states. Try exploring nearby locations or related trades below:</p>
+            ${nearbyLgasHtml}
             ${recruitmentHtml}
             ${recsHtml}
             <div class="empty-actions-row" style="margin-top: 20px;">
@@ -838,6 +894,37 @@ document.addEventListener("DOMContentLoaded", () => {
               if (resetFiltersBtn) resetFiltersBtn.click();
             });
           }
+
+          // Attach explicit opt-in listeners for nearby LGAs
+          emptyState.querySelectorAll('.btn-nearby-lga-optin').forEach(btn => {
+            btn.addEventListener('click', () => {
+              const chosenLga = btn.dataset.lga;
+              state.lga = chosenLga;
+              if (lgaSelect) {
+                // Check if option exists in select, else add or select it
+                let opt = Array.from(lgaSelect.options).find(o => o.value.toLowerCase() === chosenLga.toLowerCase());
+                if (!opt) {
+                  opt = new Option(chosenLga, chosenLga, true, true);
+                  lgaSelect.add(opt);
+                } else {
+                  opt.selected = true;
+                }
+              }
+              state.page = 1;
+              syncUrlParams();
+              fetchAndRenderProviders();
+            });
+          });
+
+          emptyState.querySelectorAll('.btn-nearby-state-optin').forEach(btn => {
+            btn.addEventListener('click', () => {
+              state.lga = 'all';
+              if (lgaSelect) lgaSelect.value = 'all';
+              state.page = 1;
+              syncUrlParams();
+              fetchAndRenderProviders();
+            });
+          });
           const recruitCta = document.getElementById("zero-state-recruitment-cta");
           if (recruitCta) {
             recruitCta.addEventListener("click", () => {

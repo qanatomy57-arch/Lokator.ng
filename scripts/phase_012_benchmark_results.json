@@ -1,0 +1,38 @@
+{
+  "network": {
+    "totalRequests": 33,
+    "totalTransferredBytes": 5276543,
+    "totalTransferredMb": "5.03",
+    "videoRequestsCount": 1,
+    "videoUrls": [
+      "01_master_marketplace.mp4"
+    ],
+    "totalVideoBytes": 2809543,
+    "totalVideoMb": "2.68",
+    "baselinePayloadMb": "22.58",
+    "payloadReductionPct": "88.1%"
+  },
+  "searchBenchmark": {
+    "queriesTested": 10,
+    "latenciesMs": [
+      34,
+      37,
+      47,
+      49,
+      80,
+      81,
+      95,
+      101,
+      268,
+      676
+    ],
+    "medianMs": 81,
+    "p95Ms": 676,
+    "slowestMs": 676
+  },
+  "secondaryUx": {
+    "zeroResultsNearbyOptin": true,
+    "leadHistoryCsvExport": true,
+    "portfolioLightboxNavigation": true
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "counts": {
+    "PUBLIC": 0,
+    "TECHNICAL": 742,
+    "HISTORICAL": 8408,
+    "INFRASTRUCTURE": 0,
+    "INTENTIONAL": 27
+  },
+  "publicOccurrences": [],
+  "infrastructureOccurrences": []
+}
