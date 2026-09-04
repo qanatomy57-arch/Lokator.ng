@@ -34,10 +34,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     let allProviders = [];
     try {
-      allProviders = await LokatorDB.getProviders();
+      const res = await LokatorDB.getProviders();
+      allProviders = Array.isArray(res) ? res : (res && Array.isArray(res.data) ? res.data : []);
     } catch (e) {
       allProviders = (typeof LokatorDB.getProvidersSync === 'function') ? LokatorDB.getProvidersSync() : [];
     }
+    if (!Array.isArray(allProviders)) allProviders = [];
 
     const verifiedCount = allProviders.filter(p => p.is_verified || p.isVerified || p.nin_verified).length;
 
@@ -201,6 +203,41 @@ document.addEventListener('DOMContentLoaded', async () => {
   const btnRefresh = document.getElementById('btn-refresh-queue');
   if (btnRefresh) {
     btnRefresh.addEventListener('click', () => hydrateCompliancePortal());
+  }
+
+  const btnReconcile = document.getElementById('btn-reconcile-kyc');
+  if (btnReconcile) {
+    btnReconcile.addEventListener('click', async () => {
+      const feedback = document.getElementById('reconcile-feedback');
+      if (feedback) {
+        feedback.style.display = 'block';
+        feedback.style.background = 'rgba(2, 132, 199, 0.15)';
+        feedback.style.color = '#38BDF8';
+        feedback.style.border = '1px solid rgba(2, 132, 199, 0.3)';
+        feedback.textContent = '🔄 Reconciling pending KYC requests with verification gateway...';
+      }
+
+      try {
+        let result = { total: 0, reconciled: 0, unchanged: 0 };
+        if (typeof PadiFixVerification !== 'undefined' && PadiFixVerification.PadiFixVerificationGateway) {
+          result = await PadiFixVerification.PadiFixVerificationGateway.reconcilePendingVerifications({}, { role: 'compliance_officer', userId: 'admin_officer' });
+        }
+        if (feedback) {
+          feedback.style.background = 'rgba(16, 185, 129, 0.15)';
+          feedback.style.color = '#10B981';
+          feedback.style.border = '1px solid rgba(16, 185, 129, 0.3)';
+          feedback.textContent = `✅ Reconciliation complete: Scanned ${result.total} pending record(s), reconciled ${result.reconciled}, unchanged ${result.unchanged}.`;
+        }
+        await hydrateCompliancePortal();
+      } catch (err) {
+        if (feedback) {
+          feedback.style.background = 'rgba(239, 68, 68, 0.15)';
+          feedback.style.color = '#F87171';
+          feedback.style.border = '1px solid rgba(239, 68, 68, 0.3)';
+          feedback.textContent = `❌ Reconciliation error: ${err.message}`;
+        }
+      }
+    });
   }
 
   // Initial load

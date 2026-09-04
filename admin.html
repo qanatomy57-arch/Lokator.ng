@@ -124,6 +124,18 @@
 
     <!-- TAB 1: VERIFICATION REVIEW QUEUE -->
     <div class="admin-tab-panel active" id="panel-verifications">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 13px; font-weight: 600; color: #94A3B8;">KYC Ingestion Engine:</span>
+          <span id="badge-kyc-mode" style="background: rgba(16, 185, 129, 0.15); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 4px 10px; border-radius: 9999px; font-size: 11px; font-weight: 700; text-transform: uppercase;">Sandbox Mode (Safe)</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <button type="button" id="btn-reconcile-kyc" class="btn-action-sm" style="background: #0284C7; color: #FFFFFF; font-weight: 700; padding: 8px 16px; border-radius: 6px; cursor: pointer; border: none;">
+            🔄 Reconcile Pending KYC
+          </button>
+        </div>
+      </div>
+      <div id="reconcile-feedback" style="display: none; padding: 10px 14px; margin-bottom: 14px; border-radius: 6px; font-size: 12px; font-weight: 600;"></div>
       <div class="admin-table-card">
         <table class="admin-table">
           <thead>
@@ -189,6 +201,8 @@
 
   </main>
 
+  <script src="monetization-config.js"></script>
+  <script src="verification-providers.js"></script>
   <script src="supabase-client.js"></script>
   <script src="admin.js"></script>
 </body>

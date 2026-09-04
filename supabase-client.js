@@ -98,6 +98,8 @@
   const DB_REPORTS_KEY = 'lokator_supabase_reports_db';
   const DB_VERIFICATIONS_KEY = 'lokator_supabase_verifications_db';
   const DB_VERIFICATION_AUDITS_KEY = 'lokator_supabase_verification_audits_db';
+  const DB_VERIFICATION_ATTEMPTS_KEY = 'lokator_supabase_verification_attempts_db';
+  const DB_KYC_WEBHOOK_EVENTS_KEY = 'lokator_supabase_kyc_webhook_events_db';
 
   // 3.0 CENTRAL WRITE RESULT MODEL (Phase 4.5 Standard)
   function createWriteResult({
@@ -2581,6 +2583,83 @@
       verAudits.unshift(auditRecord);
       setLocalStore(DB_VERIFICATION_AUDITS_KEY, verAudits);
       return auditRecord;
+    },
+
+    /**
+     * Record verification attempt entry (Phase 008 helper)
+     */
+    async recordVerificationAttemptEntry(attemptRecord) {
+      const attempts = getLocalStore(DB_VERIFICATION_ATTEMPTS_KEY, []);
+      const idx = attempts.findIndex(a => a.id === attemptRecord.id || a.attempt_id === attemptRecord.attempt_id);
+      if (idx >= 0) {
+        attempts[idx] = attemptRecord;
+      } else {
+        attempts.unshift(attemptRecord);
+      }
+      setLocalStore(DB_VERIFICATION_ATTEMPTS_KEY, attempts);
+      return attemptRecord;
+    },
+
+    /**
+     * Update verification attempt entry
+     */
+    async updateVerificationAttemptRecord(attemptId, updateData = {}) {
+      const attempts = getLocalStore(DB_VERIFICATION_ATTEMPTS_KEY, []);
+      const idx = attempts.findIndex(a => a.id === attemptId || a.attempt_id === attemptId);
+      if (idx >= 0) {
+        attempts[idx] = Object.assign({}, attempts[idx], updateData, { updated_at: new Date().toISOString() });
+        setLocalStore(DB_VERIFICATION_ATTEMPTS_KEY, attempts);
+        return attempts[idx];
+      }
+      return null;
+    },
+
+    /**
+     * Get verification attempt by ID
+     */
+    async getVerificationAttemptById(attemptId) {
+      const attempts = getLocalStore(DB_VERIFICATION_ATTEMPTS_KEY, []);
+      return attempts.find(a => a.id === attemptId || a.attempt_id === attemptId) || null;
+    },
+
+    /**
+     * Get verification attempts for provider
+     */
+    async getVerificationAttempts(providerId = null) {
+      const attempts = getLocalStore(DB_VERIFICATION_ATTEMPTS_KEY, []);
+      if (!providerId) return attempts;
+      const numId = Number(providerId);
+      return attempts.filter(a => a.provider_id === numId);
+    },
+
+    /**
+     * Get pending verification attempts for reconciliation
+     */
+    async getPendingVerificationAttempts(options = {}) {
+      const attempts = getLocalStore(DB_VERIFICATION_ATTEMPTS_KEY, []);
+      return attempts.filter(a => a.status === 'pending');
+    },
+
+    /**
+     * Record KYC webhook event in durable deduplication store
+     */
+    async recordWebhookEventEntry(eventRecord) {
+      const events = getLocalStore(DB_KYC_WEBHOOK_EVENTS_KEY, []);
+      const idx = events.findIndex(e => e.event_id === eventRecord.event_id);
+      if (idx >= 0) {
+        events[idx] = eventRecord;
+      } else {
+        events.unshift(eventRecord);
+      }
+      setLocalStore(DB_KYC_WEBHOOK_EVENTS_KEY, events);
+      return eventRecord;
+    },
+
+    /**
+     * Get recorded webhook events
+     */
+    async getWebhookEvents(options = {}) {
+      return getLocalStore(DB_KYC_WEBHOOK_EVENTS_KEY, []);
     },
 
     /**

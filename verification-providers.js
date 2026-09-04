@@ -217,6 +217,59 @@
     async healthCheck() {
       return { healthy: true, adapter: this.name };
     }
+
+    /**
+     * Creates an asynchronous provider verification attempt record
+     */
+    async createVerificationRequest(providerId, requestData = {}) {
+      return {
+        attemptId: `vatt_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+        providerReference: `ref_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+        status: 'pending',
+        adapter: this.name,
+        requestedAt: new Date().toISOString()
+      };
+    }
+
+    /**
+     * Retrieves status of an ongoing verification attempt for reconciliation
+     */
+    async retrieveVerificationStatus(providerReference, attemptId) {
+      return {
+        status: 'pending',
+        adapter: this.name,
+        providerReference,
+        attemptId,
+        normalizedOutcome: 'PENDING',
+        safeResultCode: 'PENDING_REVIEW'
+      };
+    }
+
+    /**
+     * Verifies cryptographic webhook signature
+     */
+    verifyWebhook(headers = {}, rawBody = '', secret = '') {
+      return { verified: false, reason: 'Webhook signature verification not implemented for base provider.' };
+    }
+
+    /**
+     * Normalizes raw webhook payloads
+     */
+    normalizeWebhookEvent(payload = {}) {
+      return {
+        eventId: payload.id || payload.event_id || null,
+        outcome: 'PENDING',
+        state: 'PENDING',
+        safeResultCode: 'PENDING_REVIEW'
+      };
+    }
+
+    /**
+     * Maps third-party result to PadiFix result
+     */
+    mapProviderResult(result) {
+      return this.normalizeResult(result);
+    }
   }
 
   // 5. MOCK VERIFICATION PROVIDER (Offline sandboxing & automated unit testing)
@@ -400,6 +453,8 @@
         source: this.source,
         manualReview: false,
         liveAutomated: true,
+        supportsWebhook: true,
+        supportsReconciliation: true,
         supportedDocs: ['vnin']
       };
     }
@@ -431,7 +486,7 @@
       }
 
       // If configuration missing or credentials unconfigured, fail closed safely
-      const apiKey = process.env.KYC_GATEWAY_API_KEY;
+      const apiKey = (typeof process !== 'undefined' && process.env) ? process.env.KYC_GATEWAY_API_KEY : null;
       if (!apiKey) {
         return {
           success: false,
@@ -449,20 +504,314 @@
         error: 'Automated gateway request returned non-verified result.'
       };
     }
+
+    async createVerificationRequest(providerId, requestData = {}) {
+      const attemptId = `vatt_nimc_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+      const providerReference = `ref_nimc_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+      return {
+        attemptId,
+        providerReference,
+        status: 'pending',
+        adapter: this.name,
+        source: this.source,
+        requestedAt: new Date().toISOString()
+      };
+    }
+
+    async retrieveVerificationStatus(providerReference, attemptId) {
+      const Monetization = (typeof PadiFixMonetization !== 'undefined') ? PadiFixMonetization :
+                           (typeof require !== 'undefined' ? require('./monetization-config.js') : null);
+      const isLiveEnabled = Monetization && Monetization.isFeatureEnabled('liveKycGatewayEnabled');
+      if (!isLiveEnabled) {
+        return {
+          status: 'pending',
+          normalizedOutcome: 'UNAVAILABLE',
+          state: 'PENDING',
+          safeResultCode: 'LIVE_GATEWAY_GATED',
+          adapter: this.name
+        };
+      }
+      return {
+        status: 'pending',
+        normalizedOutcome: 'PENDING',
+        state: 'PENDING',
+        safeResultCode: 'PENDING_REVIEW',
+        adapter: this.name
+      };
+    }
+
+    verifyWebhook(headers = {}, rawBody = '', secret = '') {
+      const signature = headers['x-kyc-signature'] || headers['x-prembly-signature'] || headers['x-dojah-signature'];
+      if (!signature) return { verified: false, reason: 'Missing signature header' };
+      if (typeof require !== 'undefined') {
+        const crypto = require('crypto');
+        const expected = crypto.createHmac('sha512', secret).update(rawBody).digest('hex');
+        const sigBuf = Buffer.from(signature, 'hex');
+        const expBuf = Buffer.from(expected, 'hex');
+        if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
+          return { verified: false, reason: 'Signature mismatch' };
+        }
+        return { verified: true };
+      }
+      return { verified: true };
+    }
+
+    normalizeWebhookEvent(payload = {}) {
+      const data = payload.data || {};
+      const event = String(payload.event || payload.action || data.status || '').toLowerCase();
+      const eventId = payload.id || payload.event_id || data.reference || payload.reference;
+      let outcome = 'PENDING';
+      let state = 'PENDING';
+      let safeResultCode = 'PENDING_REVIEW';
+
+      if (event.includes('approved') || event.includes('verified') || event.includes('success')) {
+        outcome = 'VERIFIED';
+        state = 'VERIFIED_NIN';
+        safeResultCode = 'VERIFICATION_SUCCESS';
+      } else if (event.includes('rejected') || event.includes('mismatch')) {
+        outcome = 'REJECTED';
+        state = 'REJECTED';
+        safeResultCode = 'IDENTITY_MISMATCH';
+      } else if (event.includes('failed') || event.includes('timeout')) {
+        outcome = 'FAILED';
+        state = 'FAILED';
+        safeResultCode = 'PROVIDER_TIMEOUT';
+      }
+
+      return {
+        eventId: String(eventId || ''),
+        outcome,
+        state,
+        safeResultCode,
+        providerId: Number(data.provider_id || payload.provider_id) || null,
+        requestId: data.request_id || payload.request_id || null,
+        attemptId: data.attempt_id || payload.attempt_id || null
+      };
+    }
+  }
+
+  // 8. SANDBOX KYC PROVIDER (Phase 008: Deterministic Full-Lifecycle Simulation)
+  class SandboxKycProvider extends VerificationProvider {
+    constructor() {
+      super('SandboxKycProvider');
+      this.source = 'SANDBOX_KYC';
+    }
+
+    getCapabilities() {
+      return {
+        adapter: this.name,
+        source: this.source,
+        manualReview: false,
+        liveAutomated: true,
+        supportsWebhook: true,
+        supportsReconciliation: true,
+        supportedDocs: ['vnin', 'cac_cert', 'voters_card', 'drivers_license']
+      };
+    }
+
+    async healthCheck() {
+      return { healthy: true, adapter: this.name, mode: 'SANDBOX', status: 'OPERATIONAL' };
+    }
+
+    async verifyIdentity(requestData = {}) {
+      const docType = (requestData.docType || 'vnin').toLowerCase();
+      const docRef = String(requestData.docRef || '').trim();
+      const upper = docRef.toUpperCase();
+
+      if (!docRef) {
+        return {
+          success: false,
+          outcome: 'FAILED',
+          state: 'UNVERIFIED',
+          safeResultCode: 'MALFORMED_PROVIDER_RESPONSE',
+          error: 'Document reference is required.'
+        };
+      }
+
+      if (upper.includes('MALFORMED')) {
+        return {
+          success: false,
+          outcome: 'FAILED',
+          state: 'FAILED',
+          safeResultCode: 'MALFORMED_PROVIDER_RESPONSE',
+          error: 'Malformed response payload from KYC partner.'
+        };
+      }
+
+      if (upper.includes('FAIL') || upper.includes('TIMEOUT')) {
+        return {
+          success: false,
+          outcome: 'FAILED',
+          state: 'FAILED',
+          safeResultCode: 'PROVIDER_TIMEOUT',
+          error: 'Identity gateway query timed out.'
+        };
+      }
+
+      if (upper.includes('REJECT') || upper.includes('MISMATCH')) {
+        return {
+          success: false,
+          outcome: 'REJECTED',
+          state: 'REJECTED',
+          safeResultCode: 'IDENTITY_MISMATCH',
+          error: 'Identity mismatch: Submitted reference details do not match provider registration.'
+        };
+      }
+
+      if (upper.includes('DUPLICATE')) {
+        return {
+          success: false,
+          outcome: 'REJECTED',
+          state: 'REJECTED',
+          safeResultCode: 'DUPLICATE_IDENTITY_REFERENCE',
+          error: 'Duplicate identity reference detected across system accounts.'
+        };
+      }
+
+      if (upper.includes('PEND') || upper.includes('WAIT')) {
+        return {
+          success: true,
+          outcome: 'PENDING',
+          state: 'PENDING',
+          status: 'pending',
+          verification_source: this.source,
+          safeResultCode: 'PENDING_REVIEW',
+          message: 'Identity verification is queued for asynchronous processing in sandbox.'
+        };
+      }
+
+      const maskedRef = maskDocumentReference(docType, docRef);
+      const refHash = hashDocumentReference(docRef);
+
+      return {
+        success: true,
+        outcome: 'VERIFIED',
+        state: (docType === 'vnin' ? 'VERIFIED_NIN' : 'VERIFIED_PLATFORM'),
+        status: 'approved',
+        verification_source: this.source,
+        maskedRef,
+        referenceHash: refHash,
+        safeResultCode: 'VERIFICATION_SUCCESS',
+        verifiedAt: new Date().toISOString(),
+        message: 'Identity successfully verified in sandbox environment.'
+      };
+    }
+
+    async createVerificationRequest(providerId, requestData = {}) {
+      const attemptId = `vatt_sbx_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+      const providerReference = `ref_sbx_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+      return {
+        attemptId,
+        providerReference,
+        status: 'pending',
+        adapter: this.name,
+        source: this.source,
+        requestedAt: new Date().toISOString()
+      };
+    }
+
+    async retrieveVerificationStatus(providerReference, attemptId) {
+      const upper = String(providerReference || '').toUpperCase();
+      if (upper.includes('REJECT') || upper.includes('MISMATCH')) {
+        return {
+          status: 'completed',
+          normalizedOutcome: 'REJECTED',
+          state: 'REJECTED',
+          safeResultCode: 'IDENTITY_MISMATCH',
+          adapter: this.name
+        };
+      }
+      if (upper.includes('FAIL') || upper.includes('TIMEOUT')) {
+        return {
+          status: 'failed',
+          normalizedOutcome: 'FAILED',
+          state: 'FAILED',
+          safeResultCode: 'PROVIDER_TIMEOUT',
+          adapter: this.name
+        };
+      }
+      if (upper.includes('PEND')) {
+        return {
+          status: 'pending',
+          normalizedOutcome: 'PENDING',
+          state: 'PENDING',
+          safeResultCode: 'PENDING_REVIEW',
+          adapter: this.name
+        };
+      }
+      return {
+        status: 'completed',
+        normalizedOutcome: 'VERIFIED',
+        state: 'VERIFIED_NIN',
+        safeResultCode: 'VERIFICATION_SUCCESS',
+        adapter: this.name
+      };
+    }
+
+    verifyWebhook(headers = {}, rawBody = '', secret = '') {
+      const signature = headers['x-kyc-signature'] || headers['x-padifix-signature'];
+      if (!signature) return { verified: false, reason: 'Missing signature header' };
+      if (typeof require !== 'undefined') {
+        const crypto = require('crypto');
+        const expected = crypto.createHmac('sha512', secret).update(rawBody).digest('hex');
+        const sigBuf = Buffer.from(signature, 'hex');
+        const expBuf = Buffer.from(expected, 'hex');
+        if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
+          return { verified: false, reason: 'Signature mismatch' };
+        }
+        return { verified: true };
+      }
+      return { verified: true };
+    }
+
+    normalizeWebhookEvent(payload = {}) {
+      const data = payload.data || {};
+      const event = String(payload.event || payload.action || data.status || '').toLowerCase();
+      const eventId = payload.id || payload.event_id || data.reference || payload.reference;
+      let outcome = 'PENDING';
+      let state = 'PENDING';
+      let safeResultCode = 'PENDING_REVIEW';
+
+      if (event.includes('approved') || event.includes('verified') || event.includes('success')) {
+        outcome = 'VERIFIED';
+        state = (data.verification_type === 'vnin' || payload.doc_type === 'vnin') ? 'VERIFIED_NIN' : 'VERIFIED_PLATFORM';
+        safeResultCode = 'VERIFICATION_SUCCESS';
+      } else if (event.includes('rejected') || event.includes('mismatch')) {
+        outcome = 'REJECTED';
+        state = 'REJECTED';
+        safeResultCode = 'IDENTITY_MISMATCH';
+      } else if (event.includes('failed') || event.includes('timeout')) {
+        outcome = 'FAILED';
+        state = 'FAILED';
+        safeResultCode = 'PROVIDER_TIMEOUT';
+      }
+
+      return {
+        eventId: String(eventId || ''),
+        outcome,
+        state,
+        safeResultCode,
+        providerId: Number(data.provider_id || payload.provider_id) || null,
+        requestId: data.request_id || payload.request_id || null,
+        attemptId: data.attempt_id || payload.attempt_id || null
+      };
+    }
   }
 
   // Alias for backward compatibility with Phase 006
   const FutureNINVerificationProvider = NinVerificationProvider;
 
-  // 8. VERIFICATION PROVIDER FACTORY
+  // 9. VERIFICATION PROVIDER FACTORY
   const VerificationProviderFactory = {
     getProvider(type = 'manual') {
       const norm = String(type).toLowerCase().trim();
       switch (norm) {
         case 'mock':
         case 'test':
-        case 'sandbox':
           return new MockVerificationProvider();
+        case 'sandbox':
+        case 'sandbox_kyc':
+          return new SandboxKycProvider();
         case 'live_nin':
         case 'nin':
         case 'prembly':
@@ -591,6 +940,28 @@
         await DB.recordVerificationRequestEntry(requestRecord);
       }
 
+      // Create and persist durable verification attempt record
+      const attemptRecord = {
+        id: `vatt_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+        attempt_id: `vatt_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+        request_id: requestRecord.id,
+        provider_id: numId,
+        provider_name: providerAdapter.name,
+        provider_reference: `ref_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+        status: 'pending',
+        normalized_result: normalized.outcome,
+        result_code: safeResultCode,
+        evidence_hash: refHash,
+        idempotency_key: idempotencyKey,
+        correlation_id: correlationId,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      if (DB && typeof DB.recordVerificationAttemptEntry === 'function') {
+        await DB.recordVerificationAttemptEntry(attemptRecord);
+      }
+
       // Append-only audit record
       const auditRecord = {
         id: `vaudit_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
@@ -616,6 +987,7 @@
         isDuplicate: false,
         idempotent: false,
         data: requestRecord,
+        attempt: attemptRecord,
         audit: auditRecord,
         message: 'Your verification request has been queued for platform compliance review.'
       };
@@ -698,6 +1070,150 @@
         audit: auditRecord,
         data: result
       };
+    },
+
+    /**
+     * Reconciles a single verification attempt with external provider or simulated sandbox
+     */
+    async reconcileVerificationAttempt(attemptId, options = {}, reviewerContext = { role: 'service' }) {
+      const allowedRoles = ['admin', 'compliance_officer', 'compliance_lead', 'reviewer', 'service'];
+      const role = String(reviewerContext.role || 'service').toLowerCase();
+      if (!allowedRoles.includes(role)) {
+        throw new Error(`UNAUTHORIZED_RECONCILER: Role '${role}' is not authorized to trigger reconciliation.`);
+      }
+
+      const DB = (typeof LokatorDB !== 'undefined') ? LokatorDB : (typeof require !== 'undefined' ? require('./supabase-client.js') : null);
+      if (!DB) throw new Error('Database service unavailable.');
+
+      let attempt = null;
+      if (typeof DB.getVerificationAttemptById === 'function') {
+        attempt = await DB.getVerificationAttemptById(attemptId);
+      }
+      if (!attempt) {
+        throw new Error(`Attempt ${attemptId} not found.`);
+      }
+
+      // If already settled, return idempotent confirmation
+      if (attempt.status === 'completed' || attempt.status === 'resolved') {
+        return {
+          status: 'REMOTE_SUCCESS',
+          idempotent: true,
+          attemptId,
+          state: attempt.normalized_result,
+          message: 'Verification attempt was already reconciled and completed.'
+        };
+      }
+
+      // Resolve provider adapter
+      const adapterKey = attempt.provider_name ? (attempt.provider_name.toLowerCase().includes('sandbox') ? 'sandbox' : 'nin') : 'sandbox';
+      const providerAdapter = VerificationProviderFactory.getProvider(adapterKey);
+
+      // Query external or sandbox status
+      const pollResult = await providerAdapter.retrieveVerificationStatus(attempt.provider_reference, attempt.attempt_id);
+
+      const targetStatus = (pollResult.normalizedOutcome === 'VERIFIED') ? 'approved' : 
+                           (pollResult.normalizedOutcome === 'REJECTED' ? 'rejected' : 
+                           (pollResult.normalizedOutcome === 'FAILED' ? 'failed' : 'pending'));
+
+      let targetState = 'PENDING';
+      if (targetStatus === 'approved') {
+        targetState = 'VERIFIED_NIN';
+      } else if (targetStatus === 'rejected') {
+        targetState = 'REJECTED';
+      } else if (targetStatus === 'failed') {
+        targetState = 'FAILED';
+      }
+
+      // State machine validation if changing from pending
+      if (targetStatus !== 'pending') {
+        VerificationStateMachine.validateTransition('PENDING', targetState);
+      }
+
+      const nowIso = new Date().toISOString();
+      attempt.status = (targetStatus === 'pending') ? 'pending' : 'completed';
+      attempt.normalized_result = pollResult.normalizedOutcome;
+      attempt.result_code = pollResult.safeResultCode || (targetStatus === 'approved' ? 'VERIFICATION_SUCCESS' : 'PENDING_REVIEW');
+      attempt.reconciled_at = nowIso;
+      attempt.updated_at = nowIso;
+
+      if (typeof DB.updateVerificationAttemptRecord === 'function') {
+        await DB.updateVerificationAttemptRecord(attempt.id || attempt.attempt_id, attempt);
+      }
+
+      // If state changed from pending, update verification request and provider profile
+      if (targetStatus !== 'pending') {
+        const updateData = {
+          status: targetStatus,
+          reviewed_at: nowIso,
+          reviewed_by: reviewerContext.userId || 'service_kyc_reconciler',
+          safe_result_code: attempt.result_code,
+          completed_at: nowIso,
+          updated_at: nowIso,
+          isNin: true
+        };
+        if (typeof DB.updateVerificationRequestReview === 'function') {
+          await DB.updateVerificationRequestReview(attempt.request_id, updateData, reviewerContext);
+        }
+
+        // Emit audit record
+        const auditRecord = {
+          id: `vaudit_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+          request_id: attempt.request_id,
+          attempt_id: attempt.attempt_id,
+          provider_id: attempt.provider_id,
+          previous_state: 'PENDING',
+          new_state: targetState,
+          actor_type: 'service',
+          actor_id: String(reviewerContext.userId || 'service_kyc_reconciler'),
+          verification_source: providerAdapter.name,
+          action: 'reconcile_verification_status',
+          reason_code: attempt.result_code,
+          correlation_id: attempt.correlation_id || `cor_${Date.now()}`,
+          created_at: nowIso
+        };
+        if (typeof DB.recordVerificationAuditEntry === 'function') {
+          await DB.recordVerificationAuditEntry(auditRecord);
+        }
+      }
+
+      return {
+        status: 'REMOTE_SUCCESS',
+        attemptId: attempt.attempt_id,
+        targetState,
+        reconciled: (targetStatus !== 'pending'),
+        resultCode: attempt.result_code,
+        data: attempt
+      };
+    },
+
+    /**
+     * Batch reconciliation for stale pending verifications
+     */
+    async reconcilePendingVerifications(options = {}, reviewerContext = { role: 'service' }) {
+      const DB = (typeof LokatorDB !== 'undefined') ? LokatorDB : (typeof require !== 'undefined' ? require('./supabase-client.js') : null);
+      if (!DB || typeof DB.getPendingVerificationAttempts !== 'function') {
+        return { total: 0, reconciled: 0, unchanged: 0 };
+      }
+
+      const pending = await DB.getPendingVerificationAttempts(options);
+      let reconciledCount = 0;
+      let unchangedCount = 0;
+
+      for (const att of pending) {
+        try {
+          const res = await this.reconcileVerificationAttempt(att.id || att.attempt_id, options, reviewerContext);
+          if (res.reconciled) reconciledCount++;
+          else unchangedCount++;
+        } catch (err) {
+          unchangedCount++;
+        }
+      }
+
+      return {
+        total: pending.length,
+        reconciled: reconciledCount,
+        unchanged: unchangedCount
+      };
     }
   };
 
@@ -709,6 +1225,7 @@
     VerificationStateMachine,
     VerificationProvider,
     MockVerificationProvider,
+    SandboxKycProvider,
     ManualVerificationProvider,
     ManualPlatformVerificationProvider,
     NinVerificationProvider,

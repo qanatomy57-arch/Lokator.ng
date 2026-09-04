@@ -47,7 +47,13 @@
     // Phase 007: Provider Verification Operations & Identity Gateway Flags
     mockVerificationEnabled: false, // Disabled by default in production
     duplicateIdentityGuardEnabled: true,
-    verificationRateLimitEnabled: true
+    verificationRateLimitEnabled: true,
+
+    // Phase 008: Real KYC Integration, Webhook Reconciliation & Compliance Operations Flags
+    kycProviderMode: 'sandbox', // 'sandbox' | 'live'
+    kycLiveEnabled: false, // Strictly false: live KYC fails closed unless authorized server-side
+    kycWebhookVerificationEnabled: true,
+    kycReconciliationEnabled: true
   };
 
   // 2. MARKETPLACE RULES & PRIVACY CONFIGURATION
@@ -150,7 +156,29 @@
     VERIFICATION_REJECTED: 'verification_rejected',
     VERIFICATION_FAILED: 'verification_failed',
     VERIFICATION_RESUBMITTED: 'verification_resubmitted',
-    VERIFICATION_STATUS_VIEWED: 'verification_status_viewed'
+    VERIFICATION_STATUS_VIEWED: 'verification_status_viewed',
+
+    // Phase 008 Real KYC & Webhook Reconciliation Events
+    VERIFICATION_ATTEMPT_CREATED: 'verification_attempt_created',
+    WEBHOOK_RECEIVED: 'webhook_received',
+    RECONCILIATION_COMPLETED: 'reconciliation_completed'
+  };
+
+  // Phase 008: Standardized Machine-Readable Compliance Decision Codes
+  const COMPLIANCE_DECISION_CODES = {
+    VERIFICATION_SUCCESS: 'VERIFICATION_SUCCESS',
+    IDENTITY_MISMATCH: 'IDENTITY_MISMATCH',
+    IDENTITY_NOT_FOUND: 'IDENTITY_NOT_FOUND',
+    DUPLICATE_IDENTITY_REFERENCE: 'DUPLICATE_IDENTITY_REFERENCE',
+    PROVIDER_TIMEOUT: 'PROVIDER_TIMEOUT',
+    PROVIDER_ERROR: 'PROVIDER_ERROR',
+    MALFORMED_PROVIDER_RESPONSE: 'MALFORMED_PROVIDER_RESPONSE',
+    INVALID_WEBHOOK_SIGNATURE: 'INVALID_WEBHOOK_SIGNATURE',
+    UNKNOWN_VERIFICATION_ATTEMPT: 'UNKNOWN_VERIFICATION_ATTEMPT',
+    POLICY_REJECTION: 'POLICY_REJECTION',
+    PENDING_REVIEW: 'PENDING_REVIEW',
+    APPROVED: 'APPROVED',
+    REJECTED: 'REJECTED'
   };
 
   // 5. ADMIN CONTROLS & ROLE-BASED ACCESS
@@ -525,6 +553,7 @@
     CONFIG,
     PRODUCTS,
     EVENTS: MONETIZATION_EVENTS,
+    DECISION_CODES: COMPLIANCE_DECISION_CODES,
     ADMIN_CONTROLS,
     VERIFICATION_STATES: PROVIDER_VERIFICATION_STATES,
     VERIFICATION_STATE_DETAILS,
