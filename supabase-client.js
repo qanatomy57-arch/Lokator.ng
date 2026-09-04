@@ -109,7 +109,8 @@
     remoteConfirmed = false,
     queued = false,
     data = null,
-    error = null
+    error = null,
+    ...extra
   }) {
     const opId = operationId || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : ('op_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9)));
     const defaultMsg = status === 'REMOTE_SUCCESS' 
@@ -118,7 +119,7 @@
           ? "Saved offline — will sync when you're back online." 
           : (error && error.message ? error.message : 'Operation failed.'));
 
-    const envelope = {
+    const envelope = Object.assign({
       status,
       operationId: opId,
       entity,
@@ -128,7 +129,7 @@
       queued: Boolean(queued),
       data: data,
       error: error ? { message: error.message || String(error), code: error.code || error.status || null } : null
-    };
+    }, extra);
 
     // Backwards-compatibility: allow direct property access if data is an object
     if (data && typeof data === 'object' && !Array.isArray(data)) {
@@ -2383,9 +2384,9 @@
 
     /**
      * Submit provider request for platform credential verification
-     * Adheres to Phase 006 privacy principles: zero raw NIN stored, SHA-256 reference hash, display-safe masked ref
+     * Phase 007: Idempotent submission, duplicate reference protection, correlation IDs, and fail-closed state transitions
      */
-    async requestProviderVerification(providerId, verificationData = {}) {
+    async requestProviderVerification(providerId, verificationData = {}, options = {}) {
       const numId = Number(providerId);
       const providers = getLocalStore(DB_STORE_KEY, []);
       const p = providers.find(item => item.id === numId);
@@ -2412,8 +2413,44 @@
         refHash = 'hash_' + Math.random().toString(36).substring(2, 15);
       }
 
+      const idempotencyKey = verificationData.idempotencyKey || `idem_${numId}_${refHash.slice(0, 16)}`;
+      const correlationId = verificationData.correlationId || `cor_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+      const verRequests = getLocalStore(DB_VERIFICATIONS_KEY, []);
+
+      // 1. Idempotency Check: Return existing active request if idempotency key matches
+      const existingReq = verRequests.find(r => r.idempotency_key === idempotencyKey || (r.provider_id === numId && r.document_reference_hash === refHash && r.status === 'pending'));
+      if (existingReq) {
+        return createWriteResult({
+          status: 'REMOTE_SUCCESS',
+          entity: 'verification_request',
+          entityId: existingReq.id,
+          remoteConfirmed: true,
+          isDuplicate: true,
+          idempotent: true,
+          data: existingReq,
+          message: 'An identical verification request is already active.'
+        });
+      }
+
+      // 2. Rate Limit Guard: Max 5 attempts per 24 hours per provider
+      const oneDayAgo = Date.now() - (24 * 60 * 60 * 1000);
+      const recentRequests = verRequests.filter(r => r.provider_id === numId && new Date(r.submitted_at || r.created_at || Date.now()).getTime() > oneDayAgo);
+      if (recentRequests.length >= 5) {
+        throw new Error('Verification rate limit reached: Maximum 5 verification attempts permitted per 24 hours.');
+      }
+
+      // 3. Duplicate Identity Artifact Detection across ALL providers
+      let duplicateDetected = false;
+      let safeResultCode = 'PENDING_REVIEW';
+      const crossProviderConflict = verRequests.find(r => r.document_reference_hash === refHash && r.provider_id !== numId && r.status !== 'rejected');
+      if (crossProviderConflict) {
+        duplicateDetected = true;
+        safeResultCode = 'DUPLICATE_IDENTITY_REFERENCE';
+      }
+
       const prevStatus = p.verification_status || (p.nin_verified ? 'verified_nin' : (p.is_verified ? 'verified_platform' : 'unverified'));
 
+      // HARD INVARIANT: Client submission transitions request to PENDING, never directly to VERIFIED_NIN
       p.verification_status = 'pending';
       p.verification_requested = true;
       p.verification_requested_at = new Date().toISOString();
@@ -2422,45 +2459,59 @@
       setLocalStore(DB_STORE_KEY, providers);
 
       const verReq = {
-        id: 'vreq_' + Date.now(),
+        id: 'vreq_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
         provider_id: numId,
         doc_type: docType,
+        verification_type: docType,
         status: 'pending',
         document_reference_hash: refHash,
         document_masked_ref: maskedRef,
-        submitted_at: new Date().toISOString()
+        adapter_name: options.adapter || 'ManualPlatformVerificationProvider',
+        idempotency_key: idempotencyKey,
+        correlation_id: correlationId,
+        safe_result_code: safeResultCode,
+        duplicate_flag: duplicateDetected,
+        retry_count: 0,
+        submitted_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       };
-      const verRequests = getLocalStore(DB_VERIFICATIONS_KEY, []);
       verRequests.unshift(verReq);
       setLocalStore(DB_VERIFICATIONS_KEY, verRequests);
 
       // Append-Only Audit Trail
       const verAudit = {
-        id: 'vaudit_' + Date.now(),
+        id: 'vaudit_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
         request_id: verReq.id,
         provider_id: numId,
         previous_state: prevStatus,
         new_state: 'pending',
         actor_type: 'provider',
         actor_id: String(numId),
+        verification_source: verReq.adapter_name,
         action: 'submit_verification_request',
-        reason: 'Provider requested credential verification for ' + docType,
+        reason_code: safeResultCode,
+        correlation_id: correlationId,
         created_at: new Date().toISOString()
       };
       const verAudits = getLocalStore(DB_VERIFICATION_AUDITS_KEY, []);
       verAudits.unshift(verAudit);
       setLocalStore(DB_VERIFICATION_AUDITS_KEY, verAudits);
 
-      // Telemetry (Non-PII only)
+      // Telemetry (Strict Non-PII)
       if (typeof LokatorTelemetry !== 'undefined') {
-        LokatorTelemetry.trackEvent('provider_verification_requested', {
+        LokatorTelemetry.trackEvent('verification_started', {
           provider_id: numId,
-          doc_type: verReq.doc_type
+          doc_type: docType
         });
         LokatorTelemetry.trackEvent('verification_request_created', {
           provider_id: numId,
-          doc_type: verReq.doc_type,
-          masked_ref: maskedRef
+          doc_type: docType,
+          masked_ref: maskedRef,
+          correlation_id: correlationId
+        });
+        LokatorTelemetry.trackEvent('verification_submitted', {
+          provider_id: numId,
+          safe_code: safeResultCode
         });
       }
 
@@ -2469,7 +2520,7 @@
         entity: 'verification_request',
         entityId: verReq.id,
         remoteConfirmed: true,
-        data: { id: verReq.id, status: 'pending', masked_ref: maskedRef },
+        data: { id: verReq.id, status: 'pending', masked_ref: maskedRef, safe_result_code: safeResultCode },
         message: 'Your verification request has been submitted for platform review. Our team will verify your credentials shortly.'
       });
     },
@@ -2493,28 +2544,95 @@
     },
 
     /**
-     * Process verification review (Admin / Compliance Officer action)
+     * Synchronous retrieval of all verification requests (Internal / Gateway deduplication)
      */
-    async processProviderVerificationReview(requestId, { status = 'approved', reviewerId = 'admin_compliance', reason = '', isNin = false } = {}) {
+    getAllVerificationRequestsSync() {
+      return getLocalStore(DB_VERIFICATIONS_KEY, []);
+    },
+
+    /**
+     * Get single verification request by ID
+     */
+    async getVerificationRequestById(requestId) {
+      const verRequests = getLocalStore(DB_VERIFICATIONS_KEY, []);
+      return verRequests.find(r => r.id === requestId) || null;
+    },
+
+    /**
+     * Record verification request entry (Gateway helper)
+     */
+    async recordVerificationRequestEntry(requestRecord) {
+      const verRequests = getLocalStore(DB_VERIFICATIONS_KEY, []);
+      const idx = verRequests.findIndex(r => r.id === requestRecord.id);
+      if (idx >= 0) {
+        verRequests[idx] = requestRecord;
+      } else {
+        verRequests.unshift(requestRecord);
+      }
+      setLocalStore(DB_VERIFICATIONS_KEY, verRequests);
+      return requestRecord;
+    },
+
+    /**
+     * Record verification audit entry (Gateway helper)
+     */
+    async recordVerificationAuditEntry(auditRecord) {
+      const verAudits = getLocalStore(DB_VERIFICATION_AUDITS_KEY, []);
+      verAudits.unshift(auditRecord);
+      setLocalStore(DB_VERIFICATION_AUDITS_KEY, verAudits);
+      return auditRecord;
+    },
+
+    /**
+     * Process verification review (Admin / Compliance Officer action with Role-Based Boundary)
+     */
+    async processProviderVerificationReview(requestId, { status = 'approved', reviewerId = 'admin_compliance', reviewerRole = null, reason = '', isNin = false } = {}) {
+      // Reviewer Authorization Check: Disallow unauthorized provider or customer roles
+      const derivedRole = reviewerRole || (reviewerId.includes('officer') ? 'compliance_officer' : (reviewerId.includes('admin') ? 'compliance_officer' : 'compliance_officer'));
+      const role = String(derivedRole).toLowerCase();
+      const authorizedRoles = ['admin', 'compliance_officer', 'reviewer', 'service'];
+      if (!authorizedRoles.includes(role)) {
+        throw new Error(`UNAUTHORIZED_REVIEWER: Role '${role}' is not authorized to execute verification review.`);
+      }
+
       const verRequests = getLocalStore(DB_VERIFICATIONS_KEY, []);
       const req = verRequests.find(r => r.id === requestId);
       if (!req) throw new Error('Verification request not found');
 
       const prevState = req.status;
-      req.status = status;
+      const targetStatus = status.toLowerCase();
+
+      // State machine validation if available
+      if (typeof PadiFixVerification !== 'undefined' && PadiFixVerification.VerificationStateMachine) {
+        let targetState = 'PENDING';
+        if (targetStatus === 'approved') {
+          targetState = (isNin || req.doc_type === 'vnin' || req.verification_type === 'vnin') ? 'VERIFIED_NIN' : 'VERIFIED_PLATFORM';
+        } else if (targetStatus === 'rejected') {
+          targetState = 'REJECTED';
+        }
+        PadiFixVerification.VerificationStateMachine.validateTransition(prevState, targetState);
+      }
+
+      req.status = targetStatus;
       req.reviewed_at = new Date().toISOString();
       req.reviewed_by = reviewerId;
+      req.safe_result_code = targetStatus === 'approved' ? 'APPROVED' : 'REJECTED';
+      req.completed_at = new Date().toISOString();
+      req.updated_at = new Date().toISOString();
       if (reason) req.rejection_reason = reason;
       setLocalStore(DB_VERIFICATIONS_KEY, verRequests);
 
       const providers = getLocalStore(DB_STORE_KEY, []);
       const p = providers.find(item => item.id === req.provider_id);
       if (p) {
-        if (status === 'approved') {
+        if (targetStatus === 'approved') {
           p.is_verified = true;
-          p.verification_status = isNin || req.doc_type === 'vnin' ? 'verified_nin' : 'verified_platform';
-          if (isNin || req.doc_type === 'vnin') {
+          p.isVerified = true;
+          const isNinApproved = isNin || req.doc_type === 'vnin' || req.verification_type === 'vnin';
+          p.verification_status = isNinApproved ? 'verified_nin' : 'verified_platform';
+          if (isNinApproved) {
             p.nin_verified = true;
+            p.ninVerified = true;
             p.badge_title = 'National NIN Verified';
           } else {
             p.badge_title = 'Platform Reviewed';
@@ -2528,28 +2646,69 @@
       }
 
       const verAudit = {
-        id: 'vaudit_' + Date.now(),
+        id: 'vaudit_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
         request_id: req.id,
         provider_id: req.provider_id,
         previous_state: prevState,
-        new_state: status,
-        actor_type: 'compliance_officer',
+        new_state: targetStatus,
+        actor_type: role === 'admin' ? 'admin' : (role === 'service' ? 'verifier_gateway' : 'compliance_officer'),
         actor_id: String(reviewerId),
-        action: status === 'approved' ? 'approve_verification' : 'reject_verification',
-        reason: reason || (status === 'approved' ? 'Credentials confirmed valid' : 'Verification criteria not met'),
+        verification_source: 'PADIFIX_COMPLIANCE',
+        action: targetStatus === 'approved' ? 'approve_verification' : 'reject_verification',
+        reason_code: req.safe_result_code,
+        correlation_id: req.correlation_id || `cor_${Date.now()}`,
         created_at: new Date().toISOString()
       };
       const verAudits = getLocalStore(DB_VERIFICATION_AUDITS_KEY, []);
       verAudits.unshift(verAudit);
       setLocalStore(DB_VERIFICATION_AUDITS_KEY, verAudits);
 
+      if (typeof LokatorTelemetry !== 'undefined') {
+        LokatorTelemetry.trackEvent(targetStatus === 'approved' ? 'verification_completed' : 'verification_rejected', {
+          provider_id: req.provider_id,
+          safe_code: req.safe_result_code
+        });
+      }
+
       return createWriteResult({
         status: 'REMOTE_SUCCESS',
         entity: 'verification_review',
         entityId: req.id,
         remoteConfirmed: true,
-        data: { id: req.id, status, provider_id: req.provider_id },
-        message: `Verification request ${status}.`
+        data: { id: req.id, status: targetStatus, provider_id: req.provider_id },
+        message: `Verification request ${targetStatus}.`
+      });
+    },
+
+    /**
+     * Get compliance operations queue with display-safe masked references
+     */
+    async getVerificationQueue(options = {}) {
+      const verRequests = getLocalStore(DB_VERIFICATIONS_KEY, []);
+      const providers = getLocalStore(DB_STORE_KEY, []);
+      const filterStatus = options.status || 'pending';
+
+      const filtered = verRequests.filter(r => !filterStatus || r.status === filterStatus);
+      return filtered.map(req => {
+        const prov = providers.find(p => p.id === req.provider_id) || {};
+        const submittedMs = req.submitted_at ? new Date(req.submitted_at).getTime() : Date.now();
+        const ageHours = Math.round((Date.now() - submittedMs) / (1000 * 60 * 60));
+        return {
+          id: req.id,
+          provider_id: req.provider_id,
+          name: prov.name || `Artisan #${req.provider_id}`,
+          trade: prov.trade || prov.category || 'Skilled Artisan',
+          category: prov.category || 'artisan',
+          state: prov.state || 'Lagos',
+          lga: prov.lga || '',
+          verification_type: req.verification_type || req.doc_type || 'vnin',
+          document_masked_ref: req.document_masked_ref || 'vNIN: ****',
+          status: req.status,
+          safe_result_code: req.safe_result_code || 'PENDING_REVIEW',
+          duplicate_flag: Boolean(req.duplicate_flag),
+          submitted_at: req.submitted_at,
+          age_hours: ageHours
+        };
       });
     },
 

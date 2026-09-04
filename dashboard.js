@@ -1312,10 +1312,18 @@ document.addEventListener('DOMContentLoaded', async () => {
       feedback.textContent = cnt > 0 ? `${cnt} Customer Reviews (★ ${rating})` : '0 Customer Reviews (★ New Listing)';
     }
 
+    const rejectedNotice = document.getElementById('dash-ver-rejected-notice');
+    const unavailableNotice = document.getElementById('dash-ver-unavailable-notice');
+    const rejectedText = document.getElementById('dash-ver-rejected-text');
+    const resubmitBtn = document.getElementById('btn-resubmit-verification');
+
     // Manage Status Notice Banners & Form Usability
+    const isRejected = (verState.key === 'REJECTED' || currentProvider.verification_status === 'rejected' || currentProvider.verificationStatus === 'rejected');
+    
     if (verState.isPending) {
       if (pendingNotice) pendingNotice.style.display = 'block';
       if (approvedNotice) approvedNotice.style.display = 'none';
+      if (rejectedNotice) rejectedNotice.style.display = 'none';
       if (submitBtn) {
         submitBtn.disabled = true;
         submitBtn.textContent = 'Request Under Review';
@@ -1326,6 +1334,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     } else if (verState.isVerified) {
       if (pendingNotice) pendingNotice.style.display = 'none';
       if (approvedNotice) approvedNotice.style.display = 'block';
+      if (rejectedNotice) rejectedNotice.style.display = 'none';
       if (submitBtn) {
         submitBtn.disabled = true;
         submitBtn.textContent = 'Profile Verified';
@@ -1333,9 +1342,32 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (formReqVer) {
         formReqVer.querySelectorAll('input, select').forEach(el => el.disabled = true);
       }
+    } else if (isRejected) {
+      if (pendingNotice) pendingNotice.style.display = 'none';
+      if (approvedNotice) approvedNotice.style.display = 'none';
+      if (rejectedNotice) {
+        rejectedNotice.style.display = 'block';
+        if (rejectedText && currentProvider.rejection_reason) {
+          rejectedText.textContent = currentProvider.rejection_reason;
+        }
+      }
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Resubmit for Review';
+      }
+      if (formReqVer) {
+        formReqVer.querySelectorAll('input, select').forEach(el => el.disabled = false);
+      }
+      if (resubmitBtn) {
+        resubmitBtn.onclick = () => {
+          const refInput = document.getElementById('ver-doc-ref');
+          if (refInput) { refInput.focus(); refInput.select(); }
+        };
+      }
     } else {
       if (pendingNotice) pendingNotice.style.display = 'none';
       if (approvedNotice) approvedNotice.style.display = 'none';
+      if (rejectedNotice) rejectedNotice.style.display = 'none';
       if (submitBtn) {
         submitBtn.disabled = false;
         submitBtn.textContent = 'Submit for Review';
@@ -1460,12 +1492,17 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       try {
-        const res = await LokatorDB.requestProviderVerification(currentProvider.id, { docType, docRef });
+        const idempotencyKey = 'idem_' + currentProvider.id + '_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+        const res = await LokatorDB.requestProviderVerification(currentProvider.id, { docType, docRef, idempotencyKey });
         currentProvider.verificationStatus = 'pending';
         currentProvider.verification_status = 'pending';
         currentProvider.verification_requested = true;
         await renderTrustCenter();
-        showToast(res.message || 'Verification request submitted for compliance review.');
+        if (res && res.idempotent) {
+          showToast('Request acknowledged: An identical verification request is already under review.', 'info');
+        } else {
+          showToast(res.message || 'Verification request submitted for compliance review.');
+        }
         formReqVer.reset();
         updatePreviewCode();
       } catch (err) {

@@ -62,13 +62,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       } else {
         tbodyVer.innerHTML = pendingVerifications.map(req => {
           const safeDate = req.submitted_at ? new Date(req.submitted_at).toLocaleDateString() : 'Recent';
+          const maskedRef = req.document_masked_ref || 
+            (typeof PadiFixVerification !== 'undefined' ? PadiFixVerification.maskDocumentReference(req.doc_type, req.doc_ref) : 'REF: ****');
           return `
             <tr>
               <td style="font-weight: 700; color: #F1F5F9;">${req.name}</td>
               <td><span style="color: #38BDF8;">${req.trade}</span> (${req.category})</td>
               <td>${req.lga ? req.lga + ', ' : ''}${req.state}</td>
               <td style="font-weight: 600; color: #FBBF24;">${req.doc_type}</td>
-              <td style="font-family: monospace; color: #CBD5E1;">${req.doc_ref}</td>
+              <td style="font-family: monospace; color: #CBD5E1;">${maskedRef}</td>
               <td style="font-size: 11px; color: #94A3B8;">${safeDate}</td>
               <td>
                 <div style="display: flex; gap: 6px;">

@@ -42,7 +42,12 @@
     providerVerificationEnabled: true,
 
     // Phase 006: Provider Verification & Trust Infrastructure Flags
-    liveKycGatewayEnabled: false // Strictly false: external KYC vendor network calls gated
+    liveKycGatewayEnabled: false, // Strictly false: external KYC vendor network calls gated
+
+    // Phase 007: Provider Verification Operations & Identity Gateway Flags
+    mockVerificationEnabled: false, // Disabled by default in production
+    duplicateIdentityGuardEnabled: true,
+    verificationRateLimitEnabled: true
   };
 
   // 2. MARKETPLACE RULES & PRIVACY CONFIGURATION
@@ -54,7 +59,10 @@
       FREE_PROFILE_LISTING: true,
       MAX_SPONSORED_PER_PAGE: 2
     },
-    FORBIDDEN_KEYS: ['password', 'token', 'jwt', 'card', 'cvv', 'pan', 'nin', 'bvn', 'secret']
+    FORBIDDEN_KEYS: [
+      'password', 'token', 'jwt', 'card', 'cvv', 'pan', 'nin', 'vnin', 'bvn', 'secret',
+      'apikey', 'api_key', 'rawresponse', 'raw_response', 'identitydocument', 'document'
+    ]
   };
 
   // 3. AUTHORITATIVE MONETIZATION PRODUCTS & PRICING (NGN)
@@ -133,11 +141,15 @@
     PROVIDER_ANALYTICS_VIEWED: 'provider_analytics_viewed',
     PROVIDER_VERIFICATION_STARTED: 'provider_verification_started',
 
-    // Phase 006 Verification Lifecycle Events
+    // Phase 006 & 007 Verification Lifecycle Events
     VERIFICATION_STARTED: 'verification_started',
     VERIFICATION_REQUEST_CREATED: 'verification_request_created',
+    VERIFICATION_SUBMITTED: 'verification_submitted',
+    VERIFICATION_PENDING: 'verification_pending',
     VERIFICATION_COMPLETED: 'verification_completed',
+    VERIFICATION_REJECTED: 'verification_rejected',
     VERIFICATION_FAILED: 'verification_failed',
+    VERIFICATION_RESUBMITTED: 'verification_resubmitted',
     VERIFICATION_STATUS_VIEWED: 'verification_status_viewed'
   };
 
