@@ -41,6 +41,20 @@
     .btn-reject { background: rgba(239, 68, 68, 0.2); color: #F87171; border: 1px solid rgba(239, 68, 68, 0.4); }
     .btn-reject:hover { background: rgba(239, 68, 68, 0.3); }
     .btn-resolve { background: #3B82F6; color: #FFF; }
+    .admin-compliance-tag { font-size: 11px; }
+    .admin-title { font-size: 24px; margin: 0 0 4px; color: #F1F5F9; }
+    .admin-subtitle { font-size: 13px; color: #94A3B8; margin: 0; }
+    .admin-actions { display: flex; gap: 8px; }
+    .btn-refresh { padding: 8px 14px; font-size: 12px; border-color: rgba(255,255,255,0.2); }
+    .kpi-pending { border-left: 4px solid #F59E0B; }
+    .kpi-pending .kpi-value { color: #FBBF24; }
+    .kpi-verified { border-left: 4px solid #10B981; }
+    .kpi-verified .kpi-value { color: #34D399; }
+    .kpi-disputes { border-left: 4px solid #EF4444; }
+    .kpi-disputes .kpi-value { color: #F87171; }
+    .kpi-status { border-left: 4px solid #38BDF8; }
+    .kpi-status .kpi-value { color: #38BDF8; font-size: 18px; }
+    .empty-state-cell { padding: 24px; text-align: center; color: #64748B; }
   </style>
 </head>
 <body>
@@ -53,7 +67,7 @@
       <nav class="nav-links">
         <a href="search.html" class="nav-link">Marketplace</a>
         <a href="analytics.html" class="nav-link">Analytics</a>
-        <span class="status-tag status-good" style="font-size: 11px;">🛡️ Compliance Desk</span>
+        <span class="status-tag status-good admin-compliance-tag">🛡️ Compliance Desk</span>
       </nav>
     </div>
   </header>
@@ -61,11 +75,11 @@
   <main class="admin-container">
     <div class="admin-header">
       <div>
-        <h1 style="font-size: 24px; margin: 0 0 4px; color: #F1F5F9;">Trust & Safety Compliance Portal</h1>
-        <p style="font-size: 13px; color: #94A3B8; margin: 0;">Artisan identity vetting, NIN/CAC compliance verification, and dispute resolution queue.</p>
+        <h1 class="admin-title">Trust & Safety Compliance Portal</h1>
+        <p class="admin-subtitle">Artisan identity vetting, NIN/CAC compliance verification, and dispute resolution queue.</p>
       </div>
-      <div style="display: flex; gap: 8px;">
-        <button type="button" id="btn-refresh-queue" class="btn btn-outline" style="padding: 8px 14px; font-size: 12px; border-color: rgba(255,255,255,0.2);">
+      <div class="admin-actions">
+        <button type="button" id="btn-refresh-queue" class="btn btn-outline btn-refresh">
           🔄 Refresh Queue
         </button>
       </div>
@@ -73,24 +87,24 @@
 
     <!-- Overview KPIs -->
     <div class="grid-kpis">
-      <div class="kpi-card" style="border-left: 4px solid #F59E0B;">
+      <div class="kpi-card kpi-pending">
         <div class="kpi-label">Pending Verifications</div>
-        <div class="kpi-value" id="kpi-pending-verifications" style="color: #FBBF24;">0</div>
+        <div class="kpi-value" id="kpi-pending-verifications">0</div>
         <div class="kpi-sub">Awaiting compliance officer review</div>
       </div>
-      <div class="kpi-card" style="border-left: 4px solid #10B981;">
+      <div class="kpi-card kpi-verified">
         <div class="kpi-label">Verified Professionals</div>
-        <div class="kpi-value" id="kpi-total-verified" style="color: #34D399;">--</div>
+        <div class="kpi-value" id="kpi-total-verified">--</div>
         <div class="kpi-sub">Active NIN / CAC verified badges</div>
       </div>
-      <div class="kpi-card" style="border-left: 4px solid #EF4444;">
+      <div class="kpi-card kpi-disputes">
         <div class="kpi-label">Open Community Disputes</div>
-        <div class="kpi-value" id="kpi-open-disputes" style="color: #F87171;">0</div>
+        <div class="kpi-value" id="kpi-open-disputes">0</div>
         <div class="kpi-sub">Customer flags requiring action</div>
       </div>
-      <div class="kpi-card" style="border-left: 4px solid #38BDF8;">
+      <div class="kpi-card kpi-status">
         <div class="kpi-label">Compliance Status</div>
-        <div class="kpi-value" id="kpi-compliance-sla" style="color: #38BDF8; font-size: 18px;">ACTIVE</div>
+        <div class="kpi-value" id="kpi-compliance-sla">ACTIVE</div>
         <div class="kpi-sub">Air-gapped verification operational</div>
       </div>
     </div>
@@ -124,7 +138,7 @@
             </tr>
           </thead>
           <tbody id="tbody-verifications">
-            <tr><td colspan="7" style="padding: 24px; text-align: center; color: #64748B;">No pending verification requests in queue.</td></tr>
+            <tr><td colspan="7" class="empty-state-cell">No pending verification requests in queue.</td></tr>
           </tbody>
         </table>
       </div>
@@ -146,7 +160,7 @@
             </tr>
           </thead>
           <tbody id="tbody-disputes">
-            <tr><td colspan="7" style="padding: 24px; text-align: center; color: #64748B;">No open dispute reports recorded.</td></tr>
+            <tr><td colspan="7" class="empty-state-cell">No open dispute reports recorded.</td></tr>
           </tbody>
         </table>
       </div>
@@ -167,7 +181,7 @@
             </tr>
           </thead>
           <tbody id="tbody-audit">
-            <tr><td colspan="6" style="padding: 24px; text-align: center; color: #64748B;">No audit entries recorded yet.</td></tr>
+            <tr><td colspan="6" class="empty-state-cell">No audit entries recorded yet.</td></tr>
           </tbody>
         </table>
       </div>
