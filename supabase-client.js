@@ -6440,6 +6440,7 @@
     featureFlags: MONETIZATION_FEATURE_FLAGS,
     candidateProducts: CANDIDATE_MONETIZATION_PRODUCTS,
     candidatePlans: CANDIDATE_PLANS,
+    architecture: (typeof PadiFixMonetization !== 'undefined') ? PadiFixMonetization : (typeof window !== 'undefined' ? window.PadiFixMonetization : null),
     entitlements: {
       getProviderEntitlements,
       hasEntitlement,

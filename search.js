@@ -902,8 +902,10 @@ document.addEventListener("DOMContentLoaded", () => {
             </a>`
           : `<a href="${escapeHtml(profileUrl)}" class="action-btn message-btn"><span>Message</span></a>`;
 
+        const isSponsored = Boolean(provider.is_sponsored || provider.isSponsored);
+
         return `
-          <article class="provider-item-card ${provider.isVerified ? 'is-verified' : ''}" id="card-prov-${safeId}" data-provider-id="${safeId}" data-provider-trade="${escapeHtml(provider.trade)}" data-position="${index + 1}">
+          <article class="provider-item-card ${provider.isVerified ? 'is-verified' : ''} ${isSponsored ? 'is-sponsored' : ''}" id="card-prov-${safeId}" data-provider-id="${safeId}" data-provider-trade="${escapeHtml(provider.trade)}" data-position="${index + 1}" data-is-sponsored="${isSponsored}">
             <div class="provider-card-main-row">
               <!-- Avatar Column -->
               <div class="provider-avatar-col">
@@ -926,6 +928,7 @@ document.addEventListener("DOMContentLoaded", () => {
                       <svg width="17" height="17" viewBox="0 0 24 24" fill="#0284C7"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
                     </span>` : ''
                   }
+                  ${isSponsored ? `<span class="badge-tag-promoted" title="Sponsored Category Placement" aria-label="Sponsored listing">⚡ Promoted</span>` : ''}
                   ${provider.isTop ? `<span class="badge-tag-top">⭐ Top</span>` : ''}
                 </div>
 
@@ -948,7 +951,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 <!-- Skill tag pills -->
                 <div class="provider-tags-row">
-                  ${skillsList.slice(0, 4).map(s => `<span class="mini-tag" data-skill="${escapeHtml(s)}">${escapeHtml(s)}</span>`).join('')}
+                  ${skillsList.map(skill => `<span class="skill-tag">${escapeHtml(skill)}</span>`).join('')}
                 </div>
               </div>
             </div>
@@ -971,6 +974,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const providerId = parseInt(card.dataset.providerId, 10);
           const trade = card.dataset.providerTrade;
           const position = parseInt(card.dataset.position, 10) || 1;
+          const isSponsored = card.dataset.isSponsored === 'true';
 
           if (e.target.closest('.call-btn')) {
             if (typeof LokatorTelemetry !== 'undefined') {
@@ -979,6 +983,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 trade,
                 surface: 'search_card'
               });
+              if (isSponsored) {
+                LokatorTelemetry.trackEvent('sponsored_contact_clicked', {
+                  providerId,
+                  trade,
+                  contactChannel: 'call'
+                });
+              }
             }
           } else if (e.target.closest('.message-btn')) {
             if (typeof LokatorTelemetry !== 'undefined') {
@@ -987,6 +998,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 trade,
                 surface: 'search_card'
               });
+              if (isSponsored) {
+                LokatorTelemetry.trackEvent('sponsored_contact_clicked', {
+                  providerId,
+                  trade,
+                  contactChannel: 'whatsapp'
+                });
+              }
             }
           } else if (e.target.closest('.provider-card-profile-link') || e.target.closest('.big-avatar') || e.target.closest('.provider-title-name')) {
             if (typeof LokatorTelemetry !== 'undefined') {
@@ -996,7 +1014,27 @@ document.addEventListener("DOMContentLoaded", () => {
                 position,
                 hasSearchIntent: Boolean(naturalLanguageParsed && naturalLanguageParsed.serviceIntent)
               });
+              if (isSponsored) {
+                LokatorTelemetry.trackEvent('sponsored_click', {
+                  providerId,
+                  trade,
+                  position
+                });
+              }
             }
+          }
+        });
+      }
+
+      // Phase 004: Track impressions for Promoted cards
+      if (typeof LokatorTelemetry !== 'undefined' && typeof PadiFixMonetization !== 'undefined' && PadiFixMonetization.isFeatureEnabled('monetizationAnalyticsEnabled')) {
+        providers.forEach((p, idx) => {
+          if (p.is_sponsored || p.isSponsored) {
+            LokatorTelemetry.trackEvent('sponsored_impression', {
+              providerId: p.id,
+              trade: p.trade,
+              position: idx + 1
+            });
           }
         });
       }

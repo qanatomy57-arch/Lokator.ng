@@ -37,6 +37,7 @@ const SHELL_ASSETS = [
   '/ai-service.js',
   '/categories.js',
   '/providers-data.js',
+  '/monetization-config.js',
   '/supabase-client.js',
   '/telemetry.js',
   '/pwa-manager.js',

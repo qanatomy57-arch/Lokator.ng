@@ -759,6 +759,26 @@
   border-radius: var(--radius-full);
 }
 
+.badge-tag-promoted {
+  background: rgba(2, 132, 199, 0.12);
+  color: #38BDF8;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  font-size: 11px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  letter-spacing: 0.02em;
+}
+
+.provider-item-card.is-sponsored {
+  border-color: rgba(56, 189, 248, 0.4);
+  box-shadow: 0 4px 16px rgba(56, 189, 248, 0.08);
+  position: relative;
+}
+
 .provider-specialty {
   font-size: 14px;
   font-weight: 700;
