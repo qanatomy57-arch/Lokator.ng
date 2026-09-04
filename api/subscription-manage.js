@@ -10,6 +10,7 @@
  */
 
 const ResendEmailService = require('../lib/resend-email-service');
+const { withSentry } = require('../lib/sentry-server');
 
 const CANONICAL_PLANS = {
   FREE: { id: 'FREE', name: 'Free', amount_ngn: 0, contacts: 5 },
@@ -21,7 +22,7 @@ const CANONICAL_PLANS = {
 // In-memory subscription store for serverless execution / testing
 const serverSubStore = new Map();
 
-module.exports = async (req, res) => {
+const subscriptionManageHandler = async (req, res) => {
   // CORS Headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
@@ -142,3 +143,5 @@ module.exports = async (req, res) => {
     return res.status(500).json({ error: 'Subscription management error', message: err.message });
   }
 };
+
+module.exports = withSentry(subscriptionManageHandler, 'subscription_manage');

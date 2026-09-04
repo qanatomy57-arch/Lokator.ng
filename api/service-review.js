@@ -13,13 +13,14 @@
  */
 
 const crypto = require('crypto');
+const { withSentry } = require('../lib/sentry-server');
 
 // In-memory review store for serverless/local fallback
 // Structure: Map<provider_id, Array<reviewRecord>>
 const reviewStore = new Map();
 const interactionTokens = new Set();
 
-module.exports = async (req, res) => {
+const serviceReviewHandler = async (req, res) => {
   // CORS Headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
@@ -202,3 +203,5 @@ module.exports = async (req, res) => {
     return res.status(500).json({ error: 'Internal Server Error', message: err.message });
   }
 };
+
+module.exports = withSentry(serviceReviewHandler, 'service_review');

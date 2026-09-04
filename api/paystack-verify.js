@@ -8,6 +8,7 @@
  */
 
 const https = require('https');
+const { withSentry } = require('../lib/sentry-server');
 
 function getJson(urlStr, headers = {}) {
   return new Promise((resolve, reject) => {
@@ -46,7 +47,7 @@ const CANONICAL_PLANS = {
   PREMIUM: { id: 'PREMIUM', name: 'Premium', amount_kobo: 1500000, amount_display: '₦15,000', contacts: 'unlimited', search_boost: 25, paystack_plan_code: 'PLN_e3nu8i62af9ypve' }
 };
 
-module.exports = async (req, res) => {
+const paystackVerifyHandler = async (req, res) => {
   // CORS Headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -255,3 +256,5 @@ module.exports = async (req, res) => {
     return res.status(500).json({ error: 'Internal Server Error', message: err.message });
   }
 };
+
+module.exports = withSentry(paystackVerifyHandler, 'paystack_verify');

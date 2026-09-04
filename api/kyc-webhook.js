@@ -26,13 +26,14 @@
  */
 
 const crypto = require('crypto');
+const { withSentry } = require('../lib/sentry-server');
 
 // In-memory processed event cache for per-lambda instance deduplication
 const processedKycEvents = new Set();
 // Store raw event digests for payload-tampering replay detection
 const processedEventDigests = new Map();
 
-module.exports = async (req, res) => {
+const kycWebhookHandler = async (req, res) => {
   // Step 1: Reject non-POST requests
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed', safeCode: 'METHOD_NOT_ALLOWED' });
@@ -289,3 +290,5 @@ module.exports = async (req, res) => {
     });
   }
 };
+
+module.exports = withSentry(kycWebhookHandler, 'kyc_webhook');

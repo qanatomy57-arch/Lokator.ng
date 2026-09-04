@@ -15,6 +15,7 @@
  */
 
 const crypto = require('crypto');
+const { withSentry } = require('../lib/sentry-server');
 
 // In-memory usage store for serverless execution / testing
 // Structure: Map<`${provider_id}_${billing_period}`, { used, whatsapp, call, plan_id }>
@@ -40,7 +41,7 @@ function getLagosBillingPeriod(date = new Date()) {
   return formatter.format(d).substring(0, 7); // 'YYYY-MM'
 }
 
-module.exports = async (req, res) => {
+const contactMeterHandler = async (req, res) => {
   // CORS Headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
@@ -204,3 +205,5 @@ module.exports = async (req, res) => {
     return res.status(500).json({ error: 'Internal Server Error', message: err.message });
   }
 };
+
+module.exports = withSentry(contactMeterHandler, 'contact_meter');

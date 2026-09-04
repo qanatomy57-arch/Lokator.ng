@@ -8,6 +8,7 @@
 
 const crypto = require('crypto');
 const ResendEmailService = require('../lib/resend-email-service');
+const { withSentry } = require('../lib/sentry-server');
 
 // In-memory processed webhook event ID cache with payload hash for replay/tamper detection
 const processedEvents = new Map();
@@ -29,7 +30,7 @@ const WEBHOOK_PLAN_CODES = {
   'PLN_padifix_premium': { id: 'PREMIUM', name: 'Premium', contacts: 'unlimited', amount: 1500000, amount_display: '₦15,000' }
 };
 
-module.exports = async (req, res) => {
+const paystackWebhookHandler = async (req, res) => {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
@@ -278,3 +279,5 @@ module.exports = async (req, res) => {
     return res.status(500).json({ error: 'Webhook processing error', message: err.message });
   }
 };
+
+module.exports = withSentry(paystackWebhookHandler, 'paystack_webhook');

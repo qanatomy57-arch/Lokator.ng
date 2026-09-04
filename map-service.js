@@ -76,6 +76,12 @@
       }
 
       this._googleMapsLoading = true;
+      if (typeof window !== 'undefined') {
+        window.gm_authFailure = () => {
+          console.warn('LokatorMapService: Google Maps authentication or billing error detected. Operating via Leaflet/OpenStreetMap fallback.');
+          this._googleMapsLoaded = false;
+        };
+      }
       const script = document.createElement('script');
       const mapId = this.getGoogleMapsMapId();
       let src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&libraries=places,geometry`;
@@ -333,21 +339,27 @@
       // Check if Google Maps is available
       if (typeof google !== 'undefined' && google.maps) {
         try {
-          const gmap = new google.maps.Map(container, {
+          const mapId = this.getGoogleMapsMapId();
+          const mapOptions = {
             center: { lat: providerLat, lng: providerLng },
             zoom: zoom,
             zoomControl: true,
             mapTypeControl: false,
             streetViewControl: false,
-            fullscreenControl: false,
-            styles: [
+            fullscreenControl: false
+          };
+          if (mapId) {
+            mapOptions.mapId = mapId;
+          } else {
+            mapOptions.styles = [
               { elementType: 'geometry', stylers: [{ color: '#1B241E' }] },
               { elementType: 'labels.text.stroke', stylers: [{ color: '#1B241E' }] },
               { elementType: 'labels.text.fill', stylers: [{ color: '#88988D' }] },
               { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#2C3E33' }] },
               { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#0C130E' }] }
-            ]
-          });
+            ];
+          }
+          const gmap = new google.maps.Map(container, mapOptions);
 
           const gMarker = new google.maps.Marker({
             position: { lat: providerLat, lng: providerLng },
