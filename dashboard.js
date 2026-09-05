@@ -2305,17 +2305,17 @@ document.addEventListener('DOMContentLoaded', async () => {
           
           <!-- Reply Display or Reply Box -->
           ${reply ? `
-            <div style="margin-top: 14px; background: rgba(0, 107, 63, 0.12); border-left: 3px solid #006B3F; padding: 10px 14px; border-radius: 6px;">
-              <div style="display: flex; justify-content: space-between; font-size: 11.5px; color: #52E58C; font-weight: 700; margin-bottom: 4px;">
+            <div style="margin-top: 14px; background: #F0FDF4; border: 1px solid #BBF7D0; border-left: 3.5px solid #00A859; padding: 12px 14px; border-radius: 8px;">
+              <div style="display: flex; justify-content: space-between; font-size: 12px; color: #15803D; font-weight: 800; margin-bottom: 4px;">
                 <span>👑 Your Official Response</span>
-                <span style="color: var(--dash-muted); font-weight: 400;">${escapeHtml(reply.date || 'Recent')}</span>
+                <span style="color: #64748B; font-weight: 500;">${escapeHtml(reply.date || 'Recent')}</span>
               </div>
-              <p style="color: #E2E8F0; font-size: 13px; margin: 0;">${escapeHtml(reply.text)}</p>
+              <p style="color: #166534; font-size: 13px; line-height: 1.4; margin: 0;">${escapeHtml(reply.text)}</p>
             </div>
           ` : `
-            <div class="dash-reply-form-wrap" id="reply-wrap-${safeRevId}" style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.05);">
+            <div class="dash-reply-form-wrap" id="reply-wrap-${safeRevId}" style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--dash-border);">
               <div style="display: flex; gap: 8px;">
-                <input type="text" id="input-reply-${safeRevId}" placeholder="Write an official response (e.g. Thank you for hiring me!)..." style="flex: 1; background: #1E293B; border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 8px 12px; border-radius: 6px; font-size: 13px;" />
+                <input type="text" id="input-reply-${safeRevId}" placeholder="Write an official response (e.g. Thank you for hiring me!)..." style="flex: 1; background: #FFFFFF; border: 1.5px solid #CBD5E1; color: #0F172A; padding: 8px 12px; border-radius: 6px; font-size: 13px;" />
                 <button type="button" class="btn btn-primary btn-sm btn-post-reply" data-rev-id="${safeRevId}" style="padding: 8px 14px; font-size: 12.5px;">Reply</button>
               </div>
             </div>

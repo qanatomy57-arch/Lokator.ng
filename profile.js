@@ -803,12 +803,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             <!-- Nested Official Provider Response -->
             ${reply ? `
-              <div style="margin-top: 12px; background: rgba(0, 107, 63, 0.12); border-left: 3px solid #006B3F; padding: 10px 14px; border-radius: 6px;">
-                <div style="display: flex; justify-content: space-between; font-size: 11.5px; color: #52E58C; font-weight: 700; margin-bottom: 3px;">
+              <div style="margin-top: 12px; background: #F0FDF4; border: 1px solid #BBF7D0; border-left: 3.5px solid #006B3F; padding: 12px 14px; border-radius: 8px;">
+                <div style="display: flex; justify-content: space-between; font-size: 12px; color: #15803D; font-weight: 800; margin-bottom: 3px;">
                   <span>👑 Response from Artisan</span>
-                  <span style="color: var(--fg-muted); font-weight: 400;">${escapeHtml(reply.date || 'Recent')}</span>
+                  <span style="color: var(--fg-muted); font-weight: 500;">${escapeHtml(reply.date || 'Recent')}</span>
                 </div>
-                <p style="color: #E2E8F0; font-size: 13px; margin: 0; line-height: 1.4;">${escapeHtml(reply.text)}</p>
+                <p style="color: #166534; font-size: 13px; margin: 0; line-height: 1.4;">${escapeHtml(reply.text)}</p>
               </div>
             ` : ''}
 
