@@ -52,9 +52,18 @@
     rel="stylesheet" />
   <link rel="stylesheet" href="style.css?v=11.00" />
   <link rel="stylesheet" href="pwa.css?v=11.00" />
-  <style>
-    html, body { background-color: #0A0E17; color: #F9FAFB; margin: 0; padding: 0; }
-  </style>
+  <!-- Zero-Flash Theme Init Script -->
+  <script>
+    (function() {
+      try {
+        var t = localStorage.getItem('padifix_theme') || 'system';
+        var d = t === 'dark' || (t === 'system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.setAttribute('data-theme', d ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme-mode', t);
+      } catch (e) {}
+    })();
+  </script>
+  <script src="theme.js" defer></script>
 </head>
 
 <body>
@@ -84,6 +93,10 @@
         <button type="button" class="pwa-install-nav-btn" id="nav-pwa-install-btn" aria-label="Install PadiFix App">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           <span>Install App</span>
+        </button>
+        <button type="button" class="theme-toggle-btn" id="home-theme-toggle" aria-label="Toggle theme">
+          <span class="theme-icon">☀️</span>
+          <span class="theme-label">Light</span>
         </button>
         <a href="register.html" class="btn btn-outline" id="nav-register">List Your Skill</a>
         <a href="search.html" class="btn btn-primary" id="nav-find">Search Directory</a>
@@ -1245,6 +1258,12 @@
       <a href="index.html#why-padifix" class="drawer-link"><span class="drawer-icon">🛡️</span> <span>Trust & Safety</span></a>
       <a href="index.html#faq" class="drawer-link"><span class="drawer-icon">❓</span> <span>Help Center</span></a>
       <a href="login.html" class="drawer-link" id="drawer-link-login"><span class="drawer-icon">🔑</span> <span>Provider Login</span></a>
+      <div style="padding: 10px 16px 4px;">
+        <button type="button" class="theme-toggle-btn" aria-label="Toggle theme" style="width: 100%; justify-content: center; padding: 10px 16px; font-size: 14px;">
+          <span class="theme-icon">☀️</span>
+          <span class="theme-label">Light</span>
+        </button>
+      </div>
       <a href="#logout" class="drawer-link drawer-logout" id="drawer-link-logout" style="display: none;"><span class="drawer-icon">🚪</span> <span>Logout</span></a>
     </nav>
   </aside>

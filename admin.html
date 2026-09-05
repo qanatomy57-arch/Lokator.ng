@@ -15,46 +15,65 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <!-- Zero-Flash Theme Init Script -->
+  <script>
+    (function() {
+      try {
+        var t = localStorage.getItem('padifix_theme') || 'system';
+        var d = t === 'dark' || (t === 'system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.setAttribute('data-theme', d ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme-mode', t);
+      } catch (e) {}
+    })();
+  </script>
+  <script src="theme.js" defer></script>
   <link rel="stylesheet" href="style.css?v=11.00" />
   <link rel="stylesheet" href="pwa.css?v=11.00" />
   <style>
-    body { background-color: #0A0E17; color: #F9FAFB; font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif; margin: 0; padding: 0; }
+    body { background-color: var(--bg); color: var(--fg); font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif; margin: 0; padding: 0; }
     .admin-container { max-width: 1200px; margin: 0 auto; padding: 24px 16px; }
-    .admin-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 16px; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
-    .admin-tabs { display: flex; gap: 12px; margin-bottom: 24px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; flex-wrap: wrap; }
-    .admin-tab-btn { background: none; border: none; color: #94A3B8; font-size: 14px; font-weight: 700; padding: 8px 16px; cursor: pointer; border-radius: 6px; transition: all 0.2s; }
-    .admin-tab-btn.active { background: rgba(56, 189, 248, 0.15); color: #38BDF8; }
+    .admin-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 16px; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+    .admin-tabs { display: flex; gap: 12px; margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 8px; flex-wrap: wrap; }
+    .admin-tab-btn { background: none; border: none; color: var(--fg-muted); font-size: 14px; font-weight: 700; padding: 8px 16px; cursor: pointer; border-radius: 6px; transition: all 0.2s; }
+    .admin-tab-btn.active { background: rgba(56, 189, 248, 0.15); color: #0284C7; }
+    [data-theme="dark"] .admin-tab-btn.active { color: #38BDF8; }
     .admin-tab-panel { display: none; }
     .admin-tab-panel.active { display: block; }
     .grid-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
-    .kpi-card { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 16px; }
-    .kpi-label { font-size: 12px; color: #94A3B8; margin-bottom: 6px; font-weight: 600; }
-    .kpi-value { font-size: 24px; font-weight: 800; color: #F1F5F9; }
-    .kpi-sub { font-size: 11px; color: #64748B; margin-top: 4px; }
-    .admin-table-card { background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; overflow: hidden; }
+    .kpi-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; box-shadow: var(--shadow-sm); }
+    .kpi-label { font-size: 12px; color: var(--fg-muted); margin-bottom: 6px; font-weight: 600; }
+    .kpi-value { font-size: 24px; font-weight: 800; color: var(--fg); }
+    .kpi-sub { font-size: 11px; color: var(--fg-muted); margin-top: 4px; }
+    .admin-table-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; box-shadow: var(--shadow-sm); }
     .admin-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
-    .admin-table th { background: rgba(255, 255, 255, 0.04); padding: 12px; color: #94A3B8; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
-    .admin-table td { padding: 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.04); color: #CBD5E1; vertical-align: middle; }
+    .admin-table th { background: var(--muted); padding: 12px; color: var(--fg-muted); border-bottom: 1px solid var(--border); font-weight: 700; }
+    .admin-table td { padding: 12px; border-bottom: 1px solid var(--border); color: var(--fg); vertical-align: middle; }
     .btn-action-sm { padding: 6px 12px; font-size: 11.5px; font-weight: 700; border-radius: 6px; border: none; cursor: pointer; transition: all 0.2s; }
     .btn-approve { background: #059669; color: #FFF; }
     .btn-approve:hover { background: #10B981; }
-    .btn-reject { background: rgba(239, 68, 68, 0.2); color: #F87171; border: 1px solid rgba(239, 68, 68, 0.4); }
-    .btn-reject:hover { background: rgba(239, 68, 68, 0.3); }
-    .btn-resolve { background: #3B82F6; color: #FFF; }
+    .btn-reject { background: rgba(239, 68, 68, 0.15); color: #DC2626; border: 1px solid rgba(239, 68, 68, 0.3); }
+    [data-theme="dark"] .btn-reject { background: rgba(239, 68, 68, 0.2); color: #F87171; border: 1px solid rgba(239, 68, 68, 0.4); }
+    .btn-reject:hover { background: rgba(239, 68, 68, 0.25); }
+    .btn-resolve { background: #2563EB; color: #FFF; }
     .admin-compliance-tag { font-size: 11px; }
-    .admin-title { font-size: 24px; margin: 0 0 4px; color: #F1F5F9; }
-    .admin-subtitle { font-size: 13px; color: #94A3B8; margin: 0; }
+    .admin-title { font-size: 24px; margin: 0 0 4px; color: var(--fg); }
+    .admin-subtitle { font-size: 13px; color: var(--fg-muted); margin: 0; }
     .admin-actions { display: flex; gap: 8px; }
-    .btn-refresh { padding: 8px 14px; font-size: 12px; border-color: rgba(255,255,255,0.2); }
+    .btn-refresh { padding: 8px 14px; font-size: 12px; border: 1px solid var(--border); background: var(--card); color: var(--fg); border-radius: 6px; cursor: pointer; font-weight: 600; }
     .kpi-pending { border-left: 4px solid #F59E0B; }
-    .kpi-pending .kpi-value { color: #FBBF24; }
+    .kpi-pending .kpi-value { color: #D97706; }
+    [data-theme="dark"] .kpi-pending .kpi-value { color: #FBBF24; }
     .kpi-verified { border-left: 4px solid #10B981; }
-    .kpi-verified .kpi-value { color: #34D399; }
+    .kpi-verified .kpi-value { color: #059669; }
+    [data-theme="dark"] .kpi-verified .kpi-value { color: #34D399; }
     .kpi-disputes { border-left: 4px solid #EF4444; }
-    .kpi-disputes .kpi-value { color: #F87171; }
-    .kpi-status { border-left: 4px solid #38BDF8; }
-    .kpi-status .kpi-value { color: #38BDF8; font-size: 18px; }
-    .empty-state-cell { padding: 24px; text-align: center; color: #64748B; }
+    .kpi-disputes .kpi-value { color: #DC2626; }
+    [data-theme="dark"] .kpi-disputes .kpi-value { color: #F87171; }
+    .kpi-status { border-left: 4px solid #0284C7; }
+    .kpi-status .kpi-value { color: #0284C7; font-size: 18px; }
+    [data-theme="dark"] .kpi-status { border-left: 4px solid #38BDF8; }
+    [data-theme="dark"] .kpi-status .kpi-value { color: #38BDF8; }
+    .empty-state-cell { padding: 24px; text-align: center; color: var(--fg-muted); }
   </style>
 </head>
 <body>
@@ -67,6 +86,10 @@
       <nav class="nav-links">
         <a href="search.html" class="nav-link">Marketplace</a>
         <a href="analytics.html" class="nav-link">Analytics</a>
+        <button type="button" class="theme-toggle-btn" id="admin-theme-toggle" aria-label="Toggle theme">
+          <span class="theme-icon">☀️</span>
+          <span class="theme-label">Light</span>
+        </button>
         <span class="status-tag status-good admin-compliance-tag">🛡️ Compliance Desk</span>
       </nav>
     </div>

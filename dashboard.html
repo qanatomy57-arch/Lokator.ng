@@ -26,9 +26,18 @@
   <link rel="stylesheet" href="style.css?v=11.00" />
   <link rel="stylesheet" href="dashboard.css?v=11.00" />
   <link rel="stylesheet" href="pwa.css?v=11.00" />
-  <style>
-    html, body { background-color: #0A0E17; color: #F9FAFB; margin: 0; padding: 0; }
-  </style>
+  <!-- Zero-Flash Theme Init Script -->
+  <script>
+    (function() {
+      try {
+        var t = localStorage.getItem('padifix_theme') || 'system';
+        var d = t === 'dark' || (t === 'system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.setAttribute('data-theme', d ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme-mode', t);
+      } catch (e) {}
+    })();
+  </script>
+  <script src="theme.js" defer></script>
 </head>
 <body class="dash-body">
 
@@ -62,6 +71,12 @@
           </label>
           <span class="avail-label online" id="dash-avail-text">Online</span>
         </div>
+
+        <!-- 3-Way Theme Toggle Button -->
+        <button type="button" class="theme-toggle-btn" id="dash-topbar-theme-toggle" aria-label="Toggle theme">
+          <span class="theme-icon">☀️</span>
+          <span class="theme-label">Light</span>
+        </button>
 
         <!-- View Public Profile CTA -->
         <a href="#" class="btn btn-outline btn-view-public-custom" id="btn-view-public" target="_blank">
@@ -737,24 +752,24 @@
 
           <!-- Non-Negotiable Marketplace Principles Banner -->
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin-bottom: 24px;">
-            <div style="background: #F0FDF4; border: 1.5px solid #BBF7D0; border-radius: 10px; padding: 14px 16px; font-size: 13px; color: #166534; line-height: 1.5;">
-              <strong style="color: #15803D; font-weight: 800; display: block; margin-bottom: 4px; font-size: 13.5px;">🤝 0% Commission & Direct Service Payments</strong>
+            <div class="callout-green">
+              <strong>🤝 0% Commission & Direct Service Payments</strong>
               PadiFix does NOT hold escrow, take cuts from your job payments, or process customer service fees. Clients pay you 100% directly via bank transfer, cash, or POS.
             </div>
-            <div style="background: #FFFBEB; border: 1.5px solid #FDE68A; border-radius: 10px; padding: 14px 16px; font-size: 13px; color: #92400E; line-height: 1.5;">
-              <strong style="color: #B45309; font-weight: 800; display: block; margin-bottom: 4px; font-size: 13.5px;">🛡️ Trust & Reputation Separation</strong>
+            <div class="callout-amber">
+              <strong>🛡️ Trust & Reputation Separation</strong>
               Subscriptions never increase your star rating, remove bad reviews, or buy verified badges. Reputation and compliance remain strictly independent of monetization.
             </div>
           </div>
 
           <!-- Provider Growth & Lead Conversion Banner (Phase 011) -->
-          <div id="provider-growth-banner" style="background: linear-gradient(135deg, #F0FDF4 0%, #E0F2FE 100%); border: 1.5px solid #BAE6FD; border-radius: 12px; padding: 16px 20px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;">
+          <div id="provider-growth-banner" class="provider-growth-banner">
             <div>
               <div style="display: flex; align-items: center; gap: 8px;">
                 <span style="font-size: 1.25rem;">📈</span>
-                <strong style="color: #0F172A; font-size: 14.5px; font-weight: 800;">Grow Your Artisan Business with Elevated Visibility</strong>
+                <strong>Grow Your Artisan Business with Elevated Visibility</strong>
               </div>
-              <p style="margin: 4px 0 0 0; color: #334155; font-size: 13px; line-height: 1.4;">Artisans on Pro and Premium receive up to <strong style="color: #0369A1;">15%–25% search ranking prominence</strong> and up to 100+ monthly customer inquiry allowances.</p>
+              <p>Artisans on Pro and Premium receive up to <span class="growth-highlight">15%–25% search ranking prominence</span> and up to 100+ monthly customer inquiry allowances.</p>
             </div>
             <a href="#plans-comparison-grid" class="btn btn-primary btn-sm" style="background: #00A859; border-color: #00A859; font-weight: 700; font-size: 12.5px; padding: 8px 16px; text-decoration: none; border-radius: 6px;">Unlock 100 Leads</a>
           </div>
@@ -946,24 +961,24 @@
             </p>
 
             <!-- Zero Raw NIN / vNIN Privacy Guarantee Banner -->
-            <div style="background: #EFF6FF; border: 1.5px solid #BFDBFE; border-radius: 10px; padding: 14px 16px; margin-bottom: 16px; font-size: 13px; color: #1E40AF; line-height: 1.5; display: flex; align-items: flex-start; gap: 10px;">
+            <div class="callout-blue" style="margin-bottom: 16px; display: flex; align-items: flex-start; gap: 10px;">
               <span style="font-size: 18px; line-height: 1;">🛡️</span>
               <div>
-                <strong style="color: #1E3A8A; font-weight: 800;">Privacy Guarantee — Zero Raw NIN Storage:</strong> In compliance with NIMC and NDPR regulations, PadiFix never collects or stores raw 11-digit NINs. For NIN validation, please generate a secure 16-character <strong style="color: #1D4ED8;">Virtual NIN (vNIN)</strong> by dialing <code style="background: #DBEAFE; padding: 2px 6px; border-radius: 4px; color: #1E40AF; font-weight: 700;">*346*3*NIN*AgentCode#</code> on your registered SIM.
+                <strong>Privacy Guarantee — Zero Raw NIN Storage:</strong> In compliance with NIMC and NDPR regulations, PadiFix never collects or stores raw 11-digit NINs. For NIN validation, please generate a secure 16-character <strong>Virtual NIN (vNIN)</strong> by dialing <code style="padding: 2px 6px; border-radius: 4px; font-weight: 700; background: rgba(0,0,0,0.1);">*346*3*NIN*AgentCode#</code> on your registered SIM.
               </div>
             </div>
 
-            <!-- Status Notice Banners -->
-            <div id="dash-ver-pending-notice" style="display: none; background: #FFFBEB; border: 1.5px solid #FDE68A; border-radius: 10px; padding: 14px 18px; margin-bottom: 16px;">
-              <div style="font-weight: 800; color: #B45309; font-size: 14px; margin-bottom: 4px;">⏳ Verification Request Pending Review</div>
-              <p style="font-size: 13px; color: #92400E; margin: 0; line-height: 1.4;" id="dash-ver-pending-text">
+            <!-- Status Notice Banners (Dual-Mode WCAG AAA) -->
+            <div id="dash-ver-pending-notice" class="callout-amber" style="display: none; margin-bottom: 16px;">
+              <div style="font-weight: 800; font-size: 14px; margin-bottom: 4px;">⏳ Verification Request Pending Review</div>
+              <p style="margin: 0; line-height: 1.4;" id="dash-ver-pending-text">
                 Your credential verification request was submitted and is currently being audited by PadiFix compliance officers. You will receive confirmation once reviewed.
               </p>
             </div>
 
-            <div id="dash-ver-approved-notice" style="display: none; background: #F0FDF4; border: 1.5px solid #BBF7D0; border-radius: 10px; padding: 14px 18px; margin-bottom: 16px;">
-              <div style="font-weight: 800; color: #15803D; font-size: 14px; margin-bottom: 4px;">🛡️ Profile Verified & Approved</div>
-              <p style="font-size: 13px; color: #166534; margin: 0; line-height: 1.4;" id="dash-ver-approved-text">
+            <div id="dash-ver-approved-notice" class="callout-green" style="display: none; margin-bottom: 16px;">
+              <div style="font-weight: 800; font-size: 14px; margin-bottom: 4px;">🛡️ Profile Verified & Approved</div>
+              <p style="margin: 0; line-height: 1.4;" id="dash-ver-approved-text">
                 Your credentials have been successfully reviewed and verified. Your public profile displays the verified trust badge.
               </p>
             </div>
@@ -1034,10 +1049,10 @@
             </div>
 
             <!-- Free Forever Guarantee Banner -->
-            <div style="background: #F0FDF4; border: 1.5px solid #86EFAC; border-radius: 10px; padding: 14px 16px; margin-bottom: 18px; font-size: 13px; color: #166534; line-height: 1.5; display: flex; align-items: center; gap: 12px;">
+            <div class="callout-green" style="margin-bottom: 18px; display: flex; align-items: center; gap: 12px;">
               <span style="font-size: 20px;">✅</span>
               <div>
-                <strong style="color: #15803D; font-weight: 800;">PadiFix Free Marketplace Guarantee:</strong> Listing, public profile, direct phone calls, direct WhatsApp chats, and client reviews will always remain 100% free with <strong style="color: #14532D;">0% commission</strong>.
+                <strong>PadiFix Free Marketplace Guarantee:</strong> Listing, public profile, direct phone calls, direct WhatsApp chats, and client reviews will always remain 100% free with <strong>0% commission</strong>.
               </div>
             </div>
 
@@ -1327,6 +1342,10 @@
         <div class="more-sheet-item" onclick="window.open(document.getElementById('btn-view-public').href, '_blank'); closeMoreSheet();">
           <span class="ms-icon">↗</span>
           <span>Public Profile</span>
+        </div>
+        <div class="more-sheet-item theme-toggle-btn" style="cursor: pointer; justify-content: flex-start;">
+          <span class="ms-icon theme-icon">☀️</span>
+          <span class="theme-label">Theme</span>
         </div>
         <div class="more-sheet-item" onclick="document.getElementById('btn-signout').click();">
           <span class="ms-icon more-sheet-signout-icon">🚪</span>

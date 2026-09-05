@@ -36,6 +36,18 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   <link rel="stylesheet" href="style.css?v=11.00" />
   <link rel="stylesheet" href="pwa.css?v=11.00" />
+  <!-- Zero-Flash Theme Init Script -->
+  <script>
+    (function() {
+      try {
+        var t = localStorage.getItem('padifix_theme') || 'system';
+        var d = t === 'dark' || (t === 'system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.setAttribute('data-theme', d ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme-mode', t);
+      } catch (e) {}
+    })();
+  </script>
+  <script src="theme.js" defer></script>
   <style>
     .nav-login-highlight {
       color: var(--green);
@@ -97,6 +109,10 @@
         <a href="search.html" class="nav-link">Find Providers</a>
         <a href="#pricing" class="nav-link">Pricing</a>
         <a href="login.html" class="nav-link nav-login-highlight">Provider Login</a>
+        <button type="button" class="theme-toggle-btn" id="reg-theme-toggle" aria-label="Toggle theme">
+          <span class="theme-icon">☀️</span>
+          <span class="theme-label">Light</span>
+        </button>
       </nav>
       <button class="hamburger" id="hamburger" aria-label="Open menu"><span></span><span></span><span></span></button>
     </div>
@@ -419,9 +435,9 @@
               </div>
             </div>
 
-            <!-- Phase 006: Trust & Verification Transparency Callout -->
-            <div style="background: #EFF6FF; border: 1.5px solid #BFDBFE; border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; font-size: 13px; color: #1E40AF; line-height: 1.5;">
-              ℹ️ <strong style="color: #1E3A8A; font-weight: 800;">Platform Verification Notice:</strong> Completing registration publishes your <strong style="color: #1D4ED8;">Self-Reported Profile</strong> so local customers can discover you immediately. Official Platform Review and National NIN Verification can be requested anytime from your provider dashboard after listing.
+            <!-- Phase 006: Trust & Verification Transparency Callout (Dual Mode) -->
+            <div class="callout-blue" style="margin-bottom: 16px;">
+              ℹ️ <strong>Platform Verification Notice:</strong> Completing registration publishes your <strong>Self-Reported Profile</strong> so local customers can discover you immediately. Official Platform Review and National NIN Verification can be requested anytime from your provider dashboard after listing.
             </div>
 
             <!-- Live Profile Card Preview -->

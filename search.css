@@ -2119,3 +2119,290 @@ body.modal-open .mobile-map-toggle-pill {
   box-shadow: 0 6px 20px rgba(0, 168, 89, 0.5);
 }
 
+/* ===== DARK THEME ENHANCEMENTS FOR SEARCH & DISCOVERY ===== */
+[data-theme="dark"] .search-hero {
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+
+[data-theme="dark"] .main-search-bar {
+  background: var(--card);
+  border-color: var(--border);
+  box-shadow: var(--shadow-md);
+}
+
+[data-theme="dark"] .search-input-group {
+  background: var(--muted);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .search-input-group input {
+  color: var(--fg);
+}
+
+[data-theme="dark"] .search-input-group input::placeholder {
+  color: var(--fg-muted);
+}
+
+[data-theme="dark"] .gps-inline-btn {
+  background: rgba(0, 168, 89, 0.15);
+  color: #34D399;
+  border-color: rgba(0, 168, 89, 0.35);
+}
+
+[data-theme="dark"] .gps-inline-btn:hover {
+  background: var(--green);
+  color: #FFFFFF;
+}
+
+[data-theme="dark"] .filter-card {
+  background: var(--card);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .results-toolbar {
+  background: var(--card);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .results-count-wrap h2 {
+  color: var(--fg);
+}
+
+[data-theme="dark"] .sort-wrap label {
+  color: var(--fg-muted);
+}
+
+[data-theme="dark"] .sort-select {
+  background: var(--muted);
+  color: var(--fg);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .view-mode-toggle {
+  background: var(--muted);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .btn-view-mode {
+  color: var(--fg-muted);
+}
+
+[data-theme="dark"] .btn-view-mode.active {
+  background: var(--green);
+  color: #FFFFFF;
+}
+
+[data-theme="dark"] .mobile-filter-trigger {
+  background: var(--muted);
+  color: var(--fg);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .search-suggestions-dropdown {
+  background: var(--card);
+  border-color: var(--border);
+  box-shadow: var(--shadow-lg);
+}
+
+[data-theme="dark"] .suggestion-item {
+  color: var(--fg);
+  border-bottom: 1px solid var(--border);
+}
+
+[data-theme="dark"] .suggestion-item:hover,
+[data-theme="dark"] .suggestion-item.active {
+  background: var(--muted);
+}
+
+[data-theme="dark"] .recent-searches-bar {
+  background: var(--card);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .recent-searches-label {
+  color: var(--fg-muted);
+}
+
+[data-theme="dark"] .recent-search-chip {
+  background: var(--muted);
+  color: var(--fg);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .recent-search-chip:hover {
+  background: rgba(0, 168, 89, 0.15);
+  border-color: var(--green);
+  color: #34D399;
+}
+
+[data-theme="dark"] .sidebar-ad-card {
+  background: linear-gradient(135deg, #111827 0%, #1E293B 100%);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .sidebar-ad-card h4 {
+  color: var(--fg);
+}
+
+[data-theme="dark"] .sidebar-ad-card p {
+  color: var(--fg-muted);
+}
+
+[data-theme="dark"] .empty-results-state {
+  background: var(--card);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .empty-results-state h3 {
+  color: var(--fg);
+}
+
+[data-theme="dark"] .empty-results-state p {
+  color: var(--fg-muted);
+}
+
+[data-theme="dark"] .modal-card {
+  background: var(--card);
+  color: var(--fg);
+  border: 1px solid var(--border);
+}
+
+[data-theme="dark"] .modal-close {
+  color: var(--fg-muted);
+}
+
+[data-theme="dark"] .browse-title {
+  color: var(--fg);
+}
+
+[data-theme="dark"] .browse-subtitle {
+  color: var(--fg-muted);
+}
+
+[data-theme="dark"] .marketplace-browse-section {
+  background: var(--card);
+  border-color: var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+[data-theme="dark"] .browse-badge {
+  background: rgba(0, 168, 89, 0.15);
+  color: #34D399;
+  border-color: rgba(0, 168, 89, 0.35);
+}
+
+[data-theme="dark"] .btn-browse-toggle {
+  background: var(--muted);
+  border-color: var(--border);
+  color: var(--fg);
+}
+
+[data-theme="dark"] .industry-browse-card {
+  background: var(--muted);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .industry-browse-card:hover {
+  background: #253347;
+  border-color: var(--green);
+}
+
+[data-theme="dark"] .industry-browse-card.is-selected {
+  background: rgba(0, 168, 89, 0.15);
+  border-color: var(--green);
+}
+
+[data-theme="dark"] .industry-card-name {
+  color: var(--fg);
+}
+
+[data-theme="dark"] .industry-card-desc {
+  color: var(--fg-muted);
+}
+
+[data-theme="dark"] .industry-skill-pill-tag {
+  background: var(--card);
+  border-color: var(--border);
+  color: var(--fg);
+}
+
+[data-theme="dark"] .industry-skill-pill-tag:hover {
+  background: var(--green);
+  color: #FFFFFF;
+}
+
+[data-theme="dark"] .provider-item-card {
+  background: var(--card);
+  border-color: var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+[data-theme="dark"] .provider-item-card:hover {
+  border-color: var(--green);
+  box-shadow: var(--shadow-md);
+}
+
+[data-theme="dark"] .provider-title-name {
+  color: var(--fg);
+}
+
+[data-theme="dark"] .provider-specialty {
+  color: #34D399;
+}
+
+[data-theme="dark"] .meta-reviews-count,
+[data-theme="dark"] .meta-exp,
+[data-theme="dark"] .provider-location-row {
+  color: var(--fg-muted);
+}
+
+[data-theme="dark"] .meta-sep {
+  color: var(--border);
+}
+
+[data-theme="dark"] .mini-tag {
+  background: var(--muted);
+  border-color: var(--border);
+  color: var(--fg);
+}
+
+[data-theme="dark"] .action-btn.call-btn {
+  background: var(--green);
+  border-color: var(--green);
+  color: #FFFFFF;
+}
+
+[data-theme="dark"] .action-btn.call-btn:hover {
+  background: var(--green-dark);
+}
+
+[data-theme="dark"] .action-btn.msg-btn {
+  background: var(--muted);
+  color: var(--fg);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .action-btn.msg-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--green);
+}
+
+[data-theme="dark"] .industry-card {
+  background: var(--card);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .industry-card:hover {
+  border-color: var(--green);
+  background: var(--muted);
+}
+
+[data-theme="dark"] .industry-card-title {
+  color: var(--fg);
+}
+
+[data-theme="dark"] .industry-card-count {
+  color: var(--fg-muted);
+}
+
