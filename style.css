@@ -175,6 +175,32 @@
   color: #60A5FA;
 }
 
+.callout-red {
+  background: #FEF2F2;
+  border: 1.5px solid #FECACA;
+  border-radius: 10px;
+  padding: 14px 18px;
+  font-size: 13px;
+  color: #991B1B;
+  line-height: 1.5;
+}
+.callout-red strong, .callout-red .callout-title {
+  color: #B91C1C;
+  font-weight: 800;
+  display: block;
+  margin-bottom: 4px;
+}
+
+[data-theme="dark"] .callout-red {
+  background: #2D0E0E;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #FEE2E2;
+}
+[data-theme="dark"] .callout-red strong, [data-theme="dark"] .callout-red .callout-title {
+  color: #F87171;
+}
+
+
 /* Dark Mode Global Overrides for Forms & Containers */
 [data-theme="dark"] .navbar {
   background: rgba(11, 15, 23, 0.94);
@@ -2902,6 +2928,87 @@ body {
 .price-features li.feat-disabled {
   color: #94A3B8;
 }
+
+/* ===== PRICING CARDS DUAL-MODE OVERRIDES ===== */
+[data-theme="dark"] .price-card {
+  background: #111827;
+  border-color: #1E293B;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .price-featured {
+  background: linear-gradient(135deg, #062314 0%, #111827 100%);
+  border-color: #00A859;
+  box-shadow: 0 4px 20px rgba(0, 168, 89, 0.25);
+}
+
+[data-theme="dark"] .price-featured:hover {
+  border-color: #34D399;
+}
+
+[data-theme="dark"] .price-card.price-vip {
+  background: linear-gradient(135deg, #241403 0%, #111827 100%);
+  border-color: #D97706;
+  box-shadow: 0 4px 20px rgba(217, 119, 6, 0.25);
+}
+
+[data-theme="dark"] .price-card.price-vip:hover {
+  border-color: #F59E0B;
+}
+
+[data-theme="dark"] .price-amount {
+  color: #F8FAFC;
+}
+
+[data-theme="dark"] .price-amount span {
+  color: #94A3B8;
+}
+
+[data-theme="dark"] .price-desc {
+  color: #94A3B8;
+}
+
+[data-theme="dark"] .price-features li {
+  color: #F8FAFC;
+}
+
+[data-theme="dark"] .price-features li svg {
+  stroke: #34D399;
+}
+
+[data-theme="dark"] .price-features li svg[stroke="#D4AF37"] {
+  stroke: #FBBF24;
+}
+
+[data-theme="dark"] .price-features li.feat-disabled {
+  color: #64748B;
+}
+
+[data-theme="dark"] .price-features li.feat-disabled svg {
+  stroke: #475569;
+}
+
+[data-theme="dark"] .price-label {
+  color: #94A3B8;
+}
+
+[data-theme="dark"] .price-featured .price-contacts {
+  color: #34D399;
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.35);
+}
+
+[data-theme="dark"] .price-vip .price-contacts {
+  color: #FBBF24;
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.35);
+}
+
+[data-theme="dark"] #select-premium {
+  border-color: #F59E0B !important;
+  color: #FBBF24 !important;
+}
+
 
 /* ===== FOOTER ===== */
 .footer {

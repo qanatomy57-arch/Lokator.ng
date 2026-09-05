@@ -141,7 +141,79 @@ function getContrastRatio(fgRgb, bgRgb) {
     results.screenshotsCaptured.push(dashDarkShot);
     console.log('📸 Captured dashboard_mobile_dark.png');
 
-    // Check Dark Mode Contrast
+    // === SPECIFIC TARGET 1: DASHBOARD VERIFICATION & MONETIZATION (USER SCREENSHOT 1 AREA) ===
+    console.log('\n=== TESTING DASHBOARD VERIFICATION & MONETIZATION IN DARK MODE ===');
+    await page.evaluate(() => {
+      window.switchTab('subscription');
+    });
+    await page.waitForTimeout(500);
+
+    const verCardDarkShot = path.join(outDir, 'dashboard_verification_dark.png');
+    const verCardElement = await page.$('.dash-ver-card');
+    if (verCardElement) {
+      await verCardElement.scrollIntoViewIfNeeded();
+      await page.waitForTimeout(300);
+      await verCardElement.screenshot({ path: verCardDarkShot });
+      results.screenshotsCaptured.push(verCardDarkShot);
+      console.log('📸 Captured dashboard_verification_dark.png');
+    }
+
+    // Check Verification Card Contrast in Dark Mode
+    const verDarkMetrics = await page.evaluate(() => {
+      const card = document.querySelector('.dash-ver-card');
+      const label = document.querySelector('#ver-doc-ref-label');
+      const historyHeader = document.querySelector('#dash-ver-history-section h4');
+      if (!card || !label) return null;
+      const cardStyle = window.getComputedStyle(card);
+      const labelStyle = window.getComputedStyle(label);
+      const histStyle = historyHeader ? window.getComputedStyle(historyHeader) : labelStyle;
+      return {
+        cardBg: cardStyle.backgroundColor,
+        labelColor: labelStyle.color,
+        histColor: histStyle.color
+      };
+    });
+
+    if (verDarkMetrics) {
+      const verLabelRatio = getContrastRatio(parseRgb(verDarkMetrics.labelColor), parseRgb(verDarkMetrics.cardBg));
+      const verHistRatio = getContrastRatio(parseRgb(verDarkMetrics.histColor), parseRgb(verDarkMetrics.cardBg));
+      console.log(`Dark Mode Verification Label Contrast: ${verLabelRatio.toFixed(2)}:1 (WCAG AA >= 4.5:1)`);
+      console.log(`Dark Mode Verification History Contrast: ${verHistRatio.toFixed(2)}:1 (WCAG AA >= 4.5:1)`);
+      results.contrastChecks.push(
+        { mode: 'dark', element: 'ver-label', ratio: verLabelRatio.toFixed(2) },
+        { mode: 'dark', element: 'ver-history', ratio: verHistRatio.toFixed(2) }
+      );
+    }
+
+    // Capture Monetization Research in Dark Mode
+    const monCardElement = await page.$('#dash-monetization-research-section');
+    if (monCardElement) {
+      await monCardElement.scrollIntoViewIfNeeded();
+      await page.waitForTimeout(300);
+      const monDarkShot = path.join(outDir, 'dashboard_monetization_dark.png');
+      await monCardElement.screenshot({ path: monDarkShot });
+      results.screenshotsCaptured.push(monDarkShot);
+      console.log('📸 Captured dashboard_monetization_dark.png');
+    }
+
+    // Now switch to Light Mode and check Verification
+    await page.evaluate(() => window.PadiFixTheme.setTheme('light'));
+    await page.waitForTimeout(400);
+
+    const verCardLightShot = path.join(outDir, 'dashboard_verification_light.png');
+    if (verCardElement) {
+      await verCardElement.scrollIntoViewIfNeeded();
+      await page.waitForTimeout(300);
+      await verCardElement.screenshot({ path: verCardLightShot });
+      results.screenshotsCaptured.push(verCardLightShot);
+      console.log('📸 Captured dashboard_verification_light.png');
+    }
+
+    // Switch back to Dark Mode for the rest of tests
+    await page.evaluate(() => window.PadiFixTheme.setTheme('dark'));
+    await page.waitForTimeout(400);
+
+    // Check Dark Mode Contrast on general dashboard
     const darkMetrics = await page.evaluate(() => {
       const body = window.getComputedStyle(document.body);
       const card = window.getComputedStyle(document.querySelector('.kpi-card') || document.body);
@@ -163,7 +235,7 @@ function getContrastRatio(fgRgb, bgRgb) {
     results.pagesTested.push('dashboard.html');
     results.themeCyclingVerified = true;
 
-    // === 2. TESTING REGISTER PAGE ===
+    // === 2. TESTING REGISTER PAGE & PRICING PLANS (USER SCREENSHOT 2 AREA) ===
     console.log('\n=== 2. TESTING REGISTER PAGE IN DUAL MODE ===');
     await page.goto(`${BASE}/register.html`, { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(500);
@@ -174,6 +246,49 @@ function getContrastRatio(fgRgb, bgRgb) {
     results.screenshotsCaptured.push(regDarkShot);
     console.log('📸 Captured register_mobile_dark.png');
 
+    // Scroll to pricing grid in Dark Mode
+    const pricingGrid = await page.$('.pricing-grid');
+    if (pricingGrid) {
+      await pricingGrid.scrollIntoViewIfNeeded();
+      await page.waitForTimeout(300);
+      const pricingDarkShot = path.join(outDir, 'register_pricing_dark.png');
+      await pricingGrid.screenshot({ path: pricingDarkShot });
+      results.screenshotsCaptured.push(pricingDarkShot);
+      console.log('📸 Captured register_pricing_dark.png');
+
+      // Check Pro Plan and VIP Plan Contrast in Dark Mode
+      const pricingDarkMetrics = await page.evaluate(() => {
+        const proCard = document.querySelector('#plan-pro');
+        const proAmount = proCard ? proCard.querySelector('.price-amount') : null;
+        const proLi = proCard ? proCard.querySelector('.price-features li') : null;
+
+        const vipCard = document.querySelector('#plan-premium');
+        const vipAmount = vipCard ? vipCard.querySelector('.price-amount') : null;
+        const vipLi = vipCard ? vipCard.querySelector('.price-features li') : null;
+
+        return {
+          proBg: proCard ? window.getComputedStyle(proCard).backgroundColor : null,
+          proAmountColor: proAmount ? window.getComputedStyle(proAmount).color : null,
+          proLiColor: proLi ? window.getComputedStyle(proLi).color : null,
+          vipBg: vipCard ? window.getComputedStyle(vipCard).backgroundColor : null,
+          vipAmountColor: vipAmount ? window.getComputedStyle(vipAmount).color : null,
+          vipLiColor: vipLi ? window.getComputedStyle(vipLi).color : null
+        };
+      });
+
+      if (pricingDarkMetrics.proAmountColor) {
+        // Pro card has gradient, sample background
+        const proRatio = getContrastRatio(parseRgb(pricingDarkMetrics.proAmountColor), [17, 24, 39]); // #111827
+        const vipRatio = getContrastRatio(parseRgb(pricingDarkMetrics.vipAmountColor), [17, 24, 39]);
+        console.log(`Dark Mode Pro Plan Price Contrast: ${proRatio.toFixed(2)}:1 (WCAG AAA >= 7:1)`);
+        console.log(`Dark Mode VIP Plan Price Contrast: ${vipRatio.toFixed(2)}:1 (WCAG AAA >= 7:1)`);
+        results.contrastChecks.push(
+          { mode: 'dark', element: 'pro-price', ratio: proRatio.toFixed(2) },
+          { mode: 'dark', element: 'vip-price', ratio: vipRatio.toFixed(2) }
+        );
+      }
+    }
+
     // Toggle to Light Mode
     await page.evaluate(() => window.PadiFixTheme.setTheme('light'));
     await page.waitForTimeout(400);
@@ -182,6 +297,15 @@ function getContrastRatio(fgRgb, bgRgb) {
     await page.screenshot({ path: regLightShot });
     results.screenshotsCaptured.push(regLightShot);
     console.log('📸 Captured register_mobile_light.png');
+
+    if (pricingGrid) {
+      await pricingGrid.scrollIntoViewIfNeeded();
+      await page.waitForTimeout(300);
+      const pricingLightShot = path.join(outDir, 'register_pricing_light.png');
+      await pricingGrid.screenshot({ path: pricingLightShot });
+      results.screenshotsCaptured.push(pricingLightShot);
+      console.log('📸 Captured register_pricing_light.png');
+    }
     results.pagesTested.push('register.html');
 
     // === 3. TESTING SEARCH PAGE ===

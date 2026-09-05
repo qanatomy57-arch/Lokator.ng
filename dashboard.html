@@ -315,23 +315,23 @@
         </div>
 
         <!-- Phase 10.12K: Provider Community Referral & Invitation Tool -->
-        <div class="dash-card-section dash-section-spaced" id="dash-referral-section" style="border-left: 4px solid #10B981; background: linear-gradient(145deg, #131A29, #0E1522); border-radius: 12px; padding: 20px; border: 1px solid rgba(255,255,255,0.08);">
+        <div class="dash-card-section dash-section-spaced dash-referral-card" id="dash-referral-section">
           <div class="dash-referral-header" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap;">
             <div style="flex: 1; min-width: 240px;">
               <div style="display: flex; align-items: center; gap: 8px;">
                 <span style="font-size: 1.2rem;">🤝</span>
-                <h2 style="margin: 0; font-size: 1.1rem; color: #FFFFFF;">Invite Fellow Artisans to PadiFix</h2>
+                <h2 style="margin: 0; font-size: 1.1rem;">Invite Fellow Artisans to PadiFix</h2>
               </div>
-              <p style="margin: 6px 0 0 0; color: #94A3B8; font-size: 0.85rem; line-height: 1.5;">
+              <p style="margin: 6px 0 0 0; font-size: 0.85rem; line-height: 1.5;">
                 Help expand verified artisan supply in your state. Share your personal invite link with plumbers, electricians, solar installers, and skilled craftsmen.
               </p>
             </div>
-            <span class="status-tag status-good" style="font-size: 0.72rem; padding: 4px 10px; border-radius: 6px; background: rgba(16,185,129,0.15); color: #34D399; border: 1px solid rgba(16,185,129,0.3); font-weight: 700; white-space: nowrap; align-self: flex-start;">COMMUNITY GROWTH</span>
+            <span class="status-tag status-good" style="font-size: 0.72rem; padding: 4px 10px; border-radius: 6px; font-weight: 700; white-space: nowrap; align-self: flex-start;">COMMUNITY GROWTH</span>
           </div>
 
           <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 12px;">
             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-              <input type="text" id="dash-referral-link" readonly title="Artisan invite and referral link" aria-label="Artisan invite and referral link" placeholder="https://padifix.vercel.app/register.html" style="flex: 1; min-width: 240px; padding: 10px 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.12); background: #0A0E17; color: #34D399; font-size: 0.85rem; font-family: monospace;" value="https://padifix.vercel.app/register.html?source=provider_referral" />
+              <input type="text" id="dash-referral-link" readonly title="Artisan invite and referral link" aria-label="Artisan invite and referral link" placeholder="https://padifix.vercel.app/register.html" style="flex: 1; min-width: 240px; padding: 10px 14px; border-radius: 8px; font-size: 0.85rem; font-family: monospace;" value="https://padifix.vercel.app/register.html?source=provider_referral" />
               <button type="button" class="btn btn-primary" id="btn-copy-ref-link" style="display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 18px; font-weight: 700; min-width: 130px;">
                 <span>📋 Copy Link</span>
               </button>
@@ -694,24 +694,24 @@
           <!-- Hero: Current Plan Summary & Lead Meter -->
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 16px; margin: 18px 0 24px 0;">
             <!-- Current Plan Card -->
-            <div style="background: #111827; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between;">
+            <div class="dash-sub-overview-card">
               <div>
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                   <span style="font-size: 12px; font-weight: 700; color: var(--dash-muted); text-transform: uppercase; letter-spacing: 0.5px;">Your PadiFix Plan</span>
                   <span id="sub-plan-pill" style="font-size: 11px; font-weight: 800; background: #00A859; color: #FFF; padding: 3px 8px; border-radius: 6px; letter-spacing: 0.5px;">PRO</span>
                 </div>
                 <div style="display: flex; align-items: baseline; gap: 8px; margin-bottom: 12px;">
-                  <h3 id="sub-plan-price" style="font-size: 1.8rem; font-weight: 800; color: #FFF; margin: 0;">₦8,000</h3>
+                  <h3 id="sub-plan-price" style="font-size: 1.8rem; font-weight: 800; margin: 0;">₦8,000</h3>
                   <span style="color: var(--dash-muted); font-size: 13px;">/ month</span>
                 </div>
-                <div style="font-size: 12.5px; color: #94A3B8; display: flex; flex-direction: column; gap: 6px;">
-                  <div>📅 <span style="color: #E2E8F0;">Billing Period:</span> <strong id="sub-period-dates">Current Month (Africa/Lagos)</strong></div>
-                  <div>🔄 <span style="color: #E2E8F0;">Renewal Date:</span> <strong id="sub-renewal-date" style="color: #34D399;">Active</strong></div>
+                <div style="font-size: 12.5px; display: flex; flex-direction: column; gap: 6px;">
+                  <div>📅 <span>Billing Period:</span> <strong id="sub-period-dates">Current Month (Africa/Lagos)</strong></div>
+                  <div>🔄 <span>Renewal Date:</span> <strong id="sub-renewal-date" style="color: #34D399;">Active</strong></div>
                   <div id="sub-cancel-notice" style="display: none; color: #F59E0B; font-size: 11.5px; font-weight: 600;">⚠️ Auto-renewal cancelled. Entitlement active until period end.</div>
                   <div id="sub-non-renewing-notice" style="display: none; color: #F59E0B; font-size: 11.5px; font-weight: 600;">⚠️ Auto-renewal cancelled. Entitlement active until period end.</div>
                 </div>
               </div>
-              <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.06); display: flex; gap: 10px; flex-wrap: wrap;">
+              <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--dash-border); display: flex; gap: 10px; flex-wrap: wrap;">
                 <a href="#plans-comparison-grid" class="btn btn-primary btn-sm" style="flex: 1; text-align: center; text-decoration: none; padding: 8px 12px; font-size: 12.5px;">Change Plan ⚡</a>
                 <button type="button" id="btn-cancel-subscription" class="btn btn-outline btn-sm" style="display: none; padding: 8px 12px; font-size: 12px; border-color: rgba(239, 68, 68, 0.4); color: #F87171;">Cancel Auto-Renewal</button>
                 <button type="button" id="sub-btn-cancel-renewal" class="btn btn-outline btn-sm" style="display: none; padding: 8px 12px; font-size: 12px; border-color: rgba(239, 68, 68, 0.4); color: #F87171;">Cancel Auto-Renewal</button>
@@ -720,7 +720,7 @@
             </div>
 
             <!-- Contact Meter / Lead Usage Card -->
-            <div id="contact-meter-card" style="background: #111827; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between;">
+            <div id="contact-meter-card" class="dash-sub-overview-card">
               <div>
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                   <span style="font-size: 12px; font-weight: 700; color: var(--dash-muted); text-transform: uppercase; letter-spacing: 0.5px;">Customer Contact Meter</span>
@@ -728,23 +728,23 @@
                 </div>
                 <div style="margin-bottom: 12px;">
                   <div style="display: flex; align-items: baseline; gap: 6px; margin-bottom: 6px;">
-                    <span id="sub-contacts-used-number" style="font-size: 1.8rem; font-weight: 800; color: #FFF;">73</span>
-                    <span style="color: var(--dash-muted); font-size: 14px;">/ <strong id="sub-contacts-total-number" style="color: #FFF;">100</strong> contacts used</span>
+                    <span id="sub-contacts-used-number" style="font-size: 1.8rem; font-weight: 800;">73</span>
+                    <span style="color: var(--dash-muted); font-size: 14px;">/ <strong id="sub-contacts-total-number">100</strong> contacts used</span>
                   </div>
-                  <div style="background: rgba(255,255,255,0.08); height: 10px; border-radius: 6px; overflow: hidden;">
+                  <div style="background: var(--dash-border); height: 10px; border-radius: 6px; overflow: hidden;">
                     <div id="sub-contacts-progress-bar" style="width: 73%; height: 100%; background: linear-gradient(90deg, #00A859, #34D399); border-radius: 6px; transition: width 0.4s ease;"></div>
                   </div>
                 </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px; color: #94A3B8;">
-                  <div style="background: rgba(255,255,255,0.03); padding: 8px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px; color: var(--dash-muted);">
+                  <div style="background: var(--dash-bg-subtle, rgba(0,0,0,0.03)); padding: 8px 10px; border-radius: 6px; border: 1px solid var(--dash-border);">
                     <span>💬 WhatsApp Inquiries:</span> <strong id="sub-count-wa" style="color: #34D399;">0</strong>
                   </div>
-                  <div style="background: rgba(255,255,255,0.03); padding: 8px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">
+                  <div style="background: var(--dash-bg-subtle, rgba(0,0,0,0.03)); padding: 8px 10px; border-radius: 6px; border: 1px solid var(--dash-border);">
                     <span>📞 Phone Calls:</span> <strong id="sub-count-call" style="color: #38BDF8;">0</strong>
                   </div>
                 </div>
               </div>
-              <div style="margin-top: 14px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.06); font-size: 11px; color: #94A3B8; display: flex; align-items: center; gap: 6px;">
+              <div style="margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--dash-border); font-size: 11px; color: var(--dash-muted); display: flex; align-items: center; gap: 6px;">
                 <span>🔒</span> <em>Zero-Inspection Privacy: PadiFix only meters contact initiation. Private chats & call audio are never stored or inspected.</em>
               </div>
             </div>
@@ -788,15 +788,15 @@
 
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px;">
               <!-- FREE PLAN -->
-              <div class="dash-sub-plan-card" id="plan-card-FREE" style="background: #111827; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 18px; display: flex; flex-direction: column; justify-content: space-between;">
+              <div class="dash-sub-plan-card" id="plan-card-FREE">
                 <div>
                   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                    <strong style="color: #FFF; font-size: 15px;">FREE</strong>
-                    <span style="font-size: 10.5px; background: rgba(255,255,255,0.1); color: #94A3B8; padding: 2px 6px; border-radius: 4px;">Starter</span>
+                    <strong style="font-size: 15px;">FREE</strong>
+                    <span style="font-size: 10.5px; background: rgba(148,163,184,0.15); color: var(--dash-muted); padding: 2px 6px; border-radius: 4px;">Starter</span>
                   </div>
-                  <div style="font-size: 1.4rem; font-weight: 800; color: #FFF; margin-bottom: 12px;">₦0 <span style="font-size: 11px; font-weight: 400; color: var(--dash-muted);">/ month</span></div>
+                  <div class="sub-plan-price" style="font-size: 1.4rem; font-weight: 800; margin-bottom: 12px;">₦0 <span style="font-size: 11px; font-weight: 400; color: var(--dash-muted);">/ month</span></div>
                   <div style="font-size: 12px; color: #34D399; font-weight: 700; margin-bottom: 10px;">5 customer contacts / month</div>
-                  <ul style="list-style: none; padding: 0; margin: 0 0 16px 0; font-size: 12px; color: #94A3B8; display: flex; flex-direction: column; gap: 6px;">
+                  <ul style="list-style: none; padding: 0; margin: 0 0 16px 0; font-size: 12px; display: flex; flex-direction: column; gap: 6px;">
                     <li>✓ Basic provider profile</li>
                     <li>✓ Standard search visibility</li>
                     <li>✓ Up to 3 skills/services</li>
@@ -811,15 +811,15 @@
               </div>
 
               <!-- BASIC PLAN -->
-              <div class="dash-sub-plan-card" id="plan-card-BASIC" style="background: #111827; border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 10px; padding: 18px; display: flex; flex-direction: column; justify-content: space-between;">
+              <div class="dash-sub-plan-card" id="plan-card-BASIC">
                 <div>
                   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                    <strong style="color: #38BDF8; font-size: 15px;">BASIC</strong>
-                    <span style="font-size: 10.5px; background: rgba(56, 189, 248, 0.15); color: #38BDF8; padding: 2px 6px; border-radius: 4px;">Growth</span>
+                    <strong style="color: #0284C7; font-size: 15px;">BASIC</strong>
+                    <span style="font-size: 10.5px; background: rgba(56, 189, 248, 0.15); color: #0284C7; padding: 2px 6px; border-radius: 4px;">Growth</span>
                   </div>
-                  <div style="font-size: 1.4rem; font-weight: 800; color: #FFF; margin-bottom: 12px;">₦3,500 <span style="font-size: 11px; font-weight: 400; color: var(--dash-muted);">/ month</span></div>
-                  <div style="font-size: 12px; color: #38BDF8; font-weight: 700; margin-bottom: 10px;">30 customer contacts / month</div>
-                  <ul style="list-style: none; padding: 0; margin: 0 0 16px 0; font-size: 12px; color: #94A3B8; display: flex; flex-direction: column; gap: 6px;">
+                  <div class="sub-plan-price" style="font-size: 1.4rem; font-weight: 800; margin-bottom: 12px;">₦3,500 <span style="font-size: 11px; font-weight: 400; color: var(--dash-muted);">/ month</span></div>
+                  <div style="font-size: 12px; color: #0284C7; font-weight: 700; margin-bottom: 10px;">30 customer contacts / month</div>
+                  <ul style="list-style: none; padding: 0; margin: 0 0 16px 0; font-size: 12px; display: flex; flex-direction: column; gap: 6px;">
                     <li>✓ Everything in Free</li>
                     <li>✓ Up to 10 skills/services</li>
                     <li>✓ Up to 15 photos + 1 video</li>
@@ -835,18 +835,18 @@
               </div>
 
               <!-- PRO PLAN (MOST POPULAR) -->
-              <div class="dash-sub-plan-card" id="plan-card-PRO" style="background: linear-gradient(180deg, rgba(0, 168, 89, 0.1) 0%, #111827 100%); border: 2px solid #00A859; border-radius: 10px; padding: 18px; display: flex; flex-direction: column; justify-content: space-between; position: relative;">
+              <div class="dash-sub-plan-card" id="plan-card-PRO" style="position: relative;">
                 <div style="position: absolute; top: -11px; right: 12px; background: #00A859; color: #FFF; font-size: 9.5px; font-weight: 800; padding: 2px 8px; border-radius: 12px; letter-spacing: 0.5px;">
                   MOST POPULAR
                 </div>
                 <div>
                   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                    <strong style="color: #34D399; font-size: 15px;">PRO</strong>
-                    <span style="font-size: 10.5px; background: rgba(0, 168, 89, 0.2); color: #34D399; padding: 2px 6px; border-radius: 4px;">Recommended</span>
+                    <strong style="color: #00A859; font-size: 15px;">PRO</strong>
+                    <span style="font-size: 10.5px; background: rgba(0, 168, 89, 0.15); color: #00A859; padding: 2px 6px; border-radius: 4px;">Recommended</span>
                   </div>
-                  <div style="font-size: 1.4rem; font-weight: 800; color: #FFF; margin-bottom: 12px;">₦8,000 <span style="font-size: 11px; font-weight: 400; color: var(--dash-muted);">/ month</span></div>
-                  <div style="font-size: 12px; color: #34D399; font-weight: 700; margin-bottom: 10px;">100 customer contacts / month</div>
-                  <ul style="list-style: none; padding: 0; margin: 0 0 16px 0; font-size: 12px; color: #CBD5E1; display: flex; flex-direction: column; gap: 6px;">
+                  <div class="sub-plan-price" style="font-size: 1.4rem; font-weight: 800; margin-bottom: 12px;">₦8,000 <span style="font-size: 11px; font-weight: 400; color: var(--dash-muted);">/ month</span></div>
+                  <div style="font-size: 12px; color: #00A859; font-weight: 700; margin-bottom: 10px;">100 customer contacts / month</div>
+                  <ul style="list-style: none; padding: 0; margin: 0 0 16px 0; font-size: 12px; display: flex; flex-direction: column; gap: 6px;">
                     <li>✓ Everything in Basic</li>
                     <li>✓ Up to 25 skills/services</li>
                     <li>✓ Up to 30 photos + 3 videos</li>
@@ -862,15 +862,15 @@
               </div>
 
               <!-- PREMIUM PLAN -->
-              <div class="dash-sub-plan-card" id="plan-card-PREMIUM" style="background: #111827; border: 1px solid rgba(245, 158, 11, 0.4); border-radius: 10px; padding: 18px; display: flex; flex-direction: column; justify-content: space-between;">
+              <div class="dash-sub-plan-card" id="plan-card-PREMIUM">
                 <div>
                   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                    <strong style="color: #FBBF24; font-size: 15px;">PREMIUM</strong>
-                    <span style="font-size: 10.5px; background: rgba(245, 158, 11, 0.15); color: #FBBF24; padding: 2px 6px; border-radius: 4px;">VIP</span>
+                    <strong style="color: #D97706; font-size: 15px;">PREMIUM</strong>
+                    <span style="font-size: 10.5px; background: rgba(245, 158, 11, 0.15); color: #D97706; padding: 2px 6px; border-radius: 4px;">VIP</span>
                   </div>
-                  <div style="font-size: 1.4rem; font-weight: 800; color: #FFF; margin-bottom: 12px;">₦15,000 <span style="font-size: 11px; font-weight: 400; color: var(--dash-muted);">/ month</span></div>
-                  <div style="font-size: 12px; color: #FBBF24; font-weight: 700; margin-bottom: 10px;">Unlimited contacts (fair use)</div>
-                  <ul style="list-style: none; padding: 0; margin: 0 0 16px 0; font-size: 12px; color: #94A3B8; display: flex; flex-direction: column; gap: 6px;">
+                  <div class="sub-plan-price" style="font-size: 1.4rem; font-weight: 800; margin-bottom: 12px;">₦15,000 <span style="font-size: 11px; font-weight: 400; color: var(--dash-muted);">/ month</span></div>
+                  <div style="font-size: 12px; color: #D97706; font-weight: 700; margin-bottom: 10px;">Unlimited contacts (fair use)</div>
+                  <ul style="list-style: none; padding: 0; margin: 0 0 16px 0; font-size: 12px; display: flex; flex-direction: column; gap: 6px;">
                     <li>✓ Everything in Pro</li>
                     <li>✓ Unlimited skills/services</li>
                     <li>✓ Unlimited photos</li>
@@ -880,7 +880,7 @@
                     <li>✓ Dedicated VIP support</li>
                   </ul>
                 </div>
-                <button type="button" class="btn btn-outline btn-sm btn-select-plan" data-plan="PREMIUM" style="width: 100%; font-size: 12px; padding: 8px; border-color: #F59E0B; color: #FBBF24;">
+                <button type="button" class="btn btn-outline btn-sm btn-select-plan" data-plan="PREMIUM" style="width: 100%; font-size: 12px; padding: 8px; border-color: #F59E0B; color: #D97706;">
                   Upgrade to Premium
                 </button>
               </div>
@@ -893,9 +893,9 @@
               <span>🧾</span> Billing & Payment History
             </h4>
             <div style="overflow-x: auto;">
-              <table style="width: 100%; border-collapse: collapse; font-size: 12.5px; text-align: left; color: #334155;">
+              <table class="dash-billing-table">
                 <thead>
-                  <tr style="border-bottom: 1.5px solid var(--dash-border); color: #0F172A; font-weight: 700;">
+                  <tr>
                     <th style="padding: 8px 10px;">Date</th>
                     <th style="padding: 8px 10px;">Description</th>
                     <th style="padding: 8px 10px;">Amount</th>
@@ -929,34 +929,34 @@
           </div>
 
           <!-- Status Breakdown Card -->
-          <div style="background: #F8FAFC; border: 1.5px solid var(--dash-border); border-radius: 12px; padding: 20px; margin-bottom: 24px;">
-            <h3 style="font-size: 16px; font-weight: 800; margin-bottom: 12px; color: var(--dash-text, #0F172A);">Platform Trust Model</h3>
+          <div class="dash-trust-model-section">
+            <h3 style="font-size: 16px; font-weight: 800; margin-bottom: 12px;">Platform Trust Model</h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;">
-              <div style="background: #111827; padding: 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06);">
+              <div class="dash-trust-pill-card">
                 <div style="font-size: 12px; font-weight: 700; color: var(--dash-muted); text-transform: uppercase; margin-bottom: 4px;">Provider-Supplied Info</div>
-                <div style="font-size: 13.5px; color: #fff; font-weight: 600;">Self-Reported by You</div>
-                <p style="font-size: 12px; color: var(--dash-muted); margin-top: 4px;">Your name, trade skills, experience, portfolio, and pricing estimates.</p>
+                <div class="trust-pill-title" style="font-size: 13.5px; font-weight: 600;">Self-Reported by You</div>
+                <p style="font-size: 12px; margin-top: 4px;">Your name, trade skills, experience, portfolio, and pricing estimates.</p>
               </div>
-              <div style="background: #111827; padding: 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06);">
+              <div class="dash-trust-pill-card">
                 <div style="font-size: 12px; font-weight: 700; color: var(--dash-muted); text-transform: uppercase; margin-bottom: 4px;">Platform-Verified Status</div>
                 <div style="font-size: 13.5px; color: var(--dash-green); font-weight: 600;" id="dash-ver-status-text">Unverified</div>
-                <p style="font-size: 12px; color: var(--dash-muted); margin-top: 4px;">Official document/NIN review by PadiFix moderation team.</p>
+                <p style="font-size: 12px; margin-top: 4px;">Official document/NIN review by PadiFix moderation team.</p>
               </div>
-              <div style="background: #111827; padding: 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06);">
+              <div class="dash-trust-pill-card">
                 <div style="font-size: 12px; font-weight: 700; color: var(--dash-muted); text-transform: uppercase; margin-bottom: 4px;">Customer Feedback</div>
                 <div style="font-size: 13.5px; color: var(--gold); font-weight: 600;" id="dash-feedback-summary">0 Customer Reviews</div>
-                <p style="font-size: 12px; color: var(--dash-muted); margin-top: 4px;">Ratings submitted directly by clients you have served.</p>
+                <p style="font-size: 12px; margin-top: 4px;">Ratings submitted directly by clients you have served.</p>
               </div>
             </div>
           </div>
 
           <!-- Request Verification Card -->
-          <div style="background: #F0FDF4; border: 1.5px solid #BBF7D0; border-radius: 12px; padding: 22px;">
-            <h3 style="font-size: 16px; font-weight: 800; margin-bottom: 8px; color: #0F172A; display: flex; align-items: center; gap: 8px;">
+          <div class="dash-ver-card">
+            <h3 style="font-size: 16px; font-weight: 800; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00A859" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
               Request Credential Verification
             </h3>
-            <p style="font-size: 13px; color: #334155; margin-bottom: 16px;">
+            <p style="font-size: 13px; margin-bottom: 16px;">
               Get an official verified trust badge on your public profile. Submit your identification details for review by PadiFix compliance officers.
             </p>
 
@@ -983,19 +983,19 @@
               </p>
             </div>
 
-            <div id="dash-ver-rejected-notice" style="display: none; background: #FEF2F2; border: 1.5px solid #FECACA; border-radius: 10px; padding: 14px 18px; margin-bottom: 16px;">
-              <div style="font-weight: 800; color: #B91C1C; font-size: 14px; margin-bottom: 4px;">⚠️ Verification Needs Resubmission</div>
-              <p style="font-size: 13px; color: #991B1B; margin: 0 0 8px 0; line-height: 1.4;" id="dash-ver-rejected-text">
+            <div id="dash-ver-rejected-notice" class="callout-red" style="display: none; margin-bottom: 16px;">
+              <div style="font-weight: 800; font-size: 14px; margin-bottom: 4px;">⚠️ Verification Needs Resubmission</div>
+              <p style="font-size: 13px; margin: 0 0 8px 0; line-height: 1.4;" id="dash-ver-rejected-text">
                 Your prior verification documents could not be validated. Please double-check your credentials and resubmit for compliance review.
               </p>
-              <button type="button" id="btn-resubmit-verification" class="btn btn-outline" style="padding: 4px 10px; font-size: 12px; border-color: #B91C1C; color: #B91C1C; font-weight: 700;">
+              <button type="button" id="btn-resubmit-verification" class="btn btn-outline" style="padding: 4px 10px; font-size: 12px; border-color: currentColor; color: inherit; font-weight: 700;">
                 Resubmit Documents
               </button>
             </div>
 
-            <div id="dash-ver-unavailable-notice" style="display: none; background: #F8FAFC; border: 1.5px solid #CBD5E1; border-radius: 10px; padding: 14px 18px; margin-bottom: 16px;">
-              <div style="font-weight: 800; color: #334155; font-size: 14px; margin-bottom: 4px;">ℹ️ Verification Processing Notice</div>
-              <p style="font-size: 13px; color: #475569; margin: 0; line-height: 1.4;" id="dash-ver-unavailable-text">
+            <div id="dash-ver-unavailable-notice" class="callout-blue" style="display: none; margin-bottom: 16px;">
+              <div style="font-weight: 800; font-size: 14px; margin-bottom: 4px;">ℹ️ Verification Processing Notice</div>
+              <p style="font-size: 13px; margin: 0; line-height: 1.4;" id="dash-ver-unavailable-text">
                 Automated identity checks are currently undergoing scheduled maintenance. Your request will be reviewed manually by PadiFix compliance officers.
               </p>
             </div>
@@ -1004,7 +1004,7 @@
               <div class="dash-form-grid" style="gap: 16px;">
                 <div class="form-group">
                   <label for="ver-doc-type">Identification Type *</label>
-                  <select id="ver-doc-type" class="filter-select" required style="width: 100%; background: #111827; border: 1px solid var(--dash-border); color: #fff; padding: 10px; border-radius: 8px;">
+                  <select id="ver-doc-type" class="filter-select dash-theme-input" required style="width: 100%; padding: 10px; border-radius: 8px;">
                     <option value="vnin" selected>Virtual NIN (vNIN - 16 characters)</option>
                     <option value="cac_cert">CAC Business Registration (RC / BN)</option>
                     <option value="drivers_license">FRSC Driver's License</option>
@@ -1013,8 +1013,8 @@
                 </div>
                 <div class="form-group">
                   <label for="ver-doc-ref" id="ver-doc-ref-label">16-Character Virtual NIN (vNIN) *</label>
-                  <input type="text" id="ver-doc-ref" required placeholder="e.g. AB12345678901234" style="width: 100%; background: #111827; border: 1px solid var(--dash-border); color: #fff; padding: 10px; border-radius: 8px;" />
-                  <div id="ver-doc-ref-preview" style="font-size: 11.5px; color: #94A3B8; margin-top: 4px;">Masked Storage: <code id="ver-preview-code">vNIN: ****</code></div>
+                  <input type="text" id="ver-doc-ref" class="dash-theme-input" required placeholder="e.g. AB12345678901234" style="width: 100%; padding: 10px; border-radius: 8px;" />
+                  <div id="ver-doc-ref-preview" style="font-size: 11.5px; color: var(--dash-muted); margin-top: 4px;">Masked Storage: <code id="ver-preview-code">vNIN: ****</code></div>
                 </div>
               </div>
               <div style="margin-top: 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
@@ -1025,7 +1025,7 @@
 
             <!-- Verification History Section -->
             <div id="dash-ver-history-section" style="margin-top: 20px; border-top: 1px solid var(--dash-border); padding-top: 16px;">
-              <h4 style="font-size: 15px; font-weight: 800; color: var(--dash-text, #0F172A); margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+              <h4 style="font-size: 15px; font-weight: 800; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
                 <span>📋</span> Verification Request History
               </h4>
               <div id="ver-history-list" style="font-size: 12.5px; color: var(--dash-muted);">
@@ -1035,13 +1035,13 @@
           </div>
 
           <!-- Phase 10.13B: Monetization Architecture & Provider Willingness-to-Pay Research -->
-          <div id="dash-monetization-research-section" style="margin-top: 24px; background: #F8FAFC; border: 1.5px solid var(--dash-border); border-radius: 12px; padding: 22px;">
+          <div id="dash-monetization-research-section" class="dash-mon-research-card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
               <div>
-                <h3 style="font-size: 16px; font-weight: 800; color: var(--dash-text, #0F172A); display: flex; align-items: center; gap: 8px; margin: 0;">
+                <h3 style="font-size: 16px; font-weight: 800; display: flex; align-items: center; gap: 8px; margin: 0;">
                   <span>🚀</span> Future Growth Opportunities & Artisan Tools (Willingness-to-Pay Research)
                 </h3>
-                <p style="font-size: 12.5px; color: var(--dash-muted); margin: 4px 0 0 0;">
+                <p style="font-size: 12.5px; margin: 4px 0 0 0;">
                   Evaluate upcoming premium tools designed to expand your client reach. All current marketplace features remain <strong>100% Free Forever</strong>.
                 </p>
               </div>
@@ -1060,132 +1060,132 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(310px, 1fr)); gap: 16px; margin-bottom: 16px;">
               
               <!-- Product 1: Verified Trust Assurance -->
-              <div class="dash-mon-card" style="background: #111827; border: 1px solid rgba(255,255,255,0.07); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between;">
+              <div class="dash-mon-card">
                 <div>
                   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                    <span style="font-weight: 700; color: #34D399; font-size: 14px;">🛡️ Verified Trust Assurance</span>
-                    <span style="font-size: 11px; color: #94A3B8; background: #1E293B; padding: 2px 6px; border-radius: 4px;">Priority #1</span>
+                    <span style="font-weight: 700; color: #00A859; font-size: 14px;">🛡️ Verified Trust Assurance</span>
+                    <span style="font-size: 11px; color: var(--dash-muted); background: var(--dash-muted-bg, rgba(0,0,0,0.05)); padding: 2px 6px; border-radius: 4px;">Priority #1</span>
                   </div>
-                  <p style="font-size: 12px; color: #94A3B8; line-height: 1.4; margin-bottom: 10px;">
+                  <p style="font-size: 12px; line-height: 1.4; margin-bottom: 10px;">
                     <strong>Problem:</strong> Homeowners hesitate to hire unfamiliar artisans without identity proof.<br>
                     <strong>Value:</strong> Expedited document vetting (NIN/CAC) by compliance officer with official verified badge (+31.5% contact conversion).
                   </p>
-                  <div style="font-size: 11px; color: #FBBF24; background: rgba(245,158,11,0.1); border-left: 3px solid #F59E0B; padding: 6px 8px; border-radius: 4px; margin-bottom: 12px;">
+                  <div style="font-size: 11px; color: #B45309; background: rgba(245,158,11,0.1); border-left: 3px solid #F59E0B; padding: 6px 8px; border-radius: 4px; margin-bottom: 12px;">
                     ⚠️ <em>Important: Paying for verification audit review does NOT guarantee approval. All applicants must meet strict vetting criteria.</em>
                   </div>
 
                   <!-- Price Hypothesis Selection -->
                   <div style="margin-bottom: 12px;">
-                    <label style="display: block; font-size: 11.5px; color: #CBD5E1; margin-bottom: 4px; font-weight: 600;">Research Price Hypothesis:</label>
-                    <select class="mon-price-select" data-product="TRUST_VERIFICATION" title="Research price hypothesis for Trust Verification" aria-label="Research price hypothesis for Trust Verification" style="width: 100%; background: #1E293B; border: 1px solid rgba(255,255,255,0.12); color: #F8FAFC; border-radius: 6px; padding: 6px 10px; font-size: 12px;">
+                    <label class="mon-price-hypothesis-label" style="display: block; font-size: 11.5px; margin-bottom: 4px; font-weight: 600;">Research Price Hypothesis:</label>
+                    <select class="mon-price-select" data-product="TRUST_VERIFICATION" title="Research price hypothesis for Trust Verification" aria-label="Research price hypothesis for Trust Verification" style="width: 100%; border-radius: 6px; padding: 6px 10px; font-size: 12px;">
                       <option value="₦3,000 one-time review" data-amount="3000">₦3,000 one-time review (Discounted)</option>
                       <option value="₦5,000 one-time review" data-amount="5000" selected>₦5,000 one-time review (Baseline)</option>
                       <option value="₦10,000 one-time review" data-amount="10000">₦10,000 one-time review (Express Audit)</option>
                     </select>
-                    <span style="font-size: 10.5px; color: #64748B; display: block; margin-top: 3px;">* Research price — not currently available for purchase.</span>
+                    <span style="font-size: 10.5px; color: var(--dash-muted); display: block; margin-top: 3px;">* Research price — not currently available for purchase.</span>
                   </div>
                 </div>
 
-                <div style="margin-top: 8px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.06); display: flex; flex-direction: column; gap: 6px;">
+                <div style="margin-top: 8px; padding-top: 10px; border-top: 1px solid var(--dash-border); display: flex; flex-direction: column; gap: 6px;">
                   <div style="display: flex; gap: 8px;">
-                    <button type="button" class="btn btn-outline btn-mon-interest" data-product="TRUST_VERIFICATION" style="flex: 1; font-size: 11px; padding: 6px 8px; border-color: rgba(255,255,255,0.2); color: #E2E8F0;">Express Interest</button>
-                    <button type="button" class="btn btn-mon-intent" data-product="TRUST_VERIFICATION" style="flex: 1.2; font-size: 11px; padding: 6px 8px; background: rgba(52, 211, 153, 0.15); border: 1px solid #34D399; color: #34D399; font-weight: 600;">Confirm Intent</button>
+                    <button type="button" class="btn btn-outline btn-mon-interest" data-product="TRUST_VERIFICATION" style="flex: 1; font-size: 11px; padding: 6px 8px;">Express Interest</button>
+                    <button type="button" class="btn btn-mon-intent" data-product="TRUST_VERIFICATION" style="flex: 1.2; font-size: 11px; padding: 6px 8px; background: rgba(0, 168, 89, 0.15); border: 1px solid #00A859; color: #00A859; font-weight: 600;">Confirm Intent</button>
                   </div>
-                  <button type="button" class="btn btn-outline btn-mon-waitlist" data-product="TRUST_VERIFICATION" style="width: 100%; font-size: 11px; padding: 5px 8px; border-color: rgba(255,255,255,0.1); color: #94A3B8;">Notify Me When Available</button>
+                  <button type="button" class="btn btn-outline btn-mon-waitlist" data-product="TRUST_VERIFICATION" style="width: 100%; font-size: 11px; padding: 5px 8px;">Notify Me When Available</button>
                 </div>
               </div>
 
               <!-- Product 2: Promoted Discovery Placement (First Pilot Candidate) -->
-              <div class="dash-mon-card" style="background: #111827; border: 1.5px solid rgba(56, 189, 248, 0.4); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; position: relative;">
+              <div class="dash-mon-card" style="border: 1.5px solid rgba(56, 189, 248, 0.5); position: relative;">
                 <div>
                   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                    <span style="font-weight: 700; color: #38BDF8; font-size: 14px;">⚡ Promoted Category Placement</span>
-                    <span style="font-size: 10.5px; color: #38BDF8; background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); padding: 2px 6px; border-radius: 4px; font-weight: 700;">First Pilot Candidate</span>
+                    <span style="font-weight: 700; color: #0284C7; font-size: 14px;">⚡ Promoted Category Placement</span>
+                    <span style="font-size: 10.5px; color: #0284C7; background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); padding: 2px 6px; border-radius: 4px; font-weight: 700;">First Pilot Candidate</span>
                   </div>
-                  <p style="font-size: 12px; color: #94A3B8; line-height: 1.4; margin-bottom: 10px;">
+                  <p style="font-size: 12px; line-height: 1.4; margin-bottom: 10px;">
                     <strong>Problem:</strong> Highly competitive cities make it difficult for skilled artisans to stand out.<br>
                     <strong>Value:</strong> Prominent sponsored card at top of LGA searches with clear "Sponsored" tag and weekly discovery insights.
                   </p>
-                  <div style="font-size: 11px; color: #94A3B8; background: #1E293B; padding: 6px 8px; border-radius: 4px; margin-bottom: 12px;">
+                  <div style="font-size: 11px; color: var(--dash-muted); background: var(--dash-muted-bg, rgba(0,0,0,0.05)); padding: 6px 8px; border-radius: 4px; margin-bottom: 12px;">
                     💡 <em>Transparent search placement that preserves fair organic relevance for all artisans without hiding organic listings.</em>
                   </div>
 
                   <!-- Price Hypothesis Selection -->
                   <div style="margin-bottom: 12px;">
-                    <label style="display: block; font-size: 11.5px; color: #CBD5E1; margin-bottom: 4px; font-weight: 600;">Research Price Hypothesis:</label>
-                    <select class="mon-price-select" data-product="PROMOTED_DISCOVERY" title="Research price hypothesis for Promoted Category Placement" aria-label="Research price hypothesis for Promoted Category Placement" style="width: 100%; background: #1E293B; border: 1px solid rgba(255,255,255,0.12); color: #F8FAFC; border-radius: 6px; padding: 6px 10px; font-size: 12px;">
+                    <label class="mon-price-hypothesis-label" style="display: block; font-size: 11.5px; margin-bottom: 4px; font-weight: 600;">Research Price Hypothesis:</label>
+                    <select class="mon-price-select" data-product="PROMOTED_DISCOVERY" title="Research price hypothesis for Promoted Category Placement" aria-label="Research price hypothesis for Promoted Category Placement" style="width: 100%; border-radius: 6px; padding: 6px 10px; font-size: 12px;">
                       <option value="₦2,000 / month" data-amount="2000">₦2,000 / month (Starter)</option>
                       <option value="₦3,500 / month" data-amount="3500" selected>₦3,500 / month (Baseline)</option>
                       <option value="₦7,500 / month" data-amount="7500">₦7,500 / month (Priority Tier)</option>
                     </select>
-                    <span style="font-size: 10.5px; color: #64748B; display: block; margin-top: 3px;">* Research price — not currently available for purchase.</span>
+                    <span style="font-size: 10.5px; color: var(--dash-muted); display: block; margin-top: 3px;">* Research price — not currently available for purchase.</span>
                   </div>
                 </div>
 
-                <div style="margin-top: 8px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.06); display: flex; flex-direction: column; gap: 6px;">
+                <div style="margin-top: 8px; padding-top: 10px; border-top: 1px solid var(--dash-border); display: flex; flex-direction: column; gap: 6px;">
                   <button type="button" class="btn btn-primary" id="btn-start-paystack-pilot" style="width: 100%; font-size: 11.5px; padding: 7px 10px; background: #0284C7; color: #FFFFFF; font-weight: 700; border: none; border-radius: 4px; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer;">
                     <span>⚡ Launch 14-Day Pilot (₦2,000)</span>
                     <span style="font-size: 9.5px; background: rgba(255,255,255,0.2); padding: 1px 4px; border-radius: 3px;">Test Mode</span>
                   </button>
                   <div style="display: flex; gap: 8px;">
-                    <button type="button" class="btn btn-outline btn-mon-interest" data-product="PROMOTED_DISCOVERY" style="flex: 1; font-size: 11px; padding: 6px 8px; border-color: rgba(255,255,255,0.2); color: #E2E8F0;">Express Interest</button>
-                    <button type="button" class="btn btn-mon-intent" data-product="PROMOTED_DISCOVERY" style="flex: 1.2; font-size: 11px; padding: 6px 8px; background: rgba(56, 189, 248, 0.15); border: 1px solid #38BDF8; color: #38BDF8; font-weight: 600;">Confirm Intent</button>
+                    <button type="button" class="btn btn-outline btn-mon-interest" data-product="PROMOTED_DISCOVERY" style="flex: 1; font-size: 11px; padding: 6px 8px;">Express Interest</button>
+                    <button type="button" class="btn btn-mon-intent" data-product="PROMOTED_DISCOVERY" style="flex: 1.2; font-size: 11px; padding: 6px 8px; background: rgba(56, 189, 248, 0.15); border: 1px solid #38BDF8; color: #0284C7; font-weight: 600;">Confirm Intent</button>
                   </div>
-                  <button type="button" class="btn btn-outline btn-mon-waitlist" data-product="PROMOTED_DISCOVERY" style="width: 100%; font-size: 11px; padding: 5px 8px; border-color: rgba(255,255,255,0.1); color: #94A3B8;">Notify Me When Available</button>
-                  <div id="dash-active-promo-banner" style="display: none; margin-top: 6px; padding: 6px 10px; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 4px; font-size: 11px; color: #34D399; font-weight: 600; text-align: center;">
+                  <button type="button" class="btn btn-outline btn-mon-waitlist" data-product="PROMOTED_DISCOVERY" style="width: 100%; font-size: 11px; padding: 5px 8px;">Notify Me When Available</button>
+                  <div id="dash-active-promo-banner" style="display: none; margin-top: 6px; padding: 6px 10px; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 4px; font-size: 11px; color: #00A859; font-weight: 600; text-align: center;">
                     ⚡ Promoted Listing Active on Search
                   </div>
                 </div>
               </div>
 
               <!-- Product 3: Qualified Contact Routing -->
-              <div class="dash-mon-card" style="background: #111827; border: 1px solid rgba(255,255,255,0.07); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between;">
+              <div class="dash-mon-card">
                 <div>
                   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                    <span style="font-weight: 700; color: #F59E0B; font-size: 14px;">🎯 Priority Lead Dispatch</span>
-                    <span style="font-size: 11px; color: #94A3B8; background: #1E293B; padding: 2px 6px; border-radius: 4px;">Priority #3</span>
+                    <span style="font-weight: 700; color: #D97706; font-size: 14px;">🎯 Priority Lead Dispatch</span>
+                    <span style="font-size: 11px; color: var(--dash-muted); background: var(--dash-muted-bg, rgba(0,0,0,0.05)); padding: 2px 6px; border-radius: 4px;">Priority #3</span>
                   </div>
-                  <p style="font-size: 12px; color: #94A3B8; line-height: 1.4; margin-bottom: 10px;">
+                  <p style="font-size: 12px; line-height: 1.4; margin-bottom: 10px;">
                     <strong>Problem:</strong> Missing urgent repair callouts because of irregular phone check-ins.<br>
                     <strong>Value:</strong> Instant SMS / WhatsApp dispatch for verified repair requests submitted in your LGA matching your trade.
                   </p>
-                  <div style="font-size: 11px; color: #94A3B8; background: #1E293B; padding: 6px 8px; border-radius: 4px; margin-bottom: 12px;">
+                  <div style="font-size: 11px; color: var(--dash-muted); background: var(--dash-muted-bg, rgba(0,0,0,0.05)); padding: 6px 8px; border-radius: 4px; margin-bottom: 12px;">
                     📱 <em>Important: Contact action is not a confirmed job. Only verified direct repair requests qualify.</em>
                   </div>
 
                   <!-- Price Hypothesis Selection -->
                   <div style="margin-bottom: 12px;">
-                    <label style="display: block; font-size: 11.5px; color: #CBD5E1; margin-bottom: 4px; font-weight: 600;">Research Price Hypothesis:</label>
-                    <select class="mon-price-select" data-product="QUALIFIED_LEAD_ACCESS" title="Research price hypothesis for Priority Lead Dispatch" aria-label="Research price hypothesis for Priority Lead Dispatch" style="width: 100%; background: #1E293B; border: 1px solid rgba(255,255,255,0.12); color: #F8FAFC; border-radius: 6px; padding: 6px 10px; font-size: 12px;">
+                    <label class="mon-price-hypothesis-label" style="display: block; font-size: 11.5px; margin-bottom: 4px; font-weight: 600;">Research Price Hypothesis:</label>
+                    <select class="mon-price-select" data-product="QUALIFIED_LEAD_ACCESS" title="Research price hypothesis for Priority Lead Dispatch" aria-label="Research price hypothesis for Priority Lead Dispatch" style="width: 100%; border-radius: 6px; padding: 6px 10px; font-size: 12px;">
                       <option value="₦500 / qualified request" data-amount="500" selected>₦500 / qualified request (Pay-per-lead)</option>
                       <option value="₦1,000 / qualified request" data-amount="1000">₦1,000 / qualified request (Priority dispatch)</option>
                       <option value="₦5,000 / monthly bucket (10 leads)" data-amount="5000">₦5,000 / monthly bucket (10 leads)</option>
                     </select>
-                    <span style="font-size: 10.5px; color: #64748B; display: block; margin-top: 3px;">* Research price — not currently available for purchase.</span>
+                    <span style="font-size: 10.5px; color: var(--dash-muted); display: block; margin-top: 3px;">* Research price — not currently available for purchase.</span>
                   </div>
                 </div>
 
-                <div style="margin-top: 8px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.06); display: flex; flex-direction: column; gap: 6px;">
+                <div style="margin-top: 8px; padding-top: 10px; border-top: 1px solid var(--dash-border); display: flex; flex-direction: column; gap: 6px;">
                   <div style="display: flex; gap: 8px;">
-                    <button type="button" class="btn btn-outline btn-mon-interest" data-product="QUALIFIED_LEAD_ACCESS" style="flex: 1; font-size: 11px; padding: 6px 8px; border-color: rgba(255,255,255,0.2); color: #E2E8F0;">Express Interest</button>
-                    <button type="button" class="btn btn-mon-intent" data-product="QUALIFIED_LEAD_ACCESS" style="flex: 1.2; font-size: 11px; padding: 6px 8px; background: rgba(245, 158, 11, 0.15); border: 1px solid #F59E0B; color: #F59E0B; font-weight: 600;">Confirm Intent</button>
+                    <button type="button" class="btn btn-outline btn-mon-interest" data-product="QUALIFIED_LEAD_ACCESS" style="flex: 1; font-size: 11px; padding: 6px 8px;">Express Interest</button>
+                    <button type="button" class="btn btn-mon-intent" data-product="QUALIFIED_LEAD_ACCESS" style="flex: 1.2; font-size: 11px; padding: 6px 8px; background: rgba(245, 158, 11, 0.15); border: 1px solid #F59E0B; color: #D97706; font-weight: 600;">Confirm Intent</button>
                   </div>
-                  <button type="button" class="btn btn-outline btn-mon-waitlist" data-product="QUALIFIED_LEAD_ACCESS" style="width: 100%; font-size: 11px; padding: 5px 8px; border-color: rgba(255,255,255,0.1); color: #94A3B8;">Notify Me When Available</button>
+                  <button type="button" class="btn btn-outline btn-mon-waitlist" data-product="QUALIFIED_LEAD_ACCESS" style="width: 100%; font-size: 11px; padding: 5px 8px;">Notify Me When Available</button>
                 </div>
               </div>
 
             </div>
 
             <!-- Structured Research Feedback Section -->
-            <div id="dash-mon-feedback-box" style="margin-top: 14px; background: #FFFFFF; border: 1.5px dashed #CBD5E1; border-radius: 10px; padding: 16px 18px;">
+            <div id="dash-mon-feedback-box" class="dash-mon-feedback-box">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
-                <label style="font-size: 13px; font-weight: 700; color: #0F172A;">
+                <label style="font-size: 13px; font-weight: 700;">
                   💡 Why are you interested in these future artisan tools? (Optional Feedback)
                 </label>
-                <span style="font-size: 12px; color: #64748B;">Helps shape product development</span>
+                <span style="font-size: 12px; color: var(--dash-muted);">Helps shape product development</span>
               </div>
               <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                <select id="mon-feedback-reason-select" title="Artisan tool interest feedback reason" aria-label="Artisan tool interest feedback reason" style="flex: 1; min-width: 200px; background: #FFFFFF; border: 1.5px solid #CBD5E1; color: #0F172A; border-radius: 6px; padding: 8px 10px; font-size: 12.5px; font-weight: 500;">
+                <select id="mon-feedback-reason-select" title="Artisan tool interest feedback reason" aria-label="Artisan tool interest feedback reason" style="flex: 1; min-width: 200px; border-radius: 6px; padding: 8px 10px; font-size: 12.5px; font-weight: 500;">
                   <option value="More trust & credibility">More trust & credibility with clients</option>
                   <option value="More local visibility">More visibility in local searches</option>
                   <option value="More direct inquiries">More direct client calls & WhatsApps</option>
@@ -1226,11 +1226,11 @@
 
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 16px;">
             <!-- Invite Link Box -->
-            <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 16px;">
-              <label for="dash-referral-code-input" style="font-size: 12px; color: #94A3B8; display: block; margin-bottom: 6px;">Your Unique Artisan Referral Code</label>
+            <div class="dash-sub-box">
+              <label for="dash-referral-code-input" style="font-size: 12px; display: block; margin-bottom: 6px;">Your Unique Artisan Referral Code</label>
               <div style="display: flex; gap: 8px; margin-bottom: 12px;">
-                <input type="text" id="dash-referral-code-input" name="referral_code" aria-label="Your Unique Artisan Referral Code" title="Your Unique Artisan Referral Code" placeholder="Referral Code" readonly value="LOK-ARTISAN-401" style="flex: 1; font-family: monospace; font-weight: 700; background: #1E293B; border: 1px solid rgba(255,255,255,0.15); color: #F59E0B; border-radius: 6px; padding: 8px 12px; font-size: 14px;" />
-                <button type="button" class="btn btn-outline" id="btn-copy-referral-link" style="padding: 8px 14px; font-size: 12px; border-color: rgba(255,255,255,0.2);">
+                <input type="text" id="dash-referral-code-input" name="referral_code" aria-label="Your Unique Artisan Referral Code" title="Your Unique Artisan Referral Code" placeholder="Referral Code" readonly value="LOK-ARTISAN-401" class="dash-theme-input" style="flex: 1; font-family: monospace; font-weight: 700; color: #F59E0B; border-radius: 6px; padding: 8px 12px; font-size: 14px;" />
+                <button type="button" class="btn btn-outline" id="btn-copy-referral-link" style="padding: 8px 14px; font-size: 12px;">
                   📋 Copy Link
                 </button>
               </div>
@@ -1240,17 +1240,17 @@
             </div>
 
             <!-- Community Builder Status Box -->
-            <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 16px;">
-              <div style="font-size: 13px; font-weight: 700; color: #F1F5F9; margin-bottom: 8px;">
+            <div class="dash-sub-box">
+              <div class="sub-box-title" style="font-size: 13px; font-weight: 700; margin-bottom: 8px;">
                 🌟 Community Builder Milestone
               </div>
-              <p style="font-size: 12px; color: #94A3B8; margin-bottom: 12px; line-height: 1.4;">
+              <p style="font-size: 12px; margin-bottom: 12px; line-height: 1.4;">
                 Artisans who invite 3+ registered peers earn the official <strong>🌟 Community Builder</strong> badge on their public profile and a +5% organic search completeness boost.
               </p>
-              <div style="background: #1E293B; border-radius: 6px; height: 10px; overflow: hidden; margin-bottom: 8px;">
+              <div style="background: var(--dash-border); border-radius: 6px; height: 10px; overflow: hidden; margin-bottom: 8px;">
                 <div id="community-progress-bar" style="background: #F59E0B; height: 100%; width: 0%; transition: width 0.3s ease;"></div>
               </div>
-              <div id="community-progress-text" style="font-size: 11px; color: #CBD5E1; text-align: right;">
+              <div id="community-progress-text" style="font-size: 11px; color: var(--dash-muted); text-align: right;">
                 3 referrals needed to unlock badge
               </div>
             </div>

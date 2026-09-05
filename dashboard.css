@@ -1410,3 +1410,415 @@ input:checked + .slider:before {
     font-size: 22px;
   }
 }
+
+/* ===== DUAL-MODE REFINEMENTS FOR DASHBOARD CARDS & TABS ===== */
+.dash-ver-card {
+  background: #F0FDF4;
+  border: 1.5px solid #BBF7D0;
+  border-radius: 12px;
+  padding: 22px;
+  color: #0D1B0F;
+  transition: all 0.2s ease;
+}
+.dash-ver-card h3 {
+  color: #0D1B0F !important;
+}
+.dash-ver-card p {
+  color: #334155 !important;
+}
+.dash-ver-card label {
+  color: #0D1B0F !important;
+}
+.dash-ver-card h4 {
+  color: #0D1B0F !important;
+}
+.dash-ver-card #ver-history-list {
+  color: #64748B !important;
+}
+
+[data-theme="dark"] .dash-ver-card {
+  background: #111827;
+  border: 1px solid #1E293B;
+  color: #F8FAFC;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+[data-theme="dark"] .dash-ver-card h3 {
+  color: #F8FAFC !important;
+}
+[data-theme="dark"] .dash-ver-card p {
+  color: #94A3B8 !important;
+}
+[data-theme="dark"] .dash-ver-card label {
+  color: #F8FAFC !important;
+}
+[data-theme="dark"] .dash-ver-card h4 {
+  color: #F8FAFC !important;
+}
+[data-theme="dark"] .dash-ver-card #ver-history-list {
+  color: #94A3B8 !important;
+}
+
+.dash-theme-input {
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  color: #0F172A;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+.dash-theme-input:focus {
+  border-color: #00A859;
+  outline: none;
+}
+[data-theme="dark"] .dash-theme-input {
+  background: #1E293B;
+  border-color: #334155;
+  color: #F8FAFC;
+}
+[data-theme="dark"] .dash-theme-input:focus {
+  border-color: #00A859;
+}
+
+.dash-mon-research-card {
+  margin-top: 24px;
+  background: #F8FAFC;
+  border: 1.5px solid var(--dash-border, #E2EBE2);
+  border-radius: 12px;
+  padding: 22px;
+  transition: all 0.2s ease;
+}
+.dash-mon-research-card h3 {
+  color: #0D1B0F !important;
+}
+.dash-mon-research-card p {
+  color: #475569 !important;
+}
+
+[data-theme="dark"] .dash-mon-research-card {
+  background: #111827;
+  border: 1px solid #1E293B;
+  color: #F8FAFC;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+[data-theme="dark"] .dash-mon-research-card h3 {
+  color: #F8FAFC !important;
+}
+[data-theme="dark"] .dash-mon-research-card p {
+  color: #94A3B8 !important;
+}
+
+.dash-mon-card {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  color: #0D1B0F;
+  transition: all 0.2s ease;
+}
+.dash-mon-card strong {
+  color: #0D1B0F;
+}
+.dash-mon-card p {
+  color: #4A5E4C;
+}
+.dash-mon-card .mon-price-hypothesis-label {
+  color: #0D1B0F;
+}
+.dash-mon-card select.mon-price-select {
+  background: #F1F5F9;
+  border: 1px solid #CBD5E1;
+  color: #0D1B0F;
+}
+
+[data-theme="dark"] .dash-mon-card {
+  background: #1E293B;
+  border-color: #334155;
+  color: #F8FAFC;
+}
+[data-theme="dark"] .dash-mon-card strong {
+  color: #F8FAFC;
+}
+[data-theme="dark"] .dash-mon-card p {
+  color: #CBD5E1;
+}
+[data-theme="dark"] .dash-mon-card .mon-price-hypothesis-label {
+  color: #CBD5E1;
+}
+[data-theme="dark"] .dash-mon-card select.mon-price-select {
+  background: #0F172A;
+  border-color: #334155;
+  color: #F8FAFC;
+}
+
+.dash-mon-feedback-box {
+  margin-top: 14px;
+  background: #FFFFFF;
+  border: 1.5px dashed #CBD5E1;
+  border-radius: 10px;
+  padding: 16px 18px;
+  transition: all 0.2s ease;
+}
+.dash-mon-feedback-box label {
+  color: #0D1B0F;
+}
+.dash-mon-feedback-box select {
+  background: #FFFFFF;
+  border: 1.5px solid #CBD5E1;
+  color: #0D1B0F;
+}
+
+[data-theme="dark"] .dash-mon-feedback-box {
+  background: #1E293B;
+  border-color: #334155;
+  color: #F8FAFC;
+}
+[data-theme="dark"] .dash-mon-feedback-box label {
+  color: #F8FAFC;
+}
+[data-theme="dark"] .dash-mon-feedback-box select {
+  background: #0F172A;
+  border-color: #334155;
+  color: #F8FAFC;
+}
+
+/* Subscription Plan Cards in Dashboard */
+.dash-sub-plan-card {
+  background: #FFFFFF;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 10px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  color: #0D1B0F;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+.dash-sub-plan-card strong {
+  color: #0D1B0F;
+}
+.dash-sub-plan-card .sub-plan-price {
+  color: #0D1B0F;
+}
+.dash-sub-plan-card ul {
+  color: #4A5E4C;
+}
+.dash-sub-plan-card ul li {
+  color: #4A5E4C;
+}
+#plan-card-BASIC {
+  border-color: rgba(2, 132, 199, 0.35);
+}
+#plan-card-PRO {
+  background: linear-gradient(180deg, #F0FDF4 0%, #FFFFFF 100%);
+  border: 2px solid #00A859;
+}
+#plan-card-PREMIUM {
+  border-color: rgba(217, 119, 6, 0.35);
+}
+
+[data-theme="dark"] .dash-sub-plan-card {
+  background: #111827;
+  border-color: #1E293B;
+  color: #F8FAFC;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+[data-theme="dark"] .dash-sub-plan-card strong {
+  color: #F8FAFC;
+}
+[data-theme="dark"] .dash-sub-plan-card .sub-plan-price {
+  color: #F8FAFC;
+}
+[data-theme="dark"] .dash-sub-plan-card ul {
+  color: #94A3B8;
+}
+[data-theme="dark"] .dash-sub-plan-card ul li {
+  color: #94A3B8;
+}
+[data-theme="dark"] #plan-card-BASIC {
+  border-color: rgba(56, 189, 248, 0.4);
+}
+[data-theme="dark"] #plan-card-PRO {
+  background: linear-gradient(180deg, rgba(0, 168, 89, 0.15) 0%, #111827 100%);
+  border: 2px solid #00A859;
+}
+[data-theme="dark"] #plan-card-PREMIUM {
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+/* Subscription Overview Cards */
+.dash-sub-overview-card {
+  background: #FFFFFF;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  color: #0D1B0F;
+  transition: all 0.2s ease;
+}
+.dash-sub-overview-card strong,
+.dash-sub-overview-card h3 {
+  color: #0D1B0F;
+}
+.dash-sub-overview-card p {
+  color: #4A5E4C;
+}
+
+[data-theme="dark"] .dash-sub-overview-card {
+  background: #111827;
+  border-color: #1E293B;
+  color: #F8FAFC;
+}
+[data-theme="dark"] .dash-sub-overview-card strong,
+[data-theme="dark"] .dash-sub-overview-card h3 {
+  color: #F8FAFC;
+}
+[data-theme="dark"] .dash-sub-overview-card p {
+  color: #94A3B8;
+}
+
+/* Billing History Table */
+.dash-billing-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  text-align: left;
+  color: #334155;
+}
+.dash-billing-table thead tr {
+  border-bottom: 1.5px solid var(--dash-border, #CBD5E1);
+  color: #0D1B0F;
+  font-weight: 700;
+}
+.dash-billing-table tbody tr {
+  border-bottom: 1px solid var(--dash-border, #E2E8F0);
+  color: #334155;
+}
+
+[data-theme="dark"] .dash-billing-table {
+  color: #94A3B8;
+}
+[data-theme="dark"] .dash-billing-table thead tr {
+  border-bottom-color: #1E293B;
+  color: #F8FAFC;
+}
+[data-theme="dark"] .dash-billing-table tbody tr {
+  border-bottom-color: #1E293B;
+  color: #CBD5E1;
+}
+
+/* Referral & Community Cards */
+.dash-referral-card {
+  border-left: 4px solid #10B981 !important;
+  background: linear-gradient(145deg, #F0FDF4, #FFFFFF);
+  border: 1px solid #BBF7D0;
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.2s ease;
+}
+.dash-referral-card h2 {
+  color: #0D1B0F !important;
+}
+.dash-referral-card p {
+  color: #4A5E4C !important;
+}
+.dash-referral-card input {
+  background: #FFFFFF !important;
+  border: 1px solid #CBD5E1 !important;
+  color: #00A859 !important;
+}
+
+[data-theme="dark"] .dash-referral-card {
+  background: linear-gradient(145deg, #131A29, #0E1522);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+[data-theme="dark"] .dash-referral-card h2 {
+  color: #F8FAFC !important;
+}
+[data-theme="dark"] .dash-referral-card p {
+  color: #94A3B8 !important;
+}
+[data-theme="dark"] .dash-referral-card input {
+  background: #0A0E17 !important;
+  border: 1px solid rgba(255,255,255,0.12) !important;
+  color: #34D399 !important;
+}
+
+/* Trust Model Breakdown */
+.dash-trust-model-section {
+  background: #F8FAFC;
+  border: 1.5px solid var(--dash-border, #E2EBE2);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+.dash-trust-model-section h3 {
+  color: #0D1B0F;
+}
+.dash-trust-pill-card {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  padding: 14px;
+  border-radius: 8px;
+}
+.dash-trust-pill-card .trust-pill-title {
+  color: #0D1B0F;
+}
+.dash-trust-pill-card p {
+  color: #4A5E4C;
+}
+
+[data-theme="dark"] .dash-trust-model-section {
+  background: #111827;
+  border-color: #1E293B;
+}
+[data-theme="dark"] .dash-trust-model-section h3 {
+  color: #F8FAFC;
+}
+[data-theme="dark"] .dash-trust-pill-card {
+  background: #1E293B;
+  border-color: #334155;
+}
+[data-theme="dark"] .dash-trust-pill-card .trust-pill-title {
+  color: #F8FAFC;
+}
+[data-theme="dark"] .dash-trust-pill-card p {
+  color: #94A3B8;
+}
+
+/* Sub Boxes */
+.dash-sub-box {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 16px;
+  color: #0D1B0F;
+}
+.dash-sub-box label {
+  color: #0D1B0F !important;
+}
+.dash-sub-box .sub-box-title {
+  color: #0D1B0F !important;
+}
+.dash-sub-box p {
+  color: #4A5E4C !important;
+}
+
+[data-theme="dark"] .dash-sub-box {
+  background: #1E293B;
+  border-color: #334155;
+  color: #F8FAFC;
+}
+[data-theme="dark"] .dash-sub-box label {
+  color: #CBD5E1 !important;
+}
+[data-theme="dark"] .dash-sub-box .sub-box-title {
+  color: #F8FAFC !important;
+}
+[data-theme="dark"] .dash-sub-box p {
+  color: #94A3B8 !important;
+}

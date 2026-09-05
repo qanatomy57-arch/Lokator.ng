@@ -1,0 +1,56 @@
+{
+  "pagesTested": [
+    "dashboard.html",
+    "register.html",
+    "search.html",
+    "index.html"
+  ],
+  "themeCyclingVerified": true,
+  "contrastChecks": [
+    {
+      "mode": "light",
+      "element": "body",
+      "ratio": "16.48"
+    },
+    {
+      "mode": "dark",
+      "element": "ver-label",
+      "ratio": "16.96"
+    },
+    {
+      "mode": "dark",
+      "element": "ver-history",
+      "ratio": "16.96"
+    },
+    {
+      "mode": "dark",
+      "element": "body",
+      "ratio": "18.33"
+    },
+    {
+      "mode": "dark",
+      "element": "pro-price",
+      "ratio": "16.96"
+    },
+    {
+      "mode": "dark",
+      "element": "vip-price",
+      "ratio": "16.96"
+    }
+  ],
+  "screenshotsCaptured": [
+    "C:\\All workspace\\PadiFix project\\lokator\\scripts\\visual_evidence\\theme_dual_mode\\dashboard_mobile_light.png",
+    "C:\\All workspace\\PadiFix project\\lokator\\scripts\\visual_evidence\\theme_dual_mode\\dashboard_mobile_dark.png",
+    "C:\\All workspace\\PadiFix project\\lokator\\scripts\\visual_evidence\\theme_dual_mode\\dashboard_verification_dark.png",
+    "C:\\All workspace\\PadiFix project\\lokator\\scripts\\visual_evidence\\theme_dual_mode\\dashboard_monetization_dark.png",
+    "C:\\All workspace\\PadiFix project\\lokator\\scripts\\visual_evidence\\theme_dual_mode\\dashboard_verification_light.png",
+    "C:\\All workspace\\PadiFix project\\lokator\\scripts\\visual_evidence\\theme_dual_mode\\register_mobile_dark.png",
+    "C:\\All workspace\\PadiFix project\\lokator\\scripts\\visual_evidence\\theme_dual_mode\\register_pricing_dark.png",
+    "C:\\All workspace\\PadiFix project\\lokator\\scripts\\visual_evidence\\theme_dual_mode\\register_mobile_light.png",
+    "C:\\All workspace\\PadiFix project\\lokator\\scripts\\visual_evidence\\theme_dual_mode\\register_pricing_light.png",
+    "C:\\All workspace\\PadiFix project\\lokator\\scripts\\visual_evidence\\theme_dual_mode\\search_mobile_light.png",
+    "C:\\All workspace\\PadiFix project\\lokator\\scripts\\visual_evidence\\theme_dual_mode\\search_mobile_dark.png",
+    "C:\\All workspace\\PadiFix project\\lokator\\scripts\\visual_evidence\\theme_dual_mode\\index_desktop_dark.png",
+    "C:\\All workspace\\PadiFix project\\lokator\\scripts\\visual_evidence\\theme_dual_mode\\index_desktop_light.png"
+  ]
+}
