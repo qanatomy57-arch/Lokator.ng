@@ -654,7 +654,11 @@
             <div>
               <div style="display: flex; align-items: center; gap: 8px;">
                 <span style="font-size: 1.4rem;">💳</span>
-              <div id="sub-status-pill-wrap">
+                <h2 style="margin: 0; font-size: 1.1rem; color: var(--dash-text);">Provider Subscription & Billing</h2>
+              </div>
+              <p style="margin: 4px 0 0 0; color: var(--dash-muted); font-size: 13px;">Manage your recurring subscription tier, contact allowances, and Paystack billing.</p>
+            </div>
+            <div id="sub-status-pill-wrap">
               <span id="sub-current-status-badge" class="status-tag" style="background: rgba(0, 168, 89, 0.15); color: #34D399; font-weight: 700; padding: 6px 12px; border-radius: 20px; font-size: 12px; border: 1px solid rgba(0, 168, 89, 0.3);">
                 Active Plan
               </span>
@@ -673,7 +677,7 @@
           </div>
 
           <!-- Hero: Current Plan Summary & Lead Meter -->
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin: 18px 0 24px 0;">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 16px; margin: 18px 0 24px 0;">
             <!-- Current Plan Card -->
             <div style="background: #111827; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between;">
               <div>
@@ -982,7 +986,7 @@
             </div>
 
             <form id="form-request-verification">
-              <div class="dash-form-grid" style="grid-template-columns: 1fr 1fr; gap: 16px;">
+              <div class="dash-form-grid" style="gap: 16px;">
                 <div class="form-group">
                   <label for="ver-doc-type">Identification Type *</label>
                   <select id="ver-doc-type" class="filter-select" required style="width: 100%; background: #111827; border: 1px solid var(--dash-border); color: #fff; padding: 10px; border-radius: 8px;">

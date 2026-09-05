@@ -366,6 +366,8 @@ input:checked + .slider:before {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
   margin-bottom: 20px;
   padding-bottom: 16px;
   border-bottom: 1px solid var(--dash-border);
@@ -1221,6 +1223,22 @@ input:checked + .slider:before {
 
   .bottom-nav-bar {
     display: flex;
+  }
+
+  .dash-section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .dash-section-header #sub-status-pill-wrap {
+    align-self: flex-start;
+  }
+
+  .dash-card-section {
+    padding: 18px 14px;
+    margin-bottom: 20px;
+    border-radius: 12px;
   }
 
   .dash-topbar-inner {

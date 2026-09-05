@@ -1481,7 +1481,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Lead Meter
     const usedNumber = document.getElementById('sub-contacts-used-number');
-    if (usedNumber) usedNumber.textContent = usage.total_contacts || 0;
+    const contactsUsed = (usage && (usage.contacts_used !== undefined ? usage.contacts_used : usage.total_contacts)) || 0;
+    if (usedNumber) usedNumber.textContent = contactsUsed;
 
     const totalNumber = document.getElementById('sub-contacts-total-number');
     if (totalNumber) {
@@ -1494,8 +1495,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         remText.textContent = 'Unlimited (Fair-use)';
         remText.style.color = '#FBBF24';
       } else {
-        remText.textContent = `${usage.remaining_contacts} contacts remaining`;
-        remText.style.color = usage.remaining_contacts > 0 ? '#34D399' : '#F87171';
+        const rawRem = usage && (usage.contacts_remaining !== undefined ? usage.contacts_remaining : usage.remaining_contacts);
+        const contactsRemaining = rawRem !== undefined ? rawRem : Math.max(0, (planInfo.contact_allowance || 0) - contactsUsed);
+        remText.textContent = `${contactsRemaining} contacts remaining`;
+        remText.style.color = contactsRemaining > 0 ? '#34D399' : '#F87171';
       }
     }
 
@@ -1503,9 +1506,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (progressBar) {
       let pct = 0;
       if (planInfo.contact_allowance === Infinity) {
-        pct = Math.min(100, Math.round((usage.total_contacts / 500) * 100));
+        pct = Math.min(100, Math.round((contactsUsed / 500) * 100));
       } else {
-        pct = Math.min(100, Math.round((usage.total_contacts / planInfo.contact_allowance) * 100));
+        pct = Math.min(100, Math.round((contactsUsed / (planInfo.contact_allowance || 1)) * 100));
       }
       progressBar.style.width = `${pct}%`;
       if (pct >= 100) {
